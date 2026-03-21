@@ -9,9 +9,6 @@ import { DonutChart } from "@/components/charts/DonutChart";
 import { LineChart } from "@/components/charts/LineChart";
 import { Gauge } from "@/components/charts/Gauge";
 import { HeatMap } from "@/components/charts/HeatMap";
-import { Funnel } from "@/components/charts/Funnel";
-import { BulletChart } from "@/components/charts/BulletChart";
-import { Waterfall } from "@/components/charts/Waterfall";
 import { StatusIndicator } from "@/components/ui/StatusIndicator";
 import { Callout } from "@/components/ui/Callout";
 import { DataTable } from "@/components/tables/DataTable";
@@ -80,48 +77,49 @@ export default function Home() {
               Components
             </a>
             <a
-              href="/docs/kpi-card"
+              href="/docs"
               className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             >
               Docs
             </a>
             <a
-              href="#pricing"
+              href="https://github.com/mpmcgowen/metricui"
               className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             >
-              Pricing
+              GitHub
             </a>
             <ThemeToggle />
-            <button className="rounded-lg bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)] transition-all hover:opacity-80">
-              Get Access
-            </button>
           </div>
         </nav>
 
         <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 text-center">
           <div className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)] bg-[var(--background)] px-3 py-1 text-xs font-medium text-[var(--muted)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-            Early Access — 40% off
+            Open source — MIT license
           </div>
-          <h1 className="mx-auto max-w-2xl text-[clamp(2.5rem,5vw,3.75rem)] font-bold leading-[1.1] tracking-tight text-[var(--foreground)]">
-            Dashboard components
+          <h1 className="mx-auto max-w-3xl text-[clamp(2.5rem,5vw,3.75rem)] font-bold leading-[1.1] tracking-tight text-[var(--foreground)]">
+            The missing UI layer
             <br />
             <span className="text-[var(--accent)]">
-              that feel designed
+              for React dashboards
             </span>
           </h1>
-          <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-[var(--muted)]">
-            Premium React components for analytics dashboards.
-            Copy-paste. Beautifully crafted. Built on Nivo + Tailwind.
+          <p className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-[var(--muted)]">
+            KPI cards, charts, tables, and layout — with built-in formatting, theming, data states, and zero config. One import, not six libraries.
           </p>
           <div className="mt-10 flex items-center justify-center gap-3">
-            <button className="inline-flex items-center gap-2 rounded-xl bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--background)] transition-all hover:opacity-80">
+            <a href="/docs/guides/getting-started" className="inline-flex items-center gap-2 rounded-xl bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--background)] transition-all hover:opacity-80">
               Get Started
               <ArrowRight className="h-4 w-4" />
-            </button>
-            <button className="inline-flex items-center gap-2 rounded-xl border border-[var(--card-border)] px-6 py-3 text-sm font-medium text-[var(--muted)] transition-all hover:border-[var(--foreground)]/20 hover:text-[var(--foreground)]">
-              Browse Components
-            </button>
+            </a>
+            <a href="#components" className="inline-flex items-center gap-2 rounded-xl border border-[var(--card-border)] px-6 py-3 text-sm font-medium text-[var(--muted)] transition-all hover:border-[var(--foreground)]/20 hover:text-[var(--foreground)]">
+              See Components
+            </a>
+          </div>
+          <div className="mt-6">
+            <code className="rounded-lg border border-[var(--card-border)] bg-[var(--background)] px-4 py-2 text-sm text-[var(--muted)]">
+              npm install metricui
+            </code>
           </div>
         </div>
       </header>
@@ -329,46 +327,6 @@ export default function Home() {
             height={320}
             centerValue="42%"
             centerLabel="Organic"
-          />
-
-          <Funnel
-            data={[
-              { id: "visited", label: "Visited", value: 10000 },
-              { id: "signed-up", label: "Signed Up", value: 4200 },
-              { id: "activated", label: "Activated", value: 2800 },
-              { id: "subscribed", label: "Subscribed", value: 1400 },
-              { id: "retained", label: "Retained", value: 980 },
-            ]}
-            title="Conversion Funnel"
-            subtitle="Signup to retention pipeline"
-            height={320}
-            showConversionRate
-          />
-
-          <BulletChart
-            simpleData={[
-              { label: "MRR", value: 85000, target: 100000, max: 120000 },
-              { label: "NPS Score", value: 72, target: 80, max: 100 },
-              { label: "Response Time", value: 120, target: 100, max: 200 },
-              { label: "Uptime %", value: 99.8, target: 99.9, max: 100 },
-            ]}
-            title="OKR Scorecard"
-            subtitle="Q1 2026 targets vs actuals"
-          />
-
-          <Waterfall
-            data={[
-              { label: "Revenue", value: 500000 },
-              { label: "COGS", value: -200000 },
-              { label: "Gross Profit", type: "subtotal" },
-              { label: "OpEx", value: -100000 },
-              { label: "Marketing", value: -50000 },
-              { label: "Net Income", type: "total" },
-            ]}
-            title="P&L Bridge"
-            subtitle="FY 2026 summary"
-            format="currency"
-            height={320}
           />
 
           <MetricGrid.Section title="Growth" border />
@@ -579,161 +537,16 @@ export default function Home() {
         </MetricProvider>
       </section>
 
-      {/* Pricing */}
-      <section
-        id="pricing"
-        className="border-t border-[var(--card-border)] bg-[var(--card-bg)] py-20"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-[var(--foreground)]">
-              Simple pricing
-            </h2>
-            <p className="mt-3 text-[var(--muted)]">
-              One-time payment. Lifetime access. Free updates forever.
-            </p>
-          </div>
-
-          <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">
-            {/* Starter */}
-            <div className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-8">
-              <h3 className="text-sm font-semibold text-[var(--foreground)]">
-                Starter
-              </h3>
-              <div className="mt-4">
-                <span className="text-4xl font-bold tracking-tight text-[var(--foreground)]">
-                  $89
-                </span>
-                <span className="ml-1 text-sm text-[var(--muted)] opacity-60 line-through">
-                  $149
-                </span>
-              </div>
-              <p className="mt-2 text-sm text-[var(--muted)]">
-                All core components. 1 project.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-[var(--muted)]">
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> All chart
-                  components
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> KPI cards &
-                  stat groups
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Data tables
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Dark mode
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Lifetime
-                  updates
-                </li>
-              </ul>
-              <button className="mt-8 w-full rounded-lg border border-[var(--card-border)] py-2.5 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--card-glow)]">
-                Get Started
-              </button>
-            </div>
-
-            {/* Pro — Highlighted */}
-            <div className="relative rounded-xl border-2 border-indigo-600 bg-[var(--card-bg)] p-8 shadow-lg shadow-indigo-500/10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge variant="info">Most Popular</Badge>
-              </div>
-              <h3 className="text-sm font-semibold text-[var(--foreground)]">
-                Pro
-              </h3>
-              <div className="mt-4">
-                <span className="text-4xl font-bold tracking-tight text-[var(--foreground)]">
-                  $149
-                </span>
-                <span className="ml-1 text-sm text-[var(--muted)] opacity-60 line-through">
-                  $249
-                </span>
-              </div>
-              <p className="mt-2 text-sm text-[var(--muted)]">
-                Everything + dashboard templates.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-[var(--muted)]">
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Everything
-                  in Starter
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> 5 full
-                  dashboard templates
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Advanced
-                  charts (heatmap, sankey...)
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Unlimited
-                  projects
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Priority
-                  updates
-                </li>
-              </ul>
-              <button className="mt-8 w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500">
-                Get Pro Access
-              </button>
-            </div>
-
-            {/* Team */}
-            <div className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-8">
-              <h3 className="text-sm font-semibold text-[var(--foreground)]">
-                Team
-              </h3>
-              <div className="mt-4">
-                <span className="text-4xl font-bold tracking-tight text-[var(--foreground)]">
-                  $349
-                </span>
-                <span className="ml-1 text-sm text-[var(--muted)] opacity-60 line-through">
-                  $599
-                </span>
-              </div>
-              <p className="mt-2 text-sm text-[var(--muted)]">
-                Pro for your whole team. Up to 25 seats.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-[var(--muted)]">
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Everything
-                  in Pro
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Up to 25
-                  team members
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Team license
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Figma source
-                  files
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-500">&#10003;</span> Priority
-                  support
-                </li>
-              </ul>
-              <button className="mt-8 w-full rounded-lg border border-[var(--card-border)] py-2.5 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--card-glow)]">
-                Get Team Access
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="border-t border-[var(--card-border)] bg-[var(--card-bg)] py-8">
-        <div className="mx-auto max-w-7xl px-6 text-center">
+        <div className="mx-auto max-w-7xl flex items-center justify-between px-6">
           <p className="text-sm text-[var(--muted)]">
-            &copy; {new Date().getFullYear()} MetricUI. Built for developers who
-            care about design.
+            &copy; {new Date().getFullYear()} MetricUI. MIT License.
           </p>
+          <div className="flex items-center gap-4">
+            <a href="/docs" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">Docs</a>
+            <a href="https://github.com/mpmcgowen/metricui" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">GitHub</a>
+          </div>
         </div>
       </footer>
     </div>

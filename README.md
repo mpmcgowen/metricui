@@ -1,19 +1,19 @@
 <p align="center">
-  <img src="https://metricui.dev/og.png" alt="MetricUI" width="600" />
+  <img src="https://metricui.com/og.png" alt="MetricUI" width="600" />
 </p>
 
 <h1 align="center">MetricUI</h1>
 
 <p align="center">
-  <strong>The React dashboard component library that feels designed.</strong>
+  <strong>The missing UI layer for React dashboards.</strong>
   <br />
-  KPI cards, charts, tables, gauges, heatmaps — with smart formatting, global theming, and zero layout code.
+  KPI cards, charts, tables, and layout — with built-in formatting, theming, data states, and zero config.
 </p>
 
 <p align="center">
-  <a href="https://metricui.dev">Demo</a> ·
-  <a href="https://metricui.dev/docs">Docs</a> ·
-  <a href="https://metricui.dev/demos/spotify">Spotify Dashboard</a> ·
+  <a href="https://metricui.com">Demo</a> ·
+  <a href="https://metricui.com/docs">Docs</a> ·
+  <a href="https://metricui.com/demos/spotify">Spotify Dashboard</a> ·
   <a href="#mcp-server">MCP Server</a>
 </p>
 
@@ -194,7 +194,7 @@ Advanced charts for specialized use cases — available in `@metricui/pro`.
 | **Export** | PNG, SVG, CSV, clipboard on any chart or table |
 | **Cross-filtering** | Click a bar/slice/row, other components filter |
 
-[Join the waitlist →](https://metricui.dev/pro)
+[Join the waitlist →](https://metricui.com/pro)
 
 ---
 
