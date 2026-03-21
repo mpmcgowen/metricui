@@ -21,7 +21,7 @@ export default function FunnelPage() {
         </span>
       </div>
 
-      <DocSection title="What it does">
+      <DocSection id="what-it-does" title="What it does">
         <p className="text-[var(--muted)] leading-relaxed">
           Visualize conversion funnels with automatic rate calculations between stages.
           Supports vertical and horizontal layouts, smooth and linear interpolation,
@@ -29,7 +29,7 @@ export default function FunnelPage() {
         </p>
       </DocSection>
 
-      <DocSection title="Features">
+      <DocSection id="features" title="Features">
         <ul className="list-disc list-inside text-[var(--muted)] space-y-1.5">
           <li>Vertical and horizontal layouts</li>
           <li>Automatic conversion rate annotations</li>
@@ -40,7 +40,7 @@ export default function FunnelPage() {
         </ul>
       </DocSection>
 
-      <DocSection title="Get MetricUI Pro">
+      <DocSection id="get-pro" title="Get MetricUI Pro">
         <p className="text-[var(--muted)] leading-relaxed">
           Funnel is available in <code className="font-mono">@metricui/pro</code> alongside
           Waterfall, BulletChart, and more advanced features coming soon.

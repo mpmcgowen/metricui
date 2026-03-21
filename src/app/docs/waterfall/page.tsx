@@ -21,14 +21,14 @@ export default function WaterfallPage() {
         </span>
       </div>
 
-      <DocSection title="What it does">
+      <DocSection id="what-it-does" title="What it does">
         <p className="text-[var(--muted)] leading-relaxed">
           Visualize how an initial value is affected by a series of positive and negative changes.
           Perfect for P&amp;L breakdowns, revenue bridges, and budget analysis.
         </p>
       </DocSection>
 
-      <DocSection title="Features">
+      <DocSection id="features" title="Features">
         <ul className="list-disc list-inside text-[var(--muted)] space-y-1.5">
           <li>Automatic running total calculation</li>
           <li>Subtotal and total markers</li>
@@ -39,7 +39,7 @@ export default function WaterfallPage() {
         </ul>
       </DocSection>
 
-      <DocSection title="Get MetricUI Pro">
+      <DocSection id="get-pro" title="Get MetricUI Pro">
         <p className="text-[var(--muted)] leading-relaxed">
           Waterfall is available in <code className="font-mono">@metricui/pro</code> alongside
           Funnel, BulletChart, and more advanced features coming soon.

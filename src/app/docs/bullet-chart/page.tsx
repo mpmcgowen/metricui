@@ -21,14 +21,14 @@ export default function BulletChartPage() {
         </span>
       </div>
 
-      <DocSection title="What it does">
+      <DocSection id="what-it-does" title="What it does">
         <p className="text-[var(--muted)] leading-relaxed">
           Compare actual performance against targets with qualitative range bands.
           Ideal for OKR scorecards, KPI targets, and quota tracking.
         </p>
       </DocSection>
 
-      <DocSection title="Features">
+      <DocSection id="features" title="Features">
         <ul className="list-disc list-inside text-[var(--muted)] space-y-1.5">
           <li>Full and simple data formats</li>
           <li>Horizontal and vertical orientation</li>
@@ -39,7 +39,7 @@ export default function BulletChartPage() {
         </ul>
       </DocSection>
 
-      <DocSection title="Get MetricUI Pro">
+      <DocSection id="get-pro" title="Get MetricUI Pro">
         <p className="text-[var(--muted)] leading-relaxed">
           BulletChart is available in <code className="font-mono">@metricui/pro</code> alongside
           Funnel, Waterfall, and more advanced features coming soon.
