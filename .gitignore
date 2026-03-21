@@ -19,6 +19,12 @@
 
 # production
 /build
+/dist
+
+# mcp-server build artifacts
+**/mcp-server/dist/
+**/mcp-server/.next/
+**/mcp-server/node_modules/
 
 # misc
 .DS_Store

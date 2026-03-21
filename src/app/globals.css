@@ -1,26 +1,336 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: #F8F8F6;
+  --foreground: #1a1a1a;
+  --card-bg: #ffffff;
+  --card-border: #e8e8e5;
+  --card-glow: rgba(0, 0, 0, 0.02);
+  --muted: #8a8a8a;
+  --accent: #4F46E5;
+
+  /* ── Variant system (defaults = "default" variant) ── */
+  --mu-card-bg: var(--card-bg);
+  --mu-card-border: var(--card-border);
+  --mu-card-border-w: 1px;
+  --mu-card-shadow: none;
+  --mu-card-radius: 1rem;
+  --mu-cell-bg: var(--mu-card-bg);
+
+  /* ── Dense system (defaults = normal density) ── */
+  --mu-padding: 1.25rem;
+  --mu-padding-x-bare: 1rem;
+  --mu-padding-x-bare-sm: 1.5rem;
+  --mu-padding-y-bare: 1.25rem;
+  --mu-gap: 1rem;
+  --mu-title-size: 0.75rem;
+  --mu-value-size: 1.875rem;
+  --mu-value-size-bare: 1.5rem;
+  --mu-table-py: 0.75rem;
+  --mu-table-px: 1.25rem;
+
+  /* ── Hover interaction ── */
+  --mu-hover-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
+  --mu-hover-border: #d1d5db;
+
+  /* ── Semantic colors ── */
+  --mu-color-positive: #059669;
+  --mu-color-negative: #ef4444;
+  --mu-color-warning: #d97706;
+  --mu-color-info: #2563eb;
+  --mu-color-indigo: #4f46e6;
+  --mu-color-purple: #9333ea;
+  --mu-color-pink: #db2777;
+  --mu-color-cyan: #0891b2;
+
+  /* ── Texture ── */
+  --mu-texture-opacity: 0.3;
+
+  /* ── Skeleton shimmer ── */
+  --mu-shimmer-highlight: color-mix(in srgb, var(--card-border) 50%, var(--card-bg));
+}
+
+.dark {
+  --background: #0A0A0C;
+  --foreground: #e8e8e5;
+  --card-bg: #111114;
+  --card-border: #1e1e22;
+  --card-glow: rgba(255, 255, 255, 0.015);
+  --muted: #5a5a5f;
+  --accent: #818CF8;
+  --mu-hover-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+  --mu-hover-border: #374151;
+  --mu-color-positive: #34d399;
+  --mu-color-negative: #f87171;
+  --mu-color-warning: #fbbf24;
+  --mu-color-info: #60a5fa;
+  --mu-color-indigo: #818cf8;
+  --mu-color-purple: #a855f7;
+  --mu-color-pink: #f472b6;
+  --mu-color-cyan: #22d3ee;
+  --mu-shimmer-highlight: color-mix(in srgb, var(--card-border) 50%, var(--foreground) 4%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Variant presets
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-variant="outlined"] {
+  --mu-card-bg: transparent;
+  --mu-card-border: var(--card-border);
+  --mu-card-border-w: 2px;
+  --mu-card-shadow: inset 0 0 0 1px var(--card-border);
+  --mu-card-radius: 0.75rem;
+  --mu-cell-bg: transparent;
+}
+
+[data-variant="ghost"] {
+  --mu-card-bg: color-mix(in srgb, var(--accent) 4%, var(--card-bg));
+  --mu-card-border: transparent;
+  --mu-card-border-w: 1px;
+  --mu-card-shadow: none;
+  --mu-cell-bg: color-mix(in srgb, var(--accent) 4%, var(--card-bg));
+}
+.dark [data-variant="ghost"] {
+  --mu-card-bg: color-mix(in srgb, var(--accent) 6%, transparent);
+  --mu-cell-bg: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+[data-variant="elevated"] {
+  --mu-card-bg: var(--card-bg);
+  --mu-card-border: transparent;
+  --mu-card-border-w: 1px;
+  --mu-card-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.08);
+  --mu-card-radius: 1.25rem;
+}
+.dark [data-variant="elevated"] {
+  --mu-card-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3);
+}
+
+[data-variant="flat"] {
+  --mu-card-bg: transparent;
+  --mu-card-border: transparent;
+  --mu-card-border-w: 0px;
+  --mu-card-shadow: none;
+  --mu-card-radius: 0;
+  --mu-cell-bg: transparent;
+  --mu-texture-opacity: 0;
+  --mu-padding: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dense mode
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-dense="true"] {
+  --mu-padding: 0.625rem;
+  --mu-padding-x-bare: 0.75rem;
+  --mu-padding-x-bare-sm: 1rem;
+  --mu-padding-y-bare: 0.5rem;
+  --mu-gap: 0.5rem;
+  --mu-title-size: 0.625rem;
+  --mu-value-size: 1.25rem;
+  --mu-value-size-bare: 1.125rem;
+  --mu-table-py: 0.375rem;
+  --mu-table-px: 0.75rem;
+}
+
+[data-metricui] {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Focus ring for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ═══════════════════════════════════════════════════════════════════════════
+   Skeleton shimmer
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.mu-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--card-border) 0%,
+    var(--mu-shimmer-highlight) 40%,
+    var(--card-border) 80%
+  );
+  background-size: 300% 100%;
+  animation: mu-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes mu-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mu-shimmer {
+    animation: none;
+    background: var(--card-border);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Scroll-triggered entrance animation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.mu-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+  will-change: opacity, transform;
+}
+
+.mu-reveal.mu-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Instant for reduced-motion (belt + suspenders with the JS check) */
+@media (prefers-reduced-motion: reduce) {
+  .mu-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Touch device: show hover-only actions at reduced opacity
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (hover: none) {
+  .mu-hover-action {
+    opacity: 0.4 !important;
+  }
+}
+
+/* Noise texture overlay for depth */
+.noise-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: var(--mu-texture-opacity);
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+
+[data-texture="false"] .noise-texture::before {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Responsive text scaling (container queries)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Every card/chart is a container for inline-size queries */
+.mu-container {
+  container-type: inline-size;
+}
+
+/* Scale value text fluidly with container width */
+@container (max-width: 220px) {
+  .mu-container {
+    --mu-value-size: 1.25rem;
+    --mu-value-size-bare: 1.125rem;
+    --mu-title-size: 0.625rem;
+  }
+}
+
+@container (max-width: 160px) {
+  .mu-container {
+    --mu-value-size: 1rem;
+    --mu-value-size-bare: 0.875rem;
+  }
+}
+
+/* ── Progressive disclosure: hide secondary elements at narrow widths ── */
+
+/* Hide sparklines when card is too narrow — they become noise */
+@container (max-width: 200px) {
+  .mu-sparkline-slot {
+    display: none;
+  }
+}
+
+/* Hide subtitles when tight on space */
+@container (max-width: 180px) {
+  .mu-subtitle {
+    display: none;
+  }
+}
+
+/* Hide footnotes when very tight */
+@container (max-width: 150px) {
+  .mu-footnote {
+    display: none;
+  }
+}
+
+/* Chart containers: hide subtitle, compact title at narrow widths */
+@container (max-width: 280px) {
+  .mu-chart-subtitle {
+    display: none;
+  }
+}
+
+/* DashboardHeader: stack layout when narrow */
+@container (max-width: 400px) {
+  .mu-header-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .mu-header-actions {
+    align-self: flex-start;
+  }
+}
+
+/* ── StatGroup: split from joined bar into individual cards at narrow widths ── */
+
+.mu-stat-grid {
+  container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+  .mu-stat-grid {
+    gap: 0.5rem;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    overflow: visible;
+    border-width: 0 !important;
+  }
+  .mu-stat-cell {
+    border: var(--mu-card-border-w) solid var(--mu-card-border);
+    border-radius: var(--mu-card-radius);
+    box-shadow: var(--mu-card-shadow);
+  }
 }

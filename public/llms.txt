@@ -1,0 +1,3638 @@
+# MetricUI
+
+> React component library for analytics dashboards. KPI cards, charts, tables, and more with built-in formatting, theming, and data states.
+
+## Packages
+
+MetricUI has two packages:
+- `metricui` (free, MIT) — all base components for production dashboards
+- `@metricui/pro` (paid) — Funnel, Waterfall, BulletChart, and future premium features
+
+## Install
+
+```
+npm install metricui
+npm install @metricui/pro  # optional, requires license
+```
+
+## Import
+
+```tsx
+// Free tier
+import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, useMetricFilters } from "metricui";
+import "metricui/styles.css";
+
+// Pro tier (requires @metricui/pro)
+import { Funnel, Waterfall, BulletChart } from "@metricui/pro";
+```
+
+## Helpers
+
+```tsx
+import { MetricProvider, DEFAULT_METRIC_CONFIG, DEFAULT_MOTION_CONFIG, SERIES_COLORS, fmt } from "metricui";
+import { ThemeProvider } from "metricui/theme";
+```
+
+---
+
+## Unified Data Format
+
+All major chart components support a **unified flat-row data format** in addition to their legacy Nivo-specific shapes. This means you can pass the same data array to AreaChart, LineChart, BarChart, BarLineChart, DonutChart, and HeatMap — just change the component tag.
+
+### Concept
+
+Instead of pre-shaping data into Nivo series (`{ id, data: [{ x, y }] }`), pass flat rows and declare which column is the x-axis (`index`) and which columns to plot (`categories`):
+
+```tsx
+const data = [
+  { month: "Jan", revenue: 4200, costs: 2800, margin: 0.33 },
+  { month: "Feb", revenue: 5100, costs: 3200, margin: 0.37 },
+  { month: "Mar", revenue: 4800, costs: 2900, margin: 0.40 },
+];
+
+<AreaChart data={data} index="month" categories={["revenue", "costs"]} />
+<BarChart  data={data} index="month" categories={["revenue", "costs"]} />
+<LineChart data={data} index="month" categories={["revenue", "costs"]} />
+```
+
+### Zero-Config Mode
+
+Omit both `index` and `categories` and MetricUI auto-infers from the first data row:
+- **index** = first string-valued column
+- **categories** = all number-valued columns
+
+```tsx
+<BarChart data={data} />
+// Infers: index="month", categories=["revenue", "costs", "margin"]
+```
+
+### CategoryConfig
+
+Each entry in `categories` can be a plain string or a rich config object:
+
+```ts
+type Category = string | CategoryConfig;
+
+interface CategoryConfig {
+  key: string;            // Column key in the data row
+  label?: string;         // Display label (defaults to key)
+  format?: FormatOption;  // Per-series format
+  color?: string;         // Override color
+  axis?: "left" | "right"; // Y-axis assignment (used by BarLineChart)
+}
+```
+
+Mix and match: `categories={["revenue", { key: "margin", format: "percent", axis: "right" }]}`
+
+### BarLineChart Axis Splitting
+
+In BarLineChart, categories with `axis: "right"` become **line series** on the right Y-axis. The rest become **bars** on the left Y-axis:
+
+```tsx
+<BarLineChart
+  data={data}
+  index="month"
+  categories={[
+    "revenue",
+    { key: "margin", format: "percent", axis: "right" },
+  ]}
+/>
+```
+
+### Supported Charts
+
+| Component | Unified format? | Notes |
+|-----------|----------------|-------|
+| AreaChart | Yes | Converts to Nivo line series |
+| LineChart | Yes | Same as AreaChart (no area fill) |
+| BarChart | Yes | Flat rows are already Nivo bar format |
+| BarLineChart | Yes | `axis: "right"` splits bars vs lines |
+| DonutChart | Yes | First category is the value column, index is labels |
+| HeatMap | Yes | Index = row IDs, categories = column headers |
+| Gauge | No | Single-value component, no series data |
+| Funnel | No | Uses its own FunnelDatumInput[] shape |
+| Waterfall | No | Uses WaterfallItem[] with value/subtotal/total types |
+| Sparkline | No | Takes a simple number[] array |
+| BulletChart | No | Uses BulletDatum[] or SimpleBulletData[] |
+
+### Backward Compatibility
+
+The legacy data formats (`data` as Nivo series, `keys`/`indexBy` for BarChart, etc.) continue to work unchanged. The unified format is additive — when `index` or `categories` are present, the component transforms the data internally.
+
+---
+
+## Components
+
+### KpiCard
+
+Category: card
+A metric card showing a single KPI with optional comparison, sparkline, goal progress, and conditional formatting. Uses forwardRef.
+
+#### Props
+
+- `title`: DynamicString (required) — Card title. Static string or template function receiving MetricContext.
+- `value`: number | null | undefined (required) — The metric value. null/undefined triggers null-state display.
+- `format`: FormatOption — How to format the value. Shorthand string or FormatConfig object.
+- `comparison`: ComparisonConfig | ComparisonConfig[] — Single or array of comparisons. Each computes change from a previous value.
+- `goal`: GoalConfig — Goal/target config. Shows a progress bar below the value.
+- `conditions`: Condition[] — Conditional formatting rules. First matching condition colors the value.
+- `sparkline`: { data: number[]; previousPeriod?: number[]; type?: SparklineType; interactive?: boolean } — Sparkline config object.
+- `sparklineData`: number[] — DEPRECATED: Use `sparkline` config instead.
+- `sparklinePreviousPeriod`: number[] — DEPRECATED: Use `sparkline` config instead.
+- `sparklineType`: SparklineType — DEPRECATED: Use `sparkline` config instead.
+- `sparklineInteractive`: boolean — DEPRECATED: Use `sparkline` config instead.
+- `icon`: React.ReactNode — Icon rendered next to the title.
+- `description`: DynamicReactNode — Description content shown in a popover next to the title.
+- `subtitle`: DynamicString — Subtitle shown below the title.
+- `footnote`: DynamicString — Small footnote at the bottom of the card.
+- `comparisonLabel`: DynamicString — Label next to the primary comparison badge.
+- `tooltip`: TooltipConfig — Custom tooltip config for the value.
+- `onClick`: () => void — Click handler for the entire card.
+- `href`: string — Turns the card into an anchor tag.
+- `drillDown`: DrillDownConfig — Drill-down action shown on hover in bottom-right corner.
+- `copyable`: boolean — Show a copy button that copies the formatted value to clipboard.
+- `onCopy`: (value: string) => void — Callback when value is copied (requires copyable).
+- `animate`: boolean | AnimationConfig — Enable count-up animation. true for default, or AnimationConfig for fine control. Falls back to config.animate.
+- `highlight`: boolean | string — Attention ring. true uses accent color, or pass CSS color string.
+- `trendIcon`: TrendIconConfig — Custom trend icons for comparison badges.
+- `nullDisplay`: NullDisplay — default: "dash" — What to show for null/undefined/NaN/Infinity. Falls back to config.nullDisplay.
+- `titlePosition`: TitlePosition — default: "top" — "top", "bottom", or "hidden".
+- `titleAlign`: TitleAlign — default: "left" — "left", "center", or "right".
+- `loading`: boolean — Show skeleton placeholder.
+- `empty`: EmptyState — Empty state config with message, icon, and action.
+- `error`: ErrorState — Error state config with message and retry callback.
+- `stale`: StaleState — Stale data indicator in top-right corner.
+- `state`: { loading?: boolean; empty?: EmptyState; error?: ErrorState; stale?: StaleState } — Grouped data state config.
+- `variant`: CardVariant — "default", "outlined", "ghost", "elevated", or any custom string. CSS-variable-driven via [data-variant]. Falls back to config.variant.
+- `dense`: boolean — default: false — Compact layout. Falls back to config.dense.
+- `accent`: string — Override border color with custom CSS color.
+- `className`: string — Additional CSS class names for the root element.
+- `classNames`: { root?: string; title?: string; value?: string; comparison?: string; sparkline?: string; goal?: string; footnote?: string } — Sub-element class overrides.
+- `id`: string — HTML id attribute.
+- `data-testid`: string — Test id.
+
+#### Data Shape
+
+```ts
+// KpiCard accepts a single numeric value
+interface KpiCardData {
+  value: number | null | undefined;
+  comparison?: { value: number; label?: string };
+  sparklineData?: number[];
+}
+```
+
+#### Minimal Example
+
+```tsx
+<KpiCard
+  title="Revenue"
+  value={142300}
+  format="currency"
+/>
+```
+
+#### Examples
+
+```tsx
+// KPI with comparison and sparkline
+<KpiCard
+  title="Monthly Revenue"
+  value={142300}
+  format="currency"
+  comparison={{ value: 128500, label: "vs last month" }}
+  sparkline={{
+    data: [98, 105, 110, 108, 120, 135, 142],
+    type: "line",
+    interactive: true,
+  }}
+/>
+
+// KPI with goal progress and conditional formatting
+<KpiCard
+  title="Conversion Rate"
+  value={4.2}
+  format="percent"
+  goal={{ value: 5, showTarget: true, showRemaining: true }}
+  conditions={[
+    { when: "above", value: 4, color: "emerald" },
+    { when: "between", min: 2, max: 4, color: "amber" },
+    { when: "below", value: 2, color: "red" },
+  ]}
+/>
+
+// KPI with multiple comparisons and copy
+<KpiCard
+  title="Active Users"
+  value={12450}
+  format="compact"
+  comparison={[
+    { value: 11200, label: "vs last week" },
+    { value: 9800, label: "vs last month", mode: "both" },
+  ]}
+  copyable
+  onCopy={(v) => console.log("Copied:", v)}
+  drillDown={{ label: "View breakdown", onClick: () => router.push("/users") }}
+/>
+```
+
+#### Notes
+
+- Uses forwardRef — you can pass a ref to the root div.
+- When `href` is provided, the root element becomes an `<a>` tag.
+- The `sparkline` object prop takes precedence over individual sparklineData/sparklineType/etc props.
+- The `state` object prop takes precedence over individual loading/empty/error/stale props.
+- Dynamic strings (DynamicString) can be a plain string or a function receiving MetricContext.
+- Condition colors can be named tokens ("emerald", "red", "amber", etc.) or raw CSS colors ("#ff6b6b", "rgb(...)").
+
+---
+
+### StatGroup
+
+Category: card
+A row/grid of mini stat cells for summary bars at the top of dashboards. Uses forwardRef.
+
+#### Props
+
+- `stats`: StatItem[] (required) — Array of stat items to display.
+- `title`: string — Group title above the grid.
+- `subtitle`: string — Group subtitle below the title.
+- `variant`: CardVariant — Visual variant (supports custom strings). CSS-variable-driven via [data-variant]. Falls back to config.variant.
+- `dense`: boolean — default: false — Compact layout. CSS-variable-driven via [data-dense]. Falls back to config.dense.
+- `columns`: 1 | 2 | 3 | 4 | 5 | 6 — Override column count. Auto-detected from stat count by default.
+- `format`: FormatOption — Default format for all numeric values. Per-stat format overrides this.
+- `loading`: boolean — default: false — Show skeleton placeholders.
+- `className`: string — Additional CSS class names.
+- `classNames`: { root?: string; header?: string; grid?: string; cell?: string; label?: string; value?: string } — Sub-element class overrides.
+- `id`: string — HTML id attribute.
+- `data-testid`: string — Test id.
+- `onStatClick`: (stat: StatItem, index: number) => void — Click handler for individual stats.
+- `nullDisplay`: NullDisplay — default: "dash" — Falls back to config.nullDisplay.
+- `animate`: boolean — default: true — Enable/disable animations.
+
+#### Data Shape
+
+```ts
+interface StatItem {
+  label: string;
+  value: string | number;
+  change?: number;               // Legacy change percentage
+  previousValue?: number;         // For auto-computed comparison
+  comparisonMode?: ComparisonMode;
+  invertTrend?: boolean;
+  format?: FormatOption;
+  icon?: React.ReactNode;
+}
+```
+
+#### Minimal Example
+
+```tsx
+<StatGroup
+  stats={[
+    { label: "Revenue", value: 142300, format: "currency" },
+    { label: "Users", value: 12450, format: "compact" },
+    { label: "Conversion", value: 4.2, format: "percent" },
+  ]}
+/>
+```
+
+#### Examples
+
+```tsx
+// StatGroup with comparisons
+<StatGroup
+  title="This Week"
+  stats={[
+    { label: "Revenue", value: 142300, previousValue: 128500, format: "currency" },
+    { label: "Orders", value: 1284, previousValue: 1150 },
+    { label: "AOV", value: 110.8, previousValue: 111.7, format: "currency", invertTrend: true },
+    { label: "Churn", value: 2.1, previousValue: 2.8, format: "percent", invertTrend: true },
+  ]}
+  columns={4}
+/>
+
+// Dense stat group with click handler
+<StatGroup
+  stats={metrics}
+  dense
+  variant="ghost"
+  onStatClick={(stat, idx) => setSelectedMetric(stat.label)}
+/>
+```
+
+---
+
+### AreaChart
+
+Category: chart
+Time-series area chart with gradient fills, stacking, dual Y-axis, comparison overlays, and reference lines.
+
+#### Props
+
+- `data`: { id: string; data: { x: string | number; y: number | null }[] }[] (required) — Array of data series.
+- `index`: string — Column key for the x-axis / category labels. Used with unified data format. If omitted with categories, auto-inferred as the first string column.
+- `categories`: Category[] — Columns to plot as series. Accepts strings or CategoryConfig objects with key, label, format, color, axis. If omitted with index, auto-inferred as all number columns.
+- `simpleData`: { label: string; value: number | null }[] — Simple format for single-series. `data` takes precedence.
+- `simpleDataId`: string — default: "Value" — Series name when using simpleData.
+- `comparisonData`: { id: string; data: { x: string | number; y: number | null }[] }[] — Previous period data as dashed overlay.
+- `title`: string — Chart card title.
+- `subtitle`: string — Chart card subtitle.
+- `description`: string | React.ReactNode — Description popover content.
+- `footnote`: string — Footnote below the chart.
+- `action`: React.ReactNode — Action slot in the top-right corner.
+- `format`: FormatOption — Format for Y-axis values and tooltips.
+- `height`: number — default: 300 — Chart height in px. Dense mode defaults to 220.
+- `curve`: CurveType — default: "monotoneX" — "basis", "cardinal", "catmullRom", "linear", "monotoneX", "monotoneY", "natural", "step", "stepAfter", "stepBefore".
+- `enablePoints`: boolean — default: false — Show data points on the line.
+- `enableArea`: boolean — default: true — Show filled area under the line.
+- `gradient`: boolean — default: true — Use gradient fill instead of flat opacity.
+- `areaOpacity`: number — default: 0.08 — Area fill opacity when gradient is false.
+- `stacked`: boolean — default: false — Stack multiple series.
+- `stackMode`: "normal" | "percent" — default: "normal" — "percent" normalizes to 100%.
+- `enableGridX`: boolean — default: false — Show vertical grid lines.
+- `enableGridY`: boolean — default: true — Show horizontal grid lines.
+- `referenceLines`: ReferenceLine[] — Reference lines (horizontal or vertical).
+- `thresholds`: ThresholdBand[] — Colored Y-axis range bands.
+- `legend`: boolean | LegendConfig — Legend config. Default: shown for multi-series.
+- `xAxisLabel`: string — X-axis label.
+- `yAxisLabel`: string — Y-axis label.
+- `rightAxisSeries`: string[] — Series IDs assigned to the right Y-axis.
+- `rightAxisFormat`: FormatOption — Format for right Y-axis values.
+- `rightAxisLabel`: string — Right Y-axis label.
+- `lineWidth`: number — default: 2 — Line width in px.
+- `lineStyle`: "solid" | "dashed" | "dotted" — default: "solid" — Line stroke style.
+- `pointSize`: number — default: 6 — Point radius in px.
+- `pointColor`: string | { from: string; modifiers?: any[] } — default: "var(--card-bg)" — Point fill color.
+- `pointBorderWidth`: number — default: 2 — Point border width.
+- `pointBorderColor`: string — Point border color. Default: series color.
+- `seriesStyles`: Record<string, SeriesStyle> — Per-series style overrides keyed by series ID.
+- `colors`: string[] — Series colors. Default: SERIES_COLORS.
+- `onPointClick`: (point: { id: string; value: number; label: string; seriesId: string; x: string | number; y: number }) => void — Click handler for data points.
+- `dense`: boolean — default: false — Compact layout.
+- `chartNullMode`: ChartNullMode — default: "gap" — "gap", "zero", or "connect".
+- `animate`: boolean — default: true — Falls back to config.animate.
+- `variant`: CardVariant — Falls back to config.variant.
+- `className`: string — Additional CSS class names.
+- `classNames`: { root?: string; header?: string; chart?: string; legend?: string } — Sub-element class overrides.
+- `id`: string — HTML id attribute.
+- `data-testid`: string — Test id.
+- `loading`: boolean — Loading state.
+- `empty`: EmptyState — Empty state config.
+- `error`: ErrorState — Error state config.
+- `stale`: StaleState — Stale data indicator.
+
+#### Data Shape
+
+```ts
+type Datum = { x: string | number; y: number | null };
+type SeriesData = { id: string; data: Datum[] };
+
+// Simple format (single series)
+type SimpleData = { label: string; value: number | null }[];
+```
+
+#### Minimal Example
+
+```tsx
+<AreaChart
+  data={[{ id: "Revenue", data: [
+    { x: "Jan", y: 4000 }, { x: "Feb", y: 4500 },
+    { x: "Mar", y: 5200 }, { x: "Apr", y: 4800 },
+  ]}]}
+  format="currency"
+/>
+```
+
+#### Examples
+
+```tsx
+// Stacked area with comparison
+<AreaChart
+  data={[
+    { id: "Organic", data: months.map(m => ({ x: m.label, y: m.organic })) },
+    { id: "Paid", data: months.map(m => ({ x: m.label, y: m.paid })) },
+  ]}
+  comparisonData={[
+    { id: "Organic", data: prevMonths.map(m => ({ x: m.label, y: m.organic })) },
+    { id: "Paid", data: prevMonths.map(m => ({ x: m.label, y: m.paid })) },
+  ]}
+  stacked
+  format="compact"
+  title="Traffic Sources"
+  yAxisLabel="Visitors"
+/>
+
+// Simple data format
+<AreaChart
+  simpleData={[
+    { label: "Mon", value: 120 },
+    { label: "Tue", value: 145 },
+    { label: "Wed", value: 132 },
+    { label: "Thu", value: 168 },
+    { label: "Fri", value: 155 },
+  ]}
+  title="Daily Signups"
+/>
+```
+
+#### Notes
+
+- X-axis ticks are automatically thinned based on container width.
+- Left Y-axis is hidden at container widths below 300px.
+- When using rightAxisSeries, right-axis data is internally normalized to the left scale.
+- Comparison data renders as dashed lines at 50% opacity.
+- simpleData is converted to full series format internally; `data` takes precedence when non-empty.
+
+---
+
+### LineChart
+
+Category: chart
+A line chart — AreaChart with area fill disabled. All AreaChart props except enableArea, gradient, and areaOpacity.
+
+#### Props
+
+Same as AreaChart (including `index` and `categories` for unified data format) with these differences:
+- `enableArea`: NOT available (always false)
+- `gradient`: NOT available
+- `areaOpacity`: NOT available
+- `enablePoints`: boolean — default: true (but pointSize defaults to 0, so invisible until sized up)
+- `pointSize`: number — default: 0 — Set > 0 to show dots.
+
+#### Data Shape
+
+Same as AreaChart.
+
+#### Minimal Example
+
+```tsx
+<LineChart
+  data={[{ id: "Users", data: [
+    { x: "Jan", y: 1200 }, { x: "Feb", y: 1350 },
+    { x: "Mar", y: 1100 }, { x: "Apr", y: 1500 },
+  ]}]}
+  title="Active Users"
+/>
+```
+
+#### Examples
+
+```tsx
+// Multi-series with visible dots
+<LineChart
+  data={[
+    { id: "Desktop", data: trafficData.desktop },
+    { id: "Mobile", data: trafficData.mobile },
+    { id: "Tablet", data: trafficData.tablet },
+  ]}
+  pointSize={6}
+  title="Traffic by Device"
+  legend
+/>
+
+// Line chart with reference line
+<LineChart
+  data={conversionData}
+  format="percent"
+  referenceLines={[
+    { axis: "y", value: 3.5, label: "Target", color: "#10B981", style: "dashed" },
+  ]}
+  title="Conversion Rate"
+/>
+```
+
+---
+
+### BarChart
+
+Category: chart
+Bar chart with vertical/horizontal layouts, grouped/stacked/percent modes, presets, comparison bars, target bars, and sorting.
+
+#### Presets
+
+- `"default"` — Single-key vertical bars
+- `"grouped"` — Side-by-side multi-key bars
+- `"stacked"` — Stacked multi-key bars
+- `"percent"` — 100% stacked (normalized)
+- `"horizontal"` — Horizontal layout
+- `"horizontal-grouped"` — Horizontal grouped bars
+
+Individual props override preset values.
+
+#### Props
+
+- `preset`: BarChartPreset — Preset configuration.
+- `data`: Record<string, string | number>[] (required) — Array of data rows.
+- `index`: string — Column key for the x-axis / category labels. Used with unified data format. If omitted with categories, auto-inferred as the first string column.
+- `categories`: Category[] — Columns to plot as series. Accepts strings or CategoryConfig objects with key, label, format, color, axis. If omitted with index, auto-inferred as all number columns.
+- `keys`: string[] (required) — Keys (series names) to render as bars.
+- `indexBy`: string (required) — Field name used as the category axis.
+- `comparisonData`: Record<string, string | number>[] — Previous period data as dashed outline bars.
+- `title`: string — Chart card title.
+- `subtitle`: string — Chart card subtitle.
+- `description`: string | React.ReactNode — Description popover.
+- `footnote`: string — Footnote.
+- `action`: React.ReactNode — Action slot.
+- `format`: FormatOption — Format for value-axis labels and tooltips.
+- `height`: number — default: 300 — Chart height in px.
+- `layout`: "vertical" | "horizontal" — default: "vertical" — Bar layout direction.
+- `groupMode`: "stacked" | "grouped" | "percent" — default: "stacked" — How multiple keys are displayed.
+- `padding`: number — default: 0.3 — Gap between bar groups (0-1).
+- `innerPadding`: number — Gap between bars in a group. Default: 4 for grouped, -1 for stacked.
+- `borderRadius`: number — default: 4 — Corner radius. Auto 0 for stacked/percent.
+- `enableLabels`: boolean — default: false — Show value labels on bars.
+- `labelPosition`: "inside" | "outside" | "auto" — default: "auto" — Where labels appear.
+- `sort`: "none" | "asc" | "desc" — default: "none" — Sort bars by total value.
+- `enableNegative`: boolean — default: false — Enable diverging colors for negative values.
+- `negativeColor`: string — default: "#EF4444" — Color for negative bars.
+- `targetData`: Record<string, number>[] — Target values as ghost/outline bars.
+- `targetColor`: string — Color for target bars. Default: theme-aware muted.
+- `seriesStyles`: Record<string, BarSeriesStyle> — Per-key color overrides.
+- `colors`: string[] — Series colors.
+- `referenceLines`: ReferenceLine[] — Reference lines.
+- `thresholds`: ThresholdBand[] — Threshold bands.
+- `legend`: boolean | LegendConfig — Legend config. Default: shown for multi-key.
+- `xAxisLabel`: string — X-axis label.
+- `yAxisLabel`: string — Y-axis label.
+- `onBarClick`: (bar: { id: string | number; value: number | null; label: string; key: string; indexValue: string | number }) => void — Click handler.
+- `dense`: boolean — default: false — Compact layout.
+- `chartNullMode`: ChartNullMode — default: "gap" — Only "zero" transforms bar data.
+- `animate`: boolean — default: true
+- `variant`: CardVariant
+- `className`: string
+- `classNames`: { root?: string; header?: string; chart?: string; legend?: string }
+- `id`: string
+- `data-testid`: string
+- `loading`: boolean
+- `empty`: EmptyState
+- `error`: ErrorState
+- `stale`: StaleState
+- `grouped`: boolean — DEPRECATED: Use groupMode="grouped" instead.
+
+#### Data Shape
+
+```ts
+type BarData = Record<string, string | number>[];
+
+// Example:
+const data = [
+  { month: "Jan", revenue: 4000, expenses: 2400 },
+  { month: "Feb", revenue: 4500, expenses: 2100 },
+];
+const keys = ["revenue", "expenses"];
+const indexBy = "month";
+```
+
+#### Minimal Example
+
+```tsx
+<BarChart
+  data={[
+    { month: "Jan", revenue: 4000 },
+    { month: "Feb", revenue: 4500 },
+    { month: "Mar", revenue: 5200 },
+  ]}
+  keys={["revenue"]}
+  indexBy="month"
+  format="currency"
+/>
+```
+
+#### Examples
+
+```tsx
+// Grouped bar chart
+<BarChart
+  preset="grouped"
+  data={monthlyData}
+  keys={["revenue", "expenses"]}
+  indexBy="month"
+  comparisonData={previousMonthlyData}
+  format="currency"
+  title="Revenue vs Expenses"
+  legend
+/>
+
+// Horizontal sorted
+<BarChart
+  preset="horizontal"
+  data={salesByRep}
+  keys={["sales"]}
+  indexBy="rep"
+  sort="desc"
+  targetData={salesTargets}
+  format="currency"
+  title="Sales by Rep"
+/>
+
+// Percent stacked
+<BarChart
+  preset="percent"
+  data={channelData}
+  keys={["organic", "paid", "referral"]}
+  indexBy="month"
+  title="Channel Mix"
+  legend
+/>
+
+// With negative values
+<BarChart
+  data={profitData}
+  keys={["profit"]}
+  indexBy="quarter"
+  format="currency"
+  enableNegative
+  negativeColor="#EF4444"
+  referenceLines={[{ axis: "y", value: 0, style: "solid", color: "var(--muted)" }]}
+  title="Quarterly Profit"
+/>
+```
+
+#### Notes
+
+- Presets set sensible defaults; individual props override preset values.
+- innerPadding defaults to -1 for stacked mode to eliminate SVG anti-aliasing gaps.
+- borderRadius is automatically set to 0 for stacked and percent modes.
+- Horizontal layout auto-computes left margin from longest category label.
+
+---
+
+### BarLineChart
+
+Category: chart
+Dual-axis combo chart with bars on the left Y-axis and lines on the right Y-axis.
+
+#### Props
+
+- `data`: Record<string, string | number>[] — Flat row data for unified format. Use with `index` and `categories` (categories with `axis: "right"` become line series).
+- `index`: string — Column key for the x-axis / category labels. Used with unified data format. If omitted with categories, auto-inferred as the first string column.
+- `categories`: Category[] — Columns to plot as series. Accepts strings or CategoryConfig objects with key, label, format, color, axis. Categories with `axis: "right"` become line series on the right Y-axis.
+- `barData`: Record<string, string | number>[] (required) — Bar data (same as BarChart). Legacy format.
+- `barKeys`: string[] (required) — Keys for bars.
+- `indexBy`: string (required) — Index field name.
+- `lineData`: { id: string; data: { x: string | number; y: number | null }[] }[] (required) — Line data (same as AreaChart series). Legacy format.
+- `title`: string
+- `subtitle`: string
+- `description`: string | React.ReactNode
+- `footnote`: string
+- `action`: React.ReactNode
+- `format`: FormatOption — Format for bar values (left Y-axis).
+- `lineFormat`: FormatOption — Format for line values (right Y-axis).
+- `height`: number — default: 300
+- `colors`: string[] — Bar colors.
+- `lineColors`: string[] — Line colors. Default: palette offset after bar keys.
+- `variant`: CardVariant
+- `className`: string
+- `classNames`: { root?: string; header?: string; chart?: string; legend?: string }
+- `loading`: boolean
+- `empty`: EmptyState
+- `error`: ErrorState
+- `stale`: StaleState
+- `legend`: boolean | LegendConfig
+- `groupMode`: "stacked" | "grouped" — default: "stacked"
+- `padding`: number — default: 0.3
+- `borderRadius`: number — default: 4
+- `lineWidth`: number — default: 2
+- `enablePoints`: boolean — default: true
+- `pointSize`: number — default: 5
+- `curve`: CurveType — default: "monotoneX"
+- `enableArea`: boolean — default: false
+- `xAxisLabel`: string
+- `yAxisLabel`: string — Left Y-axis label (bars).
+- `rightAxisLabel`: string — Right Y-axis label (lines).
+- `dense`: boolean — default: false
+- `chartNullMode`: ChartNullMode — default: "gap"
+- `animate`: boolean — default: true
+- `id`: string
+- `data-testid`: string
+
+#### Data Shape
+
+```ts
+// Bar data: same as BarChart
+type BarData = Record<string, string | number>[];
+
+// Line data: same as AreaChart series
+type LineSeriesData = { id: string; data: { x: string | number; y: number | null }[] };
+```
+
+#### Minimal Example
+
+```tsx
+<BarLineChart
+  barData={[
+    { month: "Jan", revenue: 4000 },
+    { month: "Feb", revenue: 4500 },
+  ]}
+  barKeys={["revenue"]}
+  indexBy="month"
+  lineData={[{ id: "Margin", data: [
+    { x: "Jan", y: 0.42 }, { x: "Feb", y: 0.45 },
+  ]}]}
+  format="currency"
+  lineFormat="percent"
+/>
+```
+
+#### Examples
+
+```tsx
+// Revenue bars with margin % line
+<BarLineChart
+  barData={monthlyData}
+  barKeys={["revenue"]}
+  indexBy="month"
+  lineData={[{ id: "Profit Margin", data: marginData }]}
+  format="currency"
+  lineFormat="percent"
+  title="Revenue & Margin"
+  yAxisLabel="Revenue"
+  rightAxisLabel="Margin %"
+  legend
+/>
+```
+
+---
+
+### DonutChart
+
+Category: chart
+Donut/pie chart with center content, percentage display, arc labels, and interactive legends.
+
+#### Props
+
+- `data`: DonutDatum[] (required) — Array of slices with id, label, value, optional color.
+- `index`: string — Column key for slice labels. Used with unified data format. If omitted with categories, auto-inferred as the first string column.
+- `categories`: Category[] — Column to use as slice values (typically one entry). Accepts strings or CategoryConfig objects. If omitted with index, auto-inferred as all number columns.
+- `simpleData`: Record<string, number> — Simple key-value object. `data` takes precedence.
+- `title`: string
+- `subtitle`: string
+- `description`: string | React.ReactNode
+- `footnote`: string
+- `action`: React.ReactNode
+- `format`: FormatOption — Format for values in tooltips and labels.
+- `height`: number — default: 300
+- `innerRadius`: number — default: 0.6 — 0 = pie chart.
+- `padAngle`: number — default: 0.7 — Gap between slices in degrees.
+- `cornerRadius`: number — default: 3 — Rounded slice edges in px.
+- `startAngle`: number — default: 0
+- `endAngle`: number — default: 360
+- `sortSlices`: "desc" | "asc" | "none" — default: "desc"
+- `activeOuterRadiusOffset`: number — default: 4 — Hover expansion. Dense: 2.
+- `enableArcLabels`: boolean — default: false — Show value labels on slices.
+- `arcLabelsSkipAngle`: number — default: 10
+- `enableArcLinkLabels`: boolean — default: false — Lines connecting slices to external labels.
+- `arcLinkLabelsSkipAngle`: number — default: 10
+- `showPercentage`: boolean — default: false — Percentages instead of raw values.
+- `centerValue`: string — Big number in the donut center.
+- `centerLabel`: string — Label below the center value.
+- `centerContent`: React.ReactNode — Custom center content.
+- `borderWidth`: number — default: 1
+- `colors`: string[]
+- `seriesStyles`: Record<string, DonutSeriesStyle> — Per-slice color overrides.
+- `legend`: boolean | LegendConfig — Default: shown with toggle.
+- `hideZeroSlices`: boolean — default: true
+- `onSliceClick`: (slice: { id: string; value: number; label: string; percentage: number }) => void
+- `dense`: boolean — default: false
+- `chartNullMode`: ChartNullMode — API consistency only.
+- `animate`: boolean — default: true
+- `variant`: CardVariant
+- `className`: string
+- `classNames`: { root?: string; header?: string; chart?: string; legend?: string }
+- `id`: string
+- `data-testid`: string
+- `loading`: boolean
+- `empty`: EmptyState
+- `error`: ErrorState
+- `stale`: StaleState
+
+#### Data Shape
+
+```ts
+interface DonutDatum {
+  id: string;
+  label: string;
+  value: number;
+  color?: string;
+}
+
+// Simple format alternative:
+type SimpleDonutData = Record<string, number>;
+// e.g. { "Chrome": 45, "Firefox": 25, "Safari": 20, "Edge": 10 }
+```
+
+#### Minimal Example
+
+```tsx
+<DonutChart
+  data={[
+    { id: "chrome", label: "Chrome", value: 45 },
+    { id: "firefox", label: "Firefox", value: 25 },
+    { id: "safari", label: "Safari", value: 20 },
+    { id: "edge", label: "Edge", value: 10 },
+  ]}
+  title="Browser Share"
+/>
+```
+
+#### Examples
+
+```tsx
+// With center value and percentages
+<DonutChart
+  data={browserData}
+  centerValue="100K"
+  centerLabel="Total Users"
+  showPercentage
+  enableArcLabels
+  title="Browser Share"
+/>
+
+// simpleData shorthand
+<DonutChart
+  simpleData={{ Desktop: 60, Mobile: 35, Tablet: 5 }}
+  showPercentage
+  title="Traffic by Device"
+/>
+
+// Half donut (gauge style)
+<DonutChart
+  data={[
+    { id: "completed", label: "Completed", value: 78 },
+    { id: "remaining", label: "Remaining", value: 22 },
+  ]}
+  startAngle={-90}
+  endAngle={90}
+  innerRadius={0.7}
+  centerValue="78%"
+  centerLabel="Complete"
+  sortSlices="none"
+  colors={["#10B981", "#E2E8F0"]}
+/>
+```
+
+#### Notes
+
+- Set innerRadius to 0 for a pie chart (no hole).
+- simpleData is converted to DonutDatum[] internally; `data` takes precedence.
+- Center content: SVG foreignObject for centerContent, native SVG text for centerValue/centerLabel.
+
+---
+
+### Sparkline
+
+Category: chart
+Tiny inline chart (line or bar) for embedding in cards, tables, and tight spaces.
+
+#### Props
+
+- `data`: (number | null)[] (required) — Data points. null values create gaps.
+- `trend`: "positive" | "negative" | "neutral" — default: "neutral" — For auto-coloring.
+- `color`: string — Override color. Defaults to theme-aware trend color.
+- `type`: SparklineType — default: "line" — "line" or "bar".
+- `height`: number — default: 40 — Set undefined to fill container.
+- `width`: number — Default: fills container.
+- `curve`: "monotoneX" | "linear" | "step" | "natural" — default: "monotoneX"
+- `fill`: boolean — default: true — Gradient area fill under the line.
+- `animate`: boolean — default: true — Falls back to config.animate.
+- `showEndpoints`: boolean — default: false — Dots on first and last points.
+- `showMinMax`: boolean — default: false — Dots + labels on min/max.
+- `trendColoring`: boolean | "invert" — default: false — Auto-color based on trend. "invert" flips colors.
+- `referenceLine`: SparklineReferenceLine — Horizontal reference line.
+- `band`: SparklineBand — Shaded band region.
+- `interactive`: boolean — default: false — Enable hover tooltip.
+- `format`: FormatOption — Format for tooltip values.
+- `formatTooltip`: (value: number) => string — Legacy: direct formatter. Takes precedence over `format`.
+- `strokeWidth`: number — default: 1.5
+- `className`: string
+- `classNames`: { root?: string; svg?: string; tooltip?: string }
+- `id`: string
+- `data-testid`: string
+
+#### Data Shape
+
+```ts
+type SparklineData = (number | null)[];
+```
+
+#### Minimal Example
+
+```tsx
+<Sparkline
+  data={[10, 15, 12, 18, 14, 22, 19]}
+  trend="positive"
+/>
+```
+
+#### Examples
+
+```tsx
+// Interactive with reference line
+<Sparkline
+  data={dailyRevenue}
+  trend="positive"
+  interactive
+  format="currency"
+  referenceLine={{ value: avgRevenue, label: "Avg", style: "dashed" }}
+  showMinMax
+/>
+
+// Bar sparkline with band
+<Sparkline
+  data={uptimeData}
+  type="bar"
+  color="#10B981"
+  band={{ from: 99, to: 100, color: "#10B981", opacity: 0.1 }}
+  referenceLine={{ value: 99.9, label: "SLA", style: "dashed" }}
+  interactive
+  format="percent"
+/>
+```
+
+---
+
+### Gauge
+
+Minimal arc gauge showing where a value sits in a range.
+
+**Props:**
+- `value`: number | null | undefined (required)
+- `min`: number — default: 0
+- `max`: number — default: 100
+- `title`: string
+- `subtitle`: string
+- `description`: string | React.ReactNode
+- `format`: FormatOption
+- `comparison`: ComparisonConfig | ComparisonConfig[]
+- `comparisonLabel`: string
+- `thresholds`: GaugeThreshold[] — colored zone breakpoints
+- `target`: number — target tick marker on arc
+- `targetLabel`: string
+- `arcAngle`: 180 | 270 — default: 270
+- `strokeWidth`: number — default: 12
+- `color`: string — default: var(--accent). Auto-picks from threshold zone if thresholds set.
+- `showMinMax`: boolean — default: true
+- `showValue`: boolean — default: true
+- `icon`: React.ReactNode
+- `size`: number — default: 200 (SVG viewBox)
+- `variant`: CardVariant
+- `dense`: boolean
+- `animate`: boolean | AnimationConfig
+- `nullDisplay`: NullDisplay
+- `loading`: boolean
+- `empty`: EmptyState
+- `error`: ErrorState
+- `stale`: StaleState
+- `className`: string
+- `classNames`: { root?; arc?; value?; title? }
+- `id`: string
+- `data-testid`: string
+
+**Types:**
+```typescript
+interface GaugeThreshold {
+  value: number;
+  color: string;
+}
+```
+
+**Example:**
+```tsx
+<Gauge
+  value={73}
+  title="CPU Usage"
+  format="percent"
+  thresholds={[
+    { value: 60, color: "emerald" },
+    { value: 80, color: "amber" },
+    { value: 100, color: "red" },
+  ]}
+  target={75}
+  comparison={{ value: 68 }}
+  comparisonLabel="vs last hour"
+  animate={{ countUp: true }}
+/>
+```
+
+---
+
+### HeatMap
+
+Two-dimensional matrix with color intensity.
+
+**Props:**
+- `data`: { id: string; data: { x: string; y: number | null }[] }[] (required) — rows x columns
+- `index`: string — Column key for row IDs. Used with unified data format. If omitted with categories, auto-inferred as the first string column.
+- `categories`: Category[] — Columns to use as cell columns. Accepts strings or CategoryConfig objects. If omitted with index, auto-inferred as all number columns.
+- `simpleData`: Record<string, Record<string, number | null>> — simple 2D object shorthand
+- `title`: string
+- `subtitle`: string
+- `description`: string | React.ReactNode
+- `footnote`: string
+- `action`: React.ReactNode
+- `format`: FormatOption — for cell values and tooltips
+- `height`: number — default: 300
+- `colorScale`: "sequential" | "diverging" — default: "sequential"
+- `colors`: string[] — custom color stops (overrides colorScale)
+- `emptyColor`: string — color for null cells
+- `borderRadius`: number — default: 4
+- `enableLabels`: boolean — default: false — show values inside cells
+- `forceSquare`: boolean — default: false
+- `cellPadding`: number — default: 0.05 (0-1)
+- `hoverTarget`: "cell" | "row" | "column" | "rowColumn" — default: "cell"
+- `onCellClick`: (cell) => void
+- `animate`: boolean
+- `variant`: CardVariant
+- `dense`: boolean
+- Standard data states (loading, empty, error, stale)
+
+**Data Shape:**
+```typescript
+// Series format
+const data = [
+  { id: "Mon", data: [{ x: "9am", y: 12 }, { x: "10am", y: 45 }] },
+  { id: "Tue", data: [{ x: "9am", y: 23 }, { x: "10am", y: 56 }] },
+];
+
+// Or simpleData shorthand
+const simpleData = {
+  Mon: { "9am": 12, "10am": 45 },
+  Tue: { "9am": 23, "10am": 56 },
+};
+```
+
+**Example:**
+```tsx
+<HeatMap
+  data={data}
+  title="Weekly Activity"
+  subtitle="Sessions by day and hour"
+  format="number"
+  enableLabels
+  borderRadius={6}
+  height={320}
+/>
+```
+
+---
+
+### Funnel [PRO — requires @metricui/pro]
+
+Conversion funnel chart showing value drop-off between stages.
+
+**Props:**
+- `data`: FunnelDatumInput[] (required) — stages with id, label, value, optional color
+- `simpleData`: Record<string, number> — simple key-value shorthand (data takes precedence)
+- `title`: string
+- `subtitle`: string
+- `description`: string | React.ReactNode
+- `footnote`: string
+- `action`: React.ReactNode
+- `format`: FormatOption — for values in tooltips and labels
+- `height`: number — default: 300
+- `direction`: "vertical" | "horizontal" — default: "vertical"
+- `interpolation`: "smooth" | "linear" — default: "smooth"
+- `spacing`: number — default: 4 (gap between stages in px)
+- `shapeBlending`: number — default: 0.66 (0 = rectangles, 1 = smooth funnel)
+- `fillOpacity`: number — default: 1
+- `borderWidth`: number — default: 0
+- `enableLabel`: boolean — default: true — show value labels on stages
+- `enableSeparators`: boolean — default: true — separator lines between stages
+- `showConversionRate`: boolean — default: false — conversion % between stages
+- `currentPartSizeExtension`: number — default: 10 (hover expansion px)
+- `colors`: string[] — stage colors (default: theme palette)
+- `legend`: boolean | LegendConfig
+- `onPartClick`: (part: { id, value, label, percentage }) => void
+- `animate`: boolean
+- `variant`: CardVariant
+- `dense`: boolean
+- Standard data states (loading, empty, error, stale)
+- `className`: string
+- `classNames`: { root?; header?; chart?; legend? }
+- `id`: string
+- `data-testid`: string
+
+**Types:**
+```typescript
+interface FunnelDatumInput {
+  id: string;        // Unique identifier
+  label: string;     // Display label
+  value: number;     // Value at this stage
+  color?: string;    // Optional custom color
+}
+```
+
+**Data Shape:**
+```typescript
+// Full format
+const data: FunnelDatumInput[] = [
+  { id: "visited", label: "Visited", value: 10000 },
+  { id: "signed-up", label: "Signed Up", value: 4200 },
+  { id: "subscribed", label: "Subscribed", value: 1400 },
+];
+
+// Or simpleData shorthand
+const simpleData = { "Visited": 10000, "Signed Up": 4200, "Subscribed": 1400 };
+```
+
+**Example:**
+```tsx
+<Funnel
+  data={[
+    { id: "visited", label: "Visited", value: 10000 },
+    { id: "signed-up", label: "Signed Up", value: 4200 },
+    { id: "activated", label: "Activated", value: 2800 },
+    { id: "subscribed", label: "Subscribed", value: 1400 },
+    { id: "retained", label: "Retained", value: 980 },
+  ]}
+  title="Conversion Funnel"
+  showConversionRate
+  format="compact"
+  height={360}
+/>
+```
+
+**Notes:**
+- Tooltips show absolute value and percentage of the first stage's value.
+- Conversion rate annotations are rendered as a custom SVG layer.
+- onPartClick includes a percentage field (relative to first stage).
+- simpleData is converted to FunnelDatumInput[] internally.
+
+---
+
+### BulletChart [PRO — requires @metricui/pro]
+
+Bullet chart for comparing actual values against targets with qualitative range bands.
+
+**Props:**
+- `data`: BulletDatum[] — full bullet data with id, title, ranges, measures, markers
+- `simpleData`: SimpleBulletData[] — simple shorthand: label, value, target, max, zones. data takes precedence.
+- `title`: string
+- `subtitle`: string
+- `description`: string | React.ReactNode
+- `footnote`: string
+- `action`: React.ReactNode
+- `format`: FormatOption — for values in tooltips
+- `height`: number — default: auto-calculated from item count
+- `layout`: "horizontal" | "vertical" — default: "horizontal"
+- `spacing`: number — default: 40 (gap between bullet items in px)
+- `rangeColors`: string[] — default: theme-aware greens
+- `measureColors`: string[] — default: theme accent
+- `markerColors`: string[] — default: theme foreground
+- `measureSize`: number — default: 0.4 (0-1, relative to range)
+- `markerSize`: number — default: 0.6 (relative to range height)
+- `titlePosition`: "before" | "after" — default: "before"
+- `showAxis`: boolean — default: true
+- `animate`: boolean
+- `variant`: CardVariant
+- `dense`: boolean
+- Standard data states (loading, empty, error, stale)
+- `className`: string
+- `classNames`: { root?; header?; chart? }
+- `id`: string
+- `data-testid`: string
+
+**Types:**
+```typescript
+interface BulletDatum {
+  id: string;
+  title?: React.ReactNode;
+  ranges: number[];      // Cumulative endpoints: [150, 225, 300]
+  measures: number[];    // Actual value bars
+  markers?: number[];    // Target marker lines
+}
+
+interface SimpleBulletData {
+  label: string;
+  value: number;
+  target?: number;
+  max?: number;          // Default: auto from target or value * 1.2
+  zones?: number[];      // Percentages of max. Default: [60, 80, 100]
+}
+```
+
+**Data Shape:**
+```typescript
+// Full format
+const data: BulletDatum[] = [
+  {
+    id: "revenue",
+    title: "Revenue",
+    ranges: [600000, 800000, 1000000],
+    measures: [850000],
+    markers: [1000000],
+  },
+];
+
+// Or simpleData shorthand
+const simpleData: SimpleBulletData[] = [
+  { label: "MRR", value: 85000, target: 100000, max: 120000 },
+  { label: "NPS Score", value: 72, target: 80, max: 100 },
+];
+```
+
+**Example:**
+```tsx
+<BulletChart
+  simpleData={[
+    { label: "MRR", value: 85000, target: 100000, max: 120000 },
+    { label: "NPS Score", value: 72, target: 80, max: 100 },
+    { label: "Response Time", value: 120, target: 100, max: 200 },
+  ]}
+  title="SaaS Metrics"
+/>
+```
+
+**Notes:**
+- simpleData auto-generates ranges from zone percentages (default: [60, 80, 100]). data takes precedence.
+- Height auto-calculates from item count when not specified.
+- Range colors are theme-aware (light/dark).
+- Marker lines represent targets; measures are the actual value bars.
+- The tooltip uses ChartTooltip and respects the format prop.
+
+---
+
+### Waterfall [PRO — requires @metricui/pro]
+
+Waterfall chart showing sequential positive and negative changes from a starting value. Revenue bridges, P&L breakdowns.
+
+**Props:**
+- `data`: WaterfallItem[] (required) — items with label, optional value, optional type and color
+- `title`: string
+- `subtitle`: string
+- `description`: string | React.ReactNode
+- `footnote`: string
+- `action`: React.ReactNode
+- `format`: FormatOption — for axis labels, bar value labels, and tooltips
+- `height`: number — default: 300
+- `positiveColor`: string — color for positive bars. Default: theme positive
+- `negativeColor`: string — color for negative bars. Default: theme negative
+- `totalColor`: string — color for subtotal/total bars. Default: theme accent
+- `connectors`: boolean — default: true — dashed connector lines between bars
+- `enableLabels`: boolean — default: true — show value labels on bars
+- `borderRadius`: number — default: 3 — corner radius on bars
+- `padding`: number — default: 0.35 — padding between bars (0-1)
+- `enableGridY`: boolean — default: true — show Y-axis grid lines
+- `yAxisLabel`: string
+- `animate`: boolean
+- `variant`: CardVariant
+- `dense`: boolean
+- Standard data states (loading, empty, error, stale)
+- `className`: string
+- `classNames`: { root?; header?; chart? }
+- `id`: string
+- `data-testid`: string
+
+**Types:**
+```typescript
+interface WaterfallItem {
+  label: string;          // Display label
+  value?: number;         // Positive for increase, negative for decrease. Ignored for subtotal/total.
+  type?: "value" | "subtotal" | "total";  // Default: "value". subtotal/total are auto-computed.
+  color?: string;         // Custom color override for this bar
+}
+```
+
+**Data Shape:**
+```typescript
+const data: WaterfallItem[] = [
+  { label: "Revenue", value: 500000 },
+  { label: "COGS", value: -200000 },
+  { label: "Gross Profit", type: "subtotal" },
+  { label: "OpEx", value: -100000 },
+  { label: "Net Income", type: "total" },
+];
+```
+
+**Example:**
+```tsx
+<Waterfall
+  data={[
+    { label: "Revenue", value: 500000 },
+    { label: "COGS", value: -200000 },
+    { label: "Gross Profit", type: "subtotal" },
+    { label: "OpEx", value: -100000 },
+    { label: "Marketing", value: -50000 },
+    { label: "Net Income", type: "total" },
+  ]}
+  title="P&L Bridge"
+  format="currency"
+  height={320}
+/>
+```
+
+**Notes:**
+- Built on @nivo/bar with a stacked spacer technique — transparent spacer bars create the floating effect.
+- Positive values show in green, negative in red, subtotal/total bars use the accent color.
+- Connector lines (dashed) link adjacent bar tops. Disabled for total bars that start from zero.
+- Items with type "subtotal" show the running total without resetting. Items with type "total" show and reset.
+- Tooltips show item value plus running total for non-total items.
+- Custom colors per bar override the default positive/negative/total coloring.
+
+---
+
+### MetricGrid
+
+Smart auto-layout grid for dashboards. Drop components in, it figures out the layout.
+
+**Auto-detection:** Each MetricUI component has a grid hint. KpiCards go 4-across, two charts split 2:1, tables go full width. Zero configuration needed.
+
+**Props:**
+- `columns`: number — default: 4 — max small items per row
+- `gap`: number — default: 16 (dense: 12) — gap between items
+- `className`: string
+- `id`: string
+- `data-testid`: string
+
+**Sub-components:**
+- `MetricGrid.Item` — override auto-layout: `span="sm" | "md" | "lg" | "full" | number`
+- `MetricGrid.Section` — full-width section header: `title`, `subtitle?`, `action?`
+
+**Example — zero layout code:**
+```tsx
+<MetricGrid>
+  <MetricGrid.Section title="Overview" />
+  <KpiCard title="Revenue" value={78400} format="currency" />
+  <KpiCard title="Users" value={3200} />
+  <KpiCard title="Conversion" value={4.2} format="percent" />
+
+  <MetricGrid.Section title="Performance" />
+  <AreaChart data={data} title="Revenue Over Time" />
+  <DonutChart data={slices} title="Traffic Sources" />
+
+  <MetricGrid.Section title="Details" />
+  <DataTable data={rows} title="Top Pages" />
+</MetricGrid>
+```
+
+**Auto-layout rules:**
+- Consecutive KPIs/Gauges → equal-width row (3 items = thirds, 4 = quarters)
+- Two charts → 2fr + 1fr split
+- Three charts → equal thirds
+- Single chart → full width
+- Table/StatGroup → full width
+- Unknown components → full width (no lock-in)
+- Responsive: 4 cols → 2 cols → 1 col
+
+---
+
+### DataTable
+
+Category: table
+Data table with sorting, pagination, search, formatting, sticky headers, pinned columns, and footer row. Generic over row type T.
+
+#### Props
+
+- `data`: T[] (required) — Row data array.
+- `columns`: Column<T>[] — Column definitions. Auto-inferred from first row when omitted.
+- `title`: string
+- `subtitle`: string
+- `description`: string | React.ReactNode
+- `footnote`: string
+- `action`: React.ReactNode
+- `pageSize`: number — Page size. Set to enable pagination.
+- `pagination`: boolean — Default: true when pageSize is set.
+- `maxRows`: number — Max visible rows. Shows "View all" when exceeded.
+- `onViewAll`: () => void — Callback for "View all".
+- `striped`: boolean — default: false — Alternating row backgrounds.
+- `dense`: boolean — Compact row height. Falls back to config.dense.
+- `onRowClick`: (row: T, index: number) => void — Row click handler.
+- `nullDisplay`: NullDisplay — default: "dash"
+- `footer`: FooterRow — Summary/totals footer row keyed by column key.
+- `variant`: CardVariant
+- `className`: string
+- `classNames`: { root?: string; header?: string; table?: string; thead?: string; tbody?: string; row?: string; cell?: string; footer?: string; pagination?: string }
+- `loading`: boolean — Show skeleton rows.
+- `empty`: EmptyState
+- `error`: ErrorState
+- `stale`: StaleState
+- `id`: string
+- `data-testid`: string
+- `stickyHeader`: boolean — Sticky header on scroll.
+- `searchable`: boolean — Show search input for client-side filtering.
+- `animate`: boolean — default: true — Reserved for future use.
+- `scrollIndicators`: boolean — Show left/right fade indicators when the table is horizontally scrollable.
+- `rowConditions`: RowCondition<T>[] — Conditional row styling. Each entry has `when(row, index) => boolean` and `className`.
+- `multiSort`: boolean — default: false — Enable Shift+click multi-column sorting.
+- `renderExpanded`: (row: T, index: number) => React.ReactNode — Render expanded detail panel below a row. Adds chevron toggle.
+
+#### Data Shape
+
+```ts
+type ColumnType = "text" | "number" | "currency" | "percent" | "link" | "badge" | "sparkline" | "status" | "progress" | "date" | "bar";
+
+interface Column<T> {
+  key: string;
+  header?: string;
+  label?: string;                // @deprecated — use header
+  type?: ColumnType;             // Auto-render column type (see Column Types below)
+  format?: FormatOption;
+  align?: "left" | "center" | "right";
+  width?: string | number;
+  sortable?: boolean;
+  render?: (value: any, row: T, index: number) => React.ReactNode;
+  pin?: "left";
+  wrap?: boolean;                // Allow text wrapping (default: truncate)
+  conditions?: Condition[];      // Conditional cell coloring
+  linkHref?: (value: any, row: T) => string;     // URL for type:"link"
+  linkTarget?: string;           // Link target (e.g. "_blank")
+  badgeColor?: (value: any, row: T) => string | undefined;    // Custom color for type:"badge"
+  badgeVariant?: (value: any, row: T) => BadgeVariant | undefined;  // Custom variant for type:"badge"
+  statusRules?: StatusRule[];    // Threshold rules for type:"status"
+  statusSize?: StatusSize;       // Size for type:"status"
+  dateFormat?: Intl.DateTimeFormatOptions;  // Format for type:"date"
+}
+
+interface RowCondition<T> {
+  when: (row: T, index: number) => boolean;
+  className: string;
+}
+
+interface FooterRow {
+  [key: string]: React.ReactNode;
+}
+```
+
+#### Column Types
+
+The `type` field on a column definition controls auto-rendering and auto-alignment:
+
+| Type | Renders as | Alignment | Notes |
+|------|-----------|-----------|-------|
+| `text` | Plain string | left | Default type |
+| `number` | Locale-formatted number | right | |
+| `currency` | Currency string (e.g. $1,234) | right | Uses provider locale/currency |
+| `percent` | Percentage (e.g. 12.5%) | right | |
+| `link` | Clickable anchor | left | Use `linkHref` and `linkTarget` |
+| `badge` | `<Badge>` component | left | Auto-maps "active"/"failed"/etc. to colors; customize with `badgeColor`/`badgeVariant` |
+| `sparkline` | `<Sparkline>` mini chart | center | Cell value should be number[] |
+| `status` | `<StatusIndicator>` | left | Use `statusRules` and `statusSize` |
+| `progress` | `<ProgressBar>` | center | Value 0-100 |
+| `date` | Intl.DateTimeFormat output | left | Use `dateFormat` for options |
+| `bar` | Inline bar chart | right | Scales relative to column max |
+
+#### Minimal Example
+
+```tsx
+<DataTable
+  data={[
+    { name: "Acme Corp", revenue: 142300, growth: 12.5 },
+    { name: "Globex", revenue: 98700, growth: -3.2 },
+    { name: "Initech", revenue: 67400, growth: 8.1 },
+  ]}
+/>
+```
+
+#### Examples
+
+```tsx
+// Columns with formatting and pagination
+<DataTable
+  data={salesData}
+  columns={[
+    { key: "company", header: "Company", sortable: true, pin: "left" },
+    { key: "revenue", header: "Revenue", format: "currency", sortable: true },
+    { key: "growth", header: "Growth", format: "percent", sortable: true },
+    { key: "status", header: "Status", render: (v) => <Badge variant={v === "active" ? "success" : "danger"}>{v}</Badge> },
+  ]}
+  pageSize={10}
+  searchable
+  striped
+  title="Sales Report"
+  footer={{ company: "Total", revenue: "$308,400", growth: "" }}
+/>
+
+// Auto-inferred with row click
+<DataTable
+  data={users}
+  onRowClick={(row) => router.push(`/users/${row.id}`)}
+  maxRows={5}
+  onViewAll={() => router.push("/users")}
+  stickyHeader
+/>
+
+// Column types with multi-sort, expandable rows, and row conditions
+<DataTable
+  data={servers}
+  multiSort
+  scrollIndicators
+  renderExpanded={(row) => (
+    <div className="p-4">
+      <p>Region: {row.region}</p>
+      <p>Last deployed: {row.lastDeploy}</p>
+    </div>
+  )}
+  rowConditions={[
+    { when: (row) => row.uptime < 95, className: "bg-red-500/10" },
+    { when: (row) => row.uptime >= 99.9, className: "bg-emerald-500/10" },
+  ]}
+  columns={[
+    { key: "name", header: "Server", type: "text", sortable: true, pin: "left" },
+    { key: "revenue", header: "Revenue", type: "currency", sortable: true },
+    { key: "uptime", header: "Uptime", type: "percent", sortable: true, conditions: [
+      { when: "below", value: 95, color: "red" },
+      { when: "above", value: 99, color: "emerald" },
+    ]},
+    { key: "status", header: "Status", type: "badge" },
+    { key: "health", header: "Health", type: "status", statusRules: [
+      { min: 90, color: "emerald", label: "Healthy" },
+      { min: 50, max: 90, color: "amber", label: "Degraded" },
+      { max: 50, color: "red", label: "Critical", pulse: true },
+    ], statusSize: "sm" },
+    { key: "trend", header: "Trend", type: "sparkline" },
+    { key: "lastSeen", header: "Last Seen", type: "date", dateFormat: { dateStyle: "medium" } },
+    { key: "load", header: "Load", type: "bar" },
+    { key: "docs", header: "Docs", type: "link", linkHref: (v, row) => row.docsUrl, linkTarget: "_blank" },
+  ]}
+  pageSize={10}
+  searchable
+  striped
+  title="Server Fleet"
+/>
+```
+
+#### Notes
+
+- When columns are omitted, they are auto-inferred from the first row's keys with camelCase-to-Title-Case conversion.
+- Sort cycles: asc -> desc -> none. With multiSort, Shift+click adds secondary/tertiary sorts.
+- Auto-alignment: numeric types (number, currency, percent, bar) right-align. sparkline/progress center-align. Everything else left-aligns.
+- Column types auto-render: "badge" renders Badge with auto-mapped status colors, "status" renders StatusIndicator, "sparkline" renders Sparkline, etc.
+- Search filters across all column values using case-insensitive string matching.
+- renderExpanded adds a chevron toggle column. Clicking expands/collapses the detail panel.
+- rowConditions apply CSS classes to rows matching predicates.
+
+---
+
+### Badge
+
+Category: ui
+Small status indicator with variant colors, dot/icon prefix, and optional dismiss button.
+
+#### Props
+
+- `children`: React.ReactNode (required) — Badge content.
+- `variant`: "default" | "success" | "warning" | "danger" | "info" | "outline" — default: "default"
+- `dot`: boolean — default: false — Colored dot indicator before the text.
+- `icon`: React.ReactNode — Custom icon before the text. Takes precedence over dot.
+- `size`: "sm" | "md" | "lg" — default: "md" — sm: 10px, md: 12px, lg: 14px.
+- `color`: string — Custom color via CSS color-mix.
+- `onDismiss`: () => void — Show dismiss (X) button.
+- `className`: string
+- `id`: string
+- `data-testid`: string
+
+#### Minimal Example
+
+```tsx
+<Badge variant="success">Active</Badge>
+```
+
+#### Examples
+
+```tsx
+// All variants
+<div className="flex gap-2">
+  <Badge variant="success" dot>Active</Badge>
+  <Badge variant="warning">Pending</Badge>
+  <Badge variant="danger">Failed</Badge>
+  <Badge variant="info">New</Badge>
+  <Badge variant="outline">Draft</Badge>
+</div>
+
+// Custom color with dismiss
+<Badge color="#6366F1" onDismiss={() => removeTag(tag)} size="lg">
+  {tag}
+</Badge>
+```
+
+---
+
+### StatusIndicator
+
+Category: ui
+Rule-based status display with threshold coloring, pulse animation, and five size modes. Evaluates a numeric value against rules and renders the matching status. Uses forwardRef.
+
+#### Props
+
+- `value`: number | null | undefined (required) — The value to evaluate against rules. Not displayed unless showValue is true.
+- `rules`: StatusRule[] (required) — Rules evaluated top-to-bottom. First match wins. Last rule with no min/max is the fallback.
+- `size`: StatusSize — default: "md" — Display mode: "dot", "sm", "md", "lg", or "card".
+- `showValue`: boolean — default: false — Show the underlying numeric value.
+- `title`: string — Title label (shown in "card" and "lg" sizes).
+- `description`: string | React.ReactNode — Description popover.
+- `subtitle`: string — Subtitle or secondary text.
+- `since`: Date — How long the indicator has been in the current state.
+- `trend`: number[] — History of recent values — shown as a trend arrow.
+- `tooltip`: string — Tooltip content on hover. Defaults to the matched rule's label.
+- `onClick`: () => void — Click handler.
+- `loading`: boolean — Show skeleton placeholder.
+- `className`: string — Additional class names.
+- `classNames`: { root?: string; icon?: string; label?: string; value?: string } — Sub-element class overrides.
+- `id`: string — HTML id attribute.
+- `data-testid`: string — Test id.
+
+#### Data Shape
+
+```ts
+interface StatusRule {
+  min?: number;   // Minimum value (inclusive). Omit for fallback.
+  max?: number;   // Maximum value (exclusive). Omit for no upper bound.
+  color: string;  // Named color ("emerald","red","amber","blue","gray","purple","cyan") or CSS color.
+  icon?: React.ReactNode;
+  label?: string; // e.g. "Healthy", "Critical"
+  pulse?: boolean;
+}
+
+type StatusSize = "dot" | "sm" | "md" | "lg" | "card";
+```
+
+#### Minimal Example
+
+```tsx
+<StatusIndicator
+  value={95}
+  rules={[
+    { min: 90, color: "emerald", label: "Healthy" },
+    { min: 60, max: 90, color: "amber", label: "Degraded" },
+    { max: 60, color: "red", label: "Critical" },
+  ]}
+/>
+```
+
+#### Examples
+
+```tsx
+// Card mode for service health
+<StatusIndicator
+  value={99.98}
+  rules={[
+    { min: 99.9, color: "emerald", label: "Operational" },
+    { min: 99, max: 99.9, color: "amber", label: "Partial Outage" },
+    { max: 99, color: "red", label: "Major Outage", pulse: true },
+  ]}
+  size="card"
+  title="API Gateway"
+  showValue
+  trend={[99.9, 99.95, 99.98]}
+/>
+
+// Inline in DataTable cells
+<DataTable
+  data={services}
+  columns={[
+    { key: "name", header: "Service" },
+    {
+      key: "uptime",
+      header: "Status",
+      render: (v) => (
+        <StatusIndicator
+          value={Number(v)}
+          rules={uptimeRules}
+          size="sm"
+        />
+      ),
+    },
+  ]}
+/>
+
+// All sizes
+<StatusIndicator value={95} rules={rules} size="dot" />
+<StatusIndicator value={95} rules={rules} size="sm" />
+<StatusIndicator value={95} rules={rules} size="md" />
+<StatusIndicator value={95} rules={rules} size="lg" title="System Health" />
+<StatusIndicator value={95} rules={rules} size="card" title="System Health" />
+```
+
+#### Notes
+
+- Uses forwardRef — you can pass a ref to the root element.
+- Rules are evaluated top-to-bottom; first match wins. The last rule acts as fallback if no min/max match.
+- Named colors (emerald, green, red, amber, yellow, blue, gray, purple, cyan) map to CSS variables. Any other string is treated as a raw CSS color.
+- Card mode uses the same card shell styling as KpiCard for visual consistency.
+- The dot size is ideal for inline use in tables or next to text.
+
+### Callout
+
+Category: ui
+Styled message block with info, warning, success, and error variants. Supports data-driven rules, embedded metrics, collapsible detail, action buttons, and auto-dismiss. Uses forwardRef.
+
+#### Props
+
+- `variant`: CalloutVariant — default: "info" — Visual variant: "info", "warning", "success", or "error". Ignored when rules is used.
+- `title`: string — Title text.
+- `children`: React.ReactNode — Body content.
+- `icon`: React.ReactNode | null — Icon override. Default: auto-picked per variant. Set to null to hide.
+- `value`: number | null — Value to evaluate against rules (data-driven mode).
+- `rules`: CalloutRule[] — Rules evaluated top-to-bottom. First match wins. Supports {value} placeholder in title/message.
+- `metric`: CalloutMetric — Embedded formatted metric value with label.
+- `dismissible`: boolean — default: false — Show dismiss button.
+- `onDismiss`: () => void — Callback when dismissed.
+- `autoDismiss`: number — default: 0 — Auto-dismiss after N milliseconds. 0 = never.
+- `action`: CalloutAction — Action button with label and onClick.
+- `detail`: React.ReactNode — Collapsible detail content. Hidden by default, toggle to show.
+- `detailOpen`: boolean — default: false — Whether detail starts expanded.
+- `dense`: boolean — default: false — Compact layout. Falls back to config.dense.
+- `className`: string — Additional CSS class names.
+- `classNames`: { root?: string; icon?: string; title?: string; body?: string; metric?: string; action?: string } — Sub-element class overrides.
+- `id`: string — HTML id attribute.
+- `data-testid`: string — Test id.
+
+#### Data Shape
+
+```ts
+type CalloutVariant = "info" | "warning" | "success" | "error";
+
+interface CalloutRule {
+  min?: number;     // Minimum value (inclusive). Omit for fallback.
+  max?: number;     // Maximum value (exclusive). Omit for no upper bound.
+  variant: CalloutVariant;  // Variant to apply.
+  title?: string;   // Title text. Supports {value} placeholder.
+  message?: string; // Message text. Supports {value} placeholder.
+  icon?: React.ReactNode;
+}
+
+interface CalloutMetric {
+  value: number;
+  format?: FormatOption;
+  label?: string;
+}
+
+interface CalloutAction {
+  label: string;
+  onClick: () => void;
+}
+```
+
+#### Minimal Example
+
+```tsx
+<Callout variant="info" title="Heads up">
+  This is an informational message.
+</Callout>
+```
+
+#### Examples
+
+```tsx
+// Data-driven: auto-selects variant and message based on value
+<Callout
+  value={cpuUsage}
+  rules={[
+    { min: 90, variant: "error", title: "CPU Critical", message: "Usage at {value}%. Scale up." },
+    { min: 70, max: 90, variant: "warning", title: "CPU High", message: "Usage at {value}%." },
+    { max: 70, variant: "success", title: "CPU Normal", message: "Usage at {value}%." },
+  ]}
+/>
+
+// Metric callout with formatted value
+<Callout
+  variant="success"
+  title="Revenue milestone"
+  metric={{ value: 1000000, format: "currency", label: "total revenue" }}
+  action={{ label: "View report", onClick: () => router.push("/reports") }}
+>
+  Your team crossed the $1M mark.
+</Callout>
+
+// Dismissible with collapsible detail
+<Callout
+  variant="warning"
+  title="3 services degraded"
+  dismissible
+  detail={
+    <div className="space-y-1">
+      <p>API Gateway: p99 450ms</p>
+      <p>Auth Service: p99 320ms</p>
+    </div>
+  }
+>
+  Elevated latency detected.
+</Callout>
+
+// All variants
+<Callout variant="info" title="Info">Informational message.</Callout>
+<Callout variant="warning" title="Warning">Needs attention.</Callout>
+<Callout variant="success" title="Success">Operation completed.</Callout>
+<Callout variant="error" title="Error">Something went wrong.</Callout>
+```
+
+#### Notes
+
+- Uses forwardRef — you can pass a ref to the root element.
+- Rules are evaluated top-to-bottom; first match wins. Use {value} placeholder for interpolation.
+- The metric prop uses the format engine — pass any FormatOption.
+- Dismissible callouts fade out with a 200ms animation before removing from DOM.
+- autoDismiss sets a timer in milliseconds; useful for transient success messages.
+- Has role="alert" for screen readers.
+- In MetricGrid, Callout takes full width automatically.
+
+---
+
+### SectionHeader
+
+Category: ui
+Standalone section title with subtitle, description popover, action slot, and inline badge. For separating dashboard sections. MetricGrid.Section is a convenience wrapper that delegates to SectionHeader internally. Uses forwardRef.
+
+#### Props
+
+- `title`: string (required) — Section title. Rendered uppercase, tracked, accent-colored.
+- `subtitle`: string — Subtitle rendered below title in muted text.
+- `description`: string | React.ReactNode — Description rendered as a "?" popover next to the title.
+- `action`: React.ReactNode — Action slot rendered right-aligned. Buttons, links, toggles.
+- `badge`: React.ReactNode — Badge or status indicator rendered inline after the title.
+- `border`: boolean — default: false — Bottom border for visual separation.
+- `spacing`: boolean — default: true — Top margin. Set false when you control spacing externally.
+- `dense`: boolean — Dense mode with smaller text. Falls back to config.dense.
+- `className`: string — Additional CSS class names.
+- `classNames`: { root?: string; title?: string; subtitle?: string; action?: string } — Sub-element class overrides.
+- `id`: string — HTML id attribute.
+- `data-testid`: string — Test id.
+
+#### Minimal Example
+
+```tsx
+<SectionHeader title="Revenue" />
+```
+
+#### Examples
+
+```tsx
+// With subtitle and border
+<SectionHeader
+  title="Performance"
+  subtitle="Last 30 days compared to previous period"
+  border
+/>
+
+// With action and badge
+<SectionHeader
+  title="Recent Orders"
+  subtitle="Last 7 days"
+  action={<button className="text-xs text-[var(--accent)]">View all</button>}
+  badge={<Badge variant="info" size="sm">3 new</Badge>}
+/>
+
+// With description popover
+<SectionHeader
+  title="Revenue"
+  description="Includes recurring subscriptions, one-time purchases, and services."
+/>
+
+// Inside MetricGrid (use MetricGrid.Section wrapper)
+<MetricGrid>
+  <MetricGrid.Section title="Key Metrics" subtitle="Real-time" border />
+  <KpiCard title="Revenue" value={142300} format="currency" />
+  <KpiCard title="Users" value={12450} format="compact" />
+</MetricGrid>
+```
+
+#### Notes
+
+- Uses forwardRef — you can pass a ref to the root element.
+- MetricGrid.Section is a convenience wrapper that delegates to SectionHeader with automatic full-width grid span.
+- Title renders uppercase with tracking-widest and accent color.
+- Dense mode reduces title from 10px to 9px and subtitle from text-sm to text-xs.
+- spacing=true (default) adds mt-8 (or mt-4 in dense). Set spacing=false when controlling spacing externally.
+
+---
+
+### Divider
+
+Category: ui
+Themed horizontal or vertical rule with optional centered label or icon. Separates dashboard sections with consistent styling. Uses forwardRef.
+
+#### Props
+
+- `label`: string — Label centered in the divider line.
+- `icon`: React.ReactNode — Icon centered in the divider line (replaces label).
+- `orientation`: "horizontal" | "vertical" — default: "horizontal" — Divider orientation.
+- `variant`: "solid" | "dashed" | "dotted" — default: "solid" — Line style.
+- `spacing`: "none" | "sm" | "md" | "lg" — default: "md" — Vertical spacing around horizontal dividers / horizontal spacing around vertical dividers. "none" removes spacing.
+- `accent`: boolean — default: false — Use accent color for the line instead of muted border color.
+- `dense`: boolean — Dense mode. Halves spacing values. Falls back to config.dense.
+- `className`: string — Additional CSS class names.
+- `id`: string — HTML id attribute.
+- `data-testid`: string — Test id.
+
+#### Minimal Example
+
+```tsx
+<Divider />
+```
+
+#### Examples
+
+```tsx
+// With centered label
+<Divider label="or" />
+
+// Dashed accent divider
+<Divider variant="dashed" accent label="Premium Features" />
+
+// Vertical divider between side-by-side content
+<div className="flex h-16 items-center">
+  <span>Left</span>
+  <Divider orientation="vertical" />
+  <span>Right</span>
+</div>
+
+// Dotted divider with icon
+<Divider variant="dotted" icon={<Star className="h-3 w-3" />} />
+
+// Dense mode with small spacing
+<Divider dense spacing="sm" />
+```
+
+#### Notes
+
+- Uses forwardRef — you can pass a ref to the root element.
+- Sets role="separator" and aria-orientation for accessibility.
+- Icon takes precedence over label when both are provided.
+- Grid hint is "full" — dividers span full width inside MetricGrid.
+- Dense mode halves all spacing values (e.g. md goes from my-4 to my-2).
+- Accent mode colors both the line and any label/icon text.
+
+---
+
+## MetricProvider (Global Config)
+
+Wrap your app or a subtree to set defaults for all MetricUI components. Supports nesting — child providers merge with parent, only overriding specified fields.
+
+### Setup
+
+```tsx
+import { MetricProvider } from "metricui";
+
+function App() {
+  return (
+    <MetricProvider locale="en-US" currency="USD" animate dense={false}>
+      {children}
+    </MetricProvider>
+  );
+}
+```
+
+### MetricConfig Interface
+
+```ts
+interface MetricConfig {
+  locale: string;             // BCP 47. Default: "en-US"
+  currency: string;           // ISO 4217. Default: "USD"
+  animate: boolean;           // Default: true
+  motionConfig: MotionConfig; // Default: { mass: 1, tension: 170, friction: 26, clamp: true }
+  variant: CardVariant;       // Default: "default"
+  colors: string[];           // Default: SERIES_COLORS
+  nullDisplay: NullDisplay;   // Default: "dash"
+  chartNullMode: ChartNullMode; // Default: "gap"
+  dense: boolean;             // Default: false
+  texture: boolean;           // Default: true — enable/disable noise texture globally
+  emptyState: { message?: string; icon?: React.ReactNode };
+  errorState: { message?: string };
+}
+```
+
+### Resolution Order
+
+Component prop > Nearest MetricProvider > Parent MetricProvider > DEFAULT_METRIC_CONFIG
+
+For each component:
+- `variant ?? config.variant`
+- `animate ?? config.animate`
+- `dense ?? config.dense`
+- `nullDisplay ?? config.nullDisplay`
+- `chartNullMode ?? config.chartNullMode`
+- Colors: `colors ?? config.colors`
+- Motion: `config.motionConfig` (controls chart animation physics via springDuration())
+
+### Nesting Example
+
+```tsx
+<MetricProvider locale="en-US" currency="USD">
+  {/* All components use USD */}
+  <MetricProvider currency="EUR">
+    {/* These use EUR, still en-US locale */}
+  </MetricProvider>
+</MetricProvider>
+```
+
+### Hooks
+
+- `useMetricConfig()` — returns the full resolved MetricConfig
+- `useLocale()` — returns `{ locale, currency }` for the format engine
+
+### SERIES_COLORS
+
+Default chart color palette (8 colors, colorblind-safe):
+
+```ts
+const SERIES_COLORS = [
+  "#6366F1", // indigo
+  "#06B6D4", // cyan
+  "#F59E0B", // amber
+  "#EC4899", // pink
+  "#10B981", // emerald
+  "#F97316", // orange
+  "#8B5CF6", // violet
+  "#14B8A6", // teal
+];
+```
+
+---
+
+## Format Engine
+
+Every component uses MetricUI's built-in format engine. Pass a shorthand string or a full FormatConfig object to any `format` prop.
+
+### Shorthand Strings
+
+| Shorthand   | Output example    | Description                        |
+|-------------|-------------------|------------------------------------|
+| "number"    | "1.2K", "3.5M"   | Auto-compact with K/M/B/T suffixes |
+| "compact"   | "1.2K", "3.5M"   | Same as "number" with compact:true |
+| "currency"  | "$1.2K", "$3.5M"  | Currency with compact suffixes     |
+| "percent"   | "12.5%"           | Percentage with 1 decimal          |
+| "duration"  | "5m 30s"          | Human-readable duration            |
+| "custom"    | "12.5 items"      | Base format, use prefix/suffix     |
+
+### FormatConfig Object
+
+```ts
+interface FormatConfig {
+  style: FormatStyle;             // "number" | "currency" | "percent" | "duration" | "custom"
+  currency?: string;              // ISO 4217 code, e.g. "USD"
+  compact?: CompactMode;          // true | "auto" | false | "thousands" | "millions" | "billions" | "trillions"
+  precision?: number;             // decimal places
+  prefix?: string;
+  suffix?: string;
+  locale?: string;                // BCP 47 locale
+  percentInput?: PercentInput;    // "whole" (default) or "decimal"
+  durationInput?: DurationInput;  // "milliseconds" | "seconds" | "minutes" | "hours"
+  durationStyle?: DurationStyle;  // "compact" | "long" | "clock" | "narrow"
+  durationPrecision?: DurationPrecision; // smallest unit to display
+}
+```
+
+### fmt() Helper
+
+```ts
+import { fmt } from "metricui";
+
+format={fmt("currency", { precision: 2 })}
+format={fmt("compact")}
+format={fmt("percent", { percentInput: "decimal" })}
+```
+
+### Compact Mode Options
+
+| Value        | Behavior                              |
+|--------------|---------------------------------------|
+| true / "auto"| Auto-pick K/M/B/T based on magnitude |
+| "thousands"  | Always divide by 1,000, append K      |
+| "millions"   | Always divide by 1,000,000, append M  |
+| "billions"   | Always divide by 1,000,000,000, append B |
+| "trillions"  | Always divide by 1T, append T         |
+| false        | No compacting, show full number       |
+
+### Duration Styles
+
+| Style    | Example                  |
+|----------|--------------------------|
+| "compact"| "5m 30s", "2h 15m"       |
+| "long"   | "5 minutes 30 seconds"   |
+| "clock"  | "5:30", "2:15:30"        |
+| "narrow" | "5.5m", "2.3h"           |
+
+### Duration Precision
+
+| Precision      | Example          |
+|----------------|------------------|
+| "milliseconds" | "5m 30s 250ms"   |
+| "seconds"      | "5m 30s"         |
+| "minutes"      | "2h 30m"         |
+| "hours"        | "3d 4h"          |
+| "days"         | "2w 3d"          |
+| "weeks"        | "1mo 2w"         |
+| "months"       | "14mo"           |
+
+### Format Examples by Value Type
+
+```tsx
+// Currency (USD, compact)
+format="currency"                                    // 142300 -> "$142.3K"
+
+// Currency (USD, full precision)
+format={{ style: "currency", compact: false, precision: 2 }}  // 142300.50 -> "$142,300.50"
+
+// Currency (EUR)
+format={{ style: "currency", currency: "EUR" }}      // 142300 -> "€142.3K"
+
+// Currency (GBP)
+format={{ style: "currency", currency: "GBP" }}      // 142300 -> "£142.3K"
+
+// Percentage (whole input)
+format="percent"                                     // 12.5 -> "12.5%"
+
+// Percentage (decimal input, 0.12 = 12%)
+format={{ style: "percent", percentInput: "decimal" }}  // 0.125 -> "12.5%"
+
+// Number (compact)
+format="number"                                      // 12450 -> "12.5K"
+format="compact"                                     // 3500000 -> "3.5M"
+
+// Number (full, no compact)
+format={{ style: "number", compact: false }}          // 12450 -> "12,450"
+
+// Number (forced millions)
+format={{ style: "number", compact: "millions" }}     // 3500000 -> "3.5M"
+
+// Number with suffix
+format={{ style: "number", compact: false, suffix: " users" }}  // 12450 -> "12,450 users"
+
+// Number with prefix
+format={{ style: "number", prefix: "~" }}             // 12450 -> "~12.5K"
+
+// Duration (from seconds, compact)
+format="duration"                                    // 330 -> "5m 30s"
+
+// Duration (from seconds, long)
+format={{ style: "duration", durationStyle: "long" }}  // 330 -> "5 minutes 30 seconds"
+
+// Duration (from seconds, clock)
+format={{ style: "duration", durationStyle: "clock" }}  // 330 -> "5:30"
+
+// Duration (from seconds, narrow)
+format={{ style: "duration", durationStyle: "narrow" }}  // 330 -> "5.5m"
+
+// Duration (from milliseconds)
+format={{ style: "duration", durationInput: "milliseconds" }}  // 1250 -> "1s"
+
+// Duration (from minutes)
+format={{ style: "duration", durationInput: "minutes" }}  // 90 -> "1h 30m"
+
+// Duration (precision: minutes only)
+format={{ style: "duration", durationPrecision: "minutes" }}  // 7380 -> "2h 3m"
+
+// Score (out of 100)
+format={{ style: "number", compact: false, precision: 0, suffix: "/100" }}  // 78 -> "78/100"
+
+// Multiplier
+format={{ style: "number", compact: false, precision: 1, suffix: "x" }}  // 3.2 -> "3.2x"
+
+// Temperature
+format={{ style: "number", compact: false, precision: 1, suffix: "°" }}  // 72.5 -> "72.5°"
+```
+
+### Conditional Formatting
+
+```tsx
+conditions={[
+  { when: "above", value: 100, color: "emerald" },
+  { when: "between", min: 50, max: 100, color: "amber" },
+  { when: "below", value: 50, color: "red" },
+]}
+```
+
+Operators: "above", "below", "between", "equals", "not_equals", "at_or_above", "at_or_below"
+
+Named colors: "emerald"/"green", "red", "amber"/"yellow", "blue", "indigo", "purple", "pink", "cyan"
+Custom CSS: "#ff6b6b", "rgb(255, 107, 107)", "hsl(0, 100%, 71%)"
+
+Compound conditions:
+
+```tsx
+conditions={[
+  {
+    when: "and",
+    rules: [
+      { operator: "above", value: 50 },
+      { operator: "below", value: 100 },
+    ],
+    color: "amber",
+  },
+]}
+```
+
+---
+
+## Types
+
+### Format Types
+
+```ts
+type FormatOption = FormatStyle | "compact" | FormatConfig;
+type FormatStyle = "number" | "currency" | "percent" | "duration" | "custom";
+type CompactMode = boolean | "auto" | "thousands" | "millions" | "billions" | "trillions";
+type PercentInput = "whole" | "decimal";
+type DurationInput = "milliseconds" | "seconds" | "minutes" | "hours";
+type DurationStyle = "compact" | "long" | "clock" | "narrow";
+type DurationPrecision = "months" | "weeks" | "days" | "hours" | "minutes" | "seconds" | "milliseconds";
+```
+
+### Comparison Types
+
+```ts
+type ComparisonMode = "absolute" | "percent" | "both";
+
+interface ComparisonConfig {
+  value: number;
+  label?: string;
+  mode?: ComparisonMode;     // Default: "percent"
+  invertTrend?: boolean;     // Flip colors (down = good)
+  threshold?: {
+    warning: number;
+    critical: number;
+  };
+}
+
+interface ComparisonResult {
+  percentChange: number;
+  absoluteChange: number;
+  trend: "positive" | "negative" | "neutral";
+  label: string;
+}
+```
+
+### Condition Types
+
+```ts
+type SimpleOperator = "above" | "below" | "between" | "equals" | "not_equals" | "at_or_above" | "at_or_below";
+
+interface ConditionCheck {
+  operator: SimpleOperator;
+  value?: number;
+  min?: number;
+  max?: number;
+}
+
+interface SimpleCondition {
+  when: SimpleOperator;
+  value?: number;
+  min?: number;
+  max?: number;
+  color: string;
+}
+
+interface CompoundCondition {
+  when: "and" | "or";
+  rules: ConditionCheck[];
+  color: string;
+}
+
+type Condition = SimpleCondition | CompoundCondition;
+```
+
+### Goal Types
+
+```ts
+interface GoalConfig {
+  value: number;
+  label?: string;           // Default: "Target"
+  showProgress?: boolean;   // Default: true
+  showTarget?: boolean;     // Default: false
+  showRemaining?: boolean;  // Default: false
+  color?: string;
+  completeColor?: string;   // Default: "emerald"
+}
+```
+
+### UI Types
+
+```ts
+type NullDisplay = "zero" | "dash" | "blank" | "N/A" | string;
+type ChartNullMode = "gap" | "zero" | "connect";
+type SparklineType = "line" | "bar";
+type TitlePosition = "top" | "bottom" | "hidden";
+type TitleAlign = "left" | "center" | "right";
+type CardVariant = "default" | "outlined" | "ghost" | "elevated" | (string & {});
+type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "outline";
+type BadgeSize = "sm" | "md" | "lg";
+type BarChartPreset = "default" | "grouped" | "stacked" | "percent" | "horizontal" | "horizontal-grouped";
+```
+
+### Tooltip & Drill-Down
+
+```ts
+interface TooltipConfig {
+  content: React.ReactNode | ((context: Record<string, unknown>) => React.ReactNode);
+  position?: "top" | "right" | "bottom" | "left" | "cursor";
+  delay?: number;
+  maxWidth?: number;
+}
+
+interface DrillDownConfig {
+  label?: string;     // Default: "Details"
+  onClick: () => void;
+}
+```
+
+### Animation Types
+
+```ts
+interface AnimationConfig {
+  countUp?: boolean;
+  delay?: number;     // ms
+  duration?: number;  // ms
+}
+
+interface MotionConfig {
+  mass: number;      // Default: 1
+  tension: number;   // Default: 170
+  friction: number;  // Default: 26
+  clamp: boolean;    // Default: true
+}
+```
+
+### Data State Types
+
+```ts
+interface EmptyState {
+  message?: string;
+  icon?: React.ReactNode;
+  action?: React.ReactNode;
+}
+
+interface ErrorState {
+  message?: string;
+  retry?: () => void;
+}
+
+interface StaleState {
+  since?: Date;
+  warningAfter?: number;  // minutes
+}
+
+interface DataStates {
+  loading?: boolean;
+  empty?: EmptyState;
+  error?: ErrorState;
+  stale?: StaleState;
+}
+```
+
+### Chart Style Types
+
+```ts
+interface SeriesStyle {
+  color?: string;
+  lineWidth?: number;
+  lineStyle?: "solid" | "dashed" | "dotted";
+  pointSize?: number;
+  pointColor?: string | { from: string; modifiers?: any[] };
+  pointBorderWidth?: number;
+  pointBorderColor?: string;
+}
+
+interface BarSeriesStyle {
+  color?: string;
+}
+
+interface DonutSeriesStyle {
+  color?: string;
+}
+```
+
+### Reference Line & Threshold Types
+
+```ts
+interface ReferenceLine {
+  axis: "x" | "y";
+  value: number | string;
+  label?: string;
+  color?: string;              // Default: "var(--muted)"
+  style?: "solid" | "dashed";  // Default: "dashed"
+}
+
+interface ThresholdBand {
+  from: number;
+  to: number;
+  color?: string;    // Default: "var(--accent)"
+  label?: string;
+  opacity?: number;  // Default: 0.08
+}
+```
+
+### Sparkline Overlay Types
+
+```ts
+interface SparklineReferenceLine {
+  value: number;
+  color?: string;
+  style?: "solid" | "dashed";
+  label?: string;
+}
+
+interface SparklineBand {
+  from: number;
+  to: number;
+  color?: string;
+  opacity?: number;
+}
+```
+
+### Legend Config
+
+```ts
+interface LegendConfig {
+  position?: "top" | "bottom";
+  toggleable?: boolean;  // Default: true
+}
+```
+
+### Table Types
+
+```ts
+type ColumnType = "text" | "number" | "currency" | "percent" | "link" | "badge" | "sparkline" | "status" | "progress" | "date" | "bar";
+
+interface Column<T> {
+  key: string;
+  header?: string;
+  label?: string;                // @deprecated — use header
+  type?: ColumnType;
+  format?: FormatOption;
+  align?: "left" | "center" | "right";
+  width?: string | number;
+  sortable?: boolean;
+  render?: (value: any, row: T, index: number) => React.ReactNode;
+  pin?: "left";
+  wrap?: boolean;
+  conditions?: Condition[];
+  linkHref?: (value: any, row: T) => string;
+  linkTarget?: string;
+  badgeColor?: (value: any, row: T) => string | undefined;
+  badgeVariant?: (value: any, row: T) => BadgeVariant | undefined;
+  statusRules?: StatusRule[];
+  statusSize?: StatusSize;
+  dateFormat?: Intl.DateTimeFormatOptions;
+}
+
+interface RowCondition<T> {
+  when: (row: T, index: number) => boolean;
+  className: string;
+}
+
+interface FooterRow {
+  [key: string]: React.ReactNode;
+}
+```
+
+### StatGroup Types
+
+```ts
+interface StatItem {
+  label: string;
+  value: string | number;
+  change?: number;
+  previousValue?: number;
+  comparisonMode?: ComparisonMode;
+  invertTrend?: boolean;
+  format?: FormatOption;
+  icon?: React.ReactNode;
+}
+```
+
+### Donut Types
+
+```ts
+interface DonutDatum {
+  id: string;
+  label: string;
+  value: number;
+  color?: string;
+}
+```
+
+### Annotation Type
+
+```ts
+interface Annotation {
+  type: "point" | "line" | "range";
+  at?: string | number | Date;
+  from?: string | number | Date;
+  to?: string | number | Date;
+  label: string;
+  color?: string;
+  style?: "solid" | "dashed";
+}
+```
+
+### Period Config
+
+```ts
+interface PeriodConfig {
+  current: { start: Date; end: Date };
+  previous?: "auto" | { start: Date; end: Date };
+  granularity?: "day" | "week" | "month" | "quarter" | "year";
+  label?: string;
+}
+```
+
+---
+
+## Theming
+
+### Theme Presets
+
+Pass a preset name to MetricProvider to set accent color + chart palette in one prop:
+
+```tsx
+<MetricProvider theme="emerald">  {/* Entire dashboard uses emerald accent + green-first palette */}
+</MetricProvider>
+```
+
+Built-in presets: `indigo` (default), `emerald`, `rose`, `amber`, `cyan`, `violet`, `slate`, `orange`.
+
+Custom presets:
+```tsx
+const myTheme: ThemePreset = {
+  name: "Brand",
+  accent: "#FF6B00",
+  accentDark: "#FF9A45",
+  colors: ["#FF6B00", "#3B82F6", "#10B981", "#F59E0B", "#EC4899", "#8B5CF6", "#06B6D4", "#14B8A6"],
+};
+
+<MetricProvider theme={myTheme}>
+```
+
+### CSS Variables (Required)
+
+```css
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --card-glow: #f8fafc;
+  --muted: #64748b;
+  --accent: #6366f1;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --card-glow: #1e293b;
+  --muted: #94a3b8;
+  --accent: #818cf8;
+}
+```
+
+### Variable Descriptions
+
+| Variable       | Purpose                              |
+|----------------|--------------------------------------|
+| --background   | Page background color                |
+| --foreground   | Primary text color                   |
+| --card-bg      | Card/container background            |
+| --card-border  | Card border and divider color        |
+| --card-glow    | Hover/ghost variant background tint  |
+| --muted        | Secondary/muted text color           |
+| --accent       | Primary accent color                 |
+| --font-mono    | Monospace font family for values     |
+
+### Hover Interaction Variables
+
+| Variable           | Purpose                          | Light default                           | Dark default       |
+|--------------------|----------------------------------|-----------------------------------------|--------------------|
+| --mu-hover-shadow  | Hover shadow on cards/charts     | 0 10px 15px -3px rgba(0,0,0,0.04)      | rgba(0,0,0,0.3)   |
+| --mu-hover-border  | Hover border color               | #d1d5db                                 | #374151            |
+
+### Semantic Color Variables
+
+Trend colors (comparisons) and condition colors use semantic CSS variables and are fully customizable:
+
+| Variable             | Purpose                  | Light default | Dark default |
+|----------------------|--------------------------|---------------|--------------|
+| --mu-color-positive  | Positive trend, success  | #059669       | #34d399      |
+| --mu-color-negative  | Negative trend, error    | #ef4444       | #f87171      |
+| --mu-color-warning   | Warning conditions       | #d97706       | #fbbf24      |
+| --mu-color-info      | Info conditions          | #2563eb       | #60a5fa      |
+
+### Texture Control
+
+| Variable              | Purpose                | Default |
+|-----------------------|------------------------|---------|
+| --mu-texture-opacity  | Noise texture opacity  | 0.3     |
+
+Set `--mu-texture-opacity: 0` to hide noise texture via CSS. Or use `<MetricProvider texture={false}>` to disable globally (sets `[data-texture="false"]`).
+
+### Shared Style Constants
+
+`CARD_CLASSES` and `HOVER_CLASSES` are exported from `metricui` — internal use, but available for applying the same card shell to custom components.
+
+### Card Variants (CSS-Variable-Driven)
+
+Variants are implemented via CSS custom properties set by `[data-variant="..."]` attribute
+selectors. Components set `data-variant` on their root element; MetricProvider sets it on
+a wrapper `<div className="contents">` so all children inherit.
+
+#### Variant CSS Variables
+
+| CSS Variable         | Purpose                   | Default value        |
+|----------------------|---------------------------|----------------------|
+| --mu-card-bg         | Card background           | var(--card-bg)       |
+| --mu-card-border     | Border color              | var(--card-border)   |
+| --mu-card-border-w   | Border width              | 1px                  |
+| --mu-card-shadow     | Box shadow                | none                 |
+| --mu-card-radius     | Border radius             | 1rem                 |
+| --mu-cell-bg         | StatGroup cell background | var(--mu-card-bg)    |
+| --mu-hover-shadow    | Hover shadow              | (see Hover section)  |
+| --mu-hover-border    | Hover border color        | (see Hover section)  |
+
+#### Built-in Variants
+
+| Variant   | Background                 | Border                   | Extra                              |
+|-----------|----------------------------|--------------------------|------------------------------------|
+| default   | var(--card-bg)             | 1px var(--card-border)   | clean bordered card                |
+| outlined  | transparent                | 2px var(--card-border)   | inset shadow, 0.75rem radius       |
+| ghost     | color-mix accent-tinted bg | none (0px)               | no border                          |
+| elevated  | var(--card-bg)             | transparent              | multi-layer shadow, 1.25rem radius |
+
+#### Custom Variants
+
+Define CSS variables under a `[data-variant="..."]` selector to create custom variants:
+
+```css
+[data-variant="glass"] {
+  --mu-card-bg: rgba(255,255,255,0.08);
+  --mu-card-border: rgba(255,255,255,0.15);
+  --mu-card-border-w: 1px;
+  --mu-card-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  --mu-card-radius: 1rem;
+  backdrop-filter: blur(12px);
+}
+```
+
+```tsx
+<KpiCard variant="glass" title="Revenue" value={42000} format="currency" />
+<MetricProvider variant="glass">{children}</MetricProvider>
+```
+
+### Dense Mode (CSS-Variable-Driven)
+
+Dense mode is implemented via CSS variables set by `[data-dense="true"]` attribute selectors.
+MetricProvider renders a wrapper `<div className="contents">` with `data-dense` so all
+children inherit. Chart heights and margins in dense mode are centralized via the
+`useDenseValues()` hook.
+
+#### Dense CSS Variables
+
+| CSS Variable         | Normal    | Dense     |
+|----------------------|-----------|-----------|
+| --mu-padding         | 1.25rem   | 0.625rem  |
+| --mu-gap             | 1rem      | 0.5rem    |
+| --mu-title-size      | 0.75rem   | 0.625rem  |
+| --mu-value-size      | 1.875rem  | 1.25rem   |
+| --mu-value-size-bare | 1.5rem    | 1.125rem  |
+| --mu-table-py        | 0.75rem   | 0.375rem  |
+| --mu-table-px        | 1.25rem   | 0.75rem   |
+| Chart height         | 300px     | 200px     |
+
+### Dark Mode Setup
+
+```tsx
+import { ThemeProvider } from "metricui/theme";
+import { MetricProvider } from "metricui";
+
+export default function Layout({ children }) {
+  return (
+    <html>
+      <body>
+        <ThemeProvider>
+          <MetricProvider>
+            {children}
+          </MetricProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### Custom Chart Colors
+
+```tsx
+<MetricProvider colors={["#3B82F6", "#EF4444", "#10B981", "#F59E0B"]}>
+  {children}
+</MetricProvider>
+```
+
+### Motion / Animation
+
+```tsx
+// Slower, bouncier
+<MetricProvider motionConfig={{ mass: 1.5, tension: 120, friction: 20, clamp: false }}>
+
+// Faster, snappier
+<MetricProvider motionConfig={{ mass: 0.8, tension: 250, friction: 30, clamp: true }}>
+
+// Disable all animation
+<MetricProvider animate={false}>
+```
+
+---
+
+## Patterns
+
+### Basic Dashboard
+
+```tsx
+import {
+  MetricProvider,
+  KpiCard,
+  StatGroup,
+  AreaChart,
+  BarChart,
+  DataTable,
+} from "metricui";
+
+function Dashboard() {
+  return (
+    <MetricProvider locale="en-US" currency="USD">
+      <div className="space-y-6 p-6">
+        {/* KPI Row */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiCard title="Revenue" value={142300} format="currency"
+            comparison={{ value: 128500, label: "vs last month" }} />
+          <KpiCard title="Users" value={12450} format="compact"
+            comparison={{ value: 11200 }} />
+          <KpiCard title="Conversion" value={4.2} format="percent"
+            comparison={{ value: 3.8 }} />
+          <KpiCard title="Churn" value={2.1} format="percent"
+            comparison={{ value: 2.8, invertTrend: true }} />
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <AreaChart
+            data={revenueTimeSeries}
+            format="currency"
+            title="Revenue Over Time"
+          />
+          <BarChart
+            data={salesByCategory}
+            keys={["sales"]}
+            indexBy="category"
+            format="currency"
+            title="Sales by Category"
+          />
+        </div>
+
+        {/* Table */}
+        <DataTable
+          data={transactions}
+          columns={[
+            { key: "date", header: "Date", sortable: true },
+            { key: "customer", header: "Customer", sortable: true },
+            { key: "amount", header: "Amount", format: "currency", sortable: true },
+            { key: "status", header: "Status" },
+          ]}
+          pageSize={10}
+          searchable
+          title="Recent Transactions"
+        />
+      </div>
+    </MetricProvider>
+  );
+}
+```
+
+### KPI Card with All Features
+
+```tsx
+<KpiCard
+  title="Monthly Revenue"
+  value={142300}
+  format="currency"
+  comparison={[
+    { value: 128500, label: "vs last month" },
+    { value: 110000, label: "vs last year", mode: "both" },
+  ]}
+  sparkline={{
+    data: [98, 105, 110, 108, 120, 135, 142],
+    previousPeriod: [90, 92, 95, 100, 98, 105, 110],
+    type: "line",
+    interactive: true,
+  }}
+  goal={{ value: 150000, showTarget: true, showRemaining: true }}
+  conditions={[
+    { when: "above", value: 140000, color: "emerald" },
+    { when: "between", min: 100000, max: 140000, color: "amber" },
+    { when: "below", value: 100000, color: "red" },
+  ]}
+  copyable
+  onCopy={(v) => console.log("Copied:", v)}
+  drillDown={{ label: "View breakdown", onClick: () => router.push("/revenue") }}
+  animate={{ countUp: true, duration: 1200 }}
+  description="Total revenue from all channels including recurring and one-time."
+  footnote="Updated 5 minutes ago"
+/>
+```
+
+### Time Series with Comparison
+
+```tsx
+<AreaChart
+  data={[
+    { id: "Revenue", data: thisMonth.map(d => ({ x: d.date, y: d.revenue })) },
+  ]}
+  comparisonData={[
+    { id: "Revenue", data: lastMonth.map(d => ({ x: d.date, y: d.revenue })) },
+  ]}
+  format="currency"
+  title="Revenue Trend"
+  subtitle="Current vs Previous Period"
+  xAxisLabel="Date"
+  yAxisLabel="Revenue"
+  referenceLines={[
+    { axis: "y", value: targetRevenue, label: "Target", color: "#10B981", style: "dashed" },
+  ]}
+  thresholds={[
+    { from: 0, to: dangerThreshold, color: "#EF4444", opacity: 0.05, label: "Below target" },
+  ]}
+/>
+```
+
+### Bar Chart Presets
+
+```tsx
+{/* Grouped comparison */}
+<BarChart
+  preset="grouped"
+  data={monthlyData}
+  keys={["revenue", "expenses"]}
+  indexBy="month"
+  format="currency"
+  title="Revenue vs Expenses"
+  legend
+/>
+
+{/* 100% stacked composition */}
+<BarChart
+  preset="percent"
+  data={channelData}
+  keys={["organic", "paid", "referral"]}
+  indexBy="month"
+  title="Channel Mix"
+  legend
+/>
+
+{/* Horizontal sorted */}
+<BarChart
+  preset="horizontal"
+  data={salesByRep}
+  keys={["sales"]}
+  indexBy="rep"
+  sort="desc"
+  format="currency"
+  title="Sales Leaderboard"
+/>
+
+{/* With targets and negative values */}
+<BarChart
+  data={profitData}
+  keys={["profit"]}
+  indexBy="quarter"
+  format="currency"
+  enableNegative
+  negativeColor="#EF4444"
+  targetData={targetProfitData}
+  referenceLines={[{ axis: "y", value: 0, style: "solid", color: "var(--muted)" }]}
+  title="Quarterly Profit"
+/>
+```
+
+### Data Fetching States
+
+```tsx
+function MetricCard({ data, isLoading, error }) {
+  return (
+    <KpiCard
+      title="Revenue"
+      value={data?.revenue ?? null}
+      format="currency"
+      loading={isLoading}
+      error={error ? {
+        message: "Failed to load revenue data",
+        retry: () => refetch(),
+      } : undefined}
+      empty={!isLoading && !error && data?.revenue == null ? {
+        message: "No revenue data for this period",
+        icon: <TrendingUp className="h-8 w-8" />,
+        action: <button onClick={selectPeriod}>Change period</button>,
+      } : undefined}
+      stale={data?.updatedAt ? {
+        since: new Date(data.updatedAt),
+        warningAfter: 30,
+      } : undefined}
+    />
+  );
+}
+
+{/* Grouped state prop */}
+<KpiCard
+  title="Revenue"
+  value={data?.revenue ?? null}
+  format="currency"
+  state={{
+    loading: isLoading,
+    error: error ? { message: error.message, retry: refetch } : undefined,
+    stale: { since: lastUpdated, warningAfter: 30 },
+  }}
+/>
+
+{/* Charts and tables have the same props */}
+<AreaChart
+  data={chartData ?? []}
+  loading={isLoading}
+  error={error ? { message: "Chart data unavailable", retry: refetch } : undefined}
+  empty={!chartData?.length ? { message: "No data points" } : undefined}
+/>
+```
+
+### Conditional Formatting
+
+```tsx
+{/* Simple threshold coloring */}
+<KpiCard
+  title="Server Uptime"
+  value={99.2}
+  format="percent"
+  conditions={[
+    { when: "above", value: 99.9, color: "emerald" },
+    { when: "between", min: 99, max: 99.9, color: "amber" },
+    { when: "below", value: 99, color: "red" },
+  ]}
+/>
+
+{/* Compound conditions */}
+<KpiCard
+  title="Health Score"
+  value={currentScore}
+  conditions={[
+    {
+      when: "and",
+      rules: [
+        { operator: "above", value: 80 },
+        { operator: "below", value: 100 },
+      ],
+      color: "emerald",
+    },
+    {
+      when: "or",
+      rules: [
+        { operator: "below", value: 20 },
+        { operator: "equals", value: 0 },
+      ],
+      color: "red",
+    },
+  ]}
+/>
+
+{/* Inverted trend (lower is better) */}
+<KpiCard
+  title="Error Rate"
+  value={0.5}
+  format="percent"
+  comparison={{ value: 1.2, invertTrend: true }}
+  conditions={[
+    { when: "below", value: 1, color: "emerald" },
+    { when: "between", min: 1, max: 5, color: "amber" },
+    { when: "above", value: 5, color: "red" },
+  ]}
+/>
+```
+
+### Donut Chart
+
+```tsx
+{/* Full data format */}
+<DonutChart
+  data={[
+    { id: "chrome", label: "Chrome", value: 45 },
+    { id: "firefox", label: "Firefox", value: 25 },
+    { id: "safari", label: "Safari", value: 20 },
+    { id: "edge", label: "Edge", value: 10 },
+  ]}
+  centerValue="100K"
+  centerLabel="Total Users"
+  showPercentage
+  enableArcLabels
+  title="Browser Share"
+/>
+
+{/* simpleData shorthand */}
+<DonutChart
+  simpleData={{ Desktop: 60, Mobile: 35, Tablet: 5 }}
+  showPercentage
+  title="Traffic by Device"
+/>
+
+{/* Half donut (gauge style) */}
+<DonutChart
+  data={[
+    { id: "completed", label: "Completed", value: 78 },
+    { id: "remaining", label: "Remaining", value: 22 },
+  ]}
+  startAngle={-90}
+  endAngle={90}
+  innerRadius={0.7}
+  centerValue="78%"
+  centerLabel="Complete"
+  sortSlices="none"
+  colors={["#10B981", "#E2E8F0"]}
+/>
+```
+
+### Dual Axis Combo Chart
+
+```tsx
+<BarLineChart
+  barData={[
+    { month: "Jan", revenue: 42000, expenses: 28000 },
+    { month: "Feb", revenue: 45000, expenses: 26000 },
+    { month: "Mar", revenue: 52000, expenses: 31000 },
+    { month: "Apr", revenue: 48000, expenses: 29000 },
+  ]}
+  barKeys={["revenue", "expenses"]}
+  indexBy="month"
+  lineData={[
+    { id: "Margin %", data: [
+      { x: "Jan", y: 33.3 },
+      { x: "Feb", y: 42.2 },
+      { x: "Mar", y: 40.4 },
+      { x: "Apr", y: 39.6 },
+    ]},
+  ]}
+  format="currency"
+  lineFormat="percent"
+  title="Revenue, Expenses & Margin"
+  yAxisLabel="Amount ($)"
+  rightAxisLabel="Margin %"
+  legend
+/>
+```
+
+### Table with Formatting
+
+```tsx
+import { DataTable, Badge } from "metricui";
+
+<DataTable
+  data={salesData}
+  columns={[
+    { key: "company", header: "Company", sortable: true, pin: "left" },
+    { key: "revenue", header: "Revenue", format: "currency", sortable: true },
+    { key: "growth", header: "Growth", format: "percent", sortable: true,
+      render: (v) => (
+        <span className={v >= 0 ? "text-emerald-600" : "text-red-500"}>
+          {v >= 0 ? "+" : ""}{v.toFixed(1)}%
+        </span>
+      ),
+    },
+    { key: "status", header: "Status",
+      render: (v) => (
+        <Badge variant={v === "active" ? "success" : v === "churned" ? "danger" : "warning"} dot>
+          {v}
+        </Badge>
+      ),
+    },
+    { key: "lastOrder", header: "Last Order", format: "duration" },
+  ]}
+  pageSize={10}
+  searchable
+  striped
+  stickyHeader
+  title="Sales Report"
+  subtitle="Q1 2024"
+  footer={{
+    company: "Total",
+    revenue: "$1,284,500",
+    growth: "",
+    status: "",
+    lastOrder: "",
+  }}
+  onRowClick={(row) => router.push(`/companies/${row.id}`)}
+/>
+```
+
+### Stat Group Row
+
+```tsx
+<StatGroup
+  title="This Week's Performance"
+  subtitle="Compared to previous week"
+  stats={[
+    {
+      label: "Revenue",
+      value: 142300,
+      previousValue: 128500,
+      format: "currency",
+      icon: <DollarSign className="h-3.5 w-3.5" />,
+    },
+    {
+      label: "New Users",
+      value: 1284,
+      previousValue: 1150,
+      format: "compact",
+      icon: <Users className="h-3.5 w-3.5" />,
+    },
+    {
+      label: "Avg Order Value",
+      value: 110.8,
+      previousValue: 105.2,
+      format: "currency",
+      icon: <ShoppingCart className="h-3.5 w-3.5" />,
+    },
+    {
+      label: "Churn Rate",
+      value: 2.1,
+      previousValue: 2.8,
+      format: "percent",
+      invertTrend: true,
+      icon: <UserMinus className="h-3.5 w-3.5" />,
+    },
+    {
+      label: "NPS Score",
+      value: 72,
+      previousValue: 68,
+      icon: <ThumbsUp className="h-3.5 w-3.5" />,
+    },
+  ]}
+  columns={5}
+  variant="elevated"
+  onStatClick={(stat) => setSelectedMetric(stat.label)}
+/>
+```
+
+---
+
+## Filter System
+
+MetricUI's filter system is **UI only** — it tells you what the user selected, but does not filter your data. You bring the data; the filter tells you what range to fetch.
+
+### FilterProvider
+
+Context provider that holds the active filter state (period, comparison mode, dimension filters). Wrap your dashboard in this.
+
+```tsx
+import { FilterProvider } from "metricui";
+
+<FilterProvider defaultPreset="30d" defaultComparison="none">
+  {children}
+</FilterProvider>
+```
+
+#### FilterProvider Props
+
+- `defaultPreset`: PeriodPreset — Initial preset. Default: none (no period selected).
+- `defaultComparison`: ComparisonMode — Initial comparison mode. Default: "none".
+- `children`: React.ReactNode
+
+### useMetricFilters()
+
+Hook to read and update the active filter state from the nearest FilterProvider. Returns null if no FilterProvider is present.
+
+```tsx
+import { useMetricFilters } from "metricui";
+
+function MyComponent() {
+  const filters = useMetricFilters();
+  // filters.period       → { start: Date, end: Date } | null
+  // filters.preset       → "30d" | null
+  // filters.comparisonMode → "none" | "previous" | "year-over-year"
+  // filters.comparisonPeriod → { start: Date, end: Date } | null
+  // filters.dimensions   → Record<string, string[]>
+  // filters.setPeriod(range, preset?)
+  // filters.setPreset(preset)
+  // filters.setCustomRange(start, end)
+  // filters.setComparisonMode(mode)
+  // filters.setDimension(field, values)
+  // filters.clearDimension(field)
+  // filters.clearAll()
+}
+```
+
+### Filter Types
+
+```ts
+interface DateRange { start: Date; end: Date; }
+
+type PeriodPreset = "7d" | "14d" | "30d" | "90d" | "month" | "quarter" | "ytd" | "year" | "all";
+
+type ComparisonMode = "previous" | "year-over-year" | "none";
+
+interface FilterState {
+  period: DateRange | null;
+  preset: PeriodPreset | null;
+  comparisonMode: ComparisonMode;
+  comparisonPeriod: DateRange | null;
+  dimensions: Record<string, string[]>;
+}
+
+type FilterContextValue = FilterState & FilterActions;
+```
+
+---
+
+### PeriodSelector
+
+Category: filter
+A date-range picker with preset periods, custom ranges, and comparison toggle. Uses forwardRef.
+
+#### PeriodSelector Props
+
+- `presets`: PeriodPreset[] — default: ["7d","30d","90d","month","quarter","ytd"] — Which presets to show in the dropdown.
+- `allowCustom`: boolean — default: true — Show custom date-range inputs.
+- `comparison`: boolean — default: false — Show comparison toggle button.
+- `comparisonOptions`: ComparisonMode[] — default: ["previous","year-over-year"] — Comparison modes to cycle through.
+- `onChange`: (period: DateRange, preset: PeriodPreset | null) => void — Standalone callback. Works without FilterProvider.
+- `onComparisonChange`: (mode: ComparisonMode, period: DateRange | null) => void — Standalone comparison callback.
+- `dense`: boolean — default: false — Compact mode. Falls back to MetricProvider.
+- `className`: string — Additional CSS classes.
+- `id`: string — HTML id.
+- `data-testid`: string — Test id.
+
+#### PeriodSelector Minimal Example
+
+```tsx
+<FilterProvider>
+  <PeriodSelector />
+</FilterProvider>
+```
+
+#### PeriodSelector Examples
+
+```tsx
+// With comparison toggle and default preset
+<FilterProvider defaultPreset="30d">
+  <PeriodSelector comparison />
+</FilterProvider>
+```
+
+```tsx
+// Standalone mode — no FilterProvider needed
+<PeriodSelector
+  presets={["7d", "30d", "90d"]}
+  onChange={(period, preset) => {
+    fetchData(period.start, period.end);
+  }}
+/>
+```
+
+```tsx
+// Full dashboard with period filter
+<MetricProvider locale="en-US" currency="USD">
+  <FilterProvider defaultPreset="30d">
+    <PeriodSelector comparison />
+    <RevenueCard />  {/* calls useMetricFilters() to read period */}
+  </FilterProvider>
+</MetricProvider>
+```
+
+#### PeriodSelector Notes
+
+- PeriodSelector is UI only — it tells you what the user selected, but does not filter data.
+- Without FilterProvider, use onChange for standalone mode.
+- Comparison periods are auto-computed from the active period.
+- Dense mode inherits from MetricProvider or can be set per-component.
+
+---
+
+### DropdownFilter
+
+Category: filter
+A single or multi-select dropdown for dimension filtering. Search, grouped options, count badges, and FilterContext integration. Uses forwardRef.
+
+#### DropdownFilter Props
+
+- `label`: string (required) — Label shown on the trigger button.
+- `options`: DropdownOption[] | string[] (required) — Options to display. Pass string[] as shorthand.
+- `value`: string | string[] — Controlled selected value(s).
+- `defaultValue`: string | string[] — Default value for uncontrolled mode.
+- `onChange`: (value: string | string[]) => void — Change handler. Receives string (single) or string[] (multiple).
+- `multiple`: boolean — default: false — Allow multiple selections.
+- `searchable`: boolean — default: auto (true when > 8 options) — Show search input inside dropdown.
+- `searchPlaceholder`: string — default: "Search..." — Placeholder text for search input.
+- `field`: string — FilterContext field name. Reads/writes to dimensions.
+- `showAll`: boolean — default: true (in multiple mode) — Show "All" option that clears selection.
+- `allLabel`: string — default: "All" — Label for the All option.
+- `maxHeight`: number — default: 280 — Max height of dropdown in px.
+- `dense`: boolean — default: false — Compact mode. Falls back to MetricProvider.
+- `className`: string — Additional CSS classes.
+- `classNames`: { root?, trigger?, dropdown?, option?, search? } — Sub-element class overrides.
+- `id`: string — HTML id.
+- `data-testid`: string — Test id.
+
+#### DropdownOption Type
+
+```ts
+interface DropdownOption {
+  value: string;       // Unique value
+  label?: string;      // Display label (defaults to value)
+  count?: number;      // Optional count badge
+  icon?: ReactNode;    // Icon rendered before label
+  group?: string;      // Group this option belongs to
+}
+```
+
+#### DropdownFilter Minimal Example
+
+```tsx
+<DropdownFilter label="Region" options={["US", "EU", "APAC", "LATAM"]} />
+```
+
+#### DropdownFilter Examples
+
+```tsx
+// Multi-select with count badges
+<DropdownFilter
+  label="Plan"
+  options={[
+    { value: "free", label: "Free", count: 8421 },
+    { value: "pro", label: "Pro", count: 1089 },
+    { value: "enterprise", label: "Enterprise", count: 312 },
+  ]}
+  multiple
+  showAll
+/>
+```
+
+```tsx
+// Searchable with grouped options
+<DropdownFilter
+  label="Region"
+  options={[
+    { value: "us", label: "United States", group: "Americas" },
+    { value: "ca", label: "Canada", group: "Americas" },
+    { value: "gb", label: "United Kingdom", group: "Europe" },
+    { value: "de", label: "Germany", group: "Europe" },
+  ]}
+  multiple
+  searchable
+/>
+```
+
+```tsx
+// Connected to FilterContext
+<FilterProvider>
+  <DropdownFilter label="Region" options={regions} field="region" multiple showAll />
+  {/* Other components read filters.dimensions.region */}
+</FilterProvider>
+```
+
+#### DropdownFilter Notes
+
+- DropdownFilter is UI only — it captures the selection, not filters data.
+- Without FilterProvider, use onChange for standalone mode.
+- Search is auto-enabled when there are more than 8 options.
+- The "All" option is shown by default in multiple mode. It clears all selections.
+- Grouped options render with section headers.
+- Dense mode inherits from MetricProvider or can be set per-component.
+
+---
+
+### SegmentToggle
+
+Category: filter
+A pill-style toggle for switching between segments. Single/multi-select, icons, badge counts, color-coded segments, FilterContext integration. Uses forwardRef.
+
+#### SegmentToggle Props
+
+- `options`: SegmentOption[] | string[] (required) — Segment options. Pass string[] as shorthand.
+- `value`: string | string[] — Controlled active segment(s).
+- `defaultValue`: string | string[] — default: first option — Default value for uncontrolled mode.
+- `onChange`: (value: string | string[]) => void — Change handler. Receives string (single) or string[] (multiple).
+- `multiple`: boolean — default: false — Allow multiple selections.
+- `field`: string — FilterContext field name. Reads/writes to dimensions.
+- `orientation`: "horizontal" | "vertical" — default: "horizontal" — Layout orientation.
+- `size`: "sm" | "md" | "lg" — default: "md" — Size variant.
+- `fullWidth`: boolean — default: false — Stretch segments to fill container.
+- `dense`: boolean — default: false — Compact mode. Falls back to MetricProvider.
+- `className`: string — Additional CSS classes.
+- `classNames`: { root?, option?, indicator?, badge? } — Sub-element class overrides.
+- `id`: string — HTML id.
+- `data-testid`: string — Test id.
+
+#### SegmentOption Type
+
+```ts
+interface SegmentOption {
+  value: string;       // Unique value
+  label?: string;      // Display label (defaults to value)
+  icon?: ReactNode;    // Icon before label
+  badge?: number;      // Badge count (formatted via format engine)
+  badgeFormat?: FormatOption;  // Badge format option
+  color?: string;      // Active accent color
+}
+```
+
+#### SegmentToggle Minimal Example
+
+```tsx
+<SegmentToggle options={["Daily", "Weekly", "Monthly"]} />
+```
+
+#### SegmentToggle Examples
+
+```tsx
+// With icons and badges
+<SegmentToggle options={[
+  { value: "active", label: "Active", badge: 1234, icon: <Users /> },
+  { value: "churned", label: "Churned", badge: 56, icon: <UserMinus /> },
+]} />
+```
+
+```tsx
+// Multi-select mode
+<SegmentToggle
+  options={["Frontend", "Backend", "Mobile"]}
+  multiple
+  defaultValue={["Frontend"]}
+/>
+```
+
+```tsx
+// Connected to FilterContext
+<FilterProvider>
+  <SegmentToggle options={["Issues", "PRs"]} field="view" />
+  {/* Other components read filters.dimensions.view */}
+</FilterProvider>
+```
+
+```tsx
+// Color-coded segments
+<SegmentToggle options={[
+  { value: "healthy", label: "Healthy", color: "#10B981" },
+  { value: "warning", label: "Warning", color: "#F59E0B" },
+  { value: "critical", label: "Critical", color: "#EF4444" },
+]} />
+```
+
+#### SegmentToggle Notes
+
+- SegmentToggle is UI only — it captures the selection, not filters data.
+- Without FilterProvider, use onChange for standalone mode.
+- In single-select mode, a sliding indicator animates between segments.
+- In multi-select mode, at least one segment must always be selected.
+- Badge counts are formatted through the format engine (compact by default).
+- Dense mode inherits from MetricProvider or can be set per-component.
+
+---
+
+### FilterTags
+
+Category: filter
+Context-driven filter chips that automatically display active filters from FilterProvider. Renders removable chips for the active period, comparison mode, and dimension filters. No manual wiring needed. Uses forwardRef.
+
+#### FilterTags Props
+
+- `exclude`: string[] — Fields to exclude from display. Use "_period" and "_comparison" for built-in tags.
+- `include`: string[] — Whitelist — if set, only these fields show.
+- `labels`: Record<string, string> — Custom labels for dimension fields. Default: capitalized field name.
+- `formatPeriod`: (range: DateRange, preset: PeriodPreset | null) => string — Custom period formatter.
+- `formatDimension`: (field: string, values: string[]) => string — Custom dimension value formatter.
+- `dismissible`: boolean — default: true — Show dismiss buttons on each chip.
+- `clearAll`: boolean — default: true — Show "Clear all" button when multiple filters active.
+- `clearAllLabel`: string — default: "Clear all" — Label for the clear all button.
+- `onClear`: (field: string) => void — Callback when a specific filter is cleared.
+- `onClearAll`: () => void — Callback when all filters are cleared.
+- `maxVisible`: number — default: 0 (no limit) — Max visible chips before collapsing. Shows "+N more" button.
+- `showPeriod`: boolean — default: true — Show the period filter as a tag.
+- `showComparison`: boolean — default: true — Show the comparison mode as a tag.
+- `dense`: boolean — default: false — Compact mode. Falls back to MetricProvider.
+- `className`: string — Additional CSS classes.
+- `classNames`: { root?, chip?, clearAll? } — Sub-element class overrides.
+- `id`: string — HTML id.
+- `data-testid`: string — Test id.
+
+#### FilterTags Minimal Example
+
+```tsx
+<FilterProvider defaultPreset="30d">
+  <FilterTags />
+</FilterProvider>
+```
+
+#### FilterTags Examples
+
+```tsx
+// Full filter setup — tags auto-appear when filters are active
+<FilterProvider defaultPreset="30d">
+  <PeriodSelector comparison />
+  <DropdownFilter label="Region" options={regions} field="region" multiple showAll />
+  <FilterTags />
+</FilterProvider>
+```
+
+```tsx
+// Custom labels and maxVisible
+<FilterTags
+  labels={{ region: "Market", plan: "Tier" }}
+  maxVisible={3}
+/>
+```
+
+```tsx
+// Exclude specific tags
+<FilterTags exclude={["_period", "plan"]} />
+```
+
+#### FilterTags Notes
+
+- FilterTags reads from FilterContext automatically — no manual wiring needed.
+- Renders nothing when no filters are active.
+- Period and comparison tags use special keys "_period" and "_comparison" for exclude/include.
+- Dismiss buttons call clearDimension() / setPeriod() / setComparisonMode() on the context.
+- Clear all calls filterContext.clearAll() which resets to FilterProvider defaults.
+- maxVisible collapses overflow into a "+N more" button.
+- Dense mode inherits from MetricProvider or can be set per-component.
+
+---
+
+### Nested Providers
+
+```tsx
+import { MetricProvider, KpiCard, AreaChart } from "metricui";
+
+function App() {
+  return (
+    <MetricProvider locale="en-US" currency="USD" animate variant="default">
+      {/* US section */}
+      <section>
+        <KpiCard title="US Revenue" value={142300} format="currency" />
+      </section>
+
+      {/* EU section — overrides currency and locale */}
+      <MetricProvider locale="de-DE" currency="EUR">
+        <section>
+          <KpiCard title="EU Revenue" value={98700} format="currency" />
+          {/* Shows as "€98,7K" with German number formatting */}
+        </section>
+      </MetricProvider>
+
+      {/* Dense section */}
+      <MetricProvider dense variant="ghost">
+        <section>
+          <KpiCard title="Compact KPI" value={42} />
+          <AreaChart data={compactData} title="Compact Chart" />
+        </section>
+      </MetricProvider>
+
+      {/* No-animation section */}
+      <MetricProvider animate={false}>
+        <section>
+          <AreaChart data={staticData} title="Static Chart" />
+        </section>
+      </MetricProvider>
+    </MetricProvider>
+  );
+}
+```
+
+### Dark Mode Setup
+
+```css
+/* globals.css */
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --card-glow: #f8fafc;
+  --muted: #64748b;
+  --accent: #6366f1;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --card-glow: #1e293b;
+  --muted: #94a3b8;
+  --accent: #818cf8;
+}
+```
+
+```tsx
+/* layout.tsx */
+import { ThemeProvider } from "metricui/theme";
+import { MetricProvider } from "metricui";
+
+export default function Layout({ children }) {
+  return (
+    <html>
+      <body>
+        <ThemeProvider>
+          <MetricProvider>
+            {children}
+          </MetricProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
