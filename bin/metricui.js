@@ -22,21 +22,41 @@ if (args.includes("--version") || args.includes("-v")) {
   const url = page ? `https://metricui.com/docs/${page}` : "https://metricui.com/docs";
   console.log(`  Opening ${url}`);
   openUrl(url);
+} else if (cmd === "demos") {
+  const demo = args[1];
+  const url = demo ? `https://metricui.com/demos/${demo}` : "https://metricui.com/demos/saas";
+  console.log(`  Opening ${url}`);
+  openUrl(url);
+} else if (cmd === "github") {
+  console.log("  Opening github.com/mpmcgowen/metricui");
+  openUrl("https://github.com/mpmcgowen/metricui");
+} else if (cmd === "mcp") {
+  console.log(`
+  Add MetricUI to your AI coding tool:
+
+  Claude Code:
+    claude mcp add metricui -- npx @metricui/mcp-server
+
+  Cursor (settings.json):
+    "mcpServers": {
+      "metricui": { "command": "npx", "args": ["@metricui/mcp-server"] }
+    }
+`);
 } else if (args.includes("--help") || args.includes("-h") || args.length === 0) {
   console.log(`
   MetricUI v${pkg.version}
 
   Usage:
-    metricui docs [page]  Open docs in browser (e.g. metricui docs kpi-card)
+    metricui docs [page]  Open docs (e.g. metricui docs kpi-card)
+    metricui demos [name] Open a live demo (saas, github, wikipedia, world)
+    metricui github       Open the GitHub repo
+    metricui mcp          Show MCP server setup instructions
     metricui --version    Show version
     metricui --help       Show this help
 
   Quick start:
     import { KpiCard } from "metricui"
     import "metricui/styles.css"
-
-  AI-powered development:
-    claude mcp add metricui -- npx @metricui/mcp-server
 
   Docs: metricui.com/docs
 `);
