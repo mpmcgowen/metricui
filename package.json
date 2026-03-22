@@ -40,8 +40,13 @@
     },
     "./styles.css": "./dist/styles.css"
   },
+  "bin": {
+    "metricui": "./bin/metricui.js"
+  },
   "files": [
-    "dist"
+    "dist",
+    "postinstall.js",
+    "bin"
   ],
   "scripts": {
     "dev": "next dev",
@@ -51,6 +56,7 @@
     "test:watch": "vitest",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "node postinstall.js || true",
     "prepublishOnly": "npm run build:lib"
   },
   "peerDependencies": {
