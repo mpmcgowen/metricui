@@ -43,6 +43,7 @@ import {
   Tag,
   TrendingUp,
   Tags,
+  Bot,
 } from "lucide-react";
 
 interface NavItem {
@@ -65,6 +66,7 @@ const nav: { label: string; items: NavItem[] }[] = [
       { title: "Filtering", href: "/docs/guides/filtering", icon: Calendar },
       { title: "Data States", href: "/docs/guides/data-states", icon: AlertCircle },
       { title: "Accessibility", href: "/docs/guides/accessibility", icon: Accessibility },
+      { title: "MCP Server", href: "/docs/guides/mcp-server", icon: Bot },
       { title: "Cookbook", href: "/docs/guides/cookbook", icon: Layers },
     ],
   },
