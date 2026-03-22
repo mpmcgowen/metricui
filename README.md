@@ -450,7 +450,7 @@ export default function Dashboard() {
 - Searchable DataTable with Badge status columns
 - Theme preset, dark mode, animations, error boundaries — all automatic
 
-**The AI doesn't guess. It knows.** 12 tools, 26 components, every prop, every pattern. [Full MCP docs &rarr;](https://metricui.com/docs)
+**The AI doesn't guess. It knows.** 13 tools, 26 components, every prop, every pattern. [Full MCP Server docs &rarr;](https://metricui.com/docs/guides/mcp-server)
 
 ### llms.txt
 

@@ -76,6 +76,12 @@ const guides = [
     href: "/docs/guides/accessibility",
     icon: Accessibility,
   },
+  {
+    title: "MCP Server",
+    description: "Give AI tools full knowledge of every component, prop, and pattern. 13 tools, 9 resources, 3 prompts.",
+    href: "/docs/guides/mcp-server",
+    icon: Rocket,
+  },
 ];
 
 export default function DocsOverview() {
