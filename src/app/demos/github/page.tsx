@@ -29,6 +29,8 @@ import {
   recentPulls,
   releases,
 } from "@/data/github";
+import { Sparkline } from "@/components/charts/Sparkline";
+import { Gauge } from "@/components/charts/Gauge";
 import {
   Star,
   GitFork,
@@ -36,6 +38,10 @@ import {
   Eye,
   GitPullRequest,
   Tag,
+  Clock,
+  MessageSquare,
+  ThumbsUp,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +74,42 @@ function daysAgo(iso: string): string {
   if (diff < 30) return `${diff}d ago`;
   if (diff < 365) return `${Math.floor(diff / 30)}mo ago`;
   return `${Math.floor(diff / 365)}y ago`;
+}
+
+// ---------------------------------------------------------------------------
+// Expanded row helpers
+// ---------------------------------------------------------------------------
+
+/** Days between two ISO dates (or now) */
+function daysBetween(from: string, to?: string | null): number {
+  const start = new Date(from).getTime();
+  const end = to ? new Date(to).getTime() : Date.now();
+  return Math.max(0, Math.floor((end - start) / (1000 * 60 * 60 * 24)));
+}
+
+/** Generate fake-but-plausible weekly comment activity from total + dates */
+function commentTimeline(total: number, weeks: number): number[] {
+  if (total === 0 || weeks === 0) return Array(Math.max(weeks, 4)).fill(0);
+  const len = Math.max(weeks, 4);
+  const result: number[] = [];
+  let remaining = total;
+  // heavier at start, taper off
+  for (let i = 0; i < len; i++) {
+    const weight = Math.max(0.1, 1 - i / len) + Math.random() * 0.5;
+    const val = Math.round(weight * (remaining / (len - i)));
+    const clamped = Math.min(val, remaining);
+    result.push(clamped);
+    remaining -= clamped;
+  }
+  if (remaining > 0) result[0] += remaining;
+  return result;
+}
+
+/** Engagement score: weighted combo of comments + reactions + age penalty */
+function engagementScore(comments: number, reactions: number, ageDays: number): number {
+  const raw = (comments * 3) + (reactions * 5);
+  const agePenalty = Math.max(0.3, 1 - ageDays / 365);
+  return Math.min(100, Math.round(raw * agePenalty));
 }
 
 // ---------------------------------------------------------------------------
@@ -507,24 +549,99 @@ export default function GitHubDashboard() {
               dense
               multiSort
               searchable
-              renderExpanded={(row: Record<string, unknown>) => (
-                <DetailGrid columns={3}>
-                  <DetailGrid.Item label="Labels">
-                    <span className="flex flex-wrap gap-1.5">
-                      {((row.labels as string[]) ?? []).map((l: string) => (
-                        <Badge key={l} size="sm" variant="outline">{l}</Badge>
-                      ))}
-                      {((row.labels as string[]) ?? []).length === 0 && <span className="text-[var(--muted)]">No labels</span>}
-                    </span>
-                  </DetailGrid.Item>
-                  <DetailGrid.Item label="Comments">
-                    <span className="font-[family-name:var(--font-mono)]">{String(row.comments ?? 0)}</span>
-                  </DetailGrid.Item>
-                  <DetailGrid.Item label="Reactions">
-                    <span className="font-[family-name:var(--font-mono)]">{String(row.reactions ?? 0)}</span>
-                  </DetailGrid.Item>
-                </DetailGrid>
-              )}
+              renderExpanded={(row: Record<string, unknown>) => {
+                const created = row.createdAt as string;
+                const closed = row.closedAt as string | null;
+                const comments = (row.comments as number) ?? 0;
+                const reactions = (row.reactions as number) ?? 0;
+                const labels = (row.labels as string[]) ?? [];
+                const ageDays = daysBetween(created);
+                const ageWeeks = Math.max(1, Math.ceil(ageDays / 7));
+                const score = engagementScore(comments, reactions, ageDays);
+                const timeline = commentTimeline(comments, Math.min(ageWeeks, 12));
+                const ttc = closed ? daysBetween(created, closed) : null;
+
+                return (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_1fr_auto]">
+                    {/* Left: timeline + metadata */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                          Comment Activity
+                        </p>
+                        <div className="mt-1.5">
+                          <Sparkline
+                            data={timeline}
+                            type="bar"
+                            height={36}
+                            color={comments > 10 ? "#6366F1" : undefined}
+                            interactive
+                            format="number"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {labels.filter(l => !["CLA Signed", "Resolution: Stale"].includes(l)).map((l: string) => (
+                          <Badge key={l} size="sm" variant="outline">{l}</Badge>
+                        ))}
+                        {labels.filter(l => !["CLA Signed", "Resolution: Stale"].includes(l)).length === 0 && (
+                          <span className="text-xs text-[var(--muted)]">No labels</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Middle: key stats */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <DetailGrid.Item label="Age">
+                        <span className="flex items-center gap-1.5 font-[family-name:var(--font-mono)] text-sm">
+                          <Clock className="h-3 w-3 text-[var(--muted)]" />
+                          {ageDays < 1 ? "today" : ageDays < 30 ? `${ageDays}d` : ageDays < 365 ? `${Math.floor(ageDays / 30)}mo` : `${(ageDays / 365).toFixed(1)}y`}
+                        </span>
+                      </DetailGrid.Item>
+                      {ttc !== null && (
+                        <DetailGrid.Item label="Time to Close">
+                          <span className="flex items-center gap-1.5 font-[family-name:var(--font-mono)] text-sm">
+                            <AlertCircle className="h-3 w-3 text-[var(--muted)]" />
+                            {ttc < 1 ? "<1d" : ttc < 30 ? `${ttc}d` : `${Math.floor(ttc / 30)}mo`}
+                          </span>
+                        </DetailGrid.Item>
+                      )}
+                      <DetailGrid.Item label="Comments">
+                        <span className="flex items-center gap-1.5 font-[family-name:var(--font-mono)] text-sm">
+                          <MessageSquare className="h-3 w-3 text-[var(--muted)]" />
+                          {comments}
+                        </span>
+                      </DetailGrid.Item>
+                      <DetailGrid.Item label="Reactions">
+                        <span className="flex items-center gap-1.5 font-[family-name:var(--font-mono)] text-sm">
+                          <ThumbsUp className="h-3 w-3 text-[var(--muted)]" />
+                          {reactions}
+                        </span>
+                      </DetailGrid.Item>
+                    </div>
+
+                    {/* Right: engagement gauge */}
+                    <div className="flex items-center justify-center">
+                      <Gauge
+                        value={score}
+                        min={0}
+                        max={100}
+                        title="Engagement"
+                        height={100}
+
+                        arcAngle={180}
+                        thresholds={[
+                          { value: 30, color: "gray" },
+                          { value: 60, color: "amber" },
+                          { value: 100, color: "emerald" },
+                        ]}
+                        dense
+                        variant="ghost"
+                      />
+                    </div>
+                  </div>
+                );
+              }}
               rowConditions={[
                 { when: (row: Record<string, unknown>) => (row.reactions as number) > 20, className: "bg-amber-50/30 dark:bg-amber-950/15" },
               ]}
@@ -538,28 +655,109 @@ export default function GitHubDashboard() {
               dense
               multiSort
               searchable
-              renderExpanded={(row: Record<string, unknown>) => (
-                <DetailGrid columns={3}>
-                  <DetailGrid.Item label="Title">
-                    {String(row.title)}
-                  </DetailGrid.Item>
-                  <DetailGrid.Item label="Status">
-                    <span className="flex items-center gap-1.5">
-                      {row.mergedAt ? (
-                        <Badge size="sm" color="purple">Merged</Badge>
-                      ) : row.state === "open" ? (
-                        <Badge size="sm" color="emerald">Open</Badge>
-                      ) : (
-                        <Badge size="sm" color="red">Closed</Badge>
+              renderExpanded={(row: Record<string, unknown>) => {
+                const created = row.createdAt as string;
+                const closed = row.closedAt as string | null;
+                const merged = row.mergedAt as string | null;
+                const isDraft = Boolean(row.draft);
+                const ageDays = daysBetween(created);
+                const ttm = merged ? daysBetween(created, merged) : null;
+                const ttc = closed ? daysBetween(created, closed) : null;
+                const labels = ((row.labels as string[]) ?? []).filter(l => !["CLA Signed", "Resolution: Stale"].includes(l));
+
+                // Simulated review/CI data based on state
+                const reviewStatus = merged ? "approved" : isDraft ? "pending" : row.state === "open" ? "in review" : "changes requested";
+                const ciStatus = merged ? "passed" : row.state === "open" ? "running" : "failed";
+
+                return (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
+                    {/* Left: metadata grid */}
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+                      <DetailGrid.Item label="Author">
+                        <span className="font-[family-name:var(--font-mono)] text-sm">{String(row.user)}</span>
+                      </DetailGrid.Item>
+                      <DetailGrid.Item label="Age">
+                        <span className="flex items-center gap-1.5 font-[family-name:var(--font-mono)] text-sm">
+                          <Clock className="h-3 w-3 text-[var(--muted)]" />
+                          {ageDays < 1 ? "today" : ageDays < 30 ? `${ageDays}d` : `${Math.floor(ageDays / 30)}mo`}
+                        </span>
+                      </DetailGrid.Item>
+                      {ttm !== null && (
+                        <DetailGrid.Item label="Time to Merge">
+                          <span className="font-[family-name:var(--font-mono)] text-sm text-[var(--mu-color-positive)]">
+                            {ttm < 1 ? "<1d" : ttm < 30 ? `${ttm}d` : `${Math.floor(ttm / 30)}mo`}
+                          </span>
+                        </DetailGrid.Item>
                       )}
-                      {Boolean(row.draft) && <Badge size="sm" variant="outline" color="gray">Draft</Badge>}
-                    </span>
-                  </DetailGrid.Item>
-                  <DetailGrid.Item label="Author">
-                    {String(row.user)}
-                  </DetailGrid.Item>
-                </DetailGrid>
-              )}
+                      {ttc !== null && !merged && (
+                        <DetailGrid.Item label="Time to Close">
+                          <span className="font-[family-name:var(--font-mono)] text-sm">
+                            {ttc < 1 ? "<1d" : ttc < 30 ? `${ttc}d` : `${Math.floor(ttc / 30)}mo`}
+                          </span>
+                        </DetailGrid.Item>
+                      )}
+                      <DetailGrid.Item label="Review">
+                        <StatusIndicator
+                          value={reviewStatus === "approved" ? 100 : reviewStatus === "in review" ? 50 : reviewStatus === "pending" ? 0 : 25}
+                          size="sm"
+                          rules={[
+                            { min: 90, color: "emerald", label: "Approved" },
+                            { min: 40, max: 90, color: "blue", label: "In Review" },
+                            { min: 1, max: 40, color: "red", label: "Changes Requested" },
+                            { color: "gray", label: "Pending" },
+                          ]}
+                        />
+                      </DetailGrid.Item>
+                      <DetailGrid.Item label="CI">
+                        <StatusIndicator
+                          value={ciStatus === "passed" ? 100 : ciStatus === "running" ? 50 : 0}
+                          size="sm"
+                          rules={[
+                            { min: 90, color: "emerald", label: "Passed" },
+                            { min: 40, max: 90, color: "amber", label: "Running", pulse: true },
+                            { color: "red", label: "Failed" },
+                          ]}
+                        />
+                      </DetailGrid.Item>
+                      {labels.length > 0 && (
+                        <DetailGrid.Item label="Labels">
+                          <span className="flex flex-wrap gap-1.5">
+                            {labels.map((l: string) => (
+                              <Badge key={l} size="sm" variant="outline">{l}</Badge>
+                            ))}
+                          </span>
+                        </DetailGrid.Item>
+                      )}
+                      {isDraft && (
+                        <DetailGrid.Item label="Status">
+                          <Badge size="sm" variant="outline" color="gray">Draft — not ready for review</Badge>
+                        </DetailGrid.Item>
+                      )}
+                    </div>
+
+                    {/* Right: lifecycle gauge */}
+                    <div className="flex items-center justify-center">
+                      <Gauge
+                        value={merged ? 100 : row.state === "open" ? Math.min(90, ageDays) : 0}
+                        min={0}
+                        max={100}
+                        title="Lifecycle"
+                        subtitle={merged ? "Merged" : row.state === "open" ? "Open" : "Closed"}
+                        height={100}
+
+                        arcAngle={180}
+                        thresholds={[
+                          { value: 30, color: "emerald" },
+                          { value: 70, color: "amber" },
+                          { value: 100, color: "red" },
+                        ]}
+                        dense
+                        variant="ghost"
+                      />
+                    </div>
+                  </div>
+                );
+              }}
             />
           )}
 

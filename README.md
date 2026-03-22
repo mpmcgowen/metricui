@@ -20,6 +20,26 @@
 
 ---
 
+<p align="center">
+  <img src="https://metricui.com/screenshots/full-dark.png" alt="MetricUI SaaS Dashboard — dark mode" width="800" />
+</p>
+
+<p align="center">
+  <em><a href="https://metricui.com/demos/saas">Live SaaS demo</a> — DashboardHeader, filters, KpiCards with conditions, Callout alerts, Waterfall chart. <a href="https://metricui.com/demos/github">GitHub demo</a> also available.</em>
+</p>
+
+---
+
+## Install
+
+```bash
+npm install metricui
+```
+
+That's it. All chart dependencies are included.
+
+---
+
 ## Why MetricUI?
 
 You're building a dashboard. You need KPI cards, charts, tables. You reach for Recharts + shadcn + custom CSS and spend days wiring up formatting, dark mode, loading states, and responsive layouts.
@@ -83,21 +103,71 @@ export default function Dashboard() {
 
 ---
 
-## Install
-
-```bash
-npm install metricui
-```
-
-That's it. All chart dependencies are included.
-
----
-
 ## Features
 
-### 🎯 Smart Format Engine
+### KPI Cards — Not Just Numbers
 
-One prop formats any value. Currency, percentages, durations, compact notation — with locale support.
+<p>
+  <img src="https://metricui.com/screenshots/kpi-dark.png" alt="KpiCard with goal progress" width="280" />
+</p>
+
+Sparkline with previous-period overlay. Goal progress bars. Conditional red/amber/green coloring. Multiple comparison badges. Copyable values. Drill-down links. [Docs &rarr;](https://metricui.com/docs/kpi-card)
+
+### Charts with Reference Lines & Threshold Bands
+
+<p>
+  <img src="https://metricui.com/screenshots/area-dark.png" alt="AreaChart with threshold bands" width="500" />
+</p>
+
+Mark targets, benchmarks, and danger zones directly on charts. Comparison overlays show period-over-period trends as dashed lines. Works on [AreaChart](https://metricui.com/docs/area-chart), [LineChart](https://metricui.com/docs/line-chart), and [BarChart](https://metricui.com/docs/bar-chart).
+
+```tsx
+<AreaChart
+  data={revenueData}
+  comparisonData={previousPeriod}
+  referenceLines={[{ axis: "y", value: 50000, label: "Target", style: "dashed" }]}
+  thresholds={[{ from: 0, to: 30000, color: "#EF4444", opacity: 0.05 }]}
+  format="currency"
+/>
+```
+
+### Data-Driven Alerts
+
+<p>
+  <img src="https://metricui.com/screenshots/callout-light.png" alt="Callout alert with embedded metric" width="500" />
+</p>
+
+Pass a value and rules — [Callout](https://metricui.com/docs/callout) auto-selects the right variant, title, and message. Supports embedded formatted metrics, action buttons, collapsible detail, and auto-dismiss.
+
+### Expandable Data Tables
+
+<p>
+  <img src="https://metricui.com/screenshots/table-dark.png" alt="DataTable with expanded row showing sparkline, gauge, and status indicators" width="700" />
+</p>
+
+Click a row and a mini-dashboard slides open — sparklines, gauges, status indicators, badges. Plus search, multi-sort, pagination, pinned columns, 12 column types, and row conditions. [Docs &rarr;](https://metricui.com/docs/data-table)
+
+### Conversion Funnels
+
+<p>
+  <img src="https://metricui.com/screenshots/funnel-light.png" alt="Funnel chart with conversion rates" width="500" />
+</p>
+
+Auto-computed stage-to-stage conversion rates. Vertical or horizontal. Smooth or linear interpolation. [Docs &rarr;](https://metricui.com/docs/funnel)
+
+### Light & Dark Mode
+
+<p>
+  <img src="https://metricui.com/screenshots/full-light.png" alt="MetricUI Wikipedia dashboard — light mode" width="700" />
+</p>
+
+<em><a href="https://metricui.com/demos/world">Wikipedia live demo</a> in light mode.</em>
+
+CSS variables. Zero config. Every component adapts automatically. [Theming guide &rarr;](https://metricui.com/docs/guides/theming)
+
+### Smart Format Engine
+
+One prop formats any value. Currency, percentages, durations, compact notation — with locale support. [Docs &rarr;](https://metricui.com/docs/guides/format-engine)
 
 ```tsx
 <KpiCard value={127450} format="currency" />        // → $127.5K
@@ -106,9 +176,9 @@ One prop formats any value. Currency, percentages, durations, compact notation �
 <KpiCard value={2400000} format="number" />          // → 2.4M
 ```
 
-### 🎨 Theme Presets
+### Theme Presets
 
-One prop. Entire dashboard changes color.
+One prop. Entire dashboard changes color. 8 built-in presets. Custom presets via `ThemePreset` type. [Theming guide &rarr;](https://metricui.com/docs/guides/theming)
 
 ```tsx
 <MetricProvider theme="emerald">   // Green accent + green-first chart palette
@@ -116,69 +186,23 @@ One prop. Entire dashboard changes color.
 <MetricProvider theme="amber">     // Warm amber everything
 ```
 
-8 built-in presets. Custom presets via `ThemePreset` type.
+### MetricGrid — Zero Layout Code
 
-### 📐 MetricGrid — Zero Layout Code
-
-Drop components in. It figures out the layout.
+Drop components in. It figures out the layout. [Docs &rarr;](https://metricui.com/docs/metric-grid)
 
 ```tsx
 <MetricGrid>
   <MetricGrid.Section title="Overview" />
-  <KpiCard ... />
-  <KpiCard ... />
-  <KpiCard ... />
+  <KpiCard ... />  <KpiCard ... />  <KpiCard ... />
   <AreaChart ... />          {/* Auto 2/3 width */}
   <DonutChart ... />         {/* Auto 1/3 width */}
   <DataTable ... />          {/* Auto full width */}
 </MetricGrid>
 ```
 
-3 KPIs? Equal thirds. 5 KPIs? Equal fifths. No gaps, no orphans.
+### Filter System
 
-### ⚙️ MetricProvider — Global Config
-
-Set it once. Every component inherits.
-
-```tsx
-<MetricProvider
-  theme="emerald"
-  variant="elevated"
-  dense
-  animate={false}
-  locale="de-DE"
-  currency="EUR"
-  nullDisplay="N/A"
->
-  {/* Every component reads these defaults. Props override. */}
-</MetricProvider>
-```
-
-Nested providers merge — override just what you need for a section.
-
-### 📈 Reference Lines & Threshold Bands
-
-Mark targets, benchmarks, and danger zones directly on charts. No custom SVG needed.
-
-```tsx
-<AreaChart
-  data={revenueData}
-  format="currency"
-  referenceLines={[
-    { axis: "y", value: 50000, label: "Target", color: "#10B981", style: "dashed" },
-  ]}
-  thresholds={[
-    { from: 0, to: 30000, color: "#EF4444", opacity: 0.05 },
-  ]}
-  comparisonData={previousPeriod}  // Dashed overlay of last period
-/>
-```
-
-Works on AreaChart, LineChart, and BarChart. Comparison overlays show period-over-period trends at a glance.
-
-### 🔍 Filter System
-
-Complete filter context — wire PeriodSelector, DropdownFilter, SegmentToggle, and FilterTags together with zero boilerplate.
+Complete filter context — wire [PeriodSelector](https://metricui.com/docs/period-selector), [DropdownFilter](https://metricui.com/docs/dropdown-filter), [SegmentToggle](https://metricui.com/docs/segment-toggle), and [FilterTags](https://metricui.com/docs/filter-tags) together with zero boilerplate. [Filtering guide &rarr;](https://metricui.com/docs/guides/filtering)
 
 ```tsx
 <FilterProvider defaultPreset="30d">
@@ -189,38 +213,17 @@ Complete filter context — wire PeriodSelector, DropdownFilter, SegmentToggle, 
 </FilterProvider>
 ```
 
-Read filter state anywhere with `useMetricFilters()`. Comparison periods auto-compute.
+### Data States
 
-### 📊 Data States — Loading, Empty, Error, Stale
+Every component handles loading, empty, error, and stale states out of the box. [Docs &rarr;](https://metricui.com/docs/guides/data-states)
 
-Every component handles data states out of the box. No conditional rendering, no wrapper components.
+### Error Boundaries
 
-```tsx
-<KpiCard title="Revenue" value={data?.revenue} format="currency" loading={isLoading} />
-<AreaChart data={chartData} title="Trends" error={{ message: "API timeout", onRetry: refetch }} />
-<DataTable data={[]} columns={cols} empty={{ message: "No results match your filters" }} />
-```
+One chart crashes? The rest keep running. Dev mode shows component name + actionable hints. Prod mode shows clean retry UI.
 
-One prop per state. Skeletons match the component layout. Errors show retry buttons. Empty states are customizable.
+### Accessibility
 
-### 🛡️ Error Boundaries
-
-One chart crashes? The rest keep running.
-
-- **Dev mode**: Component name, error message, actionable hint, stack trace, copy button
-- **Prod mode**: Clean "couldn't load" + retry button
-- **AI debugging**: `data-component` and `data-error` attributes on the DOM
-
-### 🌙 Dark Mode
-
-CSS variables. Zero config. Matches system preference or toggle manually.
-
-### ♿ Accessibility
-
-- `prefers-reduced-motion` kills all animations
-- Global `focus-visible` ring on every interactive element
-- ARIA attributes on charts (`role="meter"`, `aria-valuenow`)
-- Keyboard-accessible drill-downs and popovers
+`prefers-reduced-motion`, focus-visible rings, ARIA attributes on charts, keyboard-accessible drill-downs. [Docs &rarr;](https://metricui.com/docs/guides/accessibility)
 
 ---
 
@@ -228,59 +231,59 @@ CSS variables. Zero config. Matches system preference or toggle manually.
 
 ### Cards & Metrics
 
-| Component | What it does |
-|-----------|-------------|
-| **KpiCard** | Single metric with comparison badges, sparkline with previous-period overlay, goal progress bar, conditional coloring (10+ named colors), copyable values, drill-down links |
-| **StatGroup** | Multiple metrics in a dense responsive grid row with per-stat comparisons |
+| Component | What it does | Docs |
+|-----------|-------------|------|
+| [**KpiCard**](https://metricui.com/docs/kpi-card) | Comparison badges, sparkline overlays, goal progress, conditional coloring, copyable, drill-down | [Docs](https://metricui.com/docs/kpi-card) |
+| [**StatGroup**](https://metricui.com/docs/stat-group) | Multiple metrics in a dense responsive grid row with per-stat comparisons | [Docs](https://metricui.com/docs/stat-group) |
 
 ### Charts
 
-| Component | What it does |
-|-----------|-------------|
-| **AreaChart** | Time series with gradient fills, stacking (normal + 100%), dual Y-axis, comparison overlays, reference lines, threshold bands, per-series styling, 9 curve types |
-| **LineChart** | Clean line visualization (AreaChart without fill) — same props |
-| **BarChart** | 6 presets (grouped, stacked, percent, horizontal, etc.), comparison/target ghost bars, sorting, negative value coloring, reference lines |
-| **BarLineChart** | Dual-axis combo: bars on left, lines on right — unified data format |
-| **DonutChart** | Proportional breakdown with center KPI content, arc labels, percentage mode |
-| **Gauge** | Arc gauge with threshold zones (auto-color), target markers, comparison badges |
-| **HeatMap** | 2D matrix with color intensity, row/column/cross-hair hover, sequential + diverging scales |
-| **Funnel** | Conversion pipeline with auto-computed stage-to-stage rates, smooth/linear interpolation |
-| **Waterfall** | Sequential +/- changes with auto running totals, connectors, positive/negative/total coloring |
-| **BulletChart** | Actual vs target with qualitative range bands, multiple measures and markers |
-| **Sparkline** | Inline micro-chart (line/bar) with reference lines, bands, trend coloring, min/max markers |
+| Component | What it does | Docs |
+|-----------|-------------|------|
+| [**AreaChart**](https://metricui.com/docs/area-chart) | Gradient fills, stacking, dual Y-axis, comparison overlays, reference lines, threshold bands | [Docs](https://metricui.com/docs/area-chart) |
+| [**LineChart**](https://metricui.com/docs/line-chart) | Clean lines — same props as AreaChart without fill | [Docs](https://metricui.com/docs/line-chart) |
+| [**BarChart**](https://metricui.com/docs/bar-chart) | 6 presets, comparison/target bars, sorting, negative values, reference lines | [Docs](https://metricui.com/docs/bar-chart) |
+| [**BarLineChart**](https://metricui.com/docs/bar-line-chart) | Dual-axis combo: bars + lines — unified data format | [Docs](https://metricui.com/docs/bar-line-chart) |
+| [**DonutChart**](https://metricui.com/docs/donut-chart) | Center KPI content, arc labels, percentage mode | [Docs](https://metricui.com/docs/donut-chart) |
+| [**Gauge**](https://metricui.com/docs/gauge) | Arc gauge with threshold zones, target markers, comparison badges | [Docs](https://metricui.com/docs/gauge) |
+| [**HeatMap**](https://metricui.com/docs/heatmap) | 2D matrix, cross-hair hover, sequential + diverging color scales | [Docs](https://metricui.com/docs/heatmap) |
+| [**Funnel**](https://metricui.com/docs/funnel) | Conversion pipeline with auto-computed rates | [Docs](https://metricui.com/docs/funnel) |
+| [**Waterfall**](https://metricui.com/docs/waterfall) | Sequential +/- changes with auto running totals, connectors | [Docs](https://metricui.com/docs/waterfall) |
+| [**BulletChart**](https://metricui.com/docs/bullet-chart) | Actual vs target with qualitative range bands | [Docs](https://metricui.com/docs/bullet-chart) |
+| [**Sparkline**](https://metricui.com/docs/sparkline) | Inline micro-chart with reference lines, bands, trend coloring | [Docs](https://metricui.com/docs/sparkline) |
 
 ### Data
 
-| Component | What it does |
-|-----------|-------------|
-| **DataTable** | Sort, pagination, search, pinned columns, expandable rows, 12 column types (sparkline, status, progress, badge), row conditions, footer |
+| Component | What it does | Docs |
+|-----------|-------------|------|
+| [**DataTable**](https://metricui.com/docs/data-table) | Sort, search, pagination, expandable rows, 12 column types, pinned columns, row conditions | [Docs](https://metricui.com/docs/data-table) |
 
 ### Layout
 
-| Component | What it does |
-|-----------|-------------|
-| **DashboardHeader** | Page header with live/stale status (pulsing dot), auto-ticking "Updated Xm ago", breadcrumbs, action slots |
-| **MetricGrid** | Smart auto-layout grid — KPIs row up, charts pair, tables go full width. Staggered reveal animations |
-| **SectionHeader** | Labeled section divider with description popover, badge, action slot |
-| **Divider** | Horizontal/vertical separator with optional label, icon, accent coloring |
+| Component | What it does | Docs |
+|-----------|-------------|------|
+| [**DashboardHeader**](https://metricui.com/docs/dashboard-header) | Live/stale status, auto-ticking "Updated Xm ago", breadcrumbs, action slots | [Docs](https://metricui.com/docs/dashboard-header) |
+| [**MetricGrid**](https://metricui.com/docs/metric-grid) | Smart auto-layout grid with staggered reveal animations | [Docs](https://metricui.com/docs/metric-grid) |
+| [**SectionHeader**](https://metricui.com/docs/section-header) | Labeled divider with description popover, badge, action slot | [Docs](https://metricui.com/docs/section-header) |
+| [**Divider**](https://metricui.com/docs/divider) | Horizontal/vertical separator with label, icon, accent | [Docs](https://metricui.com/docs/divider) |
 
 ### Filters
 
-| Component | What it does |
-|-----------|-------------|
-| **FilterProvider** | Context that wires all filter components together. `useMetricFilters()` hook for reading state |
-| **PeriodSelector** | Date range picker with presets (7d, 30d, quarter, YTD, custom), comparison toggle |
-| **DropdownFilter** | Single/multi-select dimension filter with search, grouped options, count badges |
-| **SegmentToggle** | Pill-style toggle for switching segments/views with icons, badges, multi-select |
-| **FilterTags** | Auto-renders active filters as dismissible chips from FilterContext |
+| Component | What it does | Docs |
+|-----------|-------------|------|
+| **FilterProvider** | Context that wires all filter components. `useMetricFilters()` hook | [Guide](https://metricui.com/docs/guides/filtering) |
+| [**PeriodSelector**](https://metricui.com/docs/period-selector) | Date range presets, custom ranges, comparison toggle | [Docs](https://metricui.com/docs/period-selector) |
+| [**DropdownFilter**](https://metricui.com/docs/dropdown-filter) | Multi-select dimension filter with search, grouped options | [Docs](https://metricui.com/docs/dropdown-filter) |
+| [**SegmentToggle**](https://metricui.com/docs/segment-toggle) | Pill toggle with icons, badges, multi-select | [Docs](https://metricui.com/docs/segment-toggle) |
+| [**FilterTags**](https://metricui.com/docs/filter-tags) | Auto-renders active filters as dismissible chips | [Docs](https://metricui.com/docs/filter-tags) |
 
 ### Status & Alerts
 
-| Component | What it does |
-|-----------|-------------|
-| **Callout** | Data-driven alerts — pass a value + rules, auto-selects variant/message with `{value}` templates |
-| **StatusIndicator** | Rule-based health display with 5 sizes (dot to full card), pulse animation, trend arrows, time-in-state |
-| **Badge** | Styled label with 6 variants, 3 sizes, custom colors, icons, dismiss button |
+| Component | What it does | Docs |
+|-----------|-------------|------|
+| [**Callout**](https://metricui.com/docs/callout) | Data-driven alerts with rules, `{value}` templates, embedded metrics | [Docs](https://metricui.com/docs/callout) |
+| [**StatusIndicator**](https://metricui.com/docs/status-indicator) | Rule-based health with 5 sizes, pulse animation, trend arrows | [Docs](https://metricui.com/docs/status-indicator) |
+| [**Badge**](https://metricui.com/docs/badge) | 6 variants, 3 sizes, custom colors, icons, dismiss | [Docs](https://metricui.com/docs/badge) |
 
 ---
 
@@ -299,7 +302,7 @@ claude mcp add --transport stdio metricui -- npx -y @metricui/mcp-server
 
 ## llms.txt
 
-Machine-readable documentation for AI models at `/llms.txt`. Every component, every prop, every type, every pattern.
+Machine-readable documentation for AI models at [`/llms.txt`](https://metricui.com/llms.txt). Every component, every prop, every type, every pattern.
 
 ---
 
