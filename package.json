@@ -17,7 +17,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mpmcgowen/metricui"
+    "url": "git+https://github.com/mpmcgowen/metricui.git"
   },
   "homepage": "https://metricui.com",
   "bugs": {
@@ -41,7 +41,7 @@
     "./styles.css": "./dist/styles.css"
   },
   "bin": {
-    "metricui": "./bin/metricui.js"
+    "metricui": "bin/metricui.js"
   },
   "files": [
     "dist",
