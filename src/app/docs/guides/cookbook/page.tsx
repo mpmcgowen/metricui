@@ -443,7 +443,7 @@ export default function CookbookGuide() {
     { when: "below",       value: 5,  color: "emerald" },
   ]}
 />`}>
-            <div className="flex gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <KpiCard
                 title="Error Rate"
                 value={12.4}
