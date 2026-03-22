@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { CodeBlock } from "@/components/docs/CodeBlock";
 import {
   DollarSign,
   Users,
@@ -16,6 +18,7 @@ import {
   Github,
 } from "lucide-react";
 import { MetricProvider } from "@/lib/MetricProvider";
+import { cn } from "@/lib/utils";
 
 const features = [
   {
@@ -55,25 +58,92 @@ const demos = [
     title: "SaaS Analytics",
     description: "MRR, churn, user growth, channel performance",
     href: "/demos/saas",
+    color: "bg-indigo-500/10 text-indigo-500",
   },
   {
     title: "GitHub Analytics",
     description: "Repository stats, contributors, activity",
     href: "/demos/github",
+    color: "bg-emerald-500/10 text-emerald-500",
   },
   {
     title: "Wikipedia Live",
     description: "Real-time streaming data dashboard",
     href: "/demos/wikipedia",
+    color: "bg-amber-500/10 text-amber-500",
   },
   {
     title: "World Data",
     description: "Population, GDP, geographic metrics",
     href: "/demos/world",
+    color: "bg-cyan-500/10 text-cyan-500",
   },
 ];
 
-const codeExample = `import { KpiCard, AreaChart, MetricGrid, MetricProvider } from "metricui";
+const components = [
+  { name: "KpiCard", href: "/docs/kpi-card", icon: BarChart3 },
+  { name: "StatGroup", href: "/docs/stat-group", icon: Layers },
+  { name: "AreaChart", href: "/docs/area-chart", icon: BarChart3 },
+  { name: "LineChart", href: "/docs/line-chart", icon: BarChart3 },
+  { name: "BarChart", href: "/docs/bar-chart", icon: BarChart3 },
+  { name: "BarLineChart", href: "/docs/bar-line-chart", icon: BarChart3 },
+  { name: "DonutChart", href: "/docs/donut-chart", icon: BarChart3 },
+  { name: "Sparkline", href: "/docs/sparkline", icon: BarChart3 },
+  { name: "Gauge", href: "/docs/gauge", icon: BarChart3 },
+  { name: "HeatMap", href: "/docs/heatmap", icon: BarChart3 },
+  { name: "DataTable", href: "/docs/data-table", icon: Layers },
+  { name: "MetricGrid", href: "/docs/metric-grid", icon: Layers },
+  { name: "DashboardHeader", href: "/docs/dashboard-header", icon: Layers },
+  { name: "PeriodSelector", href: "/docs/period-selector", icon: Layers },
+  { name: "SegmentToggle", href: "/docs/segment-toggle", icon: Layers },
+  { name: "DropdownFilter", href: "/docs/dropdown-filter", icon: Layers },
+  { name: "FilterTags", href: "/docs/filter-tags", icon: Layers },
+  { name: "Callout", href: "/docs/callout", icon: Layers },
+  { name: "StatusIndicator", href: "/docs/status-indicator", icon: Layers },
+  { name: "Badge", href: "/docs/badge", icon: Layers },
+  { name: "SectionHeader", href: "/docs/section-header", icon: Layers },
+  { name: "Divider", href: "/docs/divider", icon: Layers },
+];
+
+const withoutCode = `// The usual way — Recharts + shadcn + custom everything
+import { AreaChart, Area, XAxis, YAxis, Tooltip } from "recharts";
+import { Card, CardHeader, CardTitle, CardContent } from "@/ui/card";
+import { formatCurrency, formatPercent } from "@/lib/format";
+import { Skeleton } from "@/ui/skeleton";
+
+function RevenueCard({ value, prev, loading }) {
+  if (loading) return <Skeleton className="h-32" />;
+  const change = ((value - prev) / prev) * 100;
+  const isPositive = change > 0;
+  return (
+    <Card>
+      <CardHeader><CardTitle>Revenue</CardTitle></CardHeader>
+      <CardContent>
+        <p className="text-2xl font-bold">{formatCurrency(value)}</p>
+        <p className={\`text-sm \${isPositive ? "text-green-600" : "text-red-600"}\`}>
+          {isPositive ? "+" : ""}{formatPercent(change)}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}`;
+
+const withCode = `// MetricUI — same result, zero glue code
+import { KpiCard } from "metricui";
+
+function RevenueCard({ value, prev, loading }) {
+  return (
+    <KpiCard
+      title="Revenue"
+      value={value}
+      format="currency"
+      comparison={{ value: prev }}
+      loading={loading}
+    />
+  );
+}`;
+
+const quickStart = `import { KpiCard, AreaChart, MetricGrid, MetricProvider } from "metricui";
 import "metricui/styles.css";
 
 export default function Dashboard() {
@@ -85,17 +155,17 @@ export default function Dashboard() {
           value={127450}
           format="currency"
           comparison={{ value: 113500 }}
+          sparklineData={[89, 94, 98, 103, 108, 113, 127]}
         />
-        <AreaChart
-          data={revenueData}
-          title="Revenue Over Time"
-        />
+        <AreaChart data={revenueData} title="Revenue Over Time" />
       </MetricGrid>
     </MetricProvider>
   );
 }`;
 
 export default function Home() {
+  const [compareTab, setCompareTab] = useState<"without" | "with">("without");
+
   return (
     <div className="min-h-screen">
       {/* Hero */}
@@ -154,9 +224,12 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Inline preview — just 3 KPI cards */}
+      {/* Inline preview — 3 KPI cards with context */}
       <section className="border-b border-[var(--card-border)] bg-[var(--background)] py-16">
         <div className="mx-auto max-w-4xl px-6">
+          <p className="mb-8 text-center text-sm text-[var(--muted)]">
+            3 props each. No formatting code. No layout CSS. No loading state wrapper.
+          </p>
           <MetricProvider animate>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <KpiCard
@@ -195,8 +268,69 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Before / After comparison */}
       <section className="py-20">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="text-center">
+            <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
+              Before &amp; After
+            </p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
+              Stop assembling dashboards from scratch
+            </h2>
+            <p className="mt-3 text-sm text-[var(--muted)]">
+              A single KPI card with formatting, comparison, and loading state.
+            </p>
+          </div>
+
+          {/* Tab switcher */}
+          <div className="mt-10 flex items-center justify-center gap-1 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-1 w-fit mx-auto">
+            <button
+              onClick={() => setCompareTab("without")}
+              className={cn(
+                "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+                compareTab === "without"
+                  ? "bg-[var(--accent)]/10 text-[var(--accent)]"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)]"
+              )}
+            >
+              Without MetricUI
+            </button>
+            <button
+              onClick={() => setCompareTab("with")}
+              className={cn(
+                "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+                compareTab === "with"
+                  ? "bg-[var(--accent)]/10 text-[var(--accent)]"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)]"
+              )}
+            >
+              With MetricUI
+            </button>
+          </div>
+
+          <div className="mt-6">
+            {compareTab === "without" ? (
+              <div>
+                <CodeBlock code={withoutCode} language="tsx" filename="RevenueCard.tsx — 20 lines" />
+                <p className="mt-3 text-center text-xs text-[var(--muted)]">
+                  4 imports, manual formatting, manual comparison math, manual loading state, manual color logic
+                </p>
+              </div>
+            ) : (
+              <div>
+                <CodeBlock code={withCode} language="tsx" filename="RevenueCard.tsx — 10 lines" />
+                <p className="mt-3 text-center text-xs text-[var(--muted)]">
+                  1 import. Formatting, comparisons, loading, dark mode, theming — all built in.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="border-y border-[var(--card-border)] bg-[var(--card-bg)] py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center">
             <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
@@ -208,7 +342,7 @@ export default function Home() {
           </div>
           <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((f) => (
-              <div key={f.title} className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-6">
+              <div key={f.title} className="rounded-xl border border-[var(--card-border)] bg-[var(--background)] p-6">
                 <f.icon className="h-5 w-5 text-[var(--accent)]" />
                 <h3 className="mt-3 text-sm font-semibold text-[var(--foreground)]">{f.title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted)]">{f.description}</p>
@@ -218,25 +352,25 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Code example */}
-      <section className="border-y border-[var(--card-border)] bg-[var(--card-bg)] py-20">
+      {/* Quick start code */}
+      <section className="py-20">
         <div className="mx-auto max-w-3xl px-6">
           <div className="text-center">
             <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
               Quick Start
             </p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-              A complete dashboard in 15 lines
+              A complete dashboard in 20 lines
             </h2>
           </div>
-          <pre className="mt-10 overflow-x-auto rounded-xl border border-[var(--card-border)] bg-[var(--background)] p-6 text-sm leading-relaxed text-[var(--muted)]">
-            <code>{codeExample}</code>
-          </pre>
+          <div className="mt-10">
+            <CodeBlock code={quickStart} language="tsx" filename="app/dashboard/page.tsx" />
+          </div>
         </div>
       </section>
 
       {/* Live demos */}
-      <section id="demos" className="py-20">
+      <section id="demos" className="border-y border-[var(--card-border)] bg-[var(--card-bg)] py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center">
             <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
@@ -246,7 +380,7 @@ export default function Home() {
               See it in action
             </h2>
             <p className="mt-3 text-sm text-[var(--muted)]">
-              Full interactive dashboards built entirely with MetricUI components.
+              Full interactive dashboards built entirely with MetricUI.
             </p>
           </div>
           <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2">
@@ -254,8 +388,11 @@ export default function Home() {
               <a
                 key={d.href}
                 href={d.href}
-                className="group rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-6 transition-all hover:border-[var(--accent)]/30 hover:shadow-lg hover:shadow-[var(--accent)]/5"
+                className="group rounded-xl border border-[var(--card-border)] bg-[var(--background)] p-6 transition-all hover:border-[var(--accent)]/30 hover:shadow-lg hover:shadow-[var(--accent)]/5"
               >
+                <div className={cn("mb-3 inline-flex rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-wider", d.color)}>
+                  Demo
+                </div>
                 <h3 className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors">
                   {d.title}
                 </h3>
@@ -269,22 +406,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Component list */}
-      <section className="border-t border-[var(--card-border)] bg-[var(--card-bg)] py-20">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
-            22 Components
-          </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            Everything ships free
-          </h2>
-          <p className="mt-6 text-sm leading-relaxed text-[var(--muted)]">
-            KpiCard &middot; StatGroup &middot; AreaChart &middot; LineChart &middot; BarChart &middot; BarLineChart &middot; DonutChart &middot; Sparkline &middot; Gauge &middot; HeatMap &middot; DataTable &middot; MetricGrid &middot; DashboardHeader &middot; SectionHeader &middot; Divider &middot; PeriodSelector &middot; SegmentToggle &middot; DropdownFilter &middot; FilterTags &middot; Callout &middot; StatusIndicator &middot; Badge
-          </p>
-          <div className="mt-8">
-            <a href="/docs" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--accent)] hover:underline">
-              Browse all components <ArrowRight className="h-3.5 w-3.5" />
-            </a>
+      {/* Components grid */}
+      <section className="py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="text-center">
+            <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
+              22 Components
+            </p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
+              Everything ships free
+            </h2>
+          </div>
+          <div className="mx-auto mt-12 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {components.map((c) => (
+              <a
+                key={c.name}
+                href={c.href}
+                className="group flex items-center gap-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2.5 text-sm font-medium text-[var(--muted)] transition-all hover:border-[var(--accent)]/30 hover:text-[var(--accent)]"
+              >
+                <span className="font-[family-name:var(--font-mono)] text-xs">{c.name}</span>
+              </a>
+            ))}
           </div>
         </div>
       </section>
