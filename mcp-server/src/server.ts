@@ -7,7 +7,7 @@ export function createServer(): McpServer {
   const server = new McpServer(
     {
       name: "metricui",
-      version: "0.2.0",
+      version: "0.2.1",
     },
     {
       instructions: `You have access to MetricUI — a premium React component library that turns flat data into polished, interactive analytics dashboards with one import. No Recharts, no Chart.js, no hand-rolled components.

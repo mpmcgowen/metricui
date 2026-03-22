@@ -792,7 +792,7 @@ export function registerTools(server: McpServer): void {
   // --- get_setup_guide (NEW) ---
   server.tool(
     "get_setup_guide",
-    "Get complete setup instructions for MetricUI — install commands, peer dependencies, provider setup, CSS imports, and framework-specific configuration for Next.js, Vite, or CRA.",
+    "Get complete setup instructions for MetricUI — install command, provider setup, CSS imports, and framework-specific configuration for Next.js, Vite, or CRA.",
     {
       framework: z.enum(["nextjs", "vite", "cra", "remix", "generic"]).optional().describe("Target framework (default: nextjs)"),
     },
@@ -802,9 +802,8 @@ export function registerTools(server: McpServer): void {
         `## 1. Install\n`,
         "```bash",
         `npm install metricui`,
-        `# Peer dependencies (install if not already present):`,
-        `npm install react react-dom @nivo/line @nivo/bar @nivo/pie @nivo/core lucide-react clsx tailwind-merge`,
         "```\n",
+        `All chart dependencies (Nivo) are bundled — no extra installs needed. Just make sure you have React 18+ in your project.\n`,
         `## 2. Import CSS\n`,
       ];
 
