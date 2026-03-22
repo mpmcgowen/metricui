@@ -23,7 +23,7 @@ export function ComponentExample({
     >
       {/* Live preview */}
       <div className="border-b border-[var(--card-border)] bg-[var(--card-bg)] p-6">
-        <div className="flex items-start justify-center">{children}</div>
+        <div className="w-full">{children}</div>
       </div>
 
       {/* Code */}
