@@ -287,22 +287,174 @@ One chart crashes? The rest keep running. Dev mode shows component name + action
 
 ---
 
-## MCP Server
+## AI-First: MCP Server + llms.txt
 
-MetricUI ships an MCP server that makes AI coding tools (Claude Code, Cursor, Windsurf) experts on the entire API. The AI knows every component, every prop, every pattern — and generates production-quality dashboards with theme presets, reference lines, threshold bands, conditions, goals, and filter systems on the first try.
+Most component libraries give you docs and hope the AI figures it out. MetricUI gives the AI **structured knowledge of every component, every prop, and every pattern** — so it generates production-quality dashboards on the first try.
 
 ```bash
-# Add to Claude Code (recommended)
+# One command. That's it.
 claude mcp add --transport stdio metricui -- npx -y @metricui/mcp-server
 ```
 
-**What the AI gets:** 12 tools for looking up APIs, generating dashboards, validating props, and searching docs. Full knowledge of all 26 components, every prop, data shapes, advanced patterns, and the format engine. When you say "build me a SaaS dashboard", it generates a complete page with DashboardHeader, MetricGrid, advanced KpiCards, charts with reference lines, and a filter bar — not a generic grid of basic cards.
+### The difference is real
 
----
+Here's what happens when you prompt an AI with **"Build me a SaaS dashboard with MRR, churn, users, and revenue breakdown"**:
 
-## llms.txt
+<details>
+<summary><strong>Without MetricUI MCP</strong> — what the AI generates with Recharts / generic components</summary>
 
-Machine-readable documentation for AI models at [`/llms.txt`](https://metricui.com/llms.txt). Every component, every prop, every type, every pattern.
+```tsx
+// The AI guesses at library APIs, builds everything from scratch
+import { LineChart, Line, XAxis, YAxis, PieChart, Pie } from "recharts";
+
+export default function Dashboard() {
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-6">SaaS Dashboard</h1>
+
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="border rounded-lg p-4">
+          <p className="text-sm text-gray-500">MRR</p>
+          <p className="text-2xl font-bold">${(127450).toLocaleString()}</p>
+          <p className="text-sm text-green-600">+12.3%</p>
+        </div>
+        <div className="border rounded-lg p-4">
+          <p className="text-sm text-gray-500">Churn Rate</p>
+          <p className="text-2xl font-bold">3.2%</p>
+          <p className="text-sm text-green-600">-13.5%</p>
+        </div>
+        {/* ...more hand-built cards with no formatting engine, no sparklines,
+            no conditional coloring, no goal tracking... */}
+      </div>
+
+      <LineChart width={800} height={300} data={data}>
+        <XAxis dataKey="month" />
+        <YAxis />
+        <Line dataKey="revenue" stroke="#8884d8" />
+        {/* No reference lines. No threshold bands. No comparison overlay.
+            No dark mode. No loading states. No error boundaries. */}
+      </LineChart>
+    </div>
+  );
+}
+```
+
+Raw `div` cards. Manual number formatting. No sparklines, no conditions, no goals, no filters, no dark mode, no data states, no error boundaries. Every dashboard looks the same.
+
+</details>
+
+<details open>
+<summary><strong>With MetricUI MCP</strong> — what the AI generates (real output, unedited)</summary>
+
+```tsx
+import {
+  MetricProvider, FilterProvider, DashboardHeader, PeriodSelector,
+  MetricGrid, KpiCard, Callout, AreaChart, DonutChart, BarChart,
+  DataTable, Badge,
+} from "metricui";
+import "metricui/styles.css";
+
+export default function Dashboard() {
+  return (
+    <MetricProvider theme="emerald">
+      <FilterProvider defaultPreset="30d">
+        <DashboardHeader
+          title="SaaS Metrics"
+          subtitle="Real-time metrics overview"
+          lastUpdated={new Date()}
+          actions={<PeriodSelector comparison />}
+        />
+        <MetricGrid>
+          <MetricGrid.Section title="Key Metrics" />
+
+          <KpiCard title="Monthly Revenue" value={127450} format="currency"
+            comparison={{ value: 113500 }} comparisonLabel="vs last month"
+            sparkline={{ data: [89, 94, 99, 103, 109, 114, 127],
+              previousPeriod: [78, 82, 85, 88, 91, 95, 98], interactive: true }}
+            conditions={[
+              { when: "above", value: 115000, color: "emerald" },
+              { when: "below", value: 90000, color: "red" },
+            ]} />
+
+          <KpiCard title="Churn Rate" value={3.2} format="percent"
+            comparison={{ value: 3.7, invertTrend: true }}
+            goal={{ value: 2.5, showTarget: true, showRemaining: true }}
+            conditions={[
+              { when: "below", value: 2.5, color: "emerald" },
+              { when: "above", value: 4, color: "red" },
+            ]} />
+
+          <KpiCard title="Active Users" value={8420} format="number"
+            comparison={{ value: 7680 }} copyable
+            drillDown={{ label: "View breakdown", onClick: () => {} }} />
+
+          <KpiCard title="Conversion" value={4.8} format="percent"
+            comparison={{ value: 4.2 }}
+            sparkline={{ data: [3.1, 3.4, 3.8, 4.0, 4.1, 4.2, 4.8] }} />
+
+          <Callout value={12.3} rules={[
+            { min: 15, variant: "success", title: "Exceptional Growth",
+              message: "Revenue grew {value}% — exceeding target by 50%." },
+            { min: 5, max: 15, variant: "info", title: "Healthy Growth",
+              message: "Revenue grew {value}% month-over-month." },
+            { max: 0, variant: "error", title: "Revenue Declined",
+              message: "Revenue dropped {value}%." },
+          ]} action={{ label: "View growth report", onClick: () => {} }} />
+
+          <MetricGrid.Section title="Trends" subtitle="Last 30 days" border />
+
+          <AreaChart data={revenueData} comparisonData={comparisonData}
+            format="currency" title="Revenue Trend"
+            referenceLines={[{ axis: "y", value: 50000, label: "Target",
+              color: "#10B981", style: "dashed" }]}
+            thresholds={[{ from: 0, to: 40000, color: "#EF4444", opacity: 0.05 }]}
+            xAxisLabel="Month" yAxisLabel="Revenue ($)"
+            height={360} legend />
+
+          <DonutChart data={breakdownData} format="currency"
+            title="Revenue by Plan" centerValue="$99.4K" centerLabel="Total MRR" />
+
+          <MetricGrid.Item span="full">
+            <BarChart preset="grouped" data={channelData}
+              keys={["revenue", "conversions"]} indexBy="channel"
+              sort="desc" format="currency" title="Channel Performance" legend />
+          </MetricGrid.Item>
+
+          <MetricGrid.Section title="Details" border />
+          <DataTable data={tableData} title="Top Customers" searchable
+            columns={[
+              { key: "name", header: "Customer", sortable: true },
+              { key: "plan", header: "Plan",
+                render: (v) => <Badge variant={v === "Enterprise" ? "info" : "default"}>{String(v)}</Badge> },
+              { key: "mrr", header: "MRR", format: "currency", sortable: true },
+              { key: "status", header: "Status",
+                render: (v) => <Badge variant={v === "active" ? "success" : v === "at-risk" ? "warning" : "danger"}>{String(v)}</Badge> },
+            ]} />
+        </MetricGrid>
+      </FilterProvider>
+    </MetricProvider>
+  );
+}
+```
+
+</details>
+
+**Same prompt. The AI with MetricUI MCP generates:**
+- DashboardHeader with live status + auto-ticking "Updated Xm ago"
+- FilterProvider + PeriodSelector with comparison toggle
+- MetricGrid auto-layout (zero CSS)
+- KpiCards with conditional coloring, goal progress bars, sparkline overlays, drill-down links
+- AreaChart with dashed target reference line, danger zone threshold band, and previous-period comparison overlay
+- Data-driven Callout that auto-picks severity from a growth number
+- Sorted grouped BarChart, DonutChart with center KPI
+- Searchable DataTable with Badge status columns
+- Theme preset, dark mode, animations, error boundaries — all automatic
+
+**The AI doesn't guess. It knows.** 12 tools, 26 components, every prop, every pattern. [Full MCP docs &rarr;](https://metricui.com/docs)
+
+### llms.txt
+
+Machine-readable documentation for AI models at [`/llms.txt`](https://metricui.com/llms.txt). Every component, every prop, every type, every pattern — so even AI tools without MCP support can generate correct MetricUI code.
 
 ---
 
