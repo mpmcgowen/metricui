@@ -14,32 +14,73 @@ export function registerPrompts(server: McpServer): void {
         role: "user",
         content: {
           type: "text",
-          text: `You are building a dashboard using MetricUI — a React component library for analytics dashboards.
-
-## Available Components
-${COMPONENTS.map((c) => `- **${c.name}** (${c.category}): ${c.description}`).join("\n")}
-
-## Architecture
-1. Wrap everything in \`<MetricProvider>\` for global config (variant, dense, animate, locale, currency)
-2. Use CSS grid for layout: \`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4\`
-3. Every numeric value should use the format engine: \`format="currency"\`, \`format="percent"\`, etc.
-4. Handle data states: pass \`loading\`, \`empty\`, \`error\` props
-5. All imports come from \`"metricui"\`
+          text: `You are building a production-quality dashboard using MetricUI — a premium React component library for analytics dashboards.
 
 ## Component Selection Guide
-- Single metric → KpiCard
-- Multiple metrics at a glance → StatGroup
-- Trend over time → AreaChart or LineChart
-- Category comparison → BarChart
-- Part of whole → DonutChart
-- Bars + line overlay → BarLineChart
-- Inline trend → Sparkline
-- Detailed data → DataTable
-- Labels/tags → Badge
+
+**KPI & Metrics:**
+- Single metric with sparkline, goal progress, conditional coloring → KpiCard
+- Multiple metrics summary bar → StatGroup
+
+**Charts:**
+- Trend over time (with reference lines, comparison overlays, threshold bands) → AreaChart or LineChart
+- Category comparison (grouped, stacked, horizontal, sorted, with targets) → BarChart
+- Part of whole / composition → DonutChart
+- Bars + line dual-axis overlay → BarLineChart
+- Inline trend in a card or table cell → Sparkline
+- Gauge / health score / progress → Gauge
+- Day/hour activity matrix → HeatMap
+- Conversion pipeline → Funnel
+- P&L bridge / sequential changes → Waterfall
+- Multiple measures vs targets → BulletChart
+
+**Data & Status:**
+- Tabular data with sort, search, pagination, expandable rows → DataTable
+- Data-driven alerts that auto-pick severity from a value → Callout
+- Service health / uptime with threshold rules → StatusIndicator
+- Styled labels/tags → Badge
+
+**Layout:**
+- Dashboard title bar with live/stale status, "Updated Xm ago" → DashboardHeader
+- Section labels with action slots → SectionHeader / MetricGrid.Section
+- Visual separators → Divider
+- Auto-layout grid (drop components in, zero CSS needed) → MetricGrid
+
+**Filters:**
+- Date range with comparison toggle → PeriodSelector
+- Pill-style segment/view switcher → SegmentToggle
+- Multi-select dimension filter → DropdownFilter
+- Active filter chip display → FilterTags
+- Shared filter state context → FilterProvider
+
+## Architecture — ALWAYS follow this
+
+1. Wrap in \`<MetricProvider theme="emerald">\` (or any preset: indigo, rose, amber, cyan, violet, slate, orange)
+2. Wrap in \`<FilterProvider defaultPreset="30d">\` for time filtering
+3. Use \`<DashboardHeader title="..." lastUpdated={new Date()} actions={<PeriodSelector comparison />}>\` — NOT a raw \`<h1>\`
+4. Use \`<MetricGrid>\` for layout with \`<MetricGrid.Section>\` dividers — NOT manual CSS grid
+5. Every numeric value uses the format engine: \`format="currency"\`, \`format="percent"\`, etc.
+6. Handle data states: \`loading\`, \`empty\`, \`error\` props
+7. All imports from \`"metricui"\`
+
+## Make It Impressive — Use These Features
+
+- **KpiCard conditions** — auto-color values: \`conditions={[{ when: "above", value: X, color: "emerald" }, ...]}\`
+- **KpiCard goal** — progress bar: \`goal={{ value: target, showTarget: true }}\`
+- **KpiCard multiple comparisons** — \`comparison={[{ value: X, label: "vs last month" }, { value: Y, label: "vs last year" }]}\`
+- **KpiCard sparkline with overlay** — \`sparkline={{ data: [...], previousPeriod: [...], interactive: true }}\`
+- **Reference lines** on charts — \`referenceLines={[{ axis: "y", value: 50000, label: "Target", style: "dashed" }]}\`
+- **Threshold bands** on charts — \`thresholds={[{ from: 0, to: 30000, color: "#EF4444", opacity: 0.05 }]}\`
+- **Comparison overlay** — \`comparisonData={previousPeriodData}\` for period-over-period chart comparison
+- **BarChart presets** — \`preset="grouped"\`, \`"horizontal"\`, \`"percent"\`
+- **Callout with rules** — data-driven alerts: \`rules={[{ min: 10, variant: "success", message: "Growth at {value}%" }]}\`
+- **StatusIndicator with pulse** — \`rules={[{ min: 99, color: "emerald" }, { max: 99, color: "red", pulse: true }]}\`
+- **Axis labels** — \`xAxisLabel="Month"\` and \`yAxisLabel="Revenue ($)"\` for context
 
 ## Format Mapping
 - Revenue/money → \`format="currency"\`
 - Percentages → \`format="percent"\`
+- Large counts → \`format="compact"\`
 - Counts → \`format="number"\`
 - Time spans → \`format="duration"\`
 
@@ -48,6 +89,7 @@ Build a dashboard for: ${description}
 
 Use the MCP tools to look up specific component APIs:
 - \`get_component_api("KpiCard")\` for prop details
+- \`get_component_example("AreaChart", ["referenceLines", "thresholds"])\` for advanced examples
 - \`suggest_format("revenue")\` for format config
 - \`generate_table_columns(...)\` for DataTable columns
 - \`validate_props(...)\` to check your work`,

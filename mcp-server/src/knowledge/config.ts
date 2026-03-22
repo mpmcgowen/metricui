@@ -35,7 +35,8 @@ function App() {
 | animate        | boolean         | true            | Global animation toggle for all charts and KpiCard count-up |
 | motionConfig   | MotionConfig    | { mass: 1, tension: 170, friction: 26, clamp: true } | Spring physics config for charts |
 | variant        | CardVariant     | "default"       | Default card variant across all components |
-| colors         | string[]        | SERIES_COLORS   | Default series color palette for charts |
+| theme          | string \\| ThemePreset | "indigo"  | Theme preset name or custom theme object. Sets accent color + chart palette in one prop. Built-in: indigo, emerald, rose, amber, cyan, violet, slate, orange. |
+| colors         | string[]        | SERIES_COLORS   | Default series color palette for charts. Overridden by theme preset if set. |
 | nullDisplay    | NullDisplay     | "dash"          | How null/undefined values are displayed in cards/tables |
 | chartNullMode  | ChartNullMode   | "gap"           | How charts handle null/missing data points |
 | dense          | boolean         | false           | Global compact/dense layout toggle |
@@ -97,6 +98,48 @@ const SERIES_COLORS = [
   "#8B5CF6", // violet
   "#14B8A6", // teal
 ];
+\`\`\`
+
+## Theme Presets
+
+One prop transforms your entire dashboard's look. Theme presets set the accent color (light + dark mode) and the 8-color chart series palette:
+
+\`\`\`tsx
+<MetricProvider theme="emerald">
+  {/* Every card, chart, and component picks up the emerald palette */}
+</MetricProvider>
+\`\`\`
+
+### Built-in presets
+
+| Preset   | Accent (light) | Accent (dark) | Vibe                    |
+|----------|----------------|---------------|-------------------------|
+| indigo   | #4F46E5        | #818CF8       | Default, professional   |
+| emerald  | #059669        | #34D399       | Fresh, growth-oriented  |
+| rose     | #E11D48        | #FB7185       | Bold, attention-grabbing|
+| amber    | #D97706        | #FBBF24       | Warm, inviting          |
+| cyan     | #0891B2        | #22D3EE       | Clean, technical        |
+| violet   | #7C3AED        | #A78BFA       | Creative, modern        |
+| slate    | #475569        | #94A3B8       | Neutral, understated    |
+| orange   | #EA580C        | #FB923C       | Energetic, action       |
+
+Each preset includes a colorblind-safe 8-color chart palette that harmonizes with the accent.
+
+### Custom themes
+
+Create your own brand theme:
+
+\`\`\`tsx
+import type { ThemePreset } from "metricui";
+
+const brandTheme: ThemePreset = {
+  name: "Brand",
+  accent: "#FF6B00",
+  accentDark: "#FF9A45",
+  colors: ["#FF6B00", "#3B82F6", "#10B981", "#F59E0B", "#EC4899", "#8B5CF6", "#06B6D4", "#14B8A6"],
+};
+
+<MetricProvider theme={brandTheme}>
 \`\`\`
 `;
 

@@ -1,12 +1,13 @@
 {
   "name": "@metricui/mcp-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for the MetricUI dashboard component library — exposes full API surface to AI coding tools",
   "type": "module",
   "bin": {
     "metricui-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
+  "files": ["dist"],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -21,5 +22,12 @@
     "@types/node": "^22.0.0"
   },
   "keywords": ["mcp", "model-context-protocol", "metricui", "dashboard", "react", "ai"],
-  "license": "MIT"
+  "mcpName": "io.github.mpmcgowen/metricui",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mpmcgowen/metricui",
+    "directory": "mcp-server"
+  },
+  "homepage": "https://metricui.com"
 }

@@ -182,19 +182,13 @@ CSS variables. Zero config. Matches system preference or toggle manually.
 | **Badge** | Styled label with variants, sizes, dismiss |
 | **MetricGrid** | Smart auto-layout grid with sections |
 
-### Pro Components (Coming Soon)
-
-Advanced charts for specialized use cases — available in `@metricui/pro`.
+### Advanced Charts
 
 | Component | What it does |
 |-----------|-------------|
 | **Funnel** | Conversion stages with rates, vertical/horizontal |
 | **Waterfall** | Sequential positive/negative changes, P&L bridges |
 | **BulletChart** | Actual vs target with qualitative range bands |
-| **Export** | PNG, SVG, CSV, clipboard on any chart or table |
-| **Cross-filtering** | Click a bar/slice/row, other components filter |
-
-[Join the waitlist →](https://metricui.com/pro)
 
 ---
 

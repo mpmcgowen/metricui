@@ -28,7 +28,7 @@ export interface ComponentDef {
   name: string;
   importName: string;
   category: "chart" | "card" | "table" | "ui";
-  tier: "free" | "pro";
+  tier: "free";
   description: string;
   longDescription: string;
   props: PropDef[];
@@ -572,7 +572,7 @@ interface KpiCardData {
       { name: "categories", type: "Category[]", required: false, description: "Columns to plot as series. Accepts plain strings or CategoryConfig objects ({ key, label?, format?, color?, axis? }). If omitted with index, auto-inferred as all number columns." },
       { name: "simpleData", type: "{ label: string; value: number | null }[]", required: false, description: "Simple data format for single-series. Converted to full series internally. `data` takes precedence." },
       { name: "simpleDataId", type: "string", required: false, default: '"Value"', description: "Series name when using simpleData." },
-      { name: "comparisonData", type: "{ id: string; data: { x: string | number; y: number | null }[] }[]", required: false, description: "Previous period data — renders as dashed overlay lines." },
+      { name: "comparisonData", type: "{ id: string; data: { x: string | number; y: number | null }[] }[]", required: false, description: "Previous period data rendered as dashed overlay lines at 50% opacity. Same shape as `data`. Use for period-over-period comparison — e.g., this month vs last month. Series IDs must match `data` series IDs." },
       { name: "title", type: "string", required: false, description: "Chart card title." },
       { name: "subtitle", type: "string", required: false, description: "Chart card subtitle." },
       { name: "description", type: "string | React.ReactNode", required: false, description: "Description popover content." },
@@ -589,21 +589,21 @@ interface KpiCardData {
       { name: "stackMode", type: '"normal" | "percent"', required: false, default: '"normal"', description: 'Stack mode. "normal" stacks raw values, "percent" normalizes to 100%.' },
       { name: "enableGridX", type: "boolean", required: false, default: "false", description: "Show vertical grid lines." },
       { name: "enableGridY", type: "boolean", required: false, default: "true", description: "Show horizontal grid lines." },
-      { name: "referenceLines", type: "ReferenceLine[]", required: false, description: "Reference lines (horizontal or vertical)." },
-      { name: "thresholds", type: "ThresholdBand[]", required: false, description: "Colored Y-axis range bands." },
-      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend configuration. Default: shown for multi-series." },
-      { name: "xAxisLabel", type: "string", required: false, description: "X-axis label." },
-      { name: "yAxisLabel", type: "string", required: false, description: "Y-axis label." },
-      { name: "rightAxisSeries", type: "string[]", required: false, description: "Series IDs assigned to the right Y-axis." },
-      { name: "rightAxisFormat", type: "FormatOption", required: false, description: "Format for right Y-axis values." },
-      { name: "rightAxisLabel", type: "string", required: false, description: "Right Y-axis label." },
+      { name: "referenceLines", type: "ReferenceLine[]", required: false, description: "Horizontal or vertical reference lines for targets, averages, or benchmarks. Each: `{ axis: 'x'|'y', value: number|string, label?: string, color?: string, style?: 'solid'|'dashed'|'dotted' }`. Rendered on top of the chart area." },
+      { name: "thresholds", type: "ThresholdBand[]", required: false, description: "Colored horizontal range bands for danger/warning/safe zones. Each: `{ from: number, to: number, color: string, opacity?: number, label?: string }`. Rendered behind the chart area. Great for SLA targets, budget limits, or performance zones." },
+      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend with series toggle. `true` shows default legend. LegendConfig: `{ position?, orientation?, toggleable?, className? }`. Cmd/Ctrl+click to solo a series. ARIA keyboard accessible." },
+      { name: "xAxisLabel", type: "string", required: false, description: "Label displayed along the X-axis. Use to clarify units or context (e.g., 'Month', 'Date'). Auto-hidden at narrow widths (<400px)." },
+      { name: "yAxisLabel", type: "string", required: false, description: "Label displayed along the Y-axis. Use to clarify units or context (e.g., 'Revenue ($)', 'Users'). Auto-hidden at narrow widths (<400px)." },
+      { name: "rightAxisSeries", type: "string[]", required: false, description: "Series IDs to plot on a separate right Y-axis. Use for dual-axis charts where series have different scales (e.g., revenue on left, percentage on right)." },
+      { name: "rightAxisFormat", type: "FormatOption", required: false, description: "Format for the right Y-axis values and tooltips. Typically different from the left axis (e.g., left='currency', right='percent')." },
+      { name: "rightAxisLabel", type: "string", required: false, description: "Label for the right Y-axis." },
       { name: "lineWidth", type: "number", required: false, default: "2", description: "Line width in px." },
       { name: "lineStyle", type: '"solid" | "dashed" | "dotted"', required: false, default: '"solid"', description: "Line stroke style." },
       { name: "pointSize", type: "number", required: false, default: "6", description: "Point radius in px." },
       { name: "pointColor", type: 'string | { from: string; modifiers?: any[] }', required: false, default: '"var(--card-bg)"', description: 'Point fill color. Default creates hollow ring effect. Use { from: "serieColor" } for solid.' },
       { name: "pointBorderWidth", type: "number", required: false, default: "2", description: "Point border width in px." },
       { name: "pointBorderColor", type: "string", required: false, description: "Point border color. Default: series color." },
-      { name: "seriesStyles", type: "Record<string, SeriesStyle>", required: false, description: "Per-series style overrides keyed by series ID (color, lineWidth, lineStyle, pointSize, etc.)." },
+      { name: "seriesStyles", type: "Record<string, SeriesStyle>", required: false, description: "Per-series visual overrides keyed by series ID. Override color, lineWidth, lineStyle ('solid'|'dashed'|'dotted'), pointSize, pointColor, pointBorderWidth for individual series. E.g., make one series dashed while others are solid." },
       { name: "colors", type: "string[]", required: false, description: "Series colors. Default: theme series palette (SERIES_COLORS)." },
       { name: "onPointClick", type: "(point: { id: string; value: number; label: string; seriesId: string; x: string | number; y: number }) => void", required: false, description: "Click handler for data points." },
       { name: "dense", type: "boolean", required: false, default: "false", description: "Compact layout — reduces margins and default height." },
@@ -673,6 +673,53 @@ type SimpleData = { label: string; value: number | null }[];`,
     { label: "Fri", value: 155 },
   ]}
   title="Daily Signups"
+/>`,
+      },
+      {
+        title: "Reference lines, threshold bands, and comparison overlay",
+        description: "Revenue trend with a dashed target line, colored danger/safe zones, previous period overlay, and dual-axis.",
+        code: `<AreaChart
+  data={[
+    { id: "Revenue", data: months.map(m => ({ x: m.label, y: m.revenue })) },
+  ]}
+  comparisonData={[
+    { id: "Revenue", data: prevMonths.map(m => ({ x: m.label, y: m.revenue })) },
+  ]}
+  referenceLines={[
+    { axis: "y", value: 50000, label: "Target", color: "#10B981", style: "dashed" },
+    { axis: "y", value: 30000, label: "Break-even", color: "#F59E0B", style: "dotted" },
+  ]}
+  thresholds={[
+    { from: 0, to: 30000, color: "#EF4444", opacity: 0.06, label: "Below target" },
+    { from: 50000, to: 100000, color: "#10B981", opacity: 0.04 },
+  ]}
+  format="currency"
+  title="Revenue Trend"
+  subtitle="vs previous period"
+  xAxisLabel="Month"
+  yAxisLabel="Revenue ($)"
+  height={360}
+/>`,
+      },
+      {
+        title: "Dual Y-axis with per-series styling",
+        description: "Revenue on left axis, conversion rate on right axis, with custom line styles per series.",
+        code: `<AreaChart
+  data={[
+    { id: "Revenue", data: months.map(m => ({ x: m.label, y: m.revenue })) },
+    { id: "Conversion", data: months.map(m => ({ x: m.label, y: m.cvr })) },
+  ]}
+  rightAxisSeries={["Conversion"]}
+  format="currency"
+  rightAxisFormat="percent"
+  yAxisLabel="Revenue"
+  rightAxisLabel="CVR %"
+  seriesStyles={{
+    Revenue: { lineWidth: 2.5 },
+    Conversion: { lineStyle: "dashed", lineWidth: 1.5 },
+  }}
+  title="Revenue & Conversion"
+  legend
 />`,
       },
     ],
@@ -804,13 +851,13 @@ type SeriesData = { id: string; data: Datum[] };`,
     longDescription:
       "BarChart renders categorical data as bars . Supports six built-in presets (default, grouped, stacked, percent, horizontal, horizontal-grouped), comparison data as dashed outline bars, target data as ghost bars, negative value coloring, per-key style overrides, reference lines, threshold bands, value labels, and bar sorting. Responsive margins and tick thinning adapt to container width.",
     props: [
-      { name: "preset", type: "BarChartPreset", required: false, description: 'Preset configuration: "default", "grouped", "stacked", "percent", "horizontal", "horizontal-grouped". Individual props override preset values.' },
+      { name: "preset", type: "BarChartPreset", required: false, description: 'One-prop configuration shortcut. "default" = vertical stacked, "grouped" = side-by-side bars, "stacked" = stacked bars, "percent" = 100% normalized stack, "horizontal" = horizontal bars, "horizontal-grouped" = horizontal side-by-side. Individual props override preset values.' },
       { name: "data", type: "Record<string, string | number>[]", required: true, description: "Array of data rows. Each row is an object with the indexBy field and numeric keys." },
       { name: "index", type: "string", required: false, description: "Column key for the x-axis labels. Used with the unified flat-row data format. If omitted with categories, auto-inferred as the first string column." },
       { name: "categories", type: "Category[]", required: false, description: "Columns to plot as series. Accepts plain strings or CategoryConfig objects ({ key, label?, format?, color?, axis? }). If omitted with index, auto-inferred as all number columns." },
       { name: "keys", type: "string[]", required: true, description: "Keys (series names) to render as bars." },
       { name: "indexBy", type: "string", required: true, description: "Field name used as the category axis." },
-      { name: "comparisonData", type: "Record<string, string | number>[]", required: false, description: "Previous period data rendered as dashed outline bars." },
+      { name: "comparisonData", type: "Record<string, string | number>[]", required: false, description: "Previous period data rendered as dashed outline bars behind the actual bars. Same row shape as `data`. Shows period-over-period comparison at a glance." },
       { name: "title", type: "string", required: false, description: "Chart card title." },
       { name: "subtitle", type: "string", required: false, description: "Chart card subtitle." },
       { name: "description", type: "string | React.ReactNode", required: false, description: "Description popover content." },
@@ -825,19 +872,19 @@ type SeriesData = { id: string; data: Datum[] };`,
       { name: "borderRadius", type: "number", required: false, default: "4", description: "Corner radius on bars. Set to 0 for stacked modes." },
       { name: "enableLabels", type: "boolean", required: false, default: "false", description: "Show formatted value labels on bars." },
       { name: "labelPosition", type: '"inside" | "outside" | "auto"', required: false, default: '"auto"', description: "Where labels appear." },
-      { name: "sort", type: '"none" | "asc" | "desc"', required: false, default: '"none"', description: "Sort bars by total value." },
-      { name: "enableNegative", type: "boolean", required: false, default: "false", description: "Enable diverging colors for negative values." },
-      { name: "negativeColor", type: "string", required: false, default: '"#EF4444"', description: "Color for negative bars." },
-      { name: "targetData", type: "Record<string, number>[]", required: false, description: "Target values — renders ghost/outline bars behind actuals." },
+      { name: "sort", type: '"none" | "asc" | "desc"', required: false, default: '"none"', description: "Sort bars by total value. 'desc' puts highest bars first — great for leaderboards and ranked comparisons." },
+      { name: "enableNegative", type: "boolean", required: false, default: "false", description: "Enable diverging colors for negative values. Positive bars use series color, negative bars use negativeColor. Use for P&L, variance, or NPS charts." },
+      { name: "negativeColor", type: "string", required: false, default: '"#EF4444"', description: "Color for negative-value bars when enableNegative is true." },
+      { name: "targetData", type: "Record<string, number>[]", required: false, description: "Target/goal values rendered as semi-transparent ghost bars behind actual bars. Same shape as `data`. Use for actual-vs-target comparisons (e.g., sales targets, quotas)." },
       { name: "targetColor", type: "string", required: false, description: "Color for target bars. Default: theme-aware muted color." },
       { name: "seriesStyles", type: "Record<string, BarSeriesStyle>", required: false, description: "Per-key color overrides. BarSeriesStyle has { color?: string }." },
       { name: "colors", type: "string[]", required: false, description: "Series colors. Default: theme series palette." },
-      { name: "referenceLines", type: "ReferenceLine[]", required: false, description: "Reference lines." },
-      { name: "thresholds", type: "ThresholdBand[]", required: false, description: "Threshold bands." },
-      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend configuration. Default: shown for multi-key data." },
-      { name: "xAxisLabel", type: "string", required: false, description: "X-axis label." },
-      { name: "yAxisLabel", type: "string", required: false, description: "Y-axis label." },
-      { name: "onBarClick", type: "(bar: { id: string | number; value: number | null; label: string; key: string; indexValue: string | number }) => void", required: false, description: "Click handler for bars." },
+      { name: "referenceLines", type: "ReferenceLine[]", required: false, description: "Horizontal or vertical reference lines for targets, averages, or benchmarks. Each: `{ axis: 'x'|'y', value, label?, color?, style? }`." },
+      { name: "thresholds", type: "ThresholdBand[]", required: false, description: "Colored range bands for danger/warning/safe zones. Each: `{ from, to, color, opacity?, label? }`. Rendered behind bars." },
+      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend with series toggle. Cmd/Ctrl+click to solo. Default: shown for multi-key data." },
+      { name: "xAxisLabel", type: "string", required: false, description: "Label along the X-axis (category axis in vertical mode, value axis in horizontal). Auto-hidden at narrow widths." },
+      { name: "yAxisLabel", type: "string", required: false, description: "Label along the Y-axis (value axis in vertical mode, category axis in horizontal). Auto-hidden at narrow widths." },
+      { name: "onBarClick", type: "(bar: { id: string | number; value: number | null; label: string; key: string; indexValue: string | number }) => void", required: false, description: "Click handler for bars. Use for drill-down navigation — e.g., click a bar to navigate to detail view for that category." },
       { name: "dense", type: "boolean", required: false, default: "false", description: "Compact layout." },
       { name: "chartNullMode", type: "ChartNullMode", required: false, default: '"gap"', description: 'Null handling. Only "zero" transforms bar data.' },
       { name: "animate", type: "boolean", required: false, default: "true", description: "Enable/disable animation." },
@@ -911,6 +958,54 @@ const indexBy = "month";`,
   indexBy="month"
   title="Channel Mix"
   legend
+/>`,
+      },
+      {
+        title: "Leaderboard with targets, reference line, and sorting",
+        description: "Horizontal sorted bars with target ghost bars and a team average reference line.",
+        code: `<BarChart
+  preset="horizontal"
+  data={[
+    { rep: "Alice", deals: 28 },
+    { rep: "Bob", deals: 22 },
+    { rep: "Carol", deals: 35 },
+    { rep: "Dave", deals: 18 },
+    { rep: "Eve", deals: 31 },
+  ]}
+  keys={["deals"]}
+  indexBy="rep"
+  sort="desc"
+  targetData={[
+    { rep: "Alice", deals: 25 },
+    { rep: "Bob", deals: 25 },
+    { rep: "Carol", deals: 25 },
+    { rep: "Dave", deals: 25 },
+    { rep: "Eve", deals: 25 },
+  ]}
+  referenceLines={[{ axis: "x", value: 25, label: "Team Target", color: "#10B981", style: "dashed" }]}
+  enableLabels
+  title="Sales Leaderboard"
+  subtitle="Deals closed vs target"
+/>`,
+      },
+      {
+        title: "Negative value chart with diverging colors",
+        description: "Show positive and negative values with automatic color divergence.",
+        code: `<BarChart
+  data={[
+    { metric: "Revenue", change: 12.5 },
+    { metric: "Users", change: 8.2 },
+    { metric: "Churn", change: -3.1 },
+    { metric: "Costs", change: -7.4 },
+    { metric: "NPS", change: 15.0 },
+  ]}
+  keys={["change"]}
+  indexBy="metric"
+  enableNegative
+  enableLabels
+  format="percent"
+  title="Month-over-Month Changes"
+  yAxisLabel="Change %"
 />`,
       },
     ],
@@ -1621,7 +1716,7 @@ interface FooterRow {
       { name: "enableLabels", type: "boolean", required: false, default: "false", description: "Show values inside cells." },
       { name: "forceSquare", type: "boolean", required: false, default: "false", description: "Force cells to be square." },
       { name: "cellPadding", type: "number", required: false, default: "0.05", description: "Inner padding between cells (0-1)." },
-      { name: "hoverTarget", type: '"cell" | "row" | "column" | "rowColumn"', required: false, default: '"cell"', description: "Highlight behavior on hover." },
+      { name: "hoverTarget", type: '"cell" | "row" | "column" | "rowColumn"', required: false, default: '"cell"', description: "What to highlight on hover. 'cell' = single cell, 'row' = entire row, 'column' = entire column, 'rowColumn' = cross-hair highlighting both row and column. Use 'rowColumn' for comparing patterns across dimensions." },
       { name: "onCellClick", type: "(cell: { serieId: string; x: string; value: number | null }) => void", required: false, description: "Click handler for cells." },
       { name: "animate", type: "boolean", required: false, description: "Enable animation. Reads from MetricProvider." },
       { name: "variant", type: "CardVariant", required: false, description: "Card variant (supports custom strings). CSS-variable-driven via [data-variant]. Reads from MetricProvider." },
@@ -1680,6 +1775,26 @@ const simpleData = {
   enableLabels
   forceSquare
   format={{ style: "number", precision: 2 }}
+/>`,
+      },
+      {
+        title: "Interactive activity heatmap with cross-hair hover and drill-down",
+        description: "Day x hour grid with row+column highlighting and click to drill down.",
+        code: `<HeatMap
+  simpleData={{
+    Mon: { "9am": 12, "10am": 45, "11am": 78, "12pm": 92, "1pm": 85 },
+    Tue: { "9am": 23, "10am": 56, "11am": 92, "12pm": 110, "1pm": 95 },
+    Wed: { "9am": 34, "10am": 67, "11am": 88, "12pm": 105, "1pm": 78 },
+    Thu: { "9am": 18, "10am": 42, "11am": 65, "12pm": 88, "1pm": 72 },
+    Fri: { "9am": 8, "10am": 28, "11am": 45, "12pm": 62, "1pm": 55 },
+  }}
+  title="Peak Activity Hours"
+  subtitle="Sessions by day and time"
+  hoverTarget="rowColumn"
+  enableLabels
+  colors={["#f0fdf4", "#86efac", "#22c55e", "#15803d", "#14532d"]}
+  onCellClick={(cell) => setDrill({ day: cell.serieId, hour: cell.x })}
+  height={280}
 />`,
       },
     ],
@@ -2036,7 +2151,7 @@ type CalloutVariant = "info" | "warning" | "success" | "error";`,
     name: "Funnel",
     importName: "Funnel",
     category: "chart" as const,
-    tier: "pro",
+    tier: "free",
     description: "Conversion funnel chart showing value drop-off between stages. ",
     longDescription:
       "Funnel renders a series of stages showing how values decrease through a process (e.g. signup pipeline). Supports vertical and horizontal layouts, smooth or linear interpolation, configurable shape blending (rectangles to smooth trapezoids), conversion rate annotations between stages, separator lines, custom colors per stage, interactive legends with toggle, click handlers with percentage data, and the simpleData shorthand (plain key-value object). Integrates with MetricProvider, format engine, and data states.",
@@ -2155,7 +2270,7 @@ type SimpleFunnelData = Record<string, number>;
     name: "BulletChart",
     importName: "BulletChart",
     category: "chart" as const,
-    tier: "pro",
+    tier: "free",
     description: "Bullet chart for comparing actual values against targets with qualitative range bands. ",
     longDescription:
       "BulletChart renders one or more horizontal (or vertical) bars comparing an actual measured value against a target marker, overlaid on qualitative range bands (e.g. poor / satisfactory / good). Supports full BulletDatum format and a simpleData shorthand (label/value/target/max/zones). Auto-calculates height from item count, provides theme-aware range colors, configurable measure and marker sizes, title positioning, and axis visibility. Integrates with MetricProvider, format engine, and data states.",
@@ -2284,7 +2399,7 @@ interface SimpleBulletData {
     name: "Waterfall",
     importName: "Waterfall",
     category: "chart" as const,
-    tier: "pro",
+    tier: "free",
     description: "Waterfall chart showing sequential positive and negative changes from a starting value. ",
     longDescription:
       "Waterfall renders a series of bars showing how individual positive and negative values contribute to a running total. Uses a stacked spacer technique — transparent spacer bars create the floating effect. Supports value, subtotal, and total item types. Subtotals show the running total without resetting; totals show and reset. Connector lines (dashed) link adjacent bars. Positive bars are green, negative are red, subtotal/total bars use the accent color. Integrates with MetricProvider, format engine, and data states.",
@@ -2450,6 +2565,190 @@ interface SimpleBulletData {
       "MetricGrid.Section renders a full-width labeled divider with the same muted uppercase style.",
       "MetricGrid.Item accepts span='sm'|'md'|'lg'|'full' or a column count number.",
       "Responsive: 4 cols at lg, 2 at sm, 1 below 640px.",
+      "Reveal-on-scroll: each grid cell animates in with a staggered 60ms fade+slide. Respects animate={false} and prefers-reduced-motion.",
+    ],
+  },
+
+  // =========================================================================
+  // DashboardHeader
+  // =========================================================================
+  {
+    name: "DashboardHeader",
+    importName: "DashboardHeader",
+    category: "ui" as const,
+    tier: "free",
+    description: "Top-level dashboard identity bar with title, live/stale status, auto-ticking 'Updated Xm ago', breadcrumbs, back navigation, and action slots.",
+    longDescription:
+      "DashboardHeader is the page-level header for MetricUI dashboards. It displays the dashboard title with an optional subtitle, description popover, and a status badge (live/stale/offline/loading) with pulsing dot animation. Pass `lastUpdated` to enable an auto-ticking 'Updated Xm ago' label that turns amber when stale. Supports breadcrumb navigation, back button, and an action slot for filters/controls (e.g., PeriodSelector). Uses the card shell styling and noise texture. Uses forwardRef.",
+    props: [
+      { name: "title", type: "string", required: true, description: "Dashboard title. Rendered as an h1 in monospace font." },
+      { name: "subtitle", type: "string", required: false, description: "Secondary label below the title." },
+      { name: "description", type: "string | React.ReactNode", required: false, description: "Content shown in a '?' popover next to the title. Use for dashboard explanation or data source info." },
+      { name: "lastUpdated", type: "Date", required: false, description: "Timestamp of last data refresh. Enables auto-ticking 'Updated Xm ago' label (ticks every 15s). Turns amber when older than staleAfter minutes. Also auto-derives status to 'live' or 'stale' if status prop is not set." },
+      { name: "staleAfter", type: "number", required: false, default: "5", description: "Minutes before 'last updated' turns amber and status auto-switches to 'stale'. Default: 5 minutes." },
+      { name: "status", type: "DashboardStatus", required: false, description: "Status badge: 'live' (green pulsing dot), 'stale' (amber dot), 'offline' (red dot), 'loading' (gray pulsing dot). Auto-derived from lastUpdated/staleAfter if not set explicitly." },
+      { name: "back", type: "{ href?: string; label?: string; onClick?: () => void }", required: false, description: "Back navigation link/button. Shows arrow icon + label. Rendered as <a> if href provided, <button> otherwise. Hidden when breadcrumbs are present." },
+      { name: "breadcrumbs", type: "BreadcrumbItem[]", required: false, description: "Breadcrumb trail. Each item: { label, href?, onClick? }. Last item is styled as current page. Chevron separators between items." },
+      { name: "actions", type: "React.ReactNode", required: false, description: "Right-aligned action slot. Place PeriodSelector, SegmentToggle, buttons, or any controls here." },
+      { name: "variant", type: "CardVariant", required: false, description: "Card variant. Falls back to MetricProvider." },
+      { name: "dense", type: "boolean", required: false, description: "Compact layout. Falls back to MetricProvider." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names." },
+      { name: "classNames", type: "{ root?, title?, subtitle?, breadcrumbs?, status?, actions? }", required: false, description: "Sub-element class overrides." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id." },
+    ],
+    dataShape: `interface BreadcrumbItem {
+  label: string;
+  href?: string;
+  onClick?: () => void;
+}
+
+type DashboardStatus = "live" | "stale" | "offline" | "loading";`,
+    minimalExample: `<DashboardHeader title="Sales Dashboard" />`,
+    examples: [
+      {
+        title: "Live dashboard with auto-updating status and filters",
+        description: "Shows live status, auto-ticking timestamp, and PeriodSelector in the actions slot.",
+        code: `<DashboardHeader
+  title="Revenue Dashboard"
+  subtitle="Real-time SaaS metrics"
+  lastUpdated={new Date()}
+  actions={<PeriodSelector comparison />}
+/>`,
+      },
+      {
+        title: "Dashboard with breadcrumbs and description",
+        description: "Breadcrumb navigation trail with explanation popover.",
+        code: `<DashboardHeader
+  title="Customer Cohort Analysis"
+  description="Monthly cohort retention rates computed from Stripe subscription events. Updated every 6 hours."
+  breadcrumbs={[
+    { label: "Dashboards", href: "/dashboards" },
+    { label: "Customers", href: "/dashboards/customers" },
+    { label: "Cohort Analysis" },
+  ]}
+  lastUpdated={lastRefresh}
+  staleAfter={360}
+/>`,
+      },
+      {
+        title: "Dashboard with back navigation and multiple actions",
+        description: "Back button, manual status, and multiple controls in actions.",
+        code: `<DashboardHeader
+  title="Order Details"
+  subtitle={\`Order #\${orderId}\`}
+  back={{ label: "All Orders", onClick: () => router.push("/orders") }}
+  status="live"
+  actions={
+    <div className="flex items-center gap-2">
+      <SegmentToggle options={["Summary", "Timeline", "Items"]} />
+      <button onClick={refresh}>Refresh</button>
+    </div>
+  }
+/>`,
+      },
+    ],
+    relatedComponents: ["MetricProvider", "MetricGrid", "SectionHeader", "PeriodSelector"],
+    configFields: ["variant", "dense"],
+    notes: [
+      "Uses forwardRef — attach a ref to the root div.",
+      "Wrapped in ErrorBoundary for graceful error handling.",
+      "Has __gridHint = 'header' for MetricGrid auto-layout — always renders full-width at the top.",
+      "The status badge has a pulsing dot animation for 'live' and 'loading' states.",
+      "lastUpdated auto-ticks every 15s — no manual polling needed.",
+      "If both back and breadcrumbs are provided, breadcrumbs take priority (back is hidden).",
+      "Uses the card shell (border, noise texture) for consistent visual hierarchy with other MetricUI components.",
+    ],
+  },
+
+  // =========================================================================
+  // FilterProvider
+  // =========================================================================
+  {
+    name: "FilterProvider",
+    importName: "FilterProvider",
+    category: "ui" as const,
+    tier: "free",
+    description: "Context provider that wires PeriodSelector, DropdownFilter, SegmentToggle, and FilterTags together into a shared filter state.",
+    longDescription:
+      "FilterProvider creates a shared FilterContext that all MetricUI filter components read from and write to. Place it above your filter controls and dashboard content. PeriodSelector writes the selected period, DropdownFilter/SegmentToggle write dimension values, and FilterTags reads everything to display active filters. Your data-fetching components read the filter state via the useMetricFilters() hook. FilterProvider handles comparison period auto-computation and reset logic.",
+    props: [
+      { name: "defaultPreset", type: "PeriodPreset", required: false, description: "Default time period preset on mount. E.g., '30d', '7d', 'quarter'." },
+      { name: "defaultDimensions", type: "Record<string, string[]>", required: false, description: "Default dimension filter values. E.g., { region: ['US', 'EU'], plan: ['pro'] }." },
+      { name: "children", type: "React.ReactNode", required: true, description: "Child components that can read/write filter context." },
+    ],
+    dataShape: `// useMetricFilters() hook return shape:
+interface FilterState {
+  period: { start: Date; end: Date } | null;
+  preset: PeriodPreset | null;
+  comparisonMode: ComparisonMode;
+  comparisonPeriod: { start: Date; end: Date } | null;
+  dimensions: Record<string, string[]>;
+  setPeriod: (range: DateRange, preset: PeriodPreset | null) => void;
+  setComparisonMode: (mode: ComparisonMode) => void;
+  setDimension: (field: string, values: string[]) => void;
+  clearDimension: (field: string) => void;
+  clearAll: () => void;
+}`,
+    minimalExample: `<FilterProvider defaultPreset="30d">
+  <PeriodSelector comparison />
+  <YourDashboardContent />
+</FilterProvider>`,
+    examples: [
+      {
+        title: "Complete filter system with all components",
+        description: "FilterProvider wiring PeriodSelector, DropdownFilter, SegmentToggle, and FilterTags together.",
+        code: `<FilterProvider defaultPreset="30d">
+  <DashboardHeader
+    title="Sales Dashboard"
+    lastUpdated={new Date()}
+    actions={<PeriodSelector comparison />}
+  />
+  <div className="flex items-center gap-2 mt-4">
+    <SegmentToggle options={["All", "Enterprise", "SMB"]} field="segment" />
+    <DropdownFilter label="Region" options={regions} field="region" multiple showAll />
+  </div>
+  <FilterTags />
+
+  {/* Your dashboard reads filters via useMetricFilters() */}
+  <DashboardContent />
+</FilterProvider>`,
+      },
+      {
+        title: "Reading filter state in a custom component",
+        description: "Use useMetricFilters() to read the active filters and fetch data.",
+        code: `import { useMetricFilters } from "metricui";
+
+function SalesChart() {
+  const filters = useMetricFilters();
+  const { period, dimensions, comparisonPeriod } = filters;
+
+  const data = useSalesData({
+    start: period?.start,
+    end: period?.end,
+    region: dimensions.region,
+    segment: dimensions.segment,
+  });
+
+  return (
+    <AreaChart
+      data={data.current}
+      comparisonData={comparisonPeriod ? data.comparison : undefined}
+      title="Sales Trend"
+      format="currency"
+    />
+  );
+}`,
+      },
+    ],
+    relatedComponents: ["PeriodSelector", "DropdownFilter", "SegmentToggle", "FilterTags", "DashboardHeader"],
+    configFields: [],
+    notes: [
+      "FilterProvider is UI-only — it manages filter state, not data fetching. You bring the data.",
+      "Comparison periods are auto-computed. 'previous' shifts backward by the range duration. 'year-over-year' shifts back one year.",
+      "clearAll() resets to defaultPreset and defaultDimensions.",
+      "FilterProvider can be nested for sub-dashboard filter scopes.",
+      "Without FilterProvider, all filter components work in standalone mode via onChange callbacks.",
     ],
   },
 ];

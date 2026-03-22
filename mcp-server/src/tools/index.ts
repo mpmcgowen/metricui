@@ -42,10 +42,6 @@ function text(content: string) {
   return { content: [{ type: "text" as const, text: content }] };
 }
 
-function proNotice(comp: ComponentDef): string {
-  if (comp.tier !== "pro") return "";
-  return `\n> **⚠️ Pro Component** — ${comp.name} requires MetricUI Pro.\n> Install: \`npm install @metricui/pro\`\n> Import: \`import { ${comp.importName} } from "@metricui/pro"\`\n`;
-}
 
 // ---------------------------------------------------------------------------
 // Register
@@ -65,7 +61,6 @@ export function registerTools(server: McpServer): void {
       const list = filtered.map((c) => ({
         name: c.name,
         category: c.category,
-        tier: c.tier,
         description: c.description,
         propCount: c.props.length,
       }));
@@ -91,7 +86,6 @@ export function registerTools(server: McpServer): void {
       const results = scored.map((s) => ({
         name: s.comp.name,
         category: s.comp.category,
-        tier: s.comp.tier,
         description: s.comp.description,
         relevance: s.score,
       }));
@@ -114,10 +108,9 @@ export function registerTools(server: McpServer): void {
         .map((p) => `- **${p.name}** (\`${p.type}\`${p.required ? ", required" : ""})${p.default ? ` — default: \`${p.default}\`` : ""}: ${p.description}${p.deprecated ? ` *(deprecated: ${p.deprecated})*` : ""}`)
         .join("\n");
 
-      const importPkg = comp.tier === "pro" ? "@metricui/pro" : "metricui";
+      const importPkg = "metricui";
       const sections = [
         `# ${comp.name}\n`,
-        proNotice(comp),
         `${comp.longDescription}\n`,
         `**Import:** \`import { ${comp.importName} } from "${importPkg}"\`\n`,
         `## Props\n\n${propsTable}\n`,
@@ -183,10 +176,9 @@ export function registerTools(server: McpServer): void {
       }
 
       // Build the response: working example + prop reference for customization
-      const importPkg = comp.tier === "pro" ? "@metricui/pro" : "metricui";
+      const importPkg = "metricui";
       const sections: string[] = [
         `# ${comp.name} — Working Example\n`,
-        proNotice(comp),
         `**Import:** \`import { ${comp.importName} } from "${importPkg}"\`\n`,
         `## Complete Example\n`,
         `Adapt the values, labels, and data to your use case. The structure and props are correct as-is.\n`,
@@ -232,47 +224,52 @@ export function registerTools(server: McpServer): void {
     }
   );
 
-  // --- generate_dashboard (REWRITTEN — complete working page) ---
+  // --- generate_dashboard (REWRITTEN — production-quality with advanced features) ---
   server.tool(
     "generate_dashboard",
-    "Generate a COMPLETE, working MetricUI dashboard page with realistic sample data, all component types (KPI cards, charts, tables), proper imports, MetricProvider, and CSS. Returns a full page.tsx file ready to use.",
+    "Generate a COMPLETE, production-quality MetricUI dashboard with theme presets, MetricGrid auto-layout, DashboardHeader with live status, FilterProvider + PeriodSelector, advanced KpiCards (conditions, goals, sparkline overlays), charts with reference lines and threshold bands, data-driven Callout alerts, and rich DataTable. Returns a full page.tsx file ready to use.",
     {
       description: z.string().describe("Dashboard description: 'SaaS metrics with MRR, churn, user growth, revenue breakdown, and top customers table'"),
       metrics: z.array(z.string()).optional().describe("Specific metrics/sections to include"),
       style: z.enum(["dense", "spacious"]).optional().describe("Layout density"),
       variant: z.enum(["default", "outlined", "ghost", "elevated"]).optional(),
+      theme: z.enum(["indigo", "emerald", "rose", "amber", "cyan", "violet", "slate", "orange"]).optional().describe("Theme preset (default: indigo)"),
     },
-    async ({ description, metrics, style, variant }) => {
+    async ({ description, metrics, style, variant, theme }) => {
       const dense = style === "dense";
       const v = variant || "default";
+      const t = theme || "indigo";
       const descLower = description.toLowerCase();
 
       // Determine what components to include based on description
-      const wantKpis = true; // Always include KPIs
-      const wantAreaChart = descLower.includes("growth") || descLower.includes("trend") || descLower.includes("over time") || descLower.includes("monthly") || descLower.includes("time series");
-      const wantBarChart = descLower.includes("comparison") || descLower.includes("by channel") || descLower.includes("by category") || descLower.includes("performance");
+      const wantAreaChart = descLower.includes("growth") || descLower.includes("trend") || descLower.includes("over time") || descLower.includes("monthly") || descLower.includes("time series") || descLower.includes("revenue");
+      const wantBarChart = descLower.includes("comparison") || descLower.includes("by channel") || descLower.includes("by category") || descLower.includes("performance") || descLower.includes("leaderboard");
       const wantDonut = descLower.includes("breakdown") || descLower.includes("distribution") || descLower.includes("by plan") || descLower.includes("by source") || descLower.includes("composition");
       const wantTable = descLower.includes("table") || descLower.includes("customer") || descLower.includes("product") || descLower.includes("list") || descLower.includes("detail");
-      const wantStatGroup = descLower.includes("stat") || descLower.includes("summary") || descLower.includes("overview");
+      const wantGauge = descLower.includes("gauge") || descLower.includes("health") || descLower.includes("score") || descLower.includes("uptime") || descLower.includes("monitoring");
+      const wantFunnel = descLower.includes("funnel") || descLower.includes("pipeline") || descLower.includes("conversion funnel");
+      const wantWaterfall = descLower.includes("waterfall") || descLower.includes("bridge") || descLower.includes("p&l") || descLower.includes("profit");
 
       // If nothing specific was mentioned, include a good mix
       const includeAreaChart = wantAreaChart || (!wantBarChart && !wantDonut);
       const includeDonut = wantDonut || (!wantBarChart);
-      const includeBarChart = wantBarChart;
-      const includeTable = wantTable || true; // Almost always useful
-      const includeStatGroup = wantStatGroup;
+      const includeBarChart = wantBarChart || true;
+      const includeTable = wantTable || true;
+      const includeGauge = wantGauge;
+      const includeFunnel = wantFunnel;
+      const includeWaterfall = wantWaterfall;
 
       // Determine KPI metrics from description
-      const kpiMetrics: { title: string; value: number; prev: number; format: string; invert: boolean; sparkline: number[] }[] = [];
+      const kpiMetrics: { title: string; value: number; prev: number; prev2?: number; format: string; invert: boolean; sparkline: number[]; prevSparkline?: number[]; goalValue?: number; }[] = [];
 
       if (descLower.includes("mrr") || descLower.includes("revenue")) {
-        kpiMetrics.push({ title: "Monthly Revenue", value: 127450, prev: 113500, format: "currency", invert: false, sparkline: [89000, 94200, 98800, 103400, 108900, 113500, 127450] });
+        kpiMetrics.push({ title: "Monthly Revenue", value: 127450, prev: 113500, prev2: 98200, format: "currency", invert: false, sparkline: [89000, 94200, 98800, 103400, 108900, 113500, 127450], prevSparkline: [78000, 82000, 85000, 88000, 91000, 95000, 98200], goalValue: 150000 });
       }
       if (descLower.includes("churn")) {
-        kpiMetrics.push({ title: "Churn Rate", value: 3.2, prev: 3.7, format: "percent", invert: true, sparkline: [5.1, 4.8, 4.2, 3.9, 3.7, 3.7, 3.2] });
+        kpiMetrics.push({ title: "Churn Rate", value: 3.2, prev: 3.7, format: "percent", invert: true, sparkline: [5.1, 4.8, 4.2, 3.9, 3.7, 3.7, 3.2], goalValue: 2.5 });
       }
       if (descLower.includes("user") || descLower.includes("customer")) {
-        kpiMetrics.push({ title: "Active Users", value: 8420, prev: 7680, format: "number", invert: false, sparkline: [5200, 5800, 6400, 6900, 7200, 7680, 8420] });
+        kpiMetrics.push({ title: "Active Users", value: 8420, prev: 7680, prev2: 6200, format: "number", invert: false, sparkline: [5200, 5800, 6400, 6900, 7200, 7680, 8420] });
       }
       if (descLower.includes("conversion") || descLower.includes("cvr")) {
         kpiMetrics.push({ title: "Conversion Rate", value: 4.8, prev: 4.2, format: "percent", invert: false, sparkline: [3.1, 3.4, 3.8, 4.0, 4.1, 4.2, 4.8] });
@@ -287,83 +284,83 @@ export function registerTools(server: McpServer): void {
       // Default KPIs if none matched
       if (kpiMetrics.length === 0) {
         kpiMetrics.push(
-          { title: "Total Revenue", value: 127450, prev: 113500, format: "currency", invert: false, sparkline: [89000, 94200, 98800, 103400, 108900, 113500, 127450] },
-          { title: "Active Users", value: 8420, prev: 7680, format: "number", invert: false, sparkline: [5200, 5800, 6400, 6900, 7200, 7680, 8420] },
+          { title: "Total Revenue", value: 127450, prev: 113500, prev2: 98200, format: "currency", invert: false, sparkline: [89000, 94200, 98800, 103400, 108900, 113500, 127450], prevSparkline: [78000, 82000, 85000, 88000, 91000, 95000, 98200], goalValue: 150000 },
+          { title: "Active Users", value: 8420, prev: 7680, prev2: 6200, format: "number", invert: false, sparkline: [5200, 5800, 6400, 6900, 7200, 7680, 8420] },
           { title: "Conversion", value: 4.8, prev: 4.2, format: "percent", invert: false, sparkline: [3.1, 3.4, 3.8, 4.0, 4.1, 4.2, 4.8] },
-          { title: "Churn Rate", value: 3.2, prev: 3.7, format: "percent", invert: true, sparkline: [5.1, 4.8, 4.2, 3.9, 3.7, 3.7, 3.2] },
+          { title: "Churn Rate", value: 3.2, prev: 3.7, format: "percent", invert: true, sparkline: [5.1, 4.8, 4.2, 3.9, 3.7, 3.7, 3.2], goalValue: 2.5 },
         );
       }
 
-      // Build the complete file
-      const imports = new Set(["MetricProvider", "KpiCard"]);
+      // Build imports
+      const imports = new Set(["MetricProvider", "FilterProvider", "DashboardHeader", "PeriodSelector", "MetricGrid", "KpiCard", "Callout"]);
       if (includeAreaChart) imports.add("AreaChart");
       if (includeDonut) imports.add("DonutChart");
       if (includeBarChart) imports.add("BarChart");
       if (includeTable) { imports.add("DataTable"); imports.add("Badge"); }
-      if (includeStatGroup) imports.add("StatGroup");
+      if (includeGauge) imports.add("Gauge");
+      if (includeFunnel) imports.add("Funnel");
+      if (includeWaterfall) imports.add("Waterfall");
 
-      const code: string[] = [
-        `"use client";`,
-        ``,
-        `import { ${Array.from(imports).join(", ")} } from "metricui";`,
-        `import "metricui/styles.css";`,
-        ``,
-        `// ─── Sample Data ───────────────────────────────────────────`,
-        ``,
-      ];
+      const dashTitle = description.split(/[,.]|\bwith\b/)[0].trim();
 
-      // Area chart data
+      // Build complete file as a single template string for cleaner output
+      const code: string[] = [];
+      code.push(`"use client";`);
+      code.push(``);
+      code.push(`import { ${Array.from(imports).join(", ")} } from "metricui";`);
+      code.push(`import "metricui/styles.css";`);
+      code.push(``);
+
+      // ─── Sample Data ─────────────────────────────────────────
+      code.push(`// ─── Sample Data ───────────────────────────────────────────`);
+      code.push(``);
+
       if (includeAreaChart) {
-        code.push(`const monthlyData = [`);
-        code.push(`  {`);
-        code.push(`    id: "Revenue",`);
-        code.push(`    data: [`);
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const values = [42000, 45200, 48100, 51800, 49200, 55400, 58900, 62100, 59800, 65200, 71000, 78400];
-        for (let i = 0; i < 12; i++) {
-          code.push(`      { x: "${months[i]}", y: ${values[i]} },`);
-        }
-        code.push(`    ],`);
-        code.push(`  },`);
+        code.push(`const revenueData = [`);
+        code.push(`  { id: "Revenue", data: [`);
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+        const values = [42000, 45200, 48100, 51800, 55400, 58900];
+        code.push(`    ${months.map((m, i) => `{ x: "${m}", y: ${values[i]} }`).join(", ")},`);
+        code.push(`  ]},`);
+        code.push(`];`);
+        code.push(``);
+        code.push(`const comparisonData = [`);
+        code.push(`  { id: "Revenue", data: [`);
+        const prevValues = [38000, 39500, 41200, 43800, 45100, 47600];
+        code.push(`    ${months.map((m, i) => `{ x: "${m}", y: ${prevValues[i]} }`).join(", ")},`);
+        code.push(`  ]},`);
         code.push(`];`);
         code.push(``);
       }
 
-      // Donut data
       if (includeDonut) {
         code.push(`const breakdownData = [`);
         code.push(`  { id: "enterprise", label: "Enterprise", value: 48200 },`);
         code.push(`  { id: "pro", label: "Pro", value: 32800 },`);
         code.push(`  { id: "starter", label: "Starter", value: 18400 },`);
-        code.push(`  { id: "free", label: "Free", value: 6200 },`);
         code.push(`];`);
         code.push(``);
       }
 
-      // Bar chart data
       if (includeBarChart) {
         code.push(`const channelData = [`);
-        code.push(`  { channel: "Organic", visitors: 14200, conversions: 680 },`);
-        code.push(`  { channel: "Paid", visitors: 8400, conversions: 420 },`);
-        code.push(`  { channel: "Social", visitors: 6100, conversions: 245 },`);
-        code.push(`  { channel: "Referral", visitors: 4800, conversions: 312 },`);
-        code.push(`  { channel: "Email", visitors: 3200, conversions: 288 },`);
+        code.push(`  { channel: "Organic", revenue: 28400, conversions: 680 },`);
+        code.push(`  { channel: "Paid", revenue: 18200, conversions: 420 },`);
+        code.push(`  { channel: "Referral", revenue: 12600, conversions: 312 },`);
+        code.push(`  { channel: "Social", revenue: 8400, conversions: 245 },`);
+        code.push(`  { channel: "Email", revenue: 6200, conversions: 288 },`);
         code.push(`];`);
         code.push(``);
       }
 
-      // Table data
       if (includeTable) {
         code.push(`const tableData = [`);
         const customers = [
           ["Acme Corp", "Enterprise", 4200, 15.2, "active"],
           ["Globex Inc", "Enterprise", 3800, 8.7, "active"],
-          ["Initech", "Enterprise", 3200, -2.1, "at-risk"],
+          ["Initech", "Pro", 3200, -2.1, "at-risk"],
           ["Umbrella Co", "Pro", 2900, 22.4, "active"],
-          ["Stark Industries", "Enterprise", 2750, 5.3, "active"],
-          ["Wayne Enterprises", "Pro", 2400, 12.8, "active"],
-          ["Cyberdyne Systems", "Pro", 2100, -5.6, "churning"],
-          ["Soylent Corp", "Pro", 1850, 3.2, "active"],
+          ["Stark Industries", "Enterprise", 2750, -5.6, "churning"],
         ];
         for (const [name, plan, mrr, growth, status] of customers) {
           code.push(`  { name: "${name}", plan: "${plan}", mrr: ${mrr}, growth: ${growth}, status: "${status}" },`);
@@ -372,110 +369,260 @@ export function registerTools(server: McpServer): void {
         code.push(``);
       }
 
-      // Component
+      if (includeFunnel) {
+        code.push(`const funnelData = [`);
+        code.push(`  { id: "Visitors", label: "Visitors", value: 14200 },`);
+        code.push(`  { id: "Signups", label: "Signups", value: 4800 },`);
+        code.push(`  { id: "Trials", label: "Trials", value: 2400 },`);
+        code.push(`  { id: "Paid", label: "Paid", value: 680 },`);
+        code.push(`];`);
+        code.push(``);
+      }
+
+      if (includeWaterfall) {
+        code.push(`const waterfallData = [`);
+        code.push(`  { label: "Starting MRR", value: 85000, type: "value" as const },`);
+        code.push(`  { label: "New Sales", value: 28400, type: "value" as const },`);
+        code.push(`  { label: "Expansion", value: 12600, type: "value" as const },`);
+        code.push(`  { label: "Churn", value: -8200, type: "value" as const },`);
+        code.push(`  { label: "Contraction", value: -3400, type: "value" as const },`);
+        code.push(`  { label: "Ending MRR", value: 0, type: "total" as const },`);
+        code.push(`];`);
+        code.push(``);
+      }
+
+      code.push(`const revenueGrowth = 12.3;`);
+      code.push(``);
+
+      // ─── Dashboard Component ─────────────────────────────────
       code.push(`// ─── Dashboard ───────────────────────────────────────────`);
       code.push(``);
       code.push(`export default function Dashboard() {`);
       code.push(`  return (`);
-      code.push(`    <MetricProvider${v !== "default" ? ` variant="${v}"` : ""}${dense ? " dense" : ""}>`);
-      code.push(`      <div className="min-h-screen bg-[var(--background)] p-6 lg:p-8">`);
-      code.push(`        <div className="mx-auto max-w-7xl">`);
-      code.push(`          <h1 className="mb-6 text-2xl font-bold tracking-tight text-[var(--foreground)]">`);
-      code.push(`            ${description.split(/[,.]|\bwith\b/)[0].trim()}`);
-      code.push(`          </h1>`);
+      code.push(`    <MetricProvider theme="${t}"${v !== "default" ? ` variant="${v}"` : ""}${dense ? " dense" : ""}>`);
+      code.push(`      <FilterProvider defaultPreset="30d">`);
+      code.push(`        <div className="min-h-screen bg-[var(--background)] p-6 lg:p-8">`);
+      code.push(`          <div className="mx-auto max-w-7xl">`);
       code.push(``);
 
-      // KPI Cards
-      code.push(`          {/* KPI Cards */}`);
-      code.push(`          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-${Math.min(kpiMetrics.length, 4)}">`);
-      for (const kpi of kpiMetrics) {
-        code.push(`            <KpiCard`);
-        code.push(`              title="${kpi.title}"`);
-        code.push(`              value={${kpi.value}}`);
-        code.push(`              format="${kpi.format}"`);
-        code.push(`              comparison={{ value: ${kpi.prev}${kpi.invert ? ", invertTrend: true" : ""} }}`);
-        code.push(`              comparisonLabel="vs last month"`);
-        code.push(`              sparkline={{ data: [${kpi.sparkline.join(", ")}] }}`);
-        code.push(`              animate={{ countUp: true }}`);
-        code.push(`            />`);
-      }
-      code.push(`          </div>`);
+      // DashboardHeader
+      code.push(`            <DashboardHeader`);
+      code.push(`              title="${dashTitle}"`);
+      code.push(`              subtitle="Real-time metrics overview"`);
+      code.push(`              lastUpdated={new Date()}`);
+      code.push(`              actions={<PeriodSelector comparison />}`);
+      code.push(`            />`);
+      code.push(``);
 
-      // Charts row
-      if (includeAreaChart || includeDonut) {
+      code.push(`            <MetricGrid>`);
+
+      // KPI Section
+      code.push(`              <MetricGrid.Section title="Key Metrics" />`);
+      code.push(``);
+
+      // Generate varied KpiCards — each with different advanced features
+      for (let i = 0; i < kpiMetrics.length; i++) {
+        const kpi = kpiMetrics[i];
+        code.push(`              <KpiCard`);
+        code.push(`                title="${kpi.title}"`);
+        code.push(`                value={${kpi.value}}`);
+        code.push(`                format="${kpi.format}"`);
+
+        // Vary the advanced features per card
+        if (i === 0) {
+          // Card 1: sparkline with previousPeriod + conditions
+          code.push(`                comparison={{ value: ${kpi.prev} }}`);
+          code.push(`                comparisonLabel="vs last month"`);
+          code.push(`                sparkline={{ data: [${kpi.sparkline.join(", ")}]${kpi.prevSparkline ? `, previousPeriod: [${kpi.prevSparkline.join(", ")}]` : ""}, interactive: true }}`);
+          if (kpi.invert) {
+            code.push(`                conditions={[`);
+            code.push(`                  { when: "below", value: ${kpi.value * 0.8}, color: "emerald" },`);
+            code.push(`                  { when: "above", value: ${kpi.value * 1.5}, color: "red" },`);
+            code.push(`                ]}`);
+          } else {
+            code.push(`                conditions={[`);
+            code.push(`                  { when: "above", value: ${Math.round(kpi.value * 0.9)}, color: "emerald" },`);
+            code.push(`                  { when: "between", min: ${Math.round(kpi.value * 0.7)}, max: ${Math.round(kpi.value * 0.9)}, color: "amber" },`);
+            code.push(`                  { when: "below", value: ${Math.round(kpi.value * 0.7)}, color: "red" },`);
+            code.push(`                ]}`);
+          }
+        } else if (i === 1 && kpi.prev2) {
+          // Card 2: multiple comparisons + highlight
+          code.push(`                comparison={[`);
+          code.push(`                  { value: ${kpi.prev}, label: "vs last month" },`);
+          code.push(`                  { value: ${kpi.prev2}, label: "vs last year", mode: "both" },`);
+          code.push(`                ]}`);
+          code.push(`                highlight`);
+        } else if (kpi.goalValue) {
+          // Card with goal + conditions
+          code.push(`                comparison={{ value: ${kpi.prev}${kpi.invert ? ", invertTrend: true" : ""} }}`);
+          code.push(`                comparisonLabel="vs last month"`);
+          code.push(`                goal={{ value: ${kpi.goalValue}, showTarget: true, showRemaining: true }}`);
+          if (kpi.invert) {
+            code.push(`                conditions={[`);
+            code.push(`                  { when: "below", value: ${kpi.goalValue}, color: "emerald" },`);
+            code.push(`                  { when: "above", value: ${kpi.goalValue * 1.5}, color: "red" },`);
+            code.push(`                ]}`);
+          }
+        } else {
+          // Card with copyable + drillDown
+          code.push(`                comparison={{ value: ${kpi.prev}${kpi.invert ? ", invertTrend: true" : ""} }}`);
+          code.push(`                comparisonLabel="vs last month"`);
+          code.push(`                sparkline={{ data: [${kpi.sparkline.join(", ")}] }}`);
+          code.push(`                copyable`);
+          code.push(`                drillDown={{ label: "View breakdown", onClick: () => {} }}`);
+        }
+
+        code.push(`                animate={{ countUp: true }}`);
+        code.push(`              />`);
         code.push(``);
-        code.push(`          {/* Charts */}`);
-        code.push(`          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">`);
-
-        if (includeAreaChart) {
-          code.push(`            <div className="lg:col-span-2">`);
-          code.push(`              <AreaChart`);
-          code.push(`                data={monthlyData}`);
-          code.push(`                title="Revenue Over Time"`);
-          code.push(`                subtitle="Monthly recurring revenue"`);
-          code.push(`                format="currency"`);
-          code.push(`                height={320}`);
-          code.push(`              />`);
-          code.push(`            </div>`);
-        }
-
-        if (includeDonut) {
-          code.push(`            <DonutChart`);
-          code.push(`              data={breakdownData}`);
-          code.push(`              title="Revenue Breakdown"`);
-          code.push(`              subtitle="By plan tier"`);
-          code.push(`              format="currency"`);
-          code.push(`              centerValue="$105.6K"`);
-          code.push(`              centerLabel="Total MRR"`);
-          code.push(`              height={320}`);
-          code.push(`            />`);
-        }
-
-        code.push(`          </div>`);
       }
 
-      // Bar chart
+      // Callout insight
+      code.push(`              <Callout`);
+      code.push(`                value={revenueGrowth}`);
+      code.push(`                rules={[`);
+      code.push(`                  { min: 15, variant: "success", title: "Exceptional Growth", message: "Revenue grew {value}% — exceeding target by 50%." },`);
+      code.push(`                  { min: 5, max: 15, variant: "info", title: "Healthy Growth", message: "Revenue grew {value}% month-over-month." },`);
+      code.push(`                  { min: 0, max: 5, variant: "warning", title: "Slow Growth", message: "Revenue grew only {value}%. Review pipeline." },`);
+      code.push(`                  { max: 0, variant: "error", title: "Revenue Declined", message: "Revenue dropped {value}%. Immediate attention needed." },`);
+      code.push(`                ]}`);
+      code.push(`                action={{ label: "View growth report", onClick: () => {} }}`);
+      code.push(`              />`);
+      code.push(``);
+
+      // Charts section
+      code.push(`              <MetricGrid.Section title="Trends" subtitle="Last 30 days" border />`);
+      code.push(``);
+
+      if (includeAreaChart) {
+        code.push(`              <AreaChart`);
+        code.push(`                data={revenueData}`);
+        code.push(`                comparisonData={comparisonData}`);
+        code.push(`                format="currency"`);
+        code.push(`                title="Revenue Trend"`);
+        code.push(`                subtitle="Current vs previous period"`);
+        code.push(`                referenceLines={[`);
+        code.push(`                  { axis: "y", value: 50000, label: "Target", color: "#10B981", style: "dashed" },`);
+        code.push(`                ]}`);
+        code.push(`                thresholds={[`);
+        code.push(`                  { from: 0, to: 40000, color: "#EF4444", opacity: 0.05 },`);
+        code.push(`                ]}`);
+        code.push(`                xAxisLabel="Month"`);
+        code.push(`                yAxisLabel="Revenue ($)"`);
+        code.push(`                height={360}`);
+        code.push(`                legend`);
+        code.push(`              />`);
+        code.push(``);
+      }
+
+      if (includeDonut) {
+        code.push(`              <DonutChart`);
+        code.push(`                data={breakdownData}`);
+        code.push(`                format="currency"`);
+        code.push(`                title="Revenue by Plan"`);
+        code.push(`                centerValue="$99.4K"`);
+        code.push(`                centerLabel="Total MRR"`);
+        code.push(`                height={360}`);
+        code.push(`              />`);
+        code.push(``);
+      }
+
       if (includeBarChart) {
+        code.push(`              <MetricGrid.Item span="full">`);
+        code.push(`                <BarChart`);
+        code.push(`                  preset="grouped"`);
+        code.push(`                  data={channelData}`);
+        code.push(`                  keys={["revenue", "conversions"]}`);
+        code.push(`                  indexBy="channel"`);
+        code.push(`                  sort="desc"`);
+        code.push(`                  format="currency"`);
+        code.push(`                  title="Channel Performance"`);
+        code.push(`                  subtitle="Revenue and conversions by acquisition channel"`);
+        code.push(`                  legend`);
+        code.push(`                />`);
+        code.push(`              </MetricGrid.Item>`);
         code.push(``);
-        code.push(`          {/* Channel Performance */}`);
-        code.push(`          <div className="mt-4">`);
-        code.push(`            <BarChart`);
-        code.push(`              data={channelData}`);
-        code.push(`              keys={["visitors", "conversions"]}`);
-        code.push(`              indexBy="channel"`);
-        code.push(`              title="Channel Performance"`);
-        code.push(`              subtitle="Visitors and conversions by channel"`);
-        code.push(`              groupMode="grouped"`);
-        code.push(`              height={300}`);
-        code.push(`            />`);
-        code.push(`          </div>`);
       }
 
-      // Table
+      if (includeFunnel) {
+        code.push(`              <Funnel`);
+        code.push(`                data={funnelData}`);
+        code.push(`                title="Conversion Funnel"`);
+        code.push(`                showConversionRate`);
+        code.push(`                format="compact"`);
+        code.push(`                height={320}`);
+        code.push(`              />`);
+        code.push(``);
+      }
+
+      if (includeWaterfall) {
+        code.push(`              <Waterfall`);
+        code.push(`                data={waterfallData}`);
+        code.push(`                title="MRR Bridge"`);
+        code.push(`                subtitle="Monthly recurring revenue changes"`);
+        code.push(`                format="currency"`);
+        code.push(`                connectors`);
+        code.push(`                height={320}`);
+        code.push(`              />`);
+        code.push(``);
+      }
+
+      if (includeGauge) {
+        code.push(`              <Gauge`);
+        code.push(`                value={99.2}`);
+        code.push(`                title="System Uptime"`);
+        code.push(`                format="percent"`);
+        code.push(`                thresholds={[`);
+        code.push(`                  { value: 99.9, color: "emerald" },`);
+        code.push(`                  { value: 99, color: "amber" },`);
+        code.push(`                  { value: 100, color: "red" },`);
+        code.push(`                ]}`);
+        code.push(`                target={99.9}`);
+        code.push(`                targetLabel="SLA"`);
+        code.push(`                comparison={{ value: 98.8 }}`);
+        code.push(`                comparisonLabel="vs last month"`);
+        code.push(`              />`);
+        code.push(``);
+      }
+
+      // Table section
       if (includeTable) {
+        code.push(`              <MetricGrid.Section title="Details" border />`);
         code.push(``);
-        code.push(`          {/* Top Customers */}`);
-        code.push(`          <div className="mt-4">`);
-        code.push(`            <DataTable`);
-        code.push(`              data={tableData}`);
-        code.push(`              title="Top Customers"`);
-        code.push(`              subtitle="By monthly recurring revenue"`);
-        code.push(`              columns={[`);
-        code.push(`                { key: "name", header: "Customer", sortable: true },`);
-        code.push(`                { key: "plan", header: "Plan", render: (v) => <Badge variant={v === "Enterprise" ? "info" : "default"}>{String(v)}</Badge> },`);
-        code.push(`                { key: "mrr", header: "MRR", sortable: true, format: "currency" },`);
-        code.push(`                { key: "growth", header: "Growth", sortable: true, align: "right",`);
-        code.push(`                  render: (v) => <span className={Number(v) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}>{Number(v) >= 0 ? "+" : ""}{v}%</span> },`);
-        code.push(`                { key: "status", header: "Status",`);
-        code.push(`                  render: (v) => <Badge variant={v === "active" ? "success" : v === "at-risk" ? "warning" : "danger"}>{String(v)}</Badge> },`);
-        code.push(`              ]}`);
-        code.push(`              footer={{ name: "Total", plan: "", mrr: "$23,200", growth: "", status: "" }}`);
-        code.push(`            />`);
-        code.push(`          </div>`);
+        code.push(`              <DataTable`);
+        code.push(`                data={tableData}`);
+        code.push(`                title="Top Customers"`);
+        code.push(`                subtitle="By monthly recurring revenue"`);
+        code.push(`                columns={[`);
+        code.push(`                  { key: "name", header: "Customer", sortable: true },`);
+        code.push(`                  { key: "plan", header: "Plan",`);
+        code.push(`                    render: (v) => <Badge variant={v === "Enterprise" ? "info" : "default"}>{String(v)}</Badge> },`);
+        code.push(`                  { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" },`);
+        code.push(`                  { key: "growth", header: "Growth", sortable: true, align: "right",`);
+        code.push(`                    render: (v) => (`);
+        code.push(`                      <span className={Number(v) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}>`);
+        code.push(`                        {Number(v) >= 0 ? "+" : ""}{v}%`);
+        code.push(`                      </span>`);
+        code.push(`                    ) },`);
+        code.push(`                  { key: "status", header: "Status",`);
+        code.push(`                    render: (v) => (`);
+        code.push(`                      <Badge variant={v === "active" ? "success" : v === "at-risk" ? "warning" : "danger"}>`);
+        code.push(`                        {String(v)}`);
+        code.push(`                      </Badge>`);
+        code.push(`                    ) },`);
+        code.push(`                ]}`);
+        code.push(`                searchable`);
+        code.push(`                pageSize={10}`);
+        code.push(`                footer={{ name: "Total", plan: "", mrr: "$16,850", growth: "", status: "" }}`);
+        code.push(`              />`);
       }
 
+      code.push(``);
+      code.push(`            </MetricGrid>`);
+      code.push(`          </div>`);
       code.push(`        </div>`);
-      code.push(`      </div>`);
+      code.push(`      </FilterProvider>`);
       code.push(`    </MetricProvider>`);
       code.push(`  );`);
       code.push(`}`);
@@ -785,7 +932,17 @@ Use the MetricUI MCP tools for API lookups:
 - \`validate_props("BarChart", { ... })\` — check your work
 `;
 
-      return text(`CLAUDE.md content for MetricUI project:\n\n${claudeMd}\n\nWrite this to CLAUDE.md in the project root to ensure AI tools always use MetricUI.`);
+      const mcpJson = JSON.stringify({
+        mcpServers: {
+          metricui: {
+            command: "npx",
+            args: ["-y", "@metricui/mcp-server"],
+            env: {},
+          },
+        },
+      }, null, 2);
+
+      return text(`## CLAUDE.md\n\nWrite this to \`CLAUDE.md\` in the project root:\n\n${claudeMd}\n\n## .mcp.json\n\nWrite this to \`.mcp.json\` in the project root so Claude Code auto-connects the MetricUI MCP server:\n\n\`\`\`json\n${mcpJson}\n\`\`\`\n\nThis ensures every developer who opens this project in Claude Code gets MetricUI knowledge automatically.`);
     }
   );
 

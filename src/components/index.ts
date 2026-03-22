@@ -15,20 +15,18 @@ export { Gauge } from "./charts/Gauge";
 export type { GaugeProps, GaugeThreshold } from "./charts/Gauge";
 export { HeatMap } from "./charts/HeatMap";
 export type { HeatMapProps, HeatMapColorScale } from "./charts/HeatMap";
-// Pro components (not exported from free tier)
-// BulletChart, Waterfall, Funnel → available in @metricui/pro
+export { Funnel } from "./charts/Funnel";
+export type { FunnelChartProps, FunnelDatumInput } from "./charts/Funnel";
+export { BulletChart } from "./charts/BulletChart";
+export type { BulletChartProps, BulletDatum, SimpleBulletData } from "./charts/BulletChart";
+export { Waterfall } from "./charts/Waterfall";
+export type { WaterfallProps, WaterfallItem } from "./charts/Waterfall";
 
 export { ChartContainer } from "./charts/ChartContainer";
 export { ChartTooltip } from "./charts/ChartTooltip";
 export type { ChartTooltipProps, ChartTooltipItem } from "./charts/ChartTooltip";
 export { ChartLegend } from "./charts/ChartLegend";
 export type { ChartLegendProps, ChartLegendItem } from "./charts/ChartLegend";
-
-// Shared chart types
-// Pro chart types (re-exported from @metricui/pro)
-// BulletChartProps, BulletDatum, SimpleBulletData
-// WaterfallProps, WaterfallItem
-// FunnelChartProps, FunnelDatumInput
 
 export type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent, BarClickEvent, SliceClickEvent, CellClickEvent } from "@/lib/chartTypes";
 export type { Category, CategoryConfig } from "@/lib/dataTransform";

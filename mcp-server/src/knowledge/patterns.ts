@@ -1231,4 +1231,552 @@ function FilteredContent() {
 {/* Dotted divider with icon */}
 <Divider variant="dotted" icon={<Star className="h-3 w-3" />} />`,
   },
+
+  // =========================================================================
+  // Theme Presets
+  // =========================================================================
+  {
+    name: "Theme Presets",
+    slug: "theme-presets",
+    description: "One prop transforms the entire dashboard aesthetic. 8 built-in presets + custom brand themes.",
+    tags: ["theme", "preset", "color", "branding", "emerald", "indigo", "rose", "amber", "cyan", "violet", "slate", "orange"],
+    code: `import { MetricProvider } from "metricui";
+import type { ThemePreset } from "metricui";
+
+{/* Built-in presets — one prop changes the entire palette */}
+<MetricProvider theme="emerald">   {/* Fresh, growth-oriented greens */}
+<MetricProvider theme="rose">      {/* Bold, attention-grabbing reds/pinks */}
+<MetricProvider theme="cyan">      {/* Clean, technical blues */}
+<MetricProvider theme="amber">     {/* Warm, inviting yellows/oranges */}
+<MetricProvider theme="violet">    {/* Creative, modern purples */}
+<MetricProvider theme="slate">     {/* Neutral, understated grays */}
+<MetricProvider theme="orange">    {/* Energetic, action-oriented */}
+<MetricProvider theme="indigo">    {/* Default, professional (no theme prop needed) */}
+
+{/* Custom brand theme */}
+const brandTheme: ThemePreset = {
+  name: "Brand",
+  accent: "#FF6B00",           // Light mode accent
+  accentDark: "#FF9A45",       // Dark mode accent
+  colors: [                    // 8-color chart palette
+    "#FF6B00", "#3B82F6", "#10B981", "#F59E0B",
+    "#EC4899", "#8B5CF6", "#06B6D4", "#14B8A6",
+  ],
+};
+
+<MetricProvider theme={brandTheme}>
+  {/* Every card, chart, and component uses your brand colors */}
+</MetricProvider>
+
+{/* Combine with other config */}
+<MetricProvider theme="emerald" variant="elevated" dense animate>
+  {/* Emerald palette + elevated card shadows + compact layout + animations */}
+</MetricProvider>`,
+  },
+
+  // =========================================================================
+  // Reference Lines & Threshold Bands
+  // =========================================================================
+  {
+    name: "Reference Lines & Threshold Bands",
+    slug: "reference-lines-thresholds",
+    description: "Add target lines, benchmarks, and colored danger/safe zones to any chart.",
+    tags: ["reference-line", "threshold", "band", "target", "danger-zone", "benchmark", "sla", "goal"],
+    code: `import { AreaChart, BarChart } from "metricui";
+
+{/* AreaChart with target reference line + danger/safe zones */}
+<AreaChart
+  data={revenueData}
+  format="currency"
+  title="Revenue Trend"
+  subtitle="vs target with performance zones"
+  referenceLines={[
+    { axis: "y", value: 50000, label: "Target", color: "#10B981", style: "dashed" },
+    { axis: "y", value: 30000, label: "Break-even", color: "#F59E0B", style: "dotted" },
+  ]}
+  thresholds={[
+    { from: 0, to: 30000, color: "#EF4444", opacity: 0.06, label: "Below break-even" },
+    { from: 30000, to: 50000, color: "#F59E0B", opacity: 0.04, label: "Below target" },
+    { from: 50000, to: 100000, color: "#10B981", opacity: 0.04, label: "Above target" },
+  ]}
+  xAxisLabel="Month"
+  yAxisLabel="Revenue ($)"
+/>
+
+{/* Combine with comparison overlay for maximum insight */}
+<AreaChart
+  data={currentData}
+  comparisonData={previousPeriodData}
+  referenceLines={[
+    { axis: "y", value: avgValue, label: "Average", color: "#6366F1", style: "dashed" },
+  ]}
+  format="number"
+  title="Traffic with Average & Previous Period"
+/>
+
+{/* BarChart with target reference line */}
+<BarChart
+  preset="horizontal"
+  data={teamData}
+  keys={["deals"]}
+  indexBy="rep"
+  sort="desc"
+  referenceLines={[
+    { axis: "x", value: 25, label: "Team Goal", color: "#10B981", style: "dashed" },
+  ]}
+  targetData={targetData}
+  enableLabels
+  title="Sales vs Target"
+/>`,
+  },
+
+  // =========================================================================
+  // Full Filter System
+  // =========================================================================
+  {
+    name: "Full Filter System",
+    slug: "full-filter-system",
+    description: "Complete filter setup: FilterProvider + PeriodSelector + DropdownFilter + SegmentToggle + FilterTags all wired together.",
+    tags: ["filter", "period", "dropdown", "segment", "tags", "context", "provider", "date-range"],
+    code: `import {
+  MetricProvider,
+  FilterProvider,
+  DashboardHeader,
+  PeriodSelector,
+  SegmentToggle,
+  DropdownFilter,
+  FilterTags,
+  AreaChart,
+  KpiCard,
+  useMetricFilters,
+} from "metricui";
+
+function Dashboard() {
+  return (
+    <MetricProvider theme="emerald">
+      <FilterProvider defaultPreset="30d" defaultDimensions={{ segment: ["all"] }}>
+        {/* Header with PeriodSelector in actions slot */}
+        <DashboardHeader
+          title="Sales Dashboard"
+          subtitle="Real-time revenue metrics"
+          lastUpdated={new Date()}
+          actions={<PeriodSelector comparison />}
+        />
+
+        {/* Filter bar */}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <SegmentToggle
+            options={["All", "Enterprise", "SMB", "Startup"]}
+            field="segment"
+          />
+          <DropdownFilter
+            label="Region"
+            options={[
+              { value: "us", label: "United States", count: 1234 },
+              { value: "eu", label: "Europe", count: 892 },
+              { value: "apac", label: "Asia-Pacific", count: 567 },
+            ]}
+            field="region"
+            multiple
+            showAll
+          />
+          <DropdownFilter
+            label="Plan"
+            options={["Free", "Pro", "Enterprise"]}
+            field="plan"
+            multiple
+          />
+        </div>
+
+        {/* Active filter chips — auto-reads from FilterContext */}
+        <FilterTags className="mt-2" />
+
+        {/* Dashboard content reads filters */}
+        <SalesDashboardContent />
+      </FilterProvider>
+    </MetricProvider>
+  );
+}
+
+{/* Any child component reads the filter state */}
+function SalesDashboardContent() {
+  const filters = useMetricFilters();
+  const { period, dimensions, comparisonPeriod } = filters;
+
+  // Fetch data using filter state
+  const data = useSalesData({
+    start: period?.start,
+    end: period?.end,
+    segment: dimensions.segment,
+    region: dimensions.region,
+    plan: dimensions.plan,
+  });
+
+  return (
+    <>
+      <KpiCard
+        title="Revenue"
+        value={data.revenue}
+        format="currency"
+        comparison={{ value: data.prevRevenue }}
+        comparisonLabel="vs previous period"
+      />
+      <AreaChart
+        data={data.trend}
+        comparisonData={comparisonPeriod ? data.comparisonTrend : undefined}
+        format="currency"
+        title="Revenue Trend"
+      />
+    </>
+  );
+}`,
+  },
+
+  // =========================================================================
+  // Responsive MetricGrid Layout
+  // =========================================================================
+  {
+    name: "Responsive MetricGrid Layout",
+    slug: "responsive-metric-grid",
+    description: "Auto-layout dashboard with MetricGrid — zero CSS grid, responsive reflow, reveal animations.",
+    tags: ["responsive", "layout", "metricgrid", "mobile", "tablet", "auto-layout", "grid", "section"],
+    code: `import {
+  MetricGrid,
+  KpiCard,
+  AreaChart,
+  BarChart,
+  DonutChart,
+  DataTable,
+  Gauge,
+  StatusIndicator,
+} from "metricui";
+
+{/* MetricGrid auto-detects component types and lays them out intelligently:
+    - KPIs → row of equal-width cards (4 across on desktop, 2 on tablet, 1 on mobile)
+    - Charts → pairs (2:1 or 1:1) on desktop, full width on mobile
+    - Tables → full width
+    - Sections → full width dividers
+    All with staggered reveal-on-scroll animation. */}
+
+<MetricGrid>
+  {/* Section header — full width */}
+  <MetricGrid.Section title="Key Metrics" />
+
+  {/* KPI cards — auto-row up to 4 wide */}
+  <KpiCard title="Revenue" value={142300} format="currency"
+    comparison={{ value: 128500 }} comparisonLabel="vs last month"
+    sparkline={{ data: [98, 105, 110, 108, 120, 135, 142] }}
+    conditions={[
+      { when: "above", value: 130000, color: "emerald" },
+      { when: "below", value: 100000, color: "red" },
+    ]}
+  />
+  <KpiCard title="Users" value={8420} format="compact"
+    comparison={{ value: 7680 }}
+    goal={{ value: 10000, showTarget: true }}
+  />
+  <KpiCard title="Conversion" value={4.8} format="percent"
+    comparison={{ value: 4.2 }}
+  />
+  <KpiCard title="Churn" value={3.2} format="percent"
+    comparison={{ value: 3.7, invertTrend: true }}
+    conditions={[
+      { when: "below", value: 3, color: "emerald" },
+      { when: "above", value: 5, color: "red" },
+    ]}
+  />
+
+  {/* Section divider */}
+  <MetricGrid.Section title="Trends" subtitle="Last 30 days" border />
+
+  {/* 2 charts → auto-pair side by side */}
+  <AreaChart data={revenueData} format="currency" title="Revenue Trend"
+    referenceLines={[{ axis: "y", value: 50000, label: "Target", color: "#10B981", style: "dashed" }]}
+  />
+  <DonutChart data={planBreakdown} format="currency" title="Revenue by Plan"
+    centerValue="$142K" centerLabel="Total"
+  />
+
+  {/* Explicit span override */}
+  <MetricGrid.Item span="full">
+    <BarChart data={channelData} keys={["revenue"]} indexBy="channel"
+      sort="desc" format="currency" title="Revenue by Channel"
+    />
+  </MetricGrid.Item>
+
+  {/* Section for details */}
+  <MetricGrid.Section title="Details" border />
+
+  {/* Table → always full width */}
+  <DataTable data={customers} title="Top Customers"
+    columns={[
+      { key: "name", header: "Customer", sortable: true },
+      { key: "mrr", header: "MRR", format: "currency", sortable: true },
+      { key: "status", header: "Status",
+        render: (v) => <Badge variant={v === "active" ? "success" : "warning"}>{String(v)}</Badge>
+      },
+    ]}
+  />
+</MetricGrid>`,
+  },
+
+  // =========================================================================
+  // Full-Featured Dashboard (Gold Standard)
+  // =========================================================================
+  {
+    name: "Full-Featured Dashboard",
+    slug: "full-featured-dashboard",
+    description: "The gold standard — a complete production dashboard showcasing every MetricUI capability: theme preset, filter system, MetricGrid, advanced KpiCards, reference lines, threshold bands, data-driven alerts, status indicators, and rich data tables.",
+    tags: ["dashboard", "complete", "advanced", "theme", "filter", "reference", "conditions", "goal", "metricgrid", "production", "showcase"],
+    code: `"use client";
+
+import {
+  MetricProvider,
+  FilterProvider,
+  DashboardHeader,
+  PeriodSelector,
+  SegmentToggle,
+  DropdownFilter,
+  FilterTags,
+  MetricGrid,
+  KpiCard,
+  AreaChart,
+  BarChart,
+  DonutChart,
+  DataTable,
+  Gauge,
+  Callout,
+  StatusIndicator,
+  Badge,
+} from "metricui";
+import "metricui/styles.css";
+
+// ─── Sample Data ───────────────────────────────────────────
+
+const revenueData = [
+  { id: "Revenue", data: [
+    { x: "Jan", y: 42000 }, { x: "Feb", y: 45200 }, { x: "Mar", y: 48100 },
+    { x: "Apr", y: 51800 }, { x: "May", y: 55400 }, { x: "Jun", y: 58900 },
+  ]},
+];
+
+const comparisonData = [
+  { id: "Revenue", data: [
+    { x: "Jan", y: 38000 }, { x: "Feb", y: 39500 }, { x: "Mar", y: 41200 },
+    { x: "Apr", y: 43800 }, { x: "May", y: 45100 }, { x: "Jun", y: 47600 },
+  ]},
+];
+
+const channelData = [
+  { channel: "Organic", revenue: 28400, conversions: 680 },
+  { channel: "Paid", revenue: 18200, conversions: 420 },
+  { channel: "Referral", revenue: 12600, conversions: 312 },
+  { channel: "Social", revenue: 8400, conversions: 245 },
+  { channel: "Email", revenue: 6200, conversions: 288 },
+];
+
+const planData = [
+  { id: "enterprise", label: "Enterprise", value: 48200 },
+  { id: "pro", label: "Pro", value: 32800 },
+  { id: "starter", label: "Starter", value: 18400 },
+];
+
+const customers = [
+  { name: "Acme Corp", plan: "Enterprise", mrr: 4200, growth: 15.2, status: "active" },
+  { name: "Globex Inc", plan: "Enterprise", mrr: 3800, growth: 8.7, status: "active" },
+  { name: "Initech", plan: "Pro", mrr: 3200, growth: -2.1, status: "at-risk" },
+  { name: "Umbrella Co", plan: "Pro", mrr: 2900, growth: 22.4, status: "active" },
+  { name: "Stark Industries", plan: "Enterprise", mrr: 2750, growth: -5.6, status: "churning" },
+];
+
+const revenueGrowth = 12.3;
+
+// ─── Dashboard ─────────────────────────────────────────────
+
+export default function Dashboard() {
+  return (
+    <MetricProvider theme="emerald" variant="default">
+      <FilterProvider defaultPreset="30d">
+        <div className="min-h-screen bg-[var(--background)] p-6 lg:p-8">
+          <div className="mx-auto max-w-7xl">
+
+            {/* Dashboard Header */}
+            <DashboardHeader
+              title="Revenue Dashboard"
+              subtitle="SaaS metrics overview"
+              lastUpdated={new Date()}
+              actions={<PeriodSelector comparison />}
+            />
+
+            {/* Filter Bar */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <SegmentToggle options={["All", "Enterprise", "SMB"]} field="segment" />
+              <DropdownFilter label="Region" options={["US", "EU", "APAC"]} field="region" multiple showAll />
+            </div>
+            <FilterTags className="mt-2" />
+
+            <MetricGrid>
+              {/* KPI Cards — each with different advanced features */}
+              <MetricGrid.Section title="Key Metrics" />
+
+              <KpiCard
+                title="Monthly Revenue"
+                value={58900}
+                format="currency"
+                comparison={{ value: 55400 }}
+                comparisonLabel="vs last month"
+                sparkline={{
+                  data: [42, 45, 48, 51, 55, 59],
+                  previousPeriod: [38, 40, 41, 44, 45, 48],
+                  interactive: true,
+                }}
+                conditions={[
+                  { when: "above", value: 55000, color: "emerald" },
+                  { when: "between", min: 40000, max: 55000, color: "amber" },
+                  { when: "below", value: 40000, color: "red" },
+                ]}
+              />
+
+              <KpiCard
+                title="Active Users"
+                value={8420}
+                format="compact"
+                comparison={[
+                  { value: 7680, label: "vs last month" },
+                  { value: 6200, label: "vs last year", mode: "both" },
+                ]}
+                highlight
+              />
+
+              <KpiCard
+                title="Churn Rate"
+                value={3.2}
+                format="percent"
+                comparison={{ value: 3.7, invertTrend: true }}
+                goal={{ value: 2.5, showTarget: true, showRemaining: true }}
+                conditions={[
+                  { when: "below", value: 3, color: "emerald" },
+                  { when: "between", min: 3, max: 5, color: "amber" },
+                  { when: "above", value: 5, color: "red" },
+                ]}
+              />
+
+              <KpiCard
+                title="Avg Revenue/User"
+                value={37.78}
+                format="currency"
+                comparison={{ value: 35.60 }}
+                copyable
+                drillDown={{ label: "View breakdown", onClick: () => {} }}
+              />
+
+              {/* Data-driven insight */}
+              <Callout
+                value={revenueGrowth}
+                rules={[
+                  { min: 15, variant: "success", title: "Exceptional Growth", message: "Revenue grew {value}% — exceeding target by 50%." },
+                  { min: 5, max: 15, variant: "info", title: "Healthy Growth", message: "Revenue grew {value}% month-over-month." },
+                  { min: 0, max: 5, variant: "warning", title: "Slow Growth", message: "Revenue grew only {value}%. Review pipeline." },
+                  { max: 0, variant: "error", title: "Revenue Declined", message: "Revenue dropped {value}%. Immediate attention needed." },
+                ]}
+                action={{ label: "View growth report", onClick: () => {} }}
+              />
+
+              {/* Charts */}
+              <MetricGrid.Section title="Trends" subtitle="Last 30 days" border />
+
+              <AreaChart
+                data={revenueData}
+                comparisonData={comparisonData}
+                format="currency"
+                title="Revenue Trend"
+                subtitle="Current vs previous period"
+                referenceLines={[
+                  { axis: "y", value: 50000, label: "Target", color: "#10B981", style: "dashed" },
+                ]}
+                thresholds={[
+                  { from: 0, to: 40000, color: "#EF4444", opacity: 0.05 },
+                ]}
+                xAxisLabel="Month"
+                yAxisLabel="Revenue ($)"
+                height={360}
+                legend
+              />
+
+              <DonutChart
+                data={planData}
+                format="currency"
+                title="Revenue by Plan"
+                centerValue="$99.4K"
+                centerLabel="Total MRR"
+                height={360}
+              />
+
+              <MetricGrid.Item span="full">
+                <BarChart
+                  preset="grouped"
+                  data={channelData}
+                  keys={["revenue", "conversions"]}
+                  indexBy="channel"
+                  sort="desc"
+                  format="currency"
+                  title="Channel Performance"
+                  subtitle="Revenue and conversions by acquisition channel"
+                  legend
+                />
+              </MetricGrid.Item>
+
+              {/* Health */}
+              <MetricGrid.Section title="System Health" border />
+
+              <Gauge
+                value={94.2}
+                title="Uptime"
+                format="percent"
+                thresholds={[
+                  { value: 99, color: "emerald" },
+                  { value: 95, color: "amber" },
+                  { value: 100, color: "red" },
+                ]}
+                target={99.9}
+                targetLabel="SLA"
+                comparison={{ value: 99.1 }}
+              />
+
+              {/* Table */}
+              <MetricGrid.Section title="Top Customers" border />
+
+              <DataTable
+                data={customers}
+                title="Customer Health"
+                columns={[
+                  { key: "name", header: "Customer", sortable: true },
+                  { key: "plan", header: "Plan",
+                    render: (v) => <Badge variant={v === "Enterprise" ? "info" : "default"}>{String(v)}</Badge> },
+                  { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" },
+                  { key: "growth", header: "Growth", sortable: true, align: "right",
+                    render: (v) => (
+                      <span className={Number(v) >= 0 ? "text-emerald-600" : "text-red-500"}>
+                        {Number(v) >= 0 ? "+" : ""}{v}%
+                      </span>
+                    ) },
+                  { key: "status", header: "Status",
+                    render: (v) => (
+                      <Badge variant={v === "active" ? "success" : v === "at-risk" ? "warning" : "danger"}>
+                        {String(v)}
+                      </Badge>
+                    ) },
+                ]}
+                searchable
+                pageSize={10}
+                footer={{ name: "Total", plan: "", mrr: "$16,850", growth: "", status: "" }}
+              />
+            </MetricGrid>
+          </div>
+        </div>
+      </FilterProvider>
+    </MetricProvider>
+  );
+}`,
+  },
 ];

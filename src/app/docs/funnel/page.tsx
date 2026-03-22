@@ -1,7 +1,6 @@
 "use client";
 
 import { DocSection } from "@/components/docs/DocSection";
-import { Badge } from "@/components/ui/Badge";
 
 export default function FunnelPage() {
   return (
@@ -12,13 +11,6 @@ export default function FunnelPage() {
         <p className="max-w-2xl text-[15px] leading-relaxed text-[var(--muted)]">
           Conversion funnel chart showing value drop-off between stages.
         </p>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Badge variant="info">Pro</Badge>
-        <span className="text-sm text-[var(--muted)]">
-          Part of <code className="font-mono">@metricui/pro</code>
-        </span>
       </div>
 
       <DocSection id="what-it-does" title="What it does">
@@ -40,15 +32,21 @@ export default function FunnelPage() {
         </ul>
       </DocSection>
 
-      <DocSection id="get-pro" title="Get MetricUI Pro">
-        <p className="text-[var(--muted)] leading-relaxed">
-          Funnel is available in <code className="font-mono">@metricui/pro</code> alongside
-          Waterfall, BulletChart, and more advanced features coming soon.
-        </p>
+      <DocSection id="usage" title="Usage">
         <pre className="mt-4 p-4 rounded-lg bg-[var(--card-bg)] border border-[var(--card-border)] font-mono text-sm">
-{`npm install @metricui/pro
+{`import { Funnel } from "metricui";
 
-import { Funnel } from "@metricui/pro";`}
+<Funnel
+  data={[
+    { id: "visited", label: "Visited", value: 10000 },
+    { id: "signed-up", label: "Signed Up", value: 4200 },
+    { id: "activated", label: "Activated", value: 2800 },
+    { id: "subscribed", label: "Subscribed", value: 1400 },
+  ]}
+  title="Conversion Funnel"
+  showConversionRate
+  height={360}
+/>`}
         </pre>
       </DocSection>
     </div>

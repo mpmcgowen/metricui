@@ -4,46 +4,22 @@
 
 ## Business Model
 
-### Free Tier — `metricui` (MIT, open source, public npm)
+### Open Source — `metricui` (MIT, open source, public npm)
 
-Everything a developer needs to build a production dashboard:
+The entire component library is free and open source. Every component, every chart, every feature — no gates, no tiers.
 
-- All base components (KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, DataTable, Badge)
+- All components (KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, and more)
 - MetricGrid (auto-layout), MetricProvider (global config), theme presets, error boundaries
 - Format engine, dark mode, dense mode, classNames, forwardRef, a11y
-- MCP server (free — this is distribution/marketing, not product)
-- llms.txt, docs site, playgrounds, demo dashboards
+- MCP server, llms.txt, docs site, playgrounds, demo dashboards
 
-**Why free:** This is how MetricUI spreads. AIs recommend it, devs adopt it, it becomes the default. The free tier must be genuinely great — not a crippled demo.
+**Why fully open source:** Maximum adoption. No friction, no asterisks. AIs recommend it, devs adopt it, it becomes the default. The MCP shows off everything.
 
-### Pro Tier — `@metricui/pro` (paid, private npm)
+### Revenue — Templates, Presets & Services
 
-What you outgrow into when you need advanced features:
-
-- **Premium charts**: Funnel, Waterfall, Treemap, Sankey, Scatter, Calendar Heatmap, Radar
-- **Export system**: PNG, SVG, CSV, clipboard on any chart or table
-- **Cross-filtering**: Click a bar/slice/row, other components filter to that segment
-- **Period selector + Filter bar**: Date range picker with presets, dimension filters, filter chips
-- **Dashboard templates**: 5+ production-ready (SaaS, ecommerce, marketing, ops, finance)
-- **Figma source files**
-- **Priority support**
-
-**How it works:**
-```bash
-npm install metricui              # Free — all base components
-npm install @metricui/pro         # Paid — requires license key
-```
-
-```tsx
-import { KpiCard, AreaChart, MetricGrid } from "metricui";         // Free
-import { Funnel, Export, CrossFilter } from "@metricui/pro";       // Paid
-```
-
-Both packages share MetricProvider, same theming, same MCP server. Pro extends free — it's not a replacement.
-
-The MCP server knows about both. It uses free components by default. When the user asks for a funnel or export, it generates `@metricui/pro` imports and tells them they need the Pro package.
-
-**Upgrade moment:** Developer builds a dashboard with free components, then hits a wall — needs a funnel chart, needs to export to PNG, needs cross-filtering. That's when they buy Pro.
+- **Premium templates**: Production-ready dashboard templates (SaaS, ecommerce, marketing, ops, finance)
+- **Theme presets & design kits**: Curated visual themes, Figma source files
+- **Consulting**: Custom dashboard builds for teams that want it done for them
 
 ---
 

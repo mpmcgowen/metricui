@@ -2,28 +2,17 @@
 
 > React component library for analytics dashboards. KPI cards, charts, tables, and more with built-in formatting, theming, and data states.
 
-## Packages
-
-MetricUI has two packages:
-- `metricui` (free, MIT) — all base components for production dashboards
-- `@metricui/pro` (paid) — Funnel, Waterfall, BulletChart, and future premium features
-
 ## Install
 
 ```
 npm install metricui
-npm install @metricui/pro  # optional, requires license
 ```
 
 ## Import
 
 ```tsx
-// Free tier
-import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, useMetricFilters } from "metricui";
+import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, useMetricFilters } from "metricui";
 import "metricui/styles.css";
-
-// Pro tier (requires @metricui/pro)
-import { Funnel, Waterfall, BulletChart } from "@metricui/pro";
 ```
 
 ## Helpers
@@ -1077,7 +1066,7 @@ const simpleData = {
 
 ---
 
-### Funnel [PRO — requires @metricui/pro]
+### Funnel
 
 Conversion funnel chart showing value drop-off between stages.
 
@@ -1161,7 +1150,7 @@ const simpleData = { "Visited": 10000, "Signed Up": 4200, "Subscribed": 1400 };
 
 ---
 
-### BulletChart [PRO — requires @metricui/pro]
+### BulletChart
 
 Bullet chart for comparing actual values against targets with qualitative range bands.
 
@@ -1253,7 +1242,7 @@ const simpleData: SimpleBulletData[] = [
 
 ---
 
-### Waterfall [PRO — requires @metricui/pro]
+### Waterfall
 
 Waterfall chart showing sequential positive and negative changes from a starting value. Revenue bridges, P&L breakdowns.
 

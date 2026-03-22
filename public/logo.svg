@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" fill="none">
+  <!-- M logomark -->
+  <g stroke="#1a1f2e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Left outer leg -->
+    <line x1="20" y1="140" x2="60" y2="20" />
+    <!-- Left inner to center -->
+    <line x1="40" y1="140" x2="100" y2="50" />
+    <!-- Right inner to center -->
+    <line x1="160" y1="140" x2="100" y2="50" />
+    <!-- Right outer leg -->
+    <line x1="180" y1="140" x2="140" y2="20" />
+    <!-- Left crossbar -->
+    <line x1="20" y1="140" x2="40" y2="140" />
+    <!-- Right crossbar -->
+    <line x1="160" y1="140" x2="180" y2="140" />
+    <!-- Left outer top connection -->
+    <line x1="60" y1="20" x2="100" y2="75" />
+    <!-- Right outer top connection -->
+    <line x1="140" y1="20" x2="100" y2="75" />
+  </g>
+  <!-- MetricUI text -->
+  <text x="100" y="195" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="600" letter-spacing="0.5" fill="#1a1f2e">MetricUI</text>
+</svg>
