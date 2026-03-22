@@ -106,27 +106,82 @@ const components = [
 ];
 
 const withoutCode = `// The usual way — Recharts + shadcn + custom everything
-import { AreaChart, Area, XAxis, YAxis, Tooltip } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/ui/card";
-import { formatCurrency, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/ui/skeleton";
+import { TrendingUp, TrendingDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-function RevenueCard({ value, prev, loading }) {
-  if (loading) return <Skeleton className="h-32" />;
-  const change = ((value - prev) / prev) * 100;
-  const isPositive = change > 0;
-  return (
+function formatCurrency(n: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency", currency: "USD",
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
+  }).format(n);
+}
+
+function RevenueCard({ value, prev, sparkline, loading, error }) {
+  if (loading) return (
     <Card>
-      <CardHeader><CardTitle>Revenue</CardTitle></CardHeader>
-      <CardContent>
-        <p className="text-2xl font-bold">{formatCurrency(value)}</p>
-        <p className={\`text-sm \${isPositive ? "text-green-600" : "text-red-600"}\`}>
-          {isPositive ? "+" : ""}{formatPercent(change)}
-        </p>
+      <CardHeader><Skeleton className="h-4 w-24" /></CardHeader>
+      <CardContent className="space-y-3">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-16 w-full" />
       </CardContent>
     </Card>
   );
-}`;
+
+  if (error) return (
+    <Card>
+      <CardContent className="py-8 text-center text-sm text-red-500">
+        Failed to load — <button onClick={() => window.location.reload()}>Retry</button>
+      </CardContent>
+    </Card>
+  );
+
+  const change = prev !== 0 ? ((value - prev) / prev) * 100 : 0;
+  const isPositive = change >= 0;
+  const Icon = isPositive ? TrendingUp : TrendingDown;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase">
+          Revenue
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-2xl font-bold">{formatCurrency(value)}</p>
+        <div className={cn("flex items-center gap-1 text-sm mt-1",
+          isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+        )}>
+          <Icon className="h-3 w-3" />
+          <span>{isPositive ? "+" : ""}{change.toFixed(1)}% vs last month</span>
+        </div>
+        {sparkline && (
+          <div className="mt-3 h-16">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={sparkline.map((v, i) => ({ i, v }))}>
+                <Area type="monotone" dataKey="v" stroke="#6366f1"
+                  fill="url(#grad)" strokeWidth={1.5} />
+                <defs>
+                  <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// And you still don't have: goal progress, conditional coloring,
+// comparison badges, copy-to-clipboard, drill-down, dense mode,
+// dark mode theming, null handling, count-up animation...`;
 
 const withCode = `// MetricUI — same result, zero glue code
 import { KpiCard } from "metricui";
@@ -279,7 +334,7 @@ export default function Home() {
               Stop assembling dashboards from scratch
             </h2>
             <p className="mt-3 text-sm text-[var(--muted)]">
-              A single KPI card with formatting, comparison, and loading state.
+              One KPI card with formatting, comparison, sparkline, loading, and error handling.
             </p>
           </div>
 
@@ -312,17 +367,11 @@ export default function Home() {
           <div className="mt-6">
             {compareTab === "without" ? (
               <div>
-                <CodeBlock code={withoutCode} language="tsx" filename="RevenueCard.tsx — 20 lines" />
-                <p className="mt-3 text-center text-xs text-[var(--muted)]">
-                  4 imports, manual formatting, manual comparison math, manual loading state, manual color logic
-                </p>
+                <CodeBlock code={withoutCode} language="tsx" filename="RevenueCard.tsx — 65 lines and still missing features" />
               </div>
             ) : (
               <div>
-                <CodeBlock code={withCode} language="tsx" filename="RevenueCard.tsx — 10 lines" />
-                <p className="mt-3 text-center text-xs text-[var(--muted)]">
-                  1 import. Formatting, comparisons, loading, dark mode, theming — all built in.
-                </p>
+                <CodeBlock code={withCode} language="tsx" filename="RevenueCard.tsx — 10 lines, everything included" />
               </div>
             )}
           </div>
