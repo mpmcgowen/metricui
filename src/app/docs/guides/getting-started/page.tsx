@@ -32,14 +32,8 @@ export default function GettingStartedGuide() {
             language="bash"
           />
           <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            MetricUI has peer dependencies on React 18+ and optionally on Nivo chart packages.
-            If you use charts, install the Nivo packages too:
+            MetricUI requires React 18+. All chart dependencies are bundled — no extra installs needed.
           </p>
-          <CodeBlock
-            code={`npm install @nivo/core @nivo/line @nivo/bar @nivo/pie`}
-            language="bash"
-            className="mt-3"
-          />
         </DocSection>
 
         <DocSection id="css-setup" title="CSS Setup">
