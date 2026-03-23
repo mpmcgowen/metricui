@@ -6,12 +6,15 @@
 
 ```
 npm install metricui
+npx metricui init
 ```
+
+`metricui init` detects your framework, configures AI tools (Cursor rules, Claude Code, MCP server), and optionally scaffolds a starter dashboard.
 
 ## Import
 
 ```tsx
-import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, useMetricFilters } from "metricui";
+import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, LinkedHoverProvider, useLinkedHover, useValueFlash } from "metricui";
 import "metricui/styles.css";
 ```
 
@@ -3224,6 +3227,73 @@ interface FilterState {
 type FilterContextValue = FilterState & FilterActions;
 ```
 
+### CrossFilterProvider / useCrossFilter
+
+Cross-filtering captures click selections from charts and tables into a shared context. **Signal only** — it stores what the user clicked. It never touches, filters, or transforms data. You read the selection, filter your own data, pass to charts.
+
+```tsx
+import { CrossFilterProvider, useCrossFilter } from "metricui";
+
+function App() {
+  return (
+    <CrossFilterProvider>
+      <Dashboard />
+    </CrossFilterProvider>
+  );
+}
+
+function Dashboard() {
+  const cf = useCrossFilter();
+
+  const chartData = useMemo(() => {
+    if (!cf?.isActive) return allData;
+    return allData.filter(row => row[cf.selection.field] === cf.selection.value);
+  }, [cf?.isActive, cf?.selection]);
+
+  return (
+    <>
+      {/* Source chart: keeps full data so user sees what they clicked */}
+      <BarChart data={allData} index="browser" categories={["visitors"]} crossFilter />
+      {/* Sibling charts: get filtered data */}
+      <DonutChart data={chartData} index="browser" categories={["revenue"]} crossFilter />
+    </>
+  );
+}
+```
+
+#### crossFilter prop
+
+Add `crossFilter` to any chart or DataTable to emit selections on click:
+- `crossFilter={true}` — uses the `index`/`indexBy` field name
+- `crossFilter={{ field: "region" }}` — overrides the field name
+- Supported on: BarChart, DonutChart, AreaChart, HeatMap, DataTable
+
+#### useCrossFilter() API
+
+- `selection`: `{ field: string; value: string | number } | null`
+- `isActive`: `boolean` — true when something is selected
+- `select(sel)`: set or toggle a selection
+- `clear()`: clear the current selection
+
+#### useCrossFilteredData (convenience hook)
+
+```tsx
+import { useCrossFilteredData } from "metricui";
+
+// Returns filtered data when a cross-filter selection is active, original data otherwise.
+const chartData = useCrossFilteredData(allData, "browser");
+// When "Chrome" selected: allData.filter(row => row.browser === "Chrome")
+// When nothing selected: allData
+```
+
+For multi-filter scenarios (e.g., dropdown + cross-filter), use `useCrossFilter()` directly.
+
+#### Cross-Filter Behavior
+
+- Click same value again to deselect (toggle)
+- Press Escape to clear from anywhere
+- Without a CrossFilterProvider, the crossFilter prop is silently ignored
+
 ---
 
 ### PeriodSelector
@@ -3625,3 +3695,60 @@ export default function Layout({ children }) {
   );
 }
 ```
+
+---
+
+## Linked Hover
+
+Syncs hover state across charts. Hover a data point in one chart and crosshairs/tooltips follow in all siblings.
+
+```tsx
+import { LinkedHoverProvider } from "metricui";
+
+<LinkedHoverProvider>
+  <AreaChart data={data} index="month" categories={["revenue"]} />
+  <BarChart data={data} index="month" categories={["orders"]} />
+</LinkedHoverProvider>
+```
+
+Charts auto-participate when inside a LinkedHoverProvider — no extra prop needed. Charts match by shared `index` values.
+
+### useLinkedHover()
+
+Read hover state in custom components:
+
+```tsx
+import { useLinkedHover } from "metricui";
+
+const lh = useLinkedHover();
+// lh.hoveredIndex  → "Mar" | null
+// lh.hoveredSeries → "revenue" | null
+// lh.sourceId      → which component emitted
+// lh.setHoveredIndex(index, sourceId?)
+// lh.setHoveredSeries(seriesId, sourceId?)
+```
+
+---
+
+## Value Flash
+
+Opt-in hook that adds a brief highlight animation when watched data changes. You choose which components flash — it's not automatic. Useful for real-time dashboards where individual values update.
+
+```tsx
+import { useValueFlash } from "metricui";
+
+function LiveMetric({ value }) {
+  const flashClass = useValueFlash(value);
+  return (
+    <div className={flashClass}>
+      <KpiCard value={value} format="currency" />
+    </div>
+  );
+}
+```
+
+- Returns CSS class `"mu-value-flash"` when value changes, `""` otherwise
+- Skips first render (no flash on mount)
+- Respects `MetricProvider.animate` and `prefers-reduced-motion`
+- Options: `useValueFlash(value, { duration: 800, disabled: false })`
+- Works with any data type (uses deep comparison for objects/arrays)

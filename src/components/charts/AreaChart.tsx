@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback, useMemo } from "react";
+import { forwardRef, useCallback, useMemo, useRef } from "react";
 import { ResponsiveLine } from "@nivo/line";
 import type {
   LineCustomSvgLayerProps,
@@ -20,6 +20,8 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import { withOpacity } from "@/lib/utils";
 import { devWarn } from "@/lib/devWarnings";
+import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toLineSeries, inferSchema, categoryKeys, categoryColors, rightAxisCategories, type Category } from "@/lib/dataTransform";
@@ -159,6 +161,8 @@ export interface AreaChartProps {
   colors?: string[];
   /** Click handler for data points */
   onPointClick?: (point: PointClickEvent) => void;
+  /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
+  crossFilter?: boolean | { field?: string };
   /** Compact layout — reduces margins and default height. Default: false */
   dense?: boolean;
   /** How null / missing data points are handled. Default: "gap" */
@@ -188,6 +192,38 @@ export interface AreaChartProps {
 // ---------------------------------------------------------------------------
 // Custom layers
 // ---------------------------------------------------------------------------
+
+/**
+ * Linked hover crosshair — renders a vertical dashed line at the
+ * hoveredIndex position when another component is the source.
+ */
+function createLinkedCrosshairLayer(
+  hoveredIndex: string | number | null,
+  sourceId: string | undefined,
+  myId: string,
+) {
+  return function LinkedCrosshairLayer(props: LayerProps) {
+    // Only render when another component is emitting the hover
+    if (hoveredIndex == null || sourceId === myId) return null;
+    const xScale = props.xScale as unknown as (value: string | number) => number;
+    const innerHeight = props.innerHeight;
+    const x = xScale(hoveredIndex);
+    if (x == null || isNaN(x)) return null;
+    return (
+      <line
+        x1={x}
+        x2={x}
+        y1={0}
+        y2={innerHeight}
+        stroke="var(--muted)"
+        strokeDasharray="4 3"
+        strokeWidth={1}
+        opacity={0.5}
+        style={{ pointerEvents: "none" }}
+      />
+    );
+  };
+}
 
 function createThresholdLayer(thresholds: ThresholdBand[]) {
   return function ThresholdLayer(props: LayerProps) {
@@ -485,6 +521,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   rightAxisLabel,
   colors: chartColors,
   onPointClick,
+  crossFilter: crossFilterProp,
   dense,
   chartNullMode,
   animate: animateProp,
@@ -507,6 +544,17 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? denseValues.chartHeight;
   const resolvedChartNullMode = chartNullMode ?? config.chartNullMode;
+
+  // --- Linked hover ---
+  const linkedHover = useLinkedHover();
+  const linkedHoverId = useLinkedHoverId();
+  const sliceIndexRef = useRef<string | number | null>(null);
+
+  // --- Cross-filter ---
+  const crossFilter = useCrossFilter();
+  const crossFilterField = crossFilterProp
+    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "x"
+    : undefined;
 
   // --- Resolve stacked from stackMode ---
   const isPercentStack = stackMode === "percent";
@@ -878,11 +926,16 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
       layers.push(rightAxisLayer as LineSvgLayer<SeriesData>);
     }
 
+    // Linked hover crosshair from sibling charts
+    if (linkedHover) {
+      layers.push(createLinkedCrosshairLayer(linkedHover.hoveredIndex, linkedHover.sourceId, linkedHoverId) as LineSvgLayer<SeriesData>);
+    }
+
     layers.push("slices" as LineLayerId);
     layers.push("mesh" as LineLayerId);
     layers.push("legends" as LineLayerId);
     return layers;
-  }, [thresholds, referenceLines, comparisonSeriesIds, needsCustomLines, needsCustomPoints, lineWidth, lineStyle, pointSize, pointColor, pointBorderWidth, seriesStyles, rightAxisLayer]);
+  }, [thresholds, referenceLines, comparisonSeriesIds, needsCustomLines, needsCustomPoints, lineWidth, lineStyle, pointSize, pointColor, pointBorderWidth, seriesStyles, rightAxisLayer, linkedHover?.hoveredIndex, linkedHover?.sourceId, linkedHoverId]);
 
   // --- Y-axis formatter ---
   const formatYAxis = useCallback(
@@ -918,7 +971,18 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   );
 
   return (
-    <div ref={ref} id={id} data-testid={dataTestId} style={{ minWidth: 120, height: "100%" }}>
+    <div
+      ref={ref}
+      id={id}
+      data-testid={dataTestId}
+      style={{ minWidth: 120, height: "100%" }}
+      onMouseLeave={() => {
+        if (linkedHover) {
+          sliceIndexRef.current = null;
+          linkedHover.setHoveredIndex(null, linkedHoverId);
+        }
+      }}
+    >
     <div ref={containerRef} style={{ height: "100%" }}>
     <ChartContainer componentName="AreaChart"
       title={title}
@@ -928,6 +992,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
       action={action}
       height={resolvedHeight}
       variant={resolvedVariant}
+
       className={classNames?.root ?? className}
       classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
       loading={loading}
@@ -942,6 +1007,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
             onToggle={toggleSeries}
             toggleable={legendConfig.toggleable !== false}
             className={classNames?.legend}
+            onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
           />
         )}
         {comparisonData && comparisonData.length > 0 && (
@@ -1009,6 +1075,14 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
           if (points.length === 0) return null;
           const xVal = points[0].data.x;
 
+          // Emit to linked hover context — use setTimeout(0) to escape
+          // React's commit cycle and avoid infinite re-render loops
+          // from Nivo's TooltipWrapper useLayoutEffect.
+          if (sliceIndexRef.current !== xVal) {
+            sliceIndexRef.current = xVal as string | number;
+            setTimeout(() => linkedHover?.setHoveredIndex(xVal as string | number, linkedHoverId), 0);
+          }
+
           // Split current vs comparison series
           const currentPoints = points.filter(
             (p) => !String(p.seriesId).startsWith(COMPARISON_PREFIX)
@@ -1068,12 +1142,12 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
         defs={gradientDefs}
         fill={gradientFills}
         onClick={
-          onPointClick
+          (onPointClick || (crossFilterProp && crossFilter))
             ? (rawPoint) => {
                 const point = rawPoint as unknown as Point<SeriesData>;
                 if (point.seriesId !== undefined) {
                   const sid = String(point.seriesId);
-                  onPointClick({
+                  onPointClick?.({
                     id: sid,
                     value: point.data.y as number,
                     label: String(point.data.x),
@@ -1081,6 +1155,9 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
                     x: point.data.x as string | number,
                     y: point.data.y as number,
                   });
+                  if (crossFilterProp && crossFilter && crossFilterField) {
+                    crossFilter.select({ field: crossFilterField, value: point.data.x as string | number });
+                  }
                 }
               }
             : undefined

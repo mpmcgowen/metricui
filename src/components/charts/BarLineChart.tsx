@@ -22,6 +22,8 @@ import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { LegendConfig } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toBarLineData, categoryKeys, resolveCategory, type Category } from "@/lib/dataTransform";
+import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -120,6 +122,8 @@ export interface BarLineChartProps {
   chartNullMode?: ChartNullMode;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
+  /** Emit cross-filter selection on bar click. Defaults field to the `indexBy` value. */
+  crossFilter?: boolean | { field?: string };
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string; legend?: string };
   /** HTML id attribute */
@@ -383,11 +387,18 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
   dense,
   chartNullMode,
   animate: animateProp,
+  crossFilter: crossFilterProp,
   classNames,
   id,
   "data-testid": dataTestId,
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "BarLineChart");
+  const linkedHover = useLinkedHover();
+  const linkedHoverId = useLinkedHoverId();
+  const crossFilter = useCrossFilter();
+  const crossFilterField = crossFilterProp
+    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? indexByProp ?? indexProp ?? "index"
+    : undefined;
 
   // --- Resolve unified data → bar + line split ---
   const resolved = useMemo(() => {
@@ -585,6 +596,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
         action={action}
         height={resolvedHeight}
         variant={resolvedVariant}
+
         className={classNames?.root ?? className}
         loading={loading}
         empty={empty}
@@ -596,6 +608,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
             hidden={hiddenKeys}
             onToggle={toggleKey}
             toggleable={legendConfig.toggleable !== false}
+            onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
           />
         ) : undefined}
       >
@@ -662,6 +675,11 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
                 ]}
               />
             );
+          }}
+          onClick={(datum) => {
+            if (crossFilterProp && crossFilter && crossFilterField) {
+              crossFilter.select({ field: crossFilterField, value: datum.indexValue as string | number });
+            }
           }}
           animate={resolvedAnimate}
           motionConfig={resolvedAnimate ? config.motionConfig : undefined}

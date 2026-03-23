@@ -11,6 +11,7 @@ import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 
 const tocItems: TocItem[] = [
   { id: "full-filter-setup", title: "Full Filter Setup", level: 2 },
@@ -299,47 +300,36 @@ function Dashboard() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-[var(--card-border)]">
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Prop</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Type</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Default</th>
-                  <th className="pb-2 font-semibold text-[var(--foreground)]">Description</th>
-                </tr>
-              </thead>
-              <tbody className="text-[var(--muted)]">
-                {[
-                  { prop: "exclude", type: "string[]", def: "\u2014", desc: "Fields to exclude from display. Use '_period' and '_comparison' for built-in tags." },
-                  { prop: "include", type: "string[]", def: "\u2014", desc: "Whitelist — if set, only these fields show." },
-                  { prop: "labels", type: "Record<string, string>", def: "\u2014", desc: "Custom labels for dimension fields. Default: capitalized field name." },
-                  { prop: "formatPeriod", type: "(range, preset) => string", def: "preset label or date range", desc: "Custom period formatter." },
-                  { prop: "formatDimension", type: "(field, values) => string", def: 'joins with ", "', desc: "Custom dimension value formatter." },
-                  { prop: "dismissible", type: "boolean", def: "true", desc: "Show dismiss buttons on each chip." },
-                  { prop: "clearAll", type: "boolean", def: "true", desc: "Show 'Clear all' button when multiple filters active." },
-                  { prop: "clearAllLabel", type: "string", def: '"Clear all"', desc: "Label for the clear all button." },
-                  { prop: "onClear", type: "(field: string) => void", def: "\u2014", desc: "Callback when a specific filter is cleared." },
-                  { prop: "onClearAll", type: "() => void", def: "\u2014", desc: "Callback when all filters are cleared." },
-                  { prop: "maxVisible", type: "number", def: "0 (no limit)", desc: "Max visible chips before collapsing. Shows '+N more' button." },
-                  { prop: "showPeriod", type: "boolean", def: "true", desc: "Show the period filter as a tag." },
-                  { prop: "showComparison", type: "boolean", def: "true", desc: "Show the comparison mode as a tag." },
-                  { prop: "dense", type: "boolean", def: "false", desc: "Compact mode. Falls back to MetricProvider." },
-                  { prop: "className", type: "string", def: "\u2014", desc: "Additional CSS classes." },
-                  { prop: "classNames", type: "{ root?, chip?, clearAll? }", def: "\u2014", desc: "Sub-element class overrides." },
-                  { prop: "id", type: "string", def: "\u2014", desc: "HTML id." },
-                  { prop: "data-testid", type: "string", def: "\u2014", desc: "Test id." },
-                ].map((row) => (
-                  <tr key={row.prop} className="border-b border-[var(--card-border)]/50">
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">{row.prop}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.type}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.def}</td>
-                    <td className="py-2">{row.desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { prop: "exclude", type: "string[]", default: "\u2014", description: "Fields to exclude from display. Use '_period' and '_comparison' for built-in tags." },
+              { prop: "include", type: "string[]", default: "\u2014", description: "Whitelist — if set, only these fields show." },
+              { prop: "labels", type: "Record<string, string>", default: "\u2014", description: "Custom labels for dimension fields. Default: capitalized field name." },
+              { prop: "formatPeriod", type: "(range, preset) => string", default: "preset label or date range", description: "Custom period formatter." },
+              { prop: "formatDimension", type: "(field, values) => string", default: 'joins with ", "', description: "Custom dimension value formatter." },
+              { prop: "dismissible", type: "boolean", default: "true", description: "Show dismiss buttons on each chip." },
+              { prop: "clearAll", type: "boolean", default: "true", description: "Show 'Clear all' button when multiple filters active." },
+              { prop: "clearAllLabel", type: "string", default: '"Clear all"', description: "Label for the clear all button." },
+              { prop: "onClear", type: "(field: string) => void", default: "\u2014", description: "Callback when a specific filter is cleared." },
+              { prop: "onClearAll", type: "() => void", default: "\u2014", description: "Callback when all filters are cleared." },
+              { prop: "maxVisible", type: "number", default: "0 (no limit)", description: "Max visible chips before collapsing. Shows '+N more' button." },
+              { prop: "showPeriod", type: "boolean", default: "true", description: "Show the period filter as a tag." },
+              { prop: "showComparison", type: "boolean", default: "true", description: "Show the comparison mode as a tag." },
+              { prop: "dense", type: "boolean", default: "false", description: "Compact mode. Falls back to MetricProvider." },
+              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
+              { prop: "classNames", type: "{ root?, chip?, clearAll? }", default: "\u2014", description: "Sub-element class overrides." },
+              { prop: "id", type: "string", default: "\u2014", description: "HTML id." },
+              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id." },
+            ]}
+            columns={[
+              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         {/* Notes */}

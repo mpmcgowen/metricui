@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { StatGroup } from "@/components/cards/StatGroup";
-import { AreaChart } from "@/components/charts/AreaChart";
+import { LineChart } from "@/components/charts/LineChart";
 import { BarChart } from "@/components/charts/BarChart";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { Gauge } from "@/components/charts/Gauge";
@@ -16,6 +16,7 @@ import { MetricGrid } from "@/components/layout/MetricGrid";
 import { DetailGrid } from "@/components/ui/DetailGrid";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { MetricProvider } from "@/lib/MetricProvider";
+import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { FilterTags } from "@/components/filters/FilterTags";
@@ -28,6 +29,7 @@ import {
   Bot,
   Zap,
 } from "lucide-react";
+import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -68,7 +70,16 @@ function timeAgo(unixTimestamp: number): string {
 // ---------------------------------------------------------------------------
 
 export default function WikipediaDashboard() {
+  return (
+    <CrossFilterProvider>
+      <WikipediaDashboardInner />
+    </CrossFilterProvider>
+  );
+}
+
+function WikipediaDashboardInner() {
   const { connected, loading, recentEdits, stats } = useWikipediaStream();
+  const crossFilter = useCrossFilter();
   const [editFilter, setEditFilter] = useState<string>("All Edits");
   const [wikiFilter, setWikiFilter] = useState<string[]>([]);
 
@@ -86,17 +97,36 @@ export default function WikipediaDashboard() {
     }));
   }, [stats.editsByWiki]);
 
-  // Filter edits based on segment toggle and wiki dropdown
+  // Cross-filter selection
+  const cfSelection = crossFilter?.selection ?? null;
+
+  // Filter edits based on segment toggle, wiki dropdown, and cross-filter
   const filteredEdits = useMemo(() => {
     let edits = recentEdits;
     if (editFilter === "Human Only") edits = edits.filter((e) => !e.bot);
     if (editFilter === "Bot Only") edits = edits.filter((e) => e.bot);
     if (wikiFilter.length > 0) edits = edits.filter((e) => wikiFilter.includes(e.wiki));
+
+    // Cross-filter: filter accumulated data by the clicked dimension
+    if (cfSelection) {
+      const { field, value } = cfSelection;
+      if (field === "wiki") {
+        // BarChart uses wikiLabel() for display, so reverse-lookup the key
+        const wikiKey = Object.entries(WIKI_LABELS).find(([, label]) => label === value)?.[0]
+          ?? String(value);
+        edits = edits.filter((e) => e.wiki === wikiKey);
+      } else if (field === "type") {
+        edits = edits.filter(
+          (e) => e.type.toLowerCase() === String(value).toLowerCase()
+        );
+      }
+    }
+
     return edits;
-  }, [recentEdits, editFilter, wikiFilter]);
+  }, [recentEdits, editFilter, wikiFilter, cfSelection]);
 
   // Whether any filter is active
-  const isFiltered = editFilter !== "All Edits" || wikiFilter.length > 0;
+  const isFiltered = editFilter !== "All Edits" || wikiFilter.length > 0 || cfSelection !== null;
 
   // Recompute stats from filtered edits so every component reflects filters
   const filteredStats = useMemo(() => {
@@ -362,7 +392,8 @@ export default function WikipediaDashboard() {
 
         <FilterTags className="mt-3" />
 
-        <MetricProvider loading={loading} variant="elevated">
+        <MetricProvider loading={loading} variant="elevated" theme="violet">
+          <LinkedHoverProvider>
           <MetricGrid className="mt-6">
 
             {/* \u2500\u2500 Live Metrics \u2500\u2500 */}
@@ -373,6 +404,7 @@ export default function WikipediaDashboard() {
               format="number"
               sparkline={{ data: filteredStats.editRateHistory, type: "bar" }}
               icon={<Pencil className="h-3.5 w-3.5" />}
+              description="Cumulative edits received since connecting to the EventStream. Resets on page reload."
               animate={{ countUp: true }}
             />
             <KpiCard
@@ -381,6 +413,7 @@ export default function WikipediaDashboard() {
               format={{ style: "custom", suffix: "/sec" }}
               sparkline={{ data: filteredStats.editRateHistory, type: "line" }}
               icon={<Zap className="h-3.5 w-3.5" />}
+              description="Rolling average of edits per second over the last 30-second window."
               animate={{ countUp: true }}
             />
             <KpiCard
@@ -388,13 +421,14 @@ export default function WikipediaDashboard() {
               value={filteredStats.uniqueEditors}
               format="number"
               icon={<Users className="h-3.5 w-3.5" />}
+              description={({ value }) => `${value} distinct usernames observed in the stream. Includes both registered accounts and anonymous IPs.`}
               animate={{ countUp: true }}
             />
             <KpiCard
               title="Bot Edits"
               value={filteredStats.botEditCount}
               format="number"
-              description={`${botRatio}% automated`}
+              description={`${botRatio}% of all edits are automated. Bots handle tasks like link fixes, category updates, and anti-vandalism patrols.`}
               icon={<Bot className="h-3.5 w-3.5" />}
               animate={{ countUp: true }}
             />
@@ -433,15 +467,14 @@ export default function WikipediaDashboard() {
 
             {/* \u2500\u2500 Edit Velocity \u2500\u2500 */}
             <MetricGrid.Section title="Edit Velocity" subtitle="Human vs bot edits per 5-second window" />
-            <AreaChart
+            <LineChart
               data={editVelocityData}
               title="Edit Velocity"
               subtitle="Human vs bot edits per 5s window \u2014 live"
+              description="Rolling 5-second edit counts split by human vs bot. Stacked view shows total throughput."
               format="number"
               height={310}
               stacked
-              enableArea
-              gradient
               loading={editVelocityData.length === 0}
             />
 
@@ -453,11 +486,13 @@ export default function WikipediaDashboard() {
               categories={["edits"]}
               title="Edits by Language"
               subtitle="Top 10 most active wikis"
+              description="Edit count per wiki language edition since connection. English Wikipedia typically dominates."
               format="number"
               height={300}
               sort="desc"
               layout="horizontal"
               loading={topWikis.length === 0}
+              crossFilter={{ field: "wiki" }}
             />
             <DonutChart
               data={editTypeData}
@@ -470,11 +505,13 @@ export default function WikipediaDashboard() {
               centerValue={filteredStats.totalEdits.toLocaleString()}
               centerLabel="total"
               loading={editTypeData.length === 0}
+              crossFilter={{ field: "type" }}
             />
             <Gauge
               value={botRatio}
               max={100}
               title="Bot Activity"
+              description="Percentage of total edits made by automated bots vs human editors."
               format="percent"
               height={300}
               thresholds={[
@@ -502,6 +539,7 @@ export default function WikipediaDashboard() {
             />
 
           </MetricGrid>
+          </LinkedHoverProvider>
         </MetricProvider>
       </div>
     </div>

@@ -162,7 +162,7 @@ Pass a string to any \`format\` prop:
 | "number"     | Auto-compact with K/M/B/T suffixes           | "1.2K", "3.5M" |
 | "compact"    | Same as "number" with compact: true          | "1.2K", "3.5M" |
 | "currency"   | Currency with compact suffixes               | "$1.2K", "$3.5M" |
-| "percent"    | Percentage with 1 decimal                    | "12.5%" |
+| "percent"    | Percentage with 0 decimals (add precision for more) | "12%" |
 | "duration"   | Human-readable duration from seconds         | "5m 30s" |
 | "custom"     | Base format — use prefix/suffix for anything | "12.5 items" |
 
@@ -186,6 +186,22 @@ format={{ style: "number", compact: "millions" }}
 // Custom prefix/suffix
 format={{ style: "number", prefix: "~", suffix: " users", compact: false }}
 \`\`\`
+
+## Custom units (temperature, speed, pressure, etc.)
+
+This is the most common format need for domain-specific dashboards. Use \`style: "number"\` or \`style: "custom"\` with a \`suffix\`:
+
+\`\`\`tsx
+format={{ style: "number", suffix: "°F" }}                    // 34°F
+format={{ style: "number", suffix: " mph" }}                   // 13 mph
+format={{ style: "number", suffix: " hPa", compact: false, precision: 0 }}  // 1013 hPa
+format={{ style: "number", suffix: " mi", compact: false }}    // 11 mi
+format={{ style: "number", suffix: " kg", compact: false }}    // 72 kg
+format={{ style: "percent", precision: 0 }}                    // 81%
+format={{ style: "percent", precision: 1 }}                    // 81.3%
+\`\`\`
+
+**Important:** When using suffix with values that should NOT be compacted (e.g., 1013 hPa should not become "1K hPa"), always set \`compact: false\`.
 
 ## 3. The fmt() helper
 
@@ -244,6 +260,47 @@ conditions={[
   { when: "below", value: 50, color: "red" },
 ]}
 \`\`\`
+
+## FormatConfig — full interface
+
+\`\`\`ts
+interface FormatConfig {
+  style: "number" | "currency" | "percent" | "duration" | "custom";
+  currency?: string;            // ISO 4217 code, e.g. "USD", "EUR"
+  compact?: boolean | "auto" | "thousands" | "millions" | "billions" | "trillions" | false;
+  precision?: number;           // decimal places (default: 0 for percent, 1 for compact, 2 for currency)
+  prefix?: string;              // prepended to formatted output
+  suffix?: string;              // appended to formatted output
+  locale?: string;              // BCP 47 locale string
+  percentInput?: "whole" | "decimal";  // "whole" means 12 = 12%, "decimal" means 0.12 = 12%
+  durationInput?: "seconds" | "milliseconds" | "minutes" | "hours";
+  durationStyle?: "compact" | "long" | "clock" | "narrow";
+  durationPrecision?: "milliseconds" | "seconds" | "minutes" | "hours" | "days" | "weeks" | "months";
+}
+\`\`\`
+
+## KpiCard string values
+
+KpiCard accepts string values for non-numeric KPIs (times, statuses, labels):
+
+\`\`\`tsx
+<KpiCard title="Sunrise" value="6:42 AM" />
+<KpiCard title="Status" value="Operational" />
+<KpiCard title="Location" value="Fort Wayne, IN" />
+\`\`\`
+
+String values are displayed as-is — no formatting is applied. Comparisons, conditions, goals, and sparklines are ignored for string values.
+
+## Common mistakes
+
+| Mistake | What happens | Fix |
+|---------|-------------|-----|
+| Using \`"compact"\` on values that need precision | 1013 becomes "1K" | Use \`{ style: "number", suffix: " hPa", compact: false }\` |
+| Using \`"percent"\` expecting decimals | 81 becomes "81%" not "81.0%" | Add \`precision: 1\` if you need decimals |
+| Writing custom CSS for dark mode / backgrounds | Visual disconnect between page and cards | Use \`<MetricProvider theme="...">\` — it owns the page aesthetic |
+| Cramming 5+ KPIs on one row | Tiny sparklines, cramped text | Limit to 3-4 KPIs per row, use StatGroup for secondary metrics |
+| Showing cards with no data | Broken or empty cards look worse than a gap | Omit the card entirely if data isn't available |
+| Using referenceLines / thresholds on every chart | Visual noise | Only add when they convey actionable info for the current data |
 
 Supported operators: "above", "below", "between", "equals", "not_equals", "at_or_above", "at_or_below"
 

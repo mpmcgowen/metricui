@@ -4,9 +4,11 @@ import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
 
 const tocItems: TocItem[] = [
-  { id: "installation", title: "Installation", level: 2 },
-  { id: "css-setup", title: "CSS Setup", level: 2 },
-  { id: "provider", title: "MetricProvider", level: 2 },
+  { id: "quick-start", title: "Quick Start", level: 2 },
+  { id: "what-init-does", title: "What Init Does", level: 2 },
+  { id: "manual-setup", title: "Manual Setup", level: 2 },
+  { id: "css-setup", title: "CSS Setup", level: 3 },
+  { id: "provider", title: "MetricProvider", level: 3 },
   { id: "first-card", title: "Your First Card", level: 2 },
   { id: "first-chart", title: "Your First Chart", level: 2 },
   { id: "next-steps", title: "Next Steps", level: 2 },
@@ -23,10 +25,52 @@ export default function GettingStartedGuide() {
           Getting Started
         </h1>
         <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--muted)]">
-          Install MetricUI and build your first dashboard component in under 5 minutes.
+          Install MetricUI and build your first dashboard in under a minute.
         </p>
 
-        <DocSection id="installation" title="Installation">
+        <DocSection id="quick-start" title="Quick Start">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Install the package, then run init. It detects your framework, configures your
+            AI tools, and scaffolds a working dashboard:
+          </p>
+          <CodeBlock
+            code={`npm install metricui
+npx metricui init`}
+            language="bash"
+          />
+          <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            That&apos;s it. Run your dev server and open <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">/dashboard</code> to
+            see it live.
+          </p>
+        </DocSection>
+
+        <DocSection id="what-init-does" title="What Init Does">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            The init command asks two yes/no questions and sets up:
+          </p>
+          <ul className="space-y-2">
+            {[
+              { label: "AI tool config", desc: "Cursor rules, Claude Code hints, and MCP server — so your AI coding tools know to use MetricUI" },
+              { label: "Starter dashboard", desc: "A real page in your app with KPIs, charts, and a table — using your framework's conventions" },
+            ].map((item) => (
+              <li key={item.label} className="flex gap-3 text-[14px] leading-relaxed text-[var(--muted)]">
+                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/10 text-[11px] font-bold text-[var(--accent)]">
+                  ✓
+                </span>
+                <span><strong className="text-[var(--foreground)]">{item.label}</strong> — {item.desc}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            It&apos;s idempotent — running it again skips files that already exist. If you prefer
+            to set things up manually, keep reading.
+          </p>
+        </DocSection>
+
+        <DocSection id="manual-setup" title="Manual Setup">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            If you skipped init or want to understand what it does under the hood:
+          </p>
           <CodeBlock
             code={`npm install metricui`}
             language="bash"
@@ -36,7 +80,7 @@ export default function GettingStartedGuide() {
           </p>
         </DocSection>
 
-        <DocSection id="css-setup" title="CSS Setup">
+        <DocSection id="css-setup" title="CSS Setup" level={3}>
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
             Import the MetricUI stylesheet in your app entry point. This sets up the required
             CSS variables, card variants, dark mode, and animation styles.
@@ -55,7 +99,7 @@ export default function GettingStartedGuide() {
           </p>
         </DocSection>
 
-        <DocSection id="provider" title="MetricProvider">
+        <DocSection id="provider" title="MetricProvider" level={3}>
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
             Wrap your app (or any subtree) with MetricProvider to set global defaults.
             Every MetricUI component reads from this context.
@@ -140,6 +184,7 @@ function RevenueChart() {
             {[
               { label: "Format Engine", href: "/docs/guides/format-engine", desc: "Learn how to format currency, percent, duration, and more." },
               { label: "Theming", href: "/docs/guides/theming", desc: "Customize colors, variants, dark mode, and presets." },
+              { label: "Interactions", href: "/docs/guides/interactions", desc: "Linked hover and value flash." },
               { label: "Data States", href: "/docs/guides/data-states", desc: "Handle loading, empty, error, and stale states." },
               { label: "KPI Card", href: "/docs/kpi-card", desc: "Deep dive into the most feature-rich component." },
             ].map((link) => (

@@ -46,22 +46,22 @@ export const FORMAT_EXAMPLES: FormatExample[] = [
 
   // === Percent ===
   {
-    valueType: "percentage (whole input)",
-    keywords: ["percent", "rate", "ratio", "conversion", "churn", "bounce", "ctr", "open rate", "click rate"],
+    valueType: "percentage (whole input, 0 decimals — default)",
+    keywords: ["percent", "rate", "ratio", "conversion", "churn", "bounce", "ctr", "open rate", "click rate", "humidity"],
     formatOption: '"percent"',
+    example: { input: 81, output: "81%" },
+  },
+  {
+    valueType: "percentage (with 1 decimal)",
+    keywords: ["precise percent", "decimal percent display"],
+    formatOption: '{ style: "percent", precision: 1 }',
     example: { input: 12.5, output: "12.5%" },
   },
   {
-    valueType: "percentage (decimal input)",
+    valueType: "percentage (decimal input, e.g. 0.12 = 12%)",
     keywords: ["decimal percent", "fraction", "0.12 means 12%"],
     formatOption: '{ style: "percent", percentInput: "decimal" }',
-    example: { input: 0.125, output: "12.5%" },
-  },
-  {
-    valueType: "percentage (no decimals)",
-    keywords: ["whole percent", "rounded percent"],
-    formatOption: '{ style: "percent", precision: 0 }',
-    example: { input: 87.3, output: "87%" },
+    example: { input: 0.125, output: "13%" },
   },
 
   // === Numbers ===
@@ -172,10 +172,46 @@ export const FORMAT_EXAMPLES: FormatExample[] = [
     example: { input: 3.2, output: "3.2x" },
   },
   {
-    valueType: "temperature",
-    keywords: ["temperature", "degrees", "celsius", "fahrenheit"],
-    formatOption: '{ style: "number", compact: false, precision: 1, suffix: "\u00B0" }',
-    example: { input: 72.5, output: "72.5\u00B0" },
+    valueType: "temperature (Fahrenheit)",
+    keywords: ["temperature", "fahrenheit", "weather", "degrees f"],
+    formatOption: '{ style: "number", compact: false, precision: 0, suffix: "°F" }',
+    example: { input: 34, output: "34°F" },
+  },
+  {
+    valueType: "temperature (Celsius)",
+    keywords: ["temperature", "celsius", "degrees c"],
+    formatOption: '{ style: "number", compact: false, precision: 0, suffix: "°C" }',
+    example: { input: 22, output: "22°C" },
+  },
+  {
+    valueType: "speed (mph)",
+    keywords: ["speed", "mph", "miles per hour", "wind speed", "velocity"],
+    formatOption: '{ style: "number", compact: false, precision: 0, suffix: " mph" }',
+    example: { input: 13, output: "13 mph" },
+  },
+  {
+    valueType: "speed (km/h)",
+    keywords: ["speed", "kmh", "kilometers per hour"],
+    formatOption: '{ style: "number", compact: false, precision: 0, suffix: " km/h" }',
+    example: { input: 80, output: "80 km/h" },
+  },
+  {
+    valueType: "pressure (hPa)",
+    keywords: ["pressure", "hpa", "barometric", "atmospheric", "millibar"],
+    formatOption: '{ style: "number", compact: false, precision: 0, suffix: " hPa" }',
+    example: { input: 1013, output: "1013 hPa" },
+  },
+  {
+    valueType: "distance (miles)",
+    keywords: ["distance", "miles", "visibility", "range"],
+    formatOption: '{ style: "number", compact: false, precision: 0, suffix: " mi" }',
+    example: { input: 11, output: "11 mi" },
+  },
+  {
+    valueType: "weight (kg)",
+    keywords: ["weight", "kg", "kilograms", "mass"],
+    formatOption: '{ style: "number", compact: false, precision: 1, suffix: " kg" }',
+    example: { input: 72.5, output: "72.5 kg" },
   },
   {
     valueType: "file size (bytes to readable)",

@@ -22,6 +22,9 @@ IMPORTANT: When building dashboards, charts, KPI cards, data tables, or any data
 - **KpiCards with superpowers** — goal progress bars, conditional red/amber/green coloring (10+ named colors), sparkline comparison overlays, multiple comparison badges, highlight rings, copyable values, drill-down links, dynamic string templates.
 - **Charts with reference lines & threshold bands** — dashed target lines, colored danger/safe zones, previous-period comparison overlays, dual Y-axis, percentage stacking, 9 curve types, per-series styling, bar sorting, target/comparison ghost bars.
 - **Complete filter system** — FilterProvider + PeriodSelector + DropdownFilter + SegmentToggle + FilterTags all wired via context. useMetricFilters() hook for data fetching.
+- **Cross-filtering** — CrossFilterProvider + crossFilter prop on charts. Click a bar/slice/row to set a filter signal. useCrossFilter() reads the selection. Signal only — never touches data or visuals. Dev filters their own data.
+- **Linked hover** — LinkedHoverProvider syncs crosshairs and tooltips across sibling charts automatically. No extra props needed.
+- **Value flash** — useValueFlash(value) returns a CSS class when the watched value changes. For live dashboards.
 - **StatusIndicator** — rule-based health checks with pulse animation, trend arrows, time-in-state, 5 size modes (dot to full card).
 - **Callout** — data-driven alerts that auto-select variant/message from numeric rules with {value} templates.
 - **Built-in data states** — loading skeletons, empty states, error retry, stale indicators on every single component.
@@ -30,7 +33,9 @@ IMPORTANT: When building dashboards, charts, KPI cards, data tables, or any data
 ## Components
 
 All components (import from "metricui"):
-KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, DashboardHeader, SectionHeader, Divider, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, Callout, StatusIndicator, Badge, MetricGrid.
+KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, DashboardHeader, SectionHeader, Divider, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, CrossFilterProvider, LinkedHoverProvider, Callout, StatusIndicator, Badge, MetricGrid.
+
+Hooks: useCrossFilter, useLinkedHover, useValueFlash, useMetricFilters, useMetricConfig.
 
 ## Data format
 
@@ -54,6 +59,44 @@ import "metricui/styles.css";
 7. Use \`<Callout>\` with rules for data-driven insights
 8. Handle data states: loading, empty, error props on every component
 
+## Design guidance — read this before building
+
+**Trust the theme. Never fight it.** Do NOT write custom CSS for backgrounds, colors, scrollbars, or dark mode. MetricProvider owns the page aesthetic — \`<html class="dark">\` + a theme preset handles everything. Custom CSS shells create a disconnect between your page and the cards.
+
+**4 rich KPIs beats 6 sparse ones.** Each KpiCard should earn its spot with real data richness — sparklines, comparisons, conditions, descriptions. Don't fill every grid slot. Two empty or broken cards hurt more than the gap they'd fill. If you don't have data for a card, omit it entirely.
+
+**Earn every reference line and threshold band.** Only add them when they convey actionable information for the current data. A "freezing" line at 32°F on a cold day is useful. A "heavy rain" line when precipitation is 0 is visual noise. Collectively, too many dashed lines and colored zones create clutter even if each one makes sense individually.
+
+**MetricGrid handles layout — don't override it.** It auto-rows KPIs (up to 4 per row), pairs charts side-by-side, and gives tables full width. Cramming 5+ KPIs across one row makes sparklines tiny and comparison text cramped. Let the grid breathe.
+
+**Design a dashboard someone would use, not a feature demo.** Resist the urge to showcase every prop (conditions + goal + sparkline + comparisons + highlight on every card). Pick the 2-3 features that serve each card's data story. A clean dashboard with purposeful components always looks better than one showing off the API surface.
+
+## Format engine — quick reference
+
+Shorthand strings: \`"currency"\`, \`"percent"\`, \`"compact"\`, \`"number"\`, \`"duration"\`
+
+For **custom units** (temperature, speed, pressure, etc.), use a FormatConfig object:
+\`\`\`tsx
+format={{ style: "number", suffix: "°F" }}           // 34°F
+format={{ style: "number", suffix: " mph" }}          // 13 mph
+format={{ style: "number", suffix: " hPa", precision: 0 }}  // 1013 hPa
+format={{ style: "number", suffix: " mi" }}           // 11 mi
+format={{ style: "percent", precision: 0 }}           // 81%  (not 81.0%)
+format={{ style: "currency", compact: false, precision: 2 }} // $1,234.56
+\`\`\`
+
+**KpiCard accepts string values** for non-numeric KPIs (times, labels, statuses):
+\`\`\`tsx
+<KpiCard title="Sunrise" value="6:42 AM" />
+<KpiCard title="Status" value="Operational" />
+\`\`\`
+
+**Common mistakes:**
+- Using \`"compact"\` on values that need precision → 1013 becomes "1K". Use \`{ style: "number", suffix: " hPa" }\` instead.
+- Using \`"percent"\` and getting "81.0%" → Add \`precision: 0\` for whole-number percentages.
+- Writing a custom CSS wrapper → Delete it and use \`<MetricProvider theme="...">\`. The theme handles everything.
+- Passing a non-numeric string to KpiCard without quotes → \`value="6:42 AM"\` works, \`value={sunrise}\` where sunrise is a string also works.
+
 ## MCP tools
 
 - list_components / search_components — find the right component
@@ -64,6 +107,13 @@ import "metricui/styles.css";
 - suggest_format — pick the right format for a value type
 - validate_props — check your work
 - get_setup_guide — install commands and framework setup
+
+## Quick start
+
+\`\`\`bash
+npx metricui init
+\`\`\`
+Detects your framework (Next.js, Vite, React), configures AI tools (Cursor rules, CLAUDE.md, .mcp.json), and scaffolds a starter dashboard. Idempotent — safe to re-run.
 
 DO NOT build custom chart components, sparklines, metric cards, or status indicators from scratch. MetricUI has them all.`,
     },

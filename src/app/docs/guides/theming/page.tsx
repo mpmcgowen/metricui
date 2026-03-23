@@ -1,7 +1,10 @@
+"use client";
+
 import { DocSection } from "@/components/docs/DocSection";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 
 const tocItems: TocItem[] = [
   { id: "css-variables", title: "CSS Variables", level: 2 },
@@ -54,33 +57,24 @@ export default function ThemingGuide() {
 }`}
             language="css"
           />
-          <div className="mt-6 overflow-x-auto rounded-xl border border-[var(--card-border)]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Variable</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Purpose</th>
-                </tr>
-              </thead>
-              <tbody className="text-[13px]">
-                {[
-                  ["--background", "Page background color"],
-                  ["--foreground", "Primary text color"],
-                  ["--card-bg", "Card/container background"],
-                  ["--card-border", "Card border and divider color"],
-                  ["--card-glow", "Hover/ghost variant background tint"],
-                  ["--muted", "Secondary/muted text color"],
-                  ["--accent", "Primary accent color"],
-                  ["--font-mono", "Monospace font family for values"],
-                ].map(([v, desc]) => (
-                  <tr key={v} className="border-b border-[var(--card-border)] last:border-0">
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{v}</code></td>
-                    <td className="px-4 py-2.5 text-[var(--foreground)]">{desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { variable: "--background", purpose: "Page background color" },
+              { variable: "--foreground", purpose: "Primary text color" },
+              { variable: "--card-bg", purpose: "Card/container background" },
+              { variable: "--card-border", purpose: "Card border and divider color" },
+              { variable: "--card-glow", purpose: "Hover/ghost variant background tint" },
+              { variable: "--muted", purpose: "Secondary/muted text color" },
+              { variable: "--accent", purpose: "Primary accent color" },
+              { variable: "--font-mono", purpose: "Monospace font family for values" },
+            ]}
+            columns={[
+              { key: "variable", header: "Variable", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+              { key: "purpose", header: "Purpose" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         <DocSection id="theme-presets" title="Theme Presets">
@@ -100,29 +94,20 @@ export default function ThemingGuide() {
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
             Four built-in variants control card appearance via CSS custom properties:
           </p>
-          <div className="overflow-x-auto rounded-xl border border-[var(--card-border)]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Variant</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Description</th>
-                </tr>
-              </thead>
-              <tbody className="text-[13px]">
-                {[
-                  ["default", "Clean bordered card with card background"],
-                  ["outlined", "Transparent background, 2px border, inset shadow"],
-                  ["ghost", "Accent-tinted background, no border"],
-                  ["elevated", "Card background with multi-layer shadow, no visible border"],
-                ].map(([v, desc]) => (
-                  <tr key={v} className="border-b border-[var(--card-border)] last:border-0">
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{v}</code></td>
-                    <td className="px-4 py-2.5 text-[var(--foreground)]">{desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { variant: "default", description: "Clean bordered card with card background" },
+              { variant: "outlined", description: "Transparent background, 2px border, inset shadow" },
+              { variant: "ghost", description: "Accent-tinted background, no border" },
+              { variant: "elevated", description: "Card background with multi-layer shadow, no visible border" },
+            ]}
+            columns={[
+              { key: "variant", header: "Variant", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         <DocSection id="custom-variants" title="Custom Variants">

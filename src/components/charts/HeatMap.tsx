@@ -2,7 +2,7 @@
 
 import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveHeatMap } from "@nivo/heatmap";
-import type { HeatMapDatum, ComputedCell } from "@nivo/heatmap";
+import type { HeatMapDatum, ComputedCell, CustomLayerProps as HeatMapCustomLayerProps } from "@nivo/heatmap";
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
@@ -13,6 +13,8 @@ import { useContainerSize } from "@/lib/useContainerSize";
 import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { CellClickEvent } from "@/lib/chartTypes";
 import { toHeatMapSeries, inferSchema, categoryKeys, type Category } from "@/lib/dataTransform";
+import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -68,6 +70,8 @@ export interface HeatMapProps {
   hoverOtherOpacity?: number;
   /** Click handler for cells */
   onCellClick?: (cell: CellClickEvent) => void;
+  /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
+  crossFilter?: boolean | { field?: string };
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
   /** Variant */
@@ -175,6 +179,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   hoverTarget = "cell",
   hoverOtherOpacity = 0.35,
   onCellClick,
+  crossFilter: crossFilterProp,
   animate: animateProp,
   variant,
   className,
@@ -188,6 +193,8 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   stale,
 }, ref) {
   assertPeer(ResponsiveHeatMap, "@nivo/heatmap", "HeatMap");
+  const linkedHover = useLinkedHover();
+  const linkedHoverId = useLinkedHoverId();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const localeDefaults = useLocale();
@@ -201,6 +208,12 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   const denseValues = useDenseValues();
   const resolvedDense = dense ?? config.dense;
   const resolvedHeight = height ?? denseValues.chartHeight;
+
+  // --- Cross-filter ---
+  const crossFilter = useCrossFilter();
+  const crossFilterField = crossFilterProp
+    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "x"
+    : undefined;
 
   // --- Resolve data: unified format → HeatMap series ---
   const data = useMemo(() => {
@@ -276,6 +289,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
         action={action}
         height={resolvedHeight}
         variant={resolvedVariant}
+
         className={classNames?.root ?? className}
         classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
         loading={loading}
@@ -322,16 +336,26 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
             axisRight={null}
             animate={!!resolvedAnimate}
             motionConfig={resolvedAnimate ? config.motionConfig : undefined}
+            layers={[
+              "grid",
+              "axes",
+              "cells",
+              "legends",
+              "annotations",
+            ] as any}
             onClick={
-              onCellClick
+              (onCellClick || (crossFilterProp && crossFilter))
                 ? (cell) => {
-                    onCellClick({
+                    onCellClick?.({
                       id: `${cell.serieId}-${String(cell.data.x)}`,
                       value: cell.value,
                       label: String(cell.data.x),
                       seriesId: cell.serieId,
                       x: String(cell.data.x),
                     });
+                    if (crossFilterProp && crossFilter && crossFilterField) {
+                      crossFilter.select({ field: crossFilterField, value: String(cell.data.x) });
+                    }
                   }
                 : undefined
             }

@@ -17,6 +17,8 @@ function openUrl(url) {
 
 if (args.includes("--version") || args.includes("-v")) {
   console.log(pkg.version);
+} else if (cmd === "init") {
+  require("./init.js");
 } else if (cmd === "docs") {
   const page = args[1];
   const url = page ? `https://metricui.com/docs/${page}` : "https://metricui.com/docs";
@@ -47,6 +49,7 @@ if (args.includes("--version") || args.includes("-v")) {
   MetricUI v${pkg.version}
 
   Usage:
+    metricui init         Set up MetricUI in your project
     metricui docs [page]  Open docs (e.g. metricui docs kpi-card)
     metricui demos [name] Open a live demo (saas, github, wikipedia, world)
     metricui github       Open the GitHub repo

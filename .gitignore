@@ -25,6 +25,9 @@
 **/mcp-server/dist/
 **/mcp-server/.next/
 **/mcp-server/node_modules/
+**/mcp-server/.mcpregistry_*
+**/mcp-server/server.json
+**/mcp-server/server.json.bak
 
 # misc
 .DS_Store
@@ -38,6 +41,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+
+# local MCP config
+.mcp.json
 
 # vercel
 .vercel

@@ -400,6 +400,7 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
         footnote={footnote}
         height={resolvedHeight}
         variant={resolvedVariant}
+
         className={classNames?.root ?? className}
         classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
         loading={loading}

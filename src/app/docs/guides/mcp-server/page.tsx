@@ -1,7 +1,10 @@
+"use client";
+
 import { DocSection } from "@/components/docs/DocSection";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 
 const tocItems: TocItem[] = [
   { id: "setup", title: "Setup", level: 2 },
@@ -41,40 +44,20 @@ function ToolCard({ id, name, description, params, children }: {
       </h3>
       <p className="mt-2 text-[14px] leading-relaxed text-[var(--muted)]">{description}</p>
       {params && params.length > 0 && (
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-[var(--card-border)]">
-                <th className="pb-2 pr-4 text-left font-semibold text-[var(--foreground)]">Parameter</th>
-                <th className="pb-2 pr-4 text-left font-semibold text-[var(--foreground)]">Type</th>
-                <th className="pb-2 pr-4 text-left font-semibold text-[var(--foreground)]">Required</th>
-                <th className="pb-2 text-left font-semibold text-[var(--foreground)]">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {params.map((p) => (
-                <tr key={p.name} className="border-b border-[var(--card-border)]/50">
-                  <td className="py-2 pr-4 font-mono text-[var(--accent)]">{p.name}</td>
-                  <td className="py-2 pr-4 font-mono text-[var(--muted)]">{p.type}</td>
-                  <td className="py-2 pr-4 text-[var(--muted)]">{p.required ? "Yes" : "No"}</td>
-                  <td className="py-2 text-[var(--muted)]">{p.description}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={params.map((p) => ({ parameter: p.name, type: p.type, required: p.required ? "Yes" : "No", description: p.description }))}
+          columns={[
+            { key: "parameter", header: "Parameter", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+            { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+            { key: "required", header: "Required" },
+            { key: "description", header: "Description" },
+          ]}
+          dense
+          variant="ghost"
+        />
       )}
       {children}
     </div>
-  );
-}
-
-function ResourceRow({ uri, description }: { uri: string; description: string }) {
-  return (
-    <tr className="border-b border-[var(--card-border)]/50">
-      <td className="py-2.5 pr-4 font-mono text-sm text-[var(--accent)]">{uri}</td>
-      <td className="py-2.5 text-[14px] text-[var(--muted)]">{description}</td>
-    </tr>
   );
 }
 
@@ -308,44 +291,40 @@ export default function McpServerGuide() {
           </p>
 
           <h3 className="mb-3 text-base font-semibold text-[var(--foreground)]">Static Resources</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="border-b border-[var(--card-border)]">
-                  <th className="pb-2 pr-4 text-left font-semibold text-[var(--foreground)]">URI</th>
-                  <th className="pb-2 text-left font-semibold text-[var(--foreground)]">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <ResourceRow uri="metricui://catalog" description="Complete list of all components with descriptions and import statement" />
-                <ResourceRow uri="metricui://config" description="MetricProvider & MetricConfig — all fields, defaults, nesting, hooks, resolution order" />
-                <ResourceRow uri="metricui://format" description="Format engine — shorthand strings, FormatConfig objects, fmt() helper, compact modes, duration styles" />
-                <ResourceRow uri="metricui://theming" description="CSS variables, card variants, semantic colors, texture control, dense mode, dark mode, motion config" />
-                <ResourceRow uri="metricui://types" description="All TypeScript types exported by MetricUI — FormatOption, ComparisonConfig, Condition, Column, etc." />
-                <ResourceRow uri="metricui://patterns" description="Usage patterns and code recipes — full dashboards, KPI features, data fetching, conditional formatting, theme presets, reference lines, filter system, responsive layout" />
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { uri: "metricui://catalog", description: "Complete list of all components with descriptions and import statement" },
+              { uri: "metricui://config", description: "MetricProvider & MetricConfig — all fields, defaults, nesting, hooks, resolution order" },
+              { uri: "metricui://format", description: "Format engine — shorthand strings, FormatConfig objects, fmt() helper, compact modes, duration styles" },
+              { uri: "metricui://theming", description: "CSS variables, card variants, semantic colors, texture control, dense mode, dark mode, motion config" },
+              { uri: "metricui://types", description: "All TypeScript types exported by MetricUI — FormatOption, ComparisonConfig, Condition, Column, etc." },
+              { uri: "metricui://patterns", description: "Usage patterns and code recipes — full dashboards, KPI features, data fetching, conditional formatting, theme presets, reference lines, filter system, responsive layout" },
+            ]}
+            columns={[
+              { key: "uri", header: "URI", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
 
           <h3 className="mt-8 mb-3 text-base font-semibold text-[var(--foreground)]">Resource Templates</h3>
           <p className="mb-3 text-[14px] leading-relaxed text-[var(--muted)]">
             Dynamic resources that accept a parameter to return specific items:
           </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="border-b border-[var(--card-border)]">
-                  <th className="pb-2 pr-4 text-left font-semibold text-[var(--foreground)]">URI Template</th>
-                  <th className="pb-2 text-left font-semibold text-[var(--foreground)]">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <ResourceRow uri="metricui://components/{name}" description="Full API reference for a specific component — props table, data shape, examples, notes" />
-                <ResourceRow uri="metricui://types/{name}" description="TypeScript definition for a specific type — full interface, related types" />
-                <ResourceRow uri="metricui://patterns/{slug}" description="Specific usage pattern — description, tags, complete code example" />
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { uri: "metricui://components/{name}", description: "Full API reference for a specific component — props table, data shape, examples, notes" },
+              { uri: "metricui://types/{name}", description: "TypeScript definition for a specific type — full interface, related types" },
+              { uri: "metricui://patterns/{slug}", description: "Specific usage pattern — description, tags, complete code example" },
+            ]}
+            columns={[
+              { key: "uri", header: "URI Template", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         <DocSection id="prompts" title="Prompts">

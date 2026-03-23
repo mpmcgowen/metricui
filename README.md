@@ -15,7 +15,8 @@
   <a href="https://metricui.com/docs">Docs</a> ·
   <a href="https://metricui.com/demos/saas">SaaS Demo</a> ·
   <a href="https://metricui.com/demos/github">GitHub Demo</a> ·
-  <a href="#mcp-server">MCP Server</a>
+  <a href="#mcp-server">MCP Server</a> ·
+  <a href="https://metricui.com/roadmap">Roadmap</a>
 </p>
 
 ---
@@ -455,6 +456,14 @@ export default function Dashboard() {
 ### llms.txt
 
 Machine-readable documentation for AI models at [`/llms.txt`](https://metricui.com/llms.txt). Every component, every prop, every type, every pattern — so even AI tools without MCP support can generate correct MetricUI code.
+
+---
+
+## Roadmap
+
+MetricUI is building toward 1.0 — cross-filtering, zero-config charts, anomaly detection, data stories, and a stable API you can build on with confidence. See what's shipped, what's next, and where we're headed:
+
+**[View the full roadmap &rarr;](https://metricui.com/roadmap)**
 
 ---
 

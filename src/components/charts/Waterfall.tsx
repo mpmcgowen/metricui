@@ -12,6 +12,7 @@ import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -64,6 +65,8 @@ export interface WaterfallProps {
   yAxisLabel?: string;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
+  /** Emit cross-filter selection on bar click. Defaults field to "label". */
+  crossFilter?: boolean | { field?: string };
   /** Dense mode */
   dense?: boolean;
   /** Variant */
@@ -253,6 +256,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   yAxisLabel,
   dense: denseProp,
   animate: animateProp,
+  crossFilter: crossFilterProp,
   variant,
   className,
   classNames,
@@ -264,6 +268,10 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   stale,
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "Waterfall");
+  const crossFilter = useCrossFilter();
+  const crossFilterField = crossFilterProp
+    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "label"
+    : undefined;
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const localeDefaults = useLocale();
@@ -326,13 +334,61 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
     return calculateResponsiveTicks(labels, containerWidth);
   }, [barData, containerWidth]);
 
-  // --- Margin ---
+  // --- Margin (extra top space for labels above bars) ---
   const margin = useMemo(() => ({
-    top: 16,
+    top: enableLabels ? 28 : 16,
     right: containerWidth < 400 ? 8 : 16,
     bottom: yAxisLabel ? 48 : 36,
     left: containerWidth < 300 ? 8 : containerWidth < 400 ? 36 : yAxisLabel ? 72 : 60,
-  }), [containerWidth, yAxisLabel]);
+  }), [containerWidth, yAxisLabel, enableLabels]);
+
+  // --- Custom label layer (positioned above each bar for readability) ---
+  const createLabelLayer = useCallback(
+    () => {
+      return function LabelLayer(props: BarCustomLayerProps<BarDatum>) {
+        const { bars: nivoBars } = props;
+        // Group bars by index to find each waterfall item's visual bounds
+        const barGroups = new Map<number, { minY: number; x: number; width: number }>();
+        for (const bar of nivoBars) {
+          const key = String(bar.data.id);
+          if (key === "_spacer") continue;
+          if (bar.data.value === 0) continue;
+          const idx = bar.data.index;
+          const existing = barGroups.get(idx);
+          if (!existing) {
+            barGroups.set(idx, { minY: bar.y, x: bar.x, width: bar.width });
+          } else {
+            existing.minY = Math.min(existing.minY, bar.y);
+          }
+        }
+
+        return (
+          <g>
+            {[...barGroups.entries()].map(([idx, bounds]) => {
+              const computed = computedBars[idx];
+              if (!computed) return null;
+              const label = formatValue(Math.abs(computed._value), format, localeDefaults);
+              return (
+                <text
+                  key={idx}
+                  x={bounds.x + bounds.width / 2}
+                  y={bounds.minY - 6}
+                  textAnchor="middle"
+                  dominantBaseline="auto"
+                  fill={isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.75)"}
+                  fontSize={11}
+                  fontWeight={500}
+                >
+                  {label}
+                </text>
+              );
+            })}
+          </g>
+        );
+      };
+    },
+    [computedBars, format, localeDefaults, isDark],
+  );
 
   // --- Custom layers ---
   const layers = useMemo(() => {
@@ -340,9 +396,13 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
     if (connectors) {
       l.push(createConnectorLayer(computedBars, isDark));
     }
-    l.push("bars", "markers", "legends", "annotations");
+    l.push("bars");
+    if (enableLabels) {
+      l.push(createLabelLayer());
+    }
+    l.push("markers", "legends", "annotations");
     return l;
-  }, [connectors, computedBars, isDark]);
+  }, [connectors, computedBars, isDark, enableLabels, createLabelLayer]);
 
   return (
     <div ref={containerRef} style={{ minWidth: 120, height: "100%" }}>
@@ -358,6 +418,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
         action={action}
         height={resolvedHeight}
         variant={resolvedVariant}
+
         dense={resolvedDense}
         className={classNames?.root ?? className}
         classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
@@ -381,21 +442,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
             borderWidth={0}
             enableGridX={false}
             enableGridY={enableGridY}
-            enableLabel={enableLabels}
-            labelSkipWidth={12}
-            labelSkipHeight={12}
-            label={(d) => {
-              if (String(d.id) === "_spacer") return "";
-              const idx = barData.findIndex(b => b.label === String(d.data.label));
-              const computed = computedBars[idx];
-              if (!computed) return "";
-              return formatValue(Math.abs(computed._value), format, localeDefaults);
-            }}
-            labelTextColor={(d: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-              const key = String(d.id ?? d.data?.id ?? "");
-              if (key === "_spacer") return "transparent";
-              return "#fff";
-            }}
+            enableLabel={false}
             axisTop={null}
             axisRight={null}
             axisBottom={{
@@ -441,6 +488,11 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
                   }]}
                 />
               );
+            }}
+            onClick={(datum) => {
+              if (crossFilterProp && crossFilter && crossFilterField) {
+                crossFilter.select({ field: crossFilterField, value: datum.indexValue as string | number });
+              }
             }}
             animate={resolvedAnimate}
             motionConfig={resolvedAnimate ? config.motionConfig : undefined}

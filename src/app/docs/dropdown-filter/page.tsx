@@ -9,6 +9,7 @@ import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -383,46 +384,35 @@ function MyContent() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-[var(--card-border)]">
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Prop</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Type</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Default</th>
-                  <th className="pb-2 font-semibold text-[var(--foreground)]">Description</th>
-                </tr>
-              </thead>
-              <tbody className="text-[var(--muted)]">
-                {[
-                  { prop: "label", type: "string", def: "(required)", desc: "Label shown on the trigger button." },
-                  { prop: "options", type: "DropdownOption[] | string[]", def: "(required)", desc: "Options to display. Pass string[] as shorthand." },
-                  { prop: "value", type: "string | string[]", def: "\u2014", desc: "Controlled selected value(s)." },
-                  { prop: "defaultValue", type: "string | string[]", def: "\u2014", desc: "Default value for uncontrolled mode." },
-                  { prop: "onChange", type: "(value) => void", def: "\u2014", desc: "Change handler. Receives string (single) or string[] (multiple)." },
-                  { prop: "multiple", type: "boolean", def: "false", desc: "Allow multiple selections." },
-                  { prop: "searchable", type: "boolean", def: "auto", desc: "Show search input. Default: true when > 8 options." },
-                  { prop: "searchPlaceholder", type: "string", def: '"Search..."', desc: "Placeholder text for search input." },
-                  { prop: "field", type: "string", def: "\u2014", desc: "FilterContext field name. Reads/writes to dimensions." },
-                  { prop: "showAll", type: "boolean", def: "true (multi)", desc: "Show 'All' option that clears selection." },
-                  { prop: "allLabel", type: "string", def: '"All"', desc: "Label for the All option." },
-                  { prop: "maxHeight", type: "number", def: "280", desc: "Max height of dropdown in px." },
-                  { prop: "dense", type: "boolean", def: "false", desc: "Compact mode. Falls back to MetricProvider." },
-                  { prop: "className", type: "string", def: "\u2014", desc: "Additional CSS classes." },
-                  { prop: "classNames", type: "{ root?, trigger?, dropdown?, option?, search? }", def: "\u2014", desc: "Sub-element class overrides." },
-                  { prop: "id", type: "string", def: "\u2014", desc: "HTML id." },
-                  { prop: "data-testid", type: "string", def: "\u2014", desc: "Test id." },
-                ].map((row) => (
-                  <tr key={row.prop} className="border-b border-[var(--card-border)]/50">
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">{row.prop}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.type}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.def}</td>
-                    <td className="py-2">{row.desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { prop: "label", type: "string", default: "(required)", description: "Label shown on the trigger button." },
+              { prop: "options", type: "DropdownOption[] | string[]", default: "(required)", description: "Options to display. Pass string[] as shorthand." },
+              { prop: "value", type: "string | string[]", default: "\u2014", description: "Controlled selected value(s)." },
+              { prop: "defaultValue", type: "string | string[]", default: "\u2014", description: "Default value for uncontrolled mode." },
+              { prop: "onChange", type: "(value) => void", default: "\u2014", description: "Change handler. Receives string (single) or string[] (multiple)." },
+              { prop: "multiple", type: "boolean", default: "false", description: "Allow multiple selections." },
+              { prop: "searchable", type: "boolean", default: "auto", description: "Show search input. Default: true when > 8 options." },
+              { prop: "searchPlaceholder", type: "string", default: '"Search..."', description: "Placeholder text for search input." },
+              { prop: "field", type: "string", default: "\u2014", description: "FilterContext field name. Reads/writes to dimensions." },
+              { prop: "showAll", type: "boolean", default: "true (multi)", description: "Show 'All' option that clears selection." },
+              { prop: "allLabel", type: "string", default: '"All"', description: "Label for the All option." },
+              { prop: "maxHeight", type: "number", default: "280", description: "Max height of dropdown in px." },
+              { prop: "dense", type: "boolean", default: "false", description: "Compact mode. Falls back to MetricProvider." },
+              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
+              { prop: "classNames", type: "{ root?, trigger?, dropdown?, option?, search? }", default: "\u2014", description: "Sub-element class overrides." },
+              { prop: "id", type: "string", default: "\u2014", description: "HTML id." },
+              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id." },
+            ]}
+            columns={[
+              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         {/* Notes */}

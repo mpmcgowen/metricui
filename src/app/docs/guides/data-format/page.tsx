@@ -1,7 +1,10 @@
+"use client";
+
 import { DocSection } from "@/components/docs/DocSection";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 
 const tocItems: TocItem[] = [
   { id: "overview", title: "Overview", level: 2 },
@@ -107,32 +110,22 @@ categories={[
   { key: "margin", format: "percent", axis: "right" },
 ]}`}
           />
-          <div className="mt-6 overflow-x-auto rounded-xl border border-[var(--card-border)]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Field</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Type</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Description</th>
-                </tr>
-              </thead>
-              <tbody className="text-[13px]">
-                {[
-                  ["key", "string", "Column key in the data row (required)"],
-                  ["label", "string", "Display label — defaults to key"],
-                  ["format", "FormatOption", "Format for this category's values"],
-                  ["color", "string", "Override color for this series"],
-                  ["axis", '"left" | "right"', "Assign to right Y-axis (BarLineChart, dual-axis)"],
-                ].map(([field, type, desc]) => (
-                  <tr key={field} className="border-b border-[var(--card-border)] last:border-0">
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{field}</code></td>
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{type}</code></td>
-                    <td className="px-4 py-2.5 text-[var(--foreground)]">{desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { field: "key", type: "string", description: "Column key in the data row (required)" },
+              { field: "label", type: "string", description: "Display label — defaults to key" },
+              { field: "format", type: "FormatOption", description: "Format for this category's values" },
+              { field: "color", type: "string", description: "Override color for this series" },
+              { field: "axis", type: '"left" | "right"', description: "Assign to right Y-axis (BarLineChart, dual-axis)" },
+            ]}
+            columns={[
+              { key: "field", header: "Field", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         <DocSection id="swap-chart-type" title="Swap Chart Types">
@@ -193,38 +186,28 @@ categories={[
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
             The unified format works with charts that plot tabular, multi-series data:
           </p>
-          <div className="overflow-x-auto rounded-xl border border-[var(--card-border)]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Component</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Unified Format</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Notes</th>
-                </tr>
-              </thead>
-              <tbody className="text-[13px]">
-                {[
-                  ["AreaChart", "Yes", "index → x-axis, categories → series"],
-                  ["LineChart", "Yes", "Same as AreaChart (wrapper with fill disabled)"],
-                  ["BarChart", "Yes", "index → category axis, categories → bar groups"],
-                  ["BarLineChart", "Yes", "axis: \"right\" splits bars vs lines"],
-                  ["DonutChart", "Yes", "index → slice labels, first category → values"],
-                  ["HeatMap", "Yes", "index → row labels, categories → columns"],
-                  ["Gauge", "No", "Single value — not tabular data"],
-                  ["Funnel", "No", "Sequential stages — its own shape (id/label/value)"],
-                  ["Waterfall", "No", "Sequential deltas — its own shape (label/value/type)"],
-                  ["Sparkline", "No", "Flat number array — already minimal"],
-                  ["BulletChart", "No", "Actual vs target vs ranges — specialized shape"],
-                ].map(([comp, unified, notes]) => (
-                  <tr key={comp} className="border-b border-[var(--card-border)] last:border-0">
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{comp}</code></td>
-                    <td className="px-4 py-2.5 text-[var(--foreground)]">{unified}</td>
-                    <td className="px-4 py-2.5 text-[var(--muted)]">{notes}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { component: "AreaChart", unified: "Yes", notes: "index → x-axis, categories → series" },
+              { component: "LineChart", unified: "Yes", notes: "Same as AreaChart (wrapper with fill disabled)" },
+              { component: "BarChart", unified: "Yes", notes: "index → category axis, categories → bar groups" },
+              { component: "BarLineChart", unified: "Yes", notes: "axis: \"right\" splits bars vs lines" },
+              { component: "DonutChart", unified: "Yes", notes: "index → slice labels, first category → values" },
+              { component: "HeatMap", unified: "Yes", notes: "index → row labels, categories → columns" },
+              { component: "Gauge", unified: "No", notes: "Single value — not tabular data" },
+              { component: "Funnel", unified: "No", notes: "Sequential stages — its own shape (id/label/value)" },
+              { component: "Waterfall", unified: "No", notes: "Sequential deltas — its own shape (label/value/type)" },
+              { component: "Sparkline", unified: "No", notes: "Flat number array — already minimal" },
+              { component: "BulletChart", unified: "No", notes: "Actual vs target vs ranges — specialized shape" },
+            ]}
+            columns={[
+              { key: "component", header: "Component", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+              { key: "unified", header: "Unified Format" },
+              { key: "notes", header: "Notes" },
+            ]}
+            dense
+            variant="ghost"
+          />
           <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
             Charts that don&apos;t support the unified format have fundamentally different data
             shapes — they&apos;re not plotting rows of comparable series. Each has its own

@@ -9,6 +9,7 @@ import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 import { Activity, TrendingUp, BarChart3, Zap, Users, Bot } from "lucide-react";
 
 const tocItems: TocItem[] = [
@@ -342,43 +343,32 @@ function MyContent() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-[var(--card-border)]">
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Prop</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Type</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Default</th>
-                  <th className="pb-2 font-semibold text-[var(--foreground)]">Description</th>
-                </tr>
-              </thead>
-              <tbody className="text-[var(--muted)]">
-                {[
-                  { prop: "options", type: "SegmentOption[] | string[]", def: "(required)", desc: "Segment options. Pass string[] as shorthand." },
-                  { prop: "value", type: "string | string[]", def: "\u2014", desc: "Controlled active segment(s)." },
-                  { prop: "defaultValue", type: "string | string[]", def: "first option", desc: "Default value for uncontrolled mode." },
-                  { prop: "onChange", type: "(value) => void", def: "\u2014", desc: "Change handler. Receives string (single) or string[] (multiple)." },
-                  { prop: "multiple", type: "boolean", def: "false", desc: "Allow multiple selections." },
-                  { prop: "field", type: "string", def: "\u2014", desc: "FilterContext field name. Reads/writes to dimensions." },
-                  { prop: "orientation", type: '"horizontal" | "vertical"', def: '"horizontal"', desc: "Layout orientation." },
-                  { prop: "size", type: '"sm" | "md" | "lg"', def: '"md"', desc: "Size variant." },
-                  { prop: "fullWidth", type: "boolean", def: "false", desc: "Stretch to fill container." },
-                  { prop: "dense", type: "boolean", def: "false", desc: "Compact mode. Falls back to MetricProvider." },
-                  { prop: "className", type: "string", def: "\u2014", desc: "Additional CSS classes." },
-                  { prop: "classNames", type: "{ root?, option?, indicator?, badge? }", def: "\u2014", desc: "Sub-element class overrides." },
-                  { prop: "id", type: "string", def: "\u2014", desc: "HTML id." },
-                  { prop: "data-testid", type: "string", def: "\u2014", desc: "Test id." },
-                ].map((row) => (
-                  <tr key={row.prop} className="border-b border-[var(--card-border)]/50">
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">{row.prop}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.type}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.def}</td>
-                    <td className="py-2">{row.desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { prop: "options", type: "SegmentOption[] | string[]", default: "(required)", description: "Segment options. Pass string[] as shorthand." },
+              { prop: "value", type: "string | string[]", default: "\u2014", description: "Controlled active segment(s)." },
+              { prop: "defaultValue", type: "string | string[]", default: "first option", description: "Default value for uncontrolled mode." },
+              { prop: "onChange", type: "(value) => void", default: "\u2014", description: "Change handler. Receives string (single) or string[] (multiple)." },
+              { prop: "multiple", type: "boolean", default: "false", description: "Allow multiple selections." },
+              { prop: "field", type: "string", default: "\u2014", description: "FilterContext field name. Reads/writes to dimensions." },
+              { prop: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Layout orientation." },
+              { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "Size variant." },
+              { prop: "fullWidth", type: "boolean", default: "false", description: "Stretch to fill container." },
+              { prop: "dense", type: "boolean", default: "false", description: "Compact mode. Falls back to MetricProvider." },
+              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
+              { prop: "classNames", type: "{ root?, option?, indicator?, badge? }", default: "\u2014", description: "Sub-element class overrides." },
+              { prop: "id", type: "string", default: "\u2014", description: "HTML id." },
+              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id." },
+            ]}
+            columns={[
+              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         {/* Notes */}

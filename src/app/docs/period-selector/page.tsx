@@ -9,6 +9,7 @@ import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -293,39 +294,28 @@ function MyChart() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-[var(--card-border)]">
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Prop</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Type</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Default</th>
-                  <th className="pb-2 font-semibold text-[var(--foreground)]">Description</th>
-                </tr>
-              </thead>
-              <tbody className="text-[var(--muted)]">
-                {[
-                  { prop: "presets", type: "PeriodPreset[]", def: '["7d","30d","90d","month","quarter","ytd"]', desc: "Which preset periods to show in the dropdown." },
-                  { prop: "allowCustom", type: "boolean", def: "true", desc: "Show the custom date-range inputs." },
-                  { prop: "comparison", type: "boolean", def: "false", desc: "Show the comparison toggle button." },
-                  { prop: "comparisonOptions", type: "ComparisonMode[]", def: '["previous","year-over-year"]', desc: "Which comparison modes to cycle through." },
-                  { prop: "onChange", type: "(period, preset) => void", def: "—", desc: "Standalone callback. Fires when a period is selected." },
-                  { prop: "onComparisonChange", type: "(mode, period) => void", def: "—", desc: "Standalone callback for comparison mode changes." },
-                  { prop: "dense", type: "boolean", def: "false", desc: "Compact mode. Falls back to MetricProvider." },
-                  { prop: "className", type: "string", def: "—", desc: "Additional CSS classes." },
-                  { prop: "id", type: "string", def: "—", desc: "HTML id." },
-                  { prop: "data-testid", type: "string", def: "—", desc: "Test id." },
-                ].map((row) => (
-                  <tr key={row.prop} className="border-b border-[var(--card-border)]/50">
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">{row.prop}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.type}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.def}</td>
-                    <td className="py-2">{row.desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { prop: "presets", type: "PeriodPreset[]", default: '["7d","30d","90d","month","quarter","ytd"]', description: "Which preset periods to show in the dropdown." },
+              { prop: "allowCustom", type: "boolean", default: "true", description: "Show the custom date-range inputs." },
+              { prop: "comparison", type: "boolean", default: "false", description: "Show the comparison toggle button." },
+              { prop: "comparisonOptions", type: "ComparisonMode[]", default: '["previous","year-over-year"]', description: "Which comparison modes to cycle through." },
+              { prop: "onChange", type: "(period, preset) => void", default: "—", description: "Standalone callback. Fires when a period is selected." },
+              { prop: "onComparisonChange", type: "(mode, period) => void", default: "—", description: "Standalone callback for comparison mode changes." },
+              { prop: "dense", type: "boolean", default: "false", description: "Compact mode. Falls back to MetricProvider." },
+              { prop: "className", type: "string", default: "—", description: "Additional CSS classes." },
+              { prop: "id", type: "string", default: "—", description: "HTML id." },
+              { prop: "data-testid", type: "string", default: "—", description: "Test id." },
+            ]}
+            columns={[
+              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         {/* Notes */}

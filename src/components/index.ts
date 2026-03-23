@@ -79,6 +79,19 @@ export type { FilterTagsProps } from "./filters/FilterTags";
 export { FilterProvider, useMetricFilters, PRESET_LABELS } from "@/lib/FilterContext";
 export type { FilterState, FilterActions, FilterContextValue, DateRange, PeriodPreset, ComparisonMode } from "@/lib/FilterContext";
 
+// Cross-Filter (0.3.0)
+export { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
+export { useCrossFilteredData } from "@/lib/useCrossFilteredData";
+export type { CrossFilterSelection, CrossFilterState } from "@/lib/interactionTypes";
+
+// Linked Hover (0.3.0)
+export { LinkedHoverProvider, useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
+export type { LinkedHoverState } from "@/lib/interactionTypes";
+
+// Value Flash (0.3.0)
+export { useValueFlash } from "@/lib/useValueFlash";
+export type { ValueFlashOptions, CrossFilterProp } from "@/lib/interactionTypes";
+
 // Error hints (extensible by consumers)
 export { COMPONENT_HINTS } from "@/lib/errorHints";
 

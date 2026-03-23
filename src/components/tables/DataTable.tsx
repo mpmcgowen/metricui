@@ -15,6 +15,8 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useScrollIndicators } from "@/lib/useScrollIndicators";
 import { devWarn } from "@/lib/devWarnings";
 import type { CardVariant, EmptyState, ErrorState, StaleState, NullDisplay } from "@/lib/types";
+import { useLinkedHover } from "@/lib/LinkedHoverContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Inbox, ExternalLink } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -98,7 +100,7 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   title?: string;
   subtitle?: string;
   description?: string | React.ReactNode;
-  footnote?: string;
+  footnote?: React.ReactNode;
   action?: React.ReactNode;
   pageSize?: number;
   pagination?: boolean;
@@ -134,6 +136,10 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   childrenField?: string;
   /** Start grouped rows expanded. Default: false */
   defaultExpanded?: boolean;
+  /** Field name whose value is compared against linkedHover.hoveredIndex to highlight rows. */
+  linkedIndexField?: string;
+  /** Enable cross-filter selection. Pass `true` to use the first column's key as the field, or `{ field }` to override. */
+  crossFilter?: boolean | { field?: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -272,10 +278,13 @@ function DataTableInner<T extends Record<string, unknown>>(
     scrollIndicators: scrollIndicatorsProp, rowConditions,
     multiSort: multiSortProp, renderExpanded,
     childrenField, defaultExpanded: defaultExpandedProp,
+    linkedIndexField,
+    crossFilter: crossFilterProp,
   }: DataTableProps<T>,
   ref: React.ForwardedRef<HTMLDivElement>,
 ) {
   useTheme();
+  const linkedHover = useLinkedHover();
   const localeDefaults = useLocale();
   const config = useMetricConfig();
   const resolvedDense = dense ?? config.dense;
@@ -284,7 +293,14 @@ function DataTableInner<T extends Record<string, unknown>>(
   const resolvedLoading = loading ?? config.loading;
   const resolvedScrollIndicators = scrollIndicatorsProp ?? true;
 
-  const columns = useMemo(() => columnsProp ?? inferColumns(data), [columnsProp, data]);
+  // --- Cross-filter ---
+  const crossFilter = useCrossFilter();
+  const resolvedColumns = useMemo(() => columnsProp ?? inferColumns(data), [columnsProp, data]);
+  const crossFilterField = crossFilterProp
+    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? (resolvedColumns[0]?.key as string)
+    : undefined;
+
+  const columns = resolvedColumns;
 
   // Dev warnings
   if (process.env.NODE_ENV !== "production" && data.length > 0 && columns.length > 0) {
@@ -607,17 +623,26 @@ function DataTableInner<T extends Record<string, unknown>>(
                 const isParent = hasChildren;
                 const rcClasses = rowConditions?.filter((rc) => rc.when(row, gi)).map((rc) => rc.className).join(" ") ?? "";
                 const showExpandChevron = renderExpanded || isGrouped;
+                const isLinkedHighlight = linkedIndexField && linkedHover?.hoveredIndex != null && (row as Record<string, unknown>)[linkedIndexField] === linkedHover.hoveredIndex;
                 return (
                   <React.Fragment key={ri}>
                   <tr className={cn(
-                    "group/row border-b border-[var(--card-border)]/50 transition-colors hover:bg-[var(--card-glow)]",
+                    "group/row border-b border-[var(--card-border)]/50 transition-all hover:bg-[var(--card-glow)]",
                     striped && ri % 2 === 1 && "bg-[var(--card-glow)]/50",
-                    onRowClick && "cursor-pointer",
+                    (onRowClick || (crossFilterProp && crossFilter)) && "cursor-pointer",
                     expanded.has(gi) && "bg-[var(--card-glow)]/30",
                     isParent && "font-medium",
                     isChild && "text-[var(--muted)]",
                     rcClasses,
-                  )} onClick={() => onRowClick?.(row, gi)}>
+                  )} style={{
+                    ...(isLinkedHighlight ? { backgroundColor: "color-mix(in srgb, var(--accent) 5%, transparent)" } : {}),
+                    transition: "all 200ms ease",
+                  }} onClick={() => {
+                    onRowClick?.(row, gi);
+                    if (crossFilterProp && crossFilter && crossFilterField) {
+                      crossFilter.select({ field: crossFilterField, value: (row as Record<string, unknown>)[crossFilterField] as string | number });
+                    }
+                  }}>
                     {/* Expand/group chevron */}
                     {showExpandChevron && (
                       <td className={cn("w-8 text-center", cellPy)} style={isChild ? { paddingLeft: depth * 16 } : undefined}>
@@ -745,8 +770,8 @@ function DataTableInner<T extends Record<string, unknown>>(
       )}
 
       {footnote && (
-        <div className="px-5 pb-4">
-          <p className="text-[10px] leading-snug text-[var(--muted)] opacity-75">{footnote}</p>
+        <div className="border-t border-[var(--card-border)] px-5 py-3 text-[10px] leading-snug text-[var(--muted)] opacity-75">
+          {footnote}
         </div>
       )}
     </div>

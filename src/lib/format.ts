@@ -110,7 +110,7 @@ export function fmt(style: FormatStyle | "compact", overrides?: Partial<Omit<For
 const defaults: Record<FormatStyle, FormatConfig> = {
   number: { style: "number", compact: true, locale: "en-US" },
   currency: { style: "currency", currency: "USD", compact: true, locale: "en-US" },
-  percent: { style: "percent", precision: 1, locale: "en-US" },
+  percent: { style: "percent", precision: 0, locale: "en-US" },
   duration: { style: "duration", locale: "en-US" },
   custom: { style: "custom", locale: "en-US" },
 };
@@ -143,7 +143,7 @@ export function formatValue(value: number, fmt?: FormatOption, localeDefaults?: 
   }
 
   if (config.style === "percent") {
-    const p = config.precision ?? 1;
+    const p = config.precision ?? 0;
     const displayVal = config.percentInput === "decimal" ? value * 100 : value;
     const formatted = displayVal.toFixed(p);
     return `${config.prefix ?? ""}${formatted}%${config.suffix ?? ""}`;

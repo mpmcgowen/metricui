@@ -1,7 +1,10 @@
+"use client";
+
 import { DocSection } from "@/components/docs/DocSection";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 
 const tocItems: TocItem[] = [
   { id: "shorthand", title: "Shorthand Strings", level: 2 },
@@ -32,33 +35,23 @@ export default function FormatEngineGuide() {
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
             The simplest way to format values. Pass a string to any <code className="font-[family-name:var(--font-mono)] text-[13px]">format</code> prop:
           </p>
-          <div className="overflow-x-auto rounded-xl border border-[var(--card-border)]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Shorthand</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Description</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Example</th>
-                </tr>
-              </thead>
-              <tbody className="text-[13px]">
-                {[
-                  ['"number"', "Auto-compact with K/M/B/T suffixes", '"1.2K", "3.5M"'],
-                  ['"compact"', 'Same as "number" with compact: true', '"1.2K", "3.5M"'],
-                  ['"currency"', "Currency with compact suffixes", '"$1.2K", "$3.5M"'],
-                  ['"percent"', "Percentage with 1 decimal", '"12.5%"'],
-                  ['"duration"', "Human-readable duration from seconds", '"5m 30s"'],
-                  ['"custom"', "Base format — use prefix/suffix", '"12.5 items"'],
-                ].map(([shorthand, desc, example]) => (
-                  <tr key={shorthand} className="border-b border-[var(--card-border)] last:border-0">
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{shorthand}</code></td>
-                    <td className="px-4 py-2.5 text-[var(--foreground)]">{desc}</td>
-                    <td className="px-4 py-2.5 text-[var(--muted)]">{example}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { shorthand: '"number"', description: "Auto-compact with K/M/B/T suffixes", example: '"1.2K", "3.5M"' },
+              { shorthand: '"compact"', description: 'Same as "number" with compact: true', example: '"1.2K", "3.5M"' },
+              { shorthand: '"currency"', description: "Currency with compact suffixes", example: '"$1.2K", "$3.5M"' },
+              { shorthand: '"percent"', description: "Percentage with 1 decimal", example: '"12.5%"' },
+              { shorthand: '"duration"', description: "Human-readable duration from seconds", example: '"5m 30s"' },
+              { shorthand: '"custom"', description: "Base format — use prefix/suffix", example: '"12.5 items"' },
+            ]}
+            columns={[
+              { key: "shorthand", header: "Shorthand", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+              { key: "example", header: "Example" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         <DocSection id="format-config" title="FormatConfig Objects">
@@ -97,87 +90,60 @@ format={fmt("percent", { percentInput: "decimal" })}`}
         </DocSection>
 
         <DocSection id="compact" title="Compact Modes">
-          <div className="overflow-x-auto rounded-xl border border-[var(--card-border)]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Value</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Behavior</th>
-                </tr>
-              </thead>
-              <tbody className="text-[13px]">
-                {[
-                  ['true / "auto"', "Auto-pick K/M/B/T based on magnitude"],
-                  ['"thousands"', "Always divide by 1,000 and append K"],
-                  ['"millions"', "Always divide by 1,000,000 and append M"],
-                  ['"billions"', "Always divide by 1,000,000,000 and append B"],
-                  ['"trillions"', "Always divide by 1,000,000,000,000 and append T"],
-                  ["false", "No compacting, show full number"],
-                ].map(([val, behavior]) => (
-                  <tr key={val} className="border-b border-[var(--card-border)] last:border-0">
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{val}</code></td>
-                    <td className="px-4 py-2.5 text-[var(--foreground)]">{behavior}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { value: 'true / "auto"', behavior: "Auto-pick K/M/B/T based on magnitude" },
+              { value: '"thousands"', behavior: "Always divide by 1,000 and append K" },
+              { value: '"millions"', behavior: "Always divide by 1,000,000 and append M" },
+              { value: '"billions"', behavior: "Always divide by 1,000,000,000 and append B" },
+              { value: '"trillions"', behavior: "Always divide by 1,000,000,000,000 and append T" },
+              { value: "false", behavior: "No compacting, show full number" },
+            ]}
+            columns={[
+              { key: "value", header: "Value", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+              { key: "behavior", header: "Behavior" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         <DocSection id="duration" title="Duration Styles">
           <div className="space-y-6">
             <div>
               <h3 className="mb-3 text-[14px] font-semibold text-[var(--foreground)]">Styles</h3>
-              <div className="overflow-x-auto rounded-xl border border-[var(--card-border)]">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                      <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Style</th>
-                      <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Example</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-[13px]">
-                    {[
-                      ['"compact"', '"5m 30s", "2h 15m"'],
-                      ['"long"', '"5 minutes 30 seconds"'],
-                      ['"clock"', '"5:30", "2:15:30"'],
-                      ['"narrow"', '"5.5m", "2.3h"'],
-                    ].map(([style, example]) => (
-                      <tr key={style} className="border-b border-[var(--card-border)] last:border-0">
-                        <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{style}</code></td>
-                        <td className="px-4 py-2.5 text-[var(--muted)]">{example}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                data={[
+                  { style: '"compact"', example: '"5m 30s", "2h 15m"' },
+                  { style: '"long"', example: '"5 minutes 30 seconds"' },
+                  { style: '"clock"', example: '"5:30", "2:15:30"' },
+                  { style: '"narrow"', example: '"5.5m", "2.3h"' },
+                ]}
+                columns={[
+                  { key: "style", header: "Style", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+                  { key: "example", header: "Example" },
+                ]}
+                dense
+                variant="ghost"
+              />
             </div>
             <div>
               <h3 className="mb-3 text-[14px] font-semibold text-[var(--foreground)]">Precision (smallest unit shown)</h3>
-              <div className="overflow-x-auto rounded-xl border border-[var(--card-border)]">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                      <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Precision</th>
-                      <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Example</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-[13px]">
-                    {[
-                      ['"milliseconds"', '"5m 30s 250ms"'],
-                      ['"seconds"', '"5m 30s" (default)'],
-                      ['"minutes"', '"2h 30m"'],
-                      ['"hours"', '"3d 4h"'],
-                      ['"days"', '"2w 3d"'],
-                    ].map(([prec, example]) => (
-                      <tr key={prec} className="border-b border-[var(--card-border)] last:border-0">
-                        <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{prec}</code></td>
-                        <td className="px-4 py-2.5 text-[var(--muted)]">{example}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                data={[
+                  { precision: '"milliseconds"', example: '"5m 30s 250ms"' },
+                  { precision: '"seconds"', example: '"5m 30s" (default)' },
+                  { precision: '"minutes"', example: '"2h 30m"' },
+                  { precision: '"hours"', example: '"3d 4h"' },
+                  { precision: '"days"', example: '"2w 3d"' },
+                ]}
+                columns={[
+                  { key: "precision", header: "Precision", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+                  { key: "example", header: "Example" },
+                ]}
+                dense
+                variant="ghost"
+              />
             </div>
           </div>
         </DocSection>

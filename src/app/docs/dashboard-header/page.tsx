@@ -7,6 +7,7 @@ import { CodeBlock } from "@/components/docs/CodeBlock";
 import { ImportStatement } from "@/components/docs/ImportStatement";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -288,44 +289,33 @@ export default function DashboardHeaderDocs() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-[var(--card-border)]">
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Prop</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Type</th>
-                  <th className="pb-2 pr-4 font-semibold text-[var(--foreground)]">Default</th>
-                  <th className="pb-2 font-semibold text-[var(--foreground)]">Description</th>
-                </tr>
-              </thead>
-              <tbody className="text-[var(--muted)]">
-                {[
-                  { prop: "title", type: "string", def: "(required)", desc: "Dashboard title displayed as an h1." },
-                  { prop: "subtitle", type: "string", def: "\u2014", desc: "Secondary label below the title." },
-                  { prop: "description", type: "string | ReactNode", def: "\u2014", desc: "Content for the info popover beside the title." },
-                  { prop: "lastUpdated", type: "Date", def: "\u2014", desc: 'Enables the auto-ticking "Updated Xm ago" label. Also auto-derives the status badge.' },
-                  { prop: "staleAfter", type: "number", def: "5", desc: "Minutes before lastUpdated turns the status to stale (amber)." },
-                  { prop: "status", type: '"live" | "stale" | "offline" | "loading"', def: "\u2014", desc: "Explicit status badge. Overrides auto-derivation from lastUpdated." },
-                  { prop: "back", type: "{ href?: string; label?: string; onClick?: () => void }", def: "\u2014", desc: "Renders a back-arrow link above the title. Hidden when breadcrumbs are set." },
-                  { prop: "breadcrumbs", type: "BreadcrumbItem[]", def: "\u2014", desc: "Breadcrumb trail above the title. Each item: { label, href?, onClick? }." },
-                  { prop: "actions", type: "ReactNode", def: "\u2014", desc: "Right-aligned action slot for buttons, controls, or dropdowns." },
-                  { prop: "variant", type: "CardVariant", def: "\u2014", desc: "Card variant override. Falls back to MetricProvider." },
-                  { prop: "dense", type: "boolean", def: "false", desc: "Compact title size. Falls back to MetricProvider." },
-                  { prop: "className", type: "string", def: "\u2014", desc: "Additional CSS classes on the root element." },
-                  { prop: "classNames", type: "{ root?, title?, subtitle?, breadcrumbs?, status?, actions? }", def: "\u2014", desc: "Sub-element class name overrides for fine-grained styling." },
-                  { prop: "id", type: "string", def: "\u2014", desc: "HTML id attribute." },
-                  { prop: "data-testid", type: "string", def: "\u2014", desc: "Test id for automated testing." },
-                ].map((row) => (
-                  <tr key={row.prop} className="border-b border-[var(--card-border)]/50">
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">{row.prop}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.type}</td>
-                    <td className="py-2 pr-4 font-[family-name:var(--font-mono)] text-[12px]">{row.def}</td>
-                    <td className="py-2">{row.desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { prop: "title", type: "string", default: "(required)", description: "Dashboard title displayed as an h1." },
+              { prop: "subtitle", type: "string", default: "\u2014", description: "Secondary label below the title." },
+              { prop: "description", type: "string | ReactNode", default: "\u2014", description: "Content for the info popover beside the title." },
+              { prop: "lastUpdated", type: "Date", default: "\u2014", description: 'Enables the auto-ticking "Updated Xm ago" label. Also auto-derives the status badge.' },
+              { prop: "staleAfter", type: "number", default: "5", description: "Minutes before lastUpdated turns the status to stale (amber)." },
+              { prop: "status", type: '"live" | "stale" | "offline" | "loading"', default: "\u2014", description: "Explicit status badge. Overrides auto-derivation from lastUpdated." },
+              { prop: "back", type: "{ href?, label?, onClick? }", default: "\u2014", description: "Renders a back-arrow link above the title. Hidden when breadcrumbs are set." },
+              { prop: "breadcrumbs", type: "BreadcrumbItem[]", default: "\u2014", description: "Breadcrumb trail above the title. Each item: { label, href?, onClick? }." },
+              { prop: "actions", type: "ReactNode", default: "\u2014", description: "Right-aligned action slot for buttons, controls, or dropdowns." },
+              { prop: "variant", type: "CardVariant", default: "\u2014", description: "Card variant override. Falls back to MetricProvider." },
+              { prop: "dense", type: "boolean", default: "false", description: "Compact title size. Falls back to MetricProvider." },
+              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes on the root element." },
+              { prop: "classNames", type: "{ root?, title?, subtitle?, ... }", default: "\u2014", description: "Sub-element class name overrides for fine-grained styling." },
+              { prop: "id", type: "string", default: "\u2014", description: "HTML id attribute." },
+              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id for automated testing." },
+            ]}
+            columns={[
+              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         {/* Notes */}

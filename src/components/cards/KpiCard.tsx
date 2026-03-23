@@ -38,6 +38,9 @@ import {
 import { devWarnDeprecated } from "@/lib/devWarnings";
 import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useCountUp } from "@/lib/useCountUp";
+
+import { useLinkedHover } from "@/lib/LinkedHoverContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useCopyToClipboard } from "@/lib/useCopyToClipboard";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
@@ -58,8 +61,9 @@ import { forwardRef, useState } from "react";
 
 export interface KpiCardProps {
   title: DynamicString;
-  /** Pass `null` or `undefined` to trigger null-state display */
-  value: number | null | undefined;
+  /** Pass `null` or `undefined` to trigger null-state display.
+   *  Pass a string for non-numeric KPIs (times, labels, statuses) — displayed as-is. */
+  value: number | string | null | undefined;
   format?: FormatOption;
   /** Single comparison or array of comparisons */
   comparison?: ComparisonConfig | ComparisonConfig[];
@@ -93,6 +97,12 @@ export interface KpiCardProps {
   animate?: boolean | AnimationConfig;
   /** Attention ring. `true` uses accent color, or pass a CSS color. */
   highlight?: boolean | string;
+  /** X-axis value this KPI represents — when linked hover matches, card highlights. */
+  linkedIndex?: string | number;
+  /** Cross-filter field this KPI represents — dims when a non-matching selection is active. */
+  crossFilterField?: string;
+  /** Cross-filter value this KPI represents — matches against active selection. */
+  crossFilterValue?: string | number;
   /** Custom trend icons for comparison badges */
   trendIcon?: TrendIconConfig;
   /** What to show when value is null/undefined/NaN/Infinity. Default: "dash" */
@@ -189,7 +199,8 @@ const conditionColorMap: Record<string, { text: string; glow: string }> = {
 // Null / edge value helpers
 // ---------------------------------------------------------------------------
 
-function isNullish(value: number | null | undefined): boolean {
+function isNullish(value: number | string | null | undefined): value is null | undefined {
+  if (typeof value === "string") return false;
   return value === null || value === undefined || Number.isNaN(value) || !Number.isFinite(value);
 }
 
@@ -231,6 +242,9 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   copyable,
   animate,
   highlight,
+  linkedIndex,
+  crossFilterField,
+  crossFilterValue,
   trendIcon,
   nullDisplay,
   titlePosition = "top",
@@ -273,17 +287,18 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
     if (sparklineDataProp !== undefined) devWarnDeprecated("KpiCard", "sparklineData", "sparkline={{ data: [...] }}");
   }
 
+  // --- String value passthrough ---
+  const valueIsString = typeof rawInputValue === "string";
+
   // --- Null / edge value handling ---
   const valueIsNull = isNullish(rawInputValue);
   // When null and nullDisplay is "zero", treat as 0. Otherwise use 0 as a
   // safe numeric placeholder — downstream code guards with `valueIsNull`.
-  const value: number = valueIsNull
-    ? 0
-    : rawInputValue!;
+  const value: number = valueIsString ? 0 : valueIsNull ? 0 : rawInputValue!;
   // Whether the value should be treated as "no data" for display purposes.
   // When nullDisplay is "zero", null values display as 0 and participate in
   // conditions/comparisons/goals. Otherwise they are inert.
-  const valueIsInert = valueIsNull && resolvedNullDisplay !== "zero";
+  const valueIsInert = !valueIsString && valueIsNull && resolvedNullDisplay !== "zero";
 
   // --- Animation ---
   const animConfig: AnimationConfig | undefined =
@@ -292,20 +307,32 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       : resolvedAnimate;
 
   const animatedValue = useCountUp(value, {
-    enabled: !valueIsInert && (animConfig?.countUp ?? false),
+    enabled: !valueIsString && !valueIsInert && (animConfig?.countUp ?? false),
     duration: animConfig?.duration,
     delay: animConfig?.delay,
     motionConfig: config.motionConfig,
   });
-  const displayValue = !valueIsInert && animConfig?.countUp ? animatedValue : value;
+  const displayValue = !valueIsString && !valueIsInert && animConfig?.countUp ? animatedValue : value;
+
+  // --- Linked hover highlight ---
+  const linkedHover = useLinkedHover();
+  const isLinkedHovered = linkedIndex != null && linkedHover?.hoveredIndex != null
+    && String(linkedHover.hoveredIndex) === String(linkedIndex);
+
+  // --- Cross-filter (signal only — emits on click, no visual changes) ---
+  const crossFilter = useCrossFilter();
 
   // --- Formatting ---
-  const formattedValue = valueIsInert
-    ? resolveNullDisplay(resolvedNullDisplay)
-    : formatValue(displayValue, format, localeDefaults);
-  const rawValue = valueIsInert
-    ? resolveNullDisplay(resolvedNullDisplay)
-    : formatValueRaw(value, format, localeDefaults);
+  const formattedValue = valueIsString
+    ? rawInputValue
+    : valueIsInert
+      ? resolveNullDisplay(resolvedNullDisplay)
+      : formatValue(displayValue, format, localeDefaults);
+  const rawValue = valueIsString
+    ? rawInputValue
+    : valueIsInert
+      ? resolveNullDisplay(resolvedNullDisplay)
+      : formatValueRaw(value, format, localeDefaults);
 
   // --- Normalize comparison to array ---
   const comparisons: ComparisonConfig[] = comparison
@@ -383,6 +410,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       ref={ref as React.Ref<HTMLDivElement>}
       id={id}
       data-testid={dataTestId}
+      data-metric-card=""
       data-variant={bare ? undefined : resolvedVariant}
       data-dense={resolvedDense ? "true" : undefined}
       className={cn(
@@ -463,12 +491,14 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       ref={!href ? (ref as React.Ref<never>) : undefined}
       id={id}
       data-testid={dataTestId}
+      data-metric-card=""
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       data-variant={bare ? undefined : resolvedVariant}
       data-dense={resolvedDense ? "true" : undefined}
       className={cn(
+        "h-full",
         bare
           ? cn("mu-container group relative", "px-[var(--mu-padding-x-bare)] py-[var(--mu-padding-y-bare)] sm:px-[var(--mu-padding-x-bare-sm)]")
           : cn(
@@ -496,6 +526,11 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
         } : {}),
         ...(conditionIsCustom && conditionColor ? {
           boxShadow: `0 10px 15px -3px ${withOpacity(conditionColor, 0.1)}`,
+        } : {}),
+        ...(isLinkedHovered ? {
+          boxShadow: "0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent)",
+          outline: "2px solid color-mix(in srgb, var(--accent) 30%, transparent)",
+          outlineOffset: "2px",
         } : {}),
       } as React.CSSProperties}
     >

@@ -1,0 +1,444 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+import { Badge } from "@/components/ui/Badge";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Zap,
+  Wand2,
+  Terminal,
+  Brain,
+  Eye,
+  Workflow,
+  Shield,
+  Flag,
+  MessageSquare,
+  Github,
+} from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Roadmap — MetricUI",
+  description:
+    "See what's shipped, what's next, and where MetricUI is headed. From cross-filtering to anomaly detection to 1.0 stability.",
+};
+
+interface Milestone {
+  version: string;
+  title: string;
+  tagline: string;
+  status: "shipped" | "next" | "planned";
+  icon: React.ComponentType<{ className?: string }>;
+  highlights: string[];
+  newComponents?: string[];
+}
+
+const milestones: Milestone[] = [
+  {
+    version: "0.2",
+    title: "The Foundation",
+    tagline:
+      "26 components, format engine, 8 theme presets, MCP server, full docs site. Everything you need to build a production dashboard today.",
+    status: "shipped",
+    icon: CheckCircle2,
+    highlights: [
+      "KPI cards with sparklines, goal tracking, conditional coloring, and drill-downs",
+      "11 chart types — Area, Line, Bar, Donut, Gauge, HeatMap, Funnel, Waterfall, Bullet, Bar+Line, Sparkline",
+      "Smart format engine — currency, percent, duration, compact — with locale support",
+      "Complete filter system — PeriodSelector, DropdownFilter, SegmentToggle, FilterTags",
+      "MetricGrid auto-layout — drop components in, zero CSS needed",
+      "Loading skeletons, empty states, error boundaries, stale indicators on every component",
+      "8 theme presets, dark mode, dense mode, CSS variable theming",
+      "MCP server with 13 tools so AI builds correct dashboards on the first try",
+      "185+ tests, interactive docs, llms.txt for AI tools",
+    ],
+  },
+  {
+    version: "0.3",
+    title: "Dashboards That React",
+    tagline:
+      "Click a bar in one chart and every other component on the page responds. Cross-filtering, linked hover, and live value flash — no dashboard framework does this out of the box.",
+    status: "next",
+    icon: Zap,
+    highlights: [
+      "Cross-filtering — click a bar, donut slice, or table row and sibling charts filter instantly",
+      "Linked hover — cursor position syncs across all charts, Bloomberg-terminal style",
+      "Value flash — KPI cards and charts pulse when data updates, making real-time dashboards feel alive",
+      "Time series annotations — mark deploys, campaigns, and incidents directly on charts",
+      "Auto-format inference — MetricUI guesses the right format from your field names",
+    ],
+    newComponents: ["StatusIndicator", "DashboardHeader"],
+  },
+  {
+    version: "0.4",
+    title: "Zero-Config Charts",
+    tagline:
+      "Pass data, get a chart. No index, no categories, no columns. MetricUI looks at your data and figures it out.",
+    status: "planned",
+    icon: Wand2,
+    highlights: [
+      "TypeScript data inference — auto-detect index, categories, and axis labels from your data shape",
+      "Chart type suggestions — MCP tool that recommends the best visualization for your data",
+      "ChartMorph — animated transitions when switching between chart types on the same data",
+      "FilterBar, SearchFilter, ComparisonToggle, and GranularitySelector for complete filter UX",
+    ],
+    newComponents: [
+      "ChartMorph",
+      "FilterBar",
+      "SearchFilter",
+      "ComparisonToggle",
+      "GranularitySelector",
+      "TimeAgo",
+    ],
+  },
+  {
+    version: "0.5",
+    title: "Kill the Boilerplate",
+    tagline:
+      "useMetricQuery eliminates every line of code between your data and your components. You write the fetch, we wire the rest.",
+    status: "planned",
+    icon: Terminal,
+    highlights: [
+      "useMetricQuery — pass a fetcher, get { data, loading, error, stale, refresh } that spreads onto any component",
+      "Live mode — one prop makes the entire dashboard animate smoothly between data updates",
+      "Snapshot comparison — visual before/after diff overlay on any chart",
+      "Export system — PNG, SVG, CSV, clipboard export on any chart or table",
+      "Print/PDF mode — optimized layout for reports and presentations",
+    ],
+    newComponents: ["SnapshotDiff", "RefreshToggle", "DataFreshness"],
+  },
+  {
+    version: "0.6",
+    title: "The Intelligence Layer",
+    tagline:
+      "Anomaly detection scans your data and highlights what's unusual. No ML pipeline, no backend — just a prop.",
+    status: "planned",
+    icon: Brain,
+    highlights: [
+      "Anomaly highlights — rolling mean + standard deviation bands that flag unusual data points automatically",
+      "InsightCard — template-based plain-English summaries of what your data shows",
+      "MetricText — inline formatted values in body copy with template syntax",
+      "Histogram, Leaderboard, QuotaBar, and SummaryBanner components",
+    ],
+    newComponents: [
+      "InsightCard",
+      "MetricText",
+      "Histogram",
+      "Leaderboard",
+      "QuotaBar",
+      "SummaryBanner",
+    ],
+  },
+  {
+    version: "0.7",
+    title: "See the Shape",
+    tagline:
+      "Small multiples and sparkline tables. One line of code renders 20 mini-charts that share scales and let you spot the outlier instantly.",
+    status: "planned",
+    icon: Eye,
+    highlights: [
+      "Small Multiples — split data by dimension, render a synced grid of mini-charts",
+      "Sparkline Table — DataTable columns with inline sparklines, progress bars, and micro-charts",
+      "Scatter Plot, Treemap, Radar, Calendar Heatmap, and more chart types",
+      "Chart annotation layer — pin notes to any data point for collaborative context",
+    ],
+    newComponents: [
+      "SmallMultiples",
+      "ScatterPlot",
+      "Treemap",
+      "Radar",
+      "CalendarHeatmap",
+      "DeviationChart",
+    ],
+  },
+  {
+    version: "0.8",
+    title: "Flows and Stories",
+    tagline:
+      "Sankey diagrams show where things flow. Data stories walk someone through what it means. Built for quarterly reviews and stakeholder reports.",
+    status: "planned",
+    icon: Workflow,
+    highlights: [
+      "Sankey — flow visualization with click-to-highlight paths for user journeys and cost allocation",
+      "Data stories — guided narrative walkthroughs that highlight components in sequence",
+      "Dashboard state serialization — save, share, and restore dashboard views as URLs",
+      "Multi-level drill-down with breadcrumb navigation",
+      "Embed mode for iframing dashboards into other apps",
+    ],
+    newComponents: ["Sankey", "DataStory", "ActivityFeed", "DiffSummary"],
+  },
+  {
+    version: "0.9",
+    title: "Rock Solid",
+    tagline:
+      "Nothing new, everything better. Full keyboard navigation, color-blind safe mode, performance benchmarks, 90%+ test coverage. This is when MetricUI earns \"production-ready.\"",
+    status: "planned",
+    icon: Shield,
+    highlights: [
+      "Full keyboard navigation — tab through charts, arrow keys between points, screen reader announcements",
+      "Color-blind safe mode — automatic palette swap with optional pattern fills",
+      "Performance benchmarks published and enforced in CI",
+      "i18n — RTL support, translated data states, non-Latin numeral systems",
+      "Comprehensive migration guide with codemods",
+    ],
+  },
+  {
+    version: "1.0",
+    title: "The Standard",
+    tagline:
+      "API freeze. Semantic versioning contract. 18-month LTS commitment. Premium templates. MetricUI 1.0 is a promise: build on it with confidence.",
+    status: "planned",
+    icon: Flag,
+    highlights: [
+      "Stable API — no breaking changes without a major version bump",
+      "create-metric-app CLI — scaffold a working dashboard in 30 seconds",
+      "Starter templates for SaaS, ecommerce, DevOps, and finance",
+      "Premium dashboard templates available for teams that want production-ready designs",
+      "Complete documentation — every component, every prop, every pattern",
+    ],
+  },
+];
+
+const statusConfig = {
+  shipped: {
+    label: "Shipped",
+    dotClass: "bg-emerald-500",
+    badgeColor: "emerald" as const,
+    ringClass: "ring-emerald-500/20",
+  },
+  next: {
+    label: "Up Next",
+    dotClass: "bg-amber-500 animate-pulse",
+    badgeColor: "amber" as const,
+    ringClass: "ring-amber-500/20",
+  },
+  planned: {
+    label: "Planned",
+    dotClass: "bg-zinc-400 dark:bg-zinc-600",
+    badgeColor: "gray" as const,
+    ringClass: "ring-zinc-500/10",
+  },
+};
+
+export default function RoadmapPage() {
+  return (
+    <div className="min-h-screen bg-[#F8F8F6] dark:bg-[#0A0A0C]">
+      {/* Header */}
+      <header className="border-b border-zinc-200 dark:border-zinc-800">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to MetricUI
+          </Link>
+          <Link
+            href="/docs"
+            className="text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            Docs
+          </Link>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-6 py-16">
+        {/* Hero */}
+        <div className="text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-5xl">
+            Roadmap
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-zinc-500 dark:text-zinc-400">
+            MetricUI is building toward 1.0 — a stable, complete, and
+            beautifully polished React dashboard library. Here is where we are
+            and where we are going.
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-6 text-sm">
+            <span className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              <span className="text-zinc-600 dark:text-zinc-400">Shipped</span>
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500" />
+              <span className="text-zinc-600 dark:text-zinc-400">Up Next</span>
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-zinc-400 dark:bg-zinc-600" />
+              <span className="text-zinc-600 dark:text-zinc-400">Planned</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Timeline */}
+        <div className="relative mt-16">
+          {/* Vertical line */}
+          <div className="absolute left-[23px] top-0 bottom-0 w-px bg-zinc-200 dark:bg-zinc-800 sm:left-[31px]" />
+
+          <div className="space-y-12">
+            {milestones.map((milestone) => {
+              const config = statusConfig[milestone.status];
+              const Icon = milestone.icon;
+
+              return (
+                <div key={milestone.version} className="relative flex gap-6 sm:gap-8">
+                  {/* Timeline dot */}
+                  <div className="relative z-10 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 sm:h-16 sm:w-16">
+                    <Icon
+                      className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                        milestone.status === "shipped"
+                          ? "text-emerald-500"
+                          : milestone.status === "next"
+                            ? "text-amber-500"
+                            : "text-zinc-400 dark:text-zinc-500"
+                      }`}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 pb-2">
+                    {/* Version + status badge */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-[family-name:var(--font-mono)] text-sm font-semibold text-zinc-400 dark:text-zinc-500">
+                        v{milestone.version}
+                      </span>
+                      <Badge color={config.badgeColor} size="sm" variant="outline">
+                        <span className="flex items-center gap-1.5">
+                          <span className={`h-1.5 w-1.5 rounded-full ${config.dotClass}`} />
+                          {config.label}
+                        </span>
+                      </Badge>
+                    </div>
+
+                    {/* Title */}
+                    <h2 className="mt-2 text-xl font-bold text-zinc-900 dark:text-zinc-100 sm:text-2xl">
+                      {milestone.title}
+                    </h2>
+
+                    {/* Tagline */}
+                    <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+                      {milestone.tagline}
+                    </p>
+
+                    {/* Highlights */}
+                    <ul className="mt-4 space-y-2">
+                      {milestone.highlights.map((highlight) => (
+                        <li
+                          key={highlight}
+                          className="flex gap-3 text-[14px] leading-relaxed text-zinc-600 dark:text-zinc-300"
+                        >
+                          <span
+                            className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+                              milestone.status === "shipped"
+                                ? "bg-emerald-500"
+                                : milestone.status === "next"
+                                  ? "bg-amber-500"
+                                  : "bg-zinc-300 dark:bg-zinc-600"
+                            }`}
+                          />
+                          {highlight}
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* New components */}
+                    {milestone.newComponents &&
+                      milestone.newComponents.length > 0 && (
+                        <div className="mt-4">
+                          <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                            New Components
+                          </span>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {milestone.newComponents.map((comp) => (
+                              <span
+                                key={comp}
+                                className="inline-block rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 font-[family-name:var(--font-mono)] text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                              >
+                                {comp}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Post-1.0 teaser */}
+        <div className="mt-20 rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900 sm:p-10">
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 sm:text-2xl">
+            Beyond 1.0
+          </h2>
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+            After the stable release, MetricUI keeps growing. Here is a preview
+            of what is on the horizon as post-1.0 minor releases.
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {[
+              {
+                title: "More chart types",
+                items:
+                  "Candlestick, Box Plot, Slope Chart, Bump Chart, Choropleth Map, Sunburst, Stream, Waffle, Network Graph",
+              },
+              {
+                title: "Advanced features",
+                items:
+                  "Pivot Table, Cascading Filters, Saved Views, VS Code Extension, AI-powered insights, Collaborative annotations",
+              },
+            ].map((section) => (
+              <div key={section.title}>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  {section.title}
+                </h3>
+                <p className="mt-1 text-[13px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+                  {section.items}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-16 text-center">
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+            Shape the roadmap
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-[15px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+            Have a feature request? Want to upvote something on this list? We
+            build in the open and prioritize based on what developers actually
+            need.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            <a
+              href="https://github.com/mpmcgowen/metricui/discussions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Join the Discussion
+            </a>
+            <a
+              href="https://github.com/mpmcgowen/metricui/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            >
+              <Github className="h-4 w-4" />
+              Open an Issue
+            </a>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-zinc-200 dark:border-zinc-800">
+        <div className="mx-auto max-w-5xl px-6 py-8 text-center text-sm text-zinc-400 dark:text-zinc-500">
+          MetricUI is open source (MIT). Built for developers who care about
+          design.
+        </div>
+      </footer>
+    </div>
+  );
+}

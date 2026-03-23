@@ -1,7 +1,10 @@
+"use client";
+
 import { DocSection } from "@/components/docs/DocSection";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
+import { DataTable } from "@/components/tables/DataTable";
 
 const tocItems: TocItem[] = [
   { id: "philosophy", title: "Philosophy", level: 2 },
@@ -12,6 +15,10 @@ const tocItems: TocItem[] = [
   { id: "comparisons", title: "Comparison Periods", level: 2 },
   { id: "dimensions", title: "Dimension Filters", level: 2 },
   { id: "without-provider", title: "Without a Provider", level: 2 },
+  { id: "cross-filtering", title: "Cross-Filtering", level: 2 },
+  { id: "cross-filter-setup", title: "Setup", level: 3 },
+  { id: "cross-filter-reading", title: "Reading State", level: 3 },
+  { id: "cross-filter-behavior", title: "Behavior", level: 3 },
 ];
 
 export default function FilteringGuide() {
@@ -93,29 +100,19 @@ function App() {
   );
 }`}
           />
-          <div className="mt-4 overflow-x-auto rounded-xl border border-[var(--card-border)]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Prop</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Type</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Description</th>
-                </tr>
-              </thead>
-              <tbody className="text-[13px]">
-                {[
-                  ["defaultPreset", "PeriodPreset", 'Initial period preset (e.g. "30d", "quarter", "ytd")'],
-                  ["children", "ReactNode", "Your dashboard content"],
-                ].map(([prop, type, desc]) => (
-                  <tr key={prop} className="border-b border-[var(--card-border)] last:border-0">
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{prop}</code></td>
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{type}</code></td>
-                    <td className="px-4 py-2.5 text-[var(--foreground)]">{desc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { prop: "defaultPreset", type: "PeriodPreset", description: 'Initial period preset (e.g. "30d", "quarter", "ytd")' },
+              { prop: "children", type: "ReactNode", description: "Your dashboard content" },
+            ]}
+            columns={[
+              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
         </DocSection>
 
         <DocSection id="reading-filters" title="Reading Filters">
@@ -196,30 +193,20 @@ function Dashboard() {
             When the user enables comparison mode (via PeriodSelector&apos;s comparison toggle),
             the context auto-computes a comparison period:
           </p>
-          <div className="overflow-x-auto rounded-xl border border-[var(--card-border)]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Mode</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Logic</th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Example</th>
-                </tr>
-              </thead>
-              <tbody className="text-[13px]">
-                {[
-                  ["previous", "Shifts the range backward by its own duration", "Last 30d → the 30 days before that"],
-                  ["year-over-year", "Shifts the range back one year", "Mar 1-31, 2026 → Mar 1-31, 2025"],
-                  ["none", "No comparison", "—"],
-                ].map(([mode, logic, example]) => (
-                  <tr key={mode} className="border-b border-[var(--card-border)] last:border-0">
-                    <td className="px-4 py-2.5"><code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{mode}</code></td>
-                    <td className="px-4 py-2.5 text-[var(--foreground)]">{logic}</td>
-                    <td className="px-4 py-2.5 text-[var(--muted)]">{example}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { mode: "previous", logic: "Shifts the range backward by its own duration", example: "Last 30d → the 30 days before that" },
+              { mode: "year-over-year", logic: "Shifts the range back one year", example: "Mar 1-31, 2026 → Mar 1-31, 2025" },
+              { mode: "none", logic: "No comparison", example: "—" },
+            ]}
+            columns={[
+              { key: "mode", header: "Mode", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+              { key: "logic", header: "Logic" },
+              { key: "example", header: "Example" },
+            ]}
+            dense
+            variant="ghost"
+          />
           <CodeBlock
             code={`const filters = useMetricFilters();
 
@@ -273,6 +260,124 @@ filters?.clearAll();`}
             Use FilterProvider when multiple components need to read the same filter state.
             Use onChange when you just need a date picker in one spot.
           </p>
+        </DocSection>
+
+        {/* ── Cross-Filtering ────────────────────────────────────────── */}
+
+        <DocSection id="cross-filtering" title="Cross-Filtering">
+          <p className="text-[14px] leading-relaxed text-[var(--muted)]">
+            Cross-filtering captures click selections from charts and tables into a shared
+            context. When a user clicks &ldquo;Chrome&rdquo; in a bar chart, the selection is
+            stored — your code reads it, filters your data, and the charts re-render with
+            the filtered data. Same philosophy as FilterProvider: MetricUI handles the signal,
+            you handle the data.
+          </p>
+        </DocSection>
+
+        <DocSection id="cross-filter-setup" title="Setup" level={3}>
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Three pieces: a provider, the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">crossFilter</code> prop
+            on clickable components, and your data filtering logic:
+          </p>
+          <CodeBlock
+            code={`import {
+  CrossFilterProvider,
+  useCrossFilteredData,
+  BarChart,
+  DonutChart,
+} from "metricui";
+
+function App() {
+  return (
+    <CrossFilterProvider>
+      <Dashboard />
+    </CrossFilterProvider>
+  );
+}
+
+function Dashboard() {
+  // One line — filters data when a selection is active
+  const chartData = useCrossFilteredData(allData, "browser");
+
+  return (
+    <>
+      {/* Source chart: keeps full data so user sees what they clicked */}
+      <BarChart
+        data={allData}
+        index="browser"
+        categories={["visitors"]}
+        crossFilter
+      />
+      {/* Sibling charts: get filtered data */}
+      <DonutChart
+        data={chartData}
+        index="browser"
+        categories={["revenue"]}
+        crossFilter
+      />
+    </>
+  );
+}`}
+          />
+          <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">crossFilter</code> prop
+            tells a component to call <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">crossFilter.select()</code> when
+            clicked. <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useCrossFilteredData</code> reads
+            the selection and returns filtered data — one line per chart. For advanced
+            multi-filter scenarios, use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useCrossFilter()</code> directly.
+          </p>
+        </DocSection>
+
+        <DocSection id="cross-filter-reading" title="Reading Cross-Filter State" level={3}>
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useCrossFilter()</code> from
+            any component inside a CrossFilterProvider:
+          </p>
+          <CodeBlock
+            code={`import { useCrossFilter } from "metricui";
+
+function Dashboard() {
+  const cf = useCrossFilter();
+
+  // cf.isActive        → true when something is selected
+  // cf.selection.field → "browser"
+  // cf.selection.value → "Chrome"
+  // cf.clear()         → deselect
+  // cf.select(...)     → programmatic selection
+}`}
+          />
+          <DataTable
+            data={[
+              { prop: "selection", type: "{ field, value } | null", description: "Current selection or null" },
+              { prop: "isActive", type: "boolean", description: "True when a selection is active" },
+              { prop: "select(sel)", type: "(sel) => void", description: "Set or toggle a selection" },
+              { prop: "clear()", type: "() => void", description: "Clear the current selection" },
+            ]}
+            columns={[
+              { key: "prop", header: "Property", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+              { key: "description", header: "Description" },
+            ]}
+            dense
+            variant="ghost"
+          />
+        </DocSection>
+
+        <DocSection id="cross-filter-behavior" title="Behavior" level={3}>
+          <div className="space-y-3">
+            {[
+              { label: "Toggle", desc: "Clicking the same value again deselects it" },
+              { label: "Escape key", desc: "Press Escape to clear the selection from anywhere" },
+              { label: "Signal only", desc: "The crossFilter prop only emits clicks into context — it never changes the chart's data or appearance" },
+              { label: "No provider", desc: "Without a CrossFilterProvider, the crossFilter prop is silently ignored — safe to leave on" },
+              { label: "Stable colors", desc: "DonutChart remembers color assignments — filtering won't change a slice's color" },
+            ].map((item) => (
+              <div key={item.label} className="flex gap-3 text-[14px] leading-relaxed text-[var(--muted)]">
+                <span className="mt-0.5 flex-shrink-0 font-semibold text-[var(--foreground)]">{item.label}:</span>
+                {item.desc}
+              </div>
+            ))}
+          </div>
         </DocSection>
       </div>
 

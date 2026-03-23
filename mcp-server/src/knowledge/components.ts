@@ -361,8 +361,8 @@ type ComparisonMode = "previous" | "year-over-year" | "none";`,
       "KpiCard is the core building block of MetricUI dashboards. It displays a single key performance indicator with rich features: comparison badges (single or multiple), inline sparklines, goal progress bars, conditional color formatting, copy-to-clipboard, drill-down links, dynamic string templates, and full data-state handling (loading/empty/error/stale). It uses forwardRef and supports all standard HTML div attributes via id and data-testid.",
     props: [
       { name: "title", type: "DynamicString", required: true, description: "Card title. Can be a static string or a template function receiving MetricContext." },
-      { name: "value", type: "number | null | undefined", required: true, description: "The metric value. Pass null or undefined to trigger null-state display." },
-      { name: "format", type: "FormatOption", required: false, description: "How to format the numeric value. Shorthand string ('currency', 'percent', 'compact', 'number', 'duration') or a full FormatConfig object." },
+      { name: "value", type: "number | string | null | undefined", required: true, description: "The metric value. Pass a number for formatted display. Pass a string (e.g. '6:42 AM', 'Operational') for non-numeric KPIs — displayed as-is, no formatting applied. Pass null or undefined for null-state display." },
+      { name: "format", type: "FormatOption", required: false, description: "How to format numeric values. Shorthand: 'currency', 'percent', 'compact', 'number', 'duration'. Or FormatConfig object: { style, suffix?, prefix?, precision?, compact?, currency?, locale? }. For custom units: { style: 'number', suffix: '°F', compact: false }. Ignored when value is a string." },
       { name: "comparison", type: "ComparisonConfig | ComparisonConfig[]", required: false, description: "Single comparison or array of comparisons. Each comparison computes change from a previous value and shows a trend badge." },
       { name: "goal", type: "GoalConfig", required: false, description: "Goal/target configuration. Shows a progress bar below the value." },
       { name: "conditions", type: "Condition[]", required: false, description: "Conditional formatting rules. First matching condition colors the value text." },
@@ -401,9 +401,9 @@ type ComparisonMode = "previous" | "year-over-year" | "none";`,
       { name: "data-testid", type: "string", required: false, description: "Test id for testing frameworks." },
       { name: "onCopy", type: "(value: string) => void", required: false, description: "Callback when value is copied (requires copyable)." },
     ],
-    dataShape: `// KpiCard accepts a single numeric value
+    dataShape: `// KpiCard accepts a numeric or string value
 interface KpiCardData {
-  value: number | null | undefined;
+  value: number | string | null | undefined;
   // Optional comparison previous value(s)
   comparison?: { value: number; label?: string };
   // Optional sparkline data
@@ -618,6 +618,7 @@ interface KpiCardData {
       { name: "empty", type: "EmptyState", required: false, description: "Empty state configuration." },
       { name: "error", type: "ErrorState", required: false, description: "Error state configuration." },
       { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
+      { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on click. true uses the index field, { field } overrides. Emits selection via CrossFilterProvider — does NOT change chart appearance. Dev reads selection with useCrossFilter() and filters their own data." },
     ],
     dataShape: `// Full series format
 type Datum = { x: string | number; y: number | null };
@@ -733,6 +734,7 @@ type SimpleData = { label: string; value: number | null }[];`,
       "When using rightAxisSeries, right-axis data is internally normalized to the left scale and de-normalized for tooltips.",
       "Comparison data renders as dashed lines at 50% opacity.",
       "simpleData is converted to full series format internally; `data` takes precedence when non-empty.",
+      "crossFilter prop emits a selection signal on click — it does NOT change the chart's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
     ],
   },
 
@@ -898,6 +900,7 @@ type SeriesData = { id: string; data: Datum[] };`,
       { name: "error", type: "ErrorState", required: false, description: "Error state." },
       { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
       { name: "grouped", type: "boolean", required: false, description: "Legacy grouped mode.", deprecated: 'Use groupMode="grouped" instead' },
+      { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on click. true uses the indexBy field, { field } overrides. Emits selection via CrossFilterProvider — does NOT change chart appearance. Dev reads selection with useCrossFilter() and filters their own data." },
     ],
     dataShape: `// Each row has an index field + numeric fields for each key
 type BarData = Record<string, string | number>[];
@@ -1019,6 +1022,7 @@ const indexBy = "month";`,
       'borderRadius is automatically set to 0 for stacked and percent modes.',
       "Horizontal layout auto-computes left margin from longest category label.",
       "The HoverDimLayer dims non-hovered bar groups for visual focus.",
+      "crossFilter prop emits a selection signal on click — it does NOT change the chart's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
     ],
   },
 
@@ -1193,6 +1197,7 @@ type LineSeriesData = { id: string; data: { x: string | number; y: number | null
       { name: "empty", type: "EmptyState", required: false, description: "Empty state." },
       { name: "error", type: "ErrorState", required: false, description: "Error state." },
       { name: "stale", type: "StaleState", required: false, description: "Stale indicator." },
+      { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on click. true uses the slice id field, { field } overrides. Emits selection via CrossFilterProvider — does NOT change chart appearance. Dev reads selection with useCrossFilter() and filters their own data." },
     ],
     dataShape: `interface DonutDatum {
   id: string;
@@ -1258,6 +1263,8 @@ type SimpleDonutData = Record<string, number>;
       "simpleData is converted to DonutDatum[] internally; `data` takes precedence when non-empty.",
       "Center content is rendered using SVG foreignObject for centerContent, or native SVG text for centerValue/centerLabel.",
       "Set innerRadius to 0 for a pie chart (no hole).",
+      "Stable color assignments — DonutChart remembers which color belongs to which slice across data changes. Filtering down to one slice keeps its original color. No dev action needed.",
+      "crossFilter prop emits a selection signal on click — it does NOT change the chart's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
     ],
   },
 
@@ -1396,6 +1403,7 @@ type SparklineData = (number | null)[];`,
       { name: "rowConditions", type: "RowCondition<T>[]", required: false, description: "Conditional row styling. Each entry has a `when(row, index) => boolean` predicate and a `className` to apply when true." },
       { name: "multiSort", type: "boolean", required: false, default: "false", description: "Enable Shift+click multi-column sorting. Default: false (single sort)." },
       { name: "renderExpanded", type: "(row: T, index: number) => React.ReactNode", required: false, description: "Render expanded detail panel below a row. Enables chevron toggle on each row." },
+      { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on row click. true uses the first column key, { field } overrides. Emits selection via CrossFilterProvider — does NOT change table appearance. Dev reads selection with useCrossFilter() and filters their own data." },
     ],
     dataShape: `type ColumnType = "text" | "number" | "currency" | "percent" | "link" | "badge" | "sparkline" | "status" | "progress" | "date" | "bar";
 
@@ -1521,6 +1529,7 @@ interface FooterRow {
       "Search filters across all column values using case-insensitive string matching.",
       "renderExpanded adds a chevron toggle column. Clicking a row expands/collapses the detail panel.",
       "rowConditions apply CSS classes to rows matching predicates — useful for highlighting warnings or critical rows.",
+      "crossFilter prop emits a selection signal on row click — it does NOT change the table's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
     ],
   },
 
@@ -1729,6 +1738,7 @@ interface FooterRow {
       { name: "empty", type: "EmptyState", required: false, description: "Empty state." },
       { name: "error", type: "ErrorState", required: false, description: "Error state." },
       { name: "stale", type: "StaleState", required: false, description: "Stale indicator." },
+      { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on click. true uses the row id field, { field } overrides. Emits selection via CrossFilterProvider — does NOT change chart appearance. Dev reads selection with useCrossFilter() and filters their own data." },
     ],
     dataShape: `// Each series is a row, each datum is a column
 type HeatMapSeries = {
@@ -1806,6 +1816,7 @@ const simpleData = {
       "simpleData shorthand converts { row: { col: value } } to the series format automatically.",
       "Sequential color scale uses blues scheme. Diverging uses red-yellow-green.",
       "Custom colors array overrides the preset color scales.",
+      "crossFilter prop emits a selection signal on click — it does NOT change the chart's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
     ],
   },
   // =========================================================================
@@ -2749,6 +2760,137 @@ function SalesChart() {
       "clearAll() resets to defaultPreset and defaultDimensions.",
       "FilterProvider can be nested for sub-dashboard filter scopes.",
       "Without FilterProvider, all filter components work in standalone mode via onChange callbacks.",
+    ],
+  },
+
+  // =========================================================================
+  // CrossFilterProvider
+  // =========================================================================
+  {
+    name: "CrossFilterProvider",
+    importName: "CrossFilterProvider",
+    category: "ui" as const,
+    tier: "free",
+    description: "Context provider for cross-filtering. Charts with crossFilter prop emit selections; dev reads state via useCrossFilter() and filters their own data.",
+    longDescription:
+      "CrossFilterProvider creates a shared cross-filter context. Wrap it around your dashboard and add crossFilter prop to charts/tables. When a user clicks a bar, slice, or row, the chart emits a selection signal ({ field, value }). The provider holds the selection — it NEVER touches data or visuals. The dev reads the selection via useCrossFilter() and filters their own data before passing it to charts. Toggle behavior: clicking the same value deselects. Press Escape to clear. Same signal-only philosophy as FilterProvider.",
+    props: [
+      { name: "children", type: "React.ReactNode", required: true, description: "Child components that participate in cross-filtering." },
+    ],
+    dataShape: `// useCrossFilter() hook return shape:
+interface CrossFilterState {
+  selection: { field: string; value: string } | null;
+  isActive: boolean;
+  select: (field: string, value: string) => void;
+  clear: () => void;
+}`,
+    minimalExample: `<CrossFilterProvider>
+  <BarChart data={data} keys={["revenue"]} indexBy="region" crossFilter />
+  <DataTable data={filteredData} columns={columns} />
+</CrossFilterProvider>`,
+    examples: [
+      {
+        title: "Cross-filter a dashboard by clicking a bar chart",
+        description: "Click a bar to select a region, then filter other charts. Signal only — dev filters the data.",
+        code: `import { CrossFilterProvider, useCrossFilter, BarChart, AreaChart, DataTable } from "metricui";
+
+function Dashboard() {
+  return (
+    <CrossFilterProvider>
+      <BarChart
+        data={regionData}
+        keys={["revenue"]}
+        indexBy="region"
+        crossFilter
+        title="Revenue by Region"
+      />
+      <FilteredContent />
+    </CrossFilterProvider>
+  );
+}
+
+function FilteredContent() {
+  const { selection, isActive } = useCrossFilter();
+
+  // Dev filters their own data based on the selection
+  const filtered = isActive
+    ? allData.filter(d => d.region === selection!.value)
+    : allData;
+
+  return (
+    <>
+      <AreaChart data={toSeries(filtered)} title="Revenue Trend" format="currency" />
+      <DataTable data={filtered} columns={columns} title="Transactions" />
+    </>
+  );
+}`,
+      },
+      {
+        title: "Cross-filter with explicit field override",
+        description: "Override the field name emitted by the crossFilter prop.",
+        code: `<CrossFilterProvider>
+  <DonutChart
+    data={browserData}
+    crossFilter={{ field: "browser" }}
+    title="Browser Share"
+  />
+  <FilteredCharts />
+</CrossFilterProvider>`,
+      },
+    ],
+    relatedComponents: ["FilterProvider", "BarChart", "DonutChart", "AreaChart", "HeatMap", "DataTable"],
+    configFields: [],
+    notes: [
+      "CrossFilterProvider is SIGNAL ONLY — it holds the selection state but NEVER touches data or visuals. The dev reads the selection and filters their own data.",
+      "Toggle behavior: clicking the same value again deselects it. Press Escape to clear.",
+      "useCrossFilter() returns { selection, isActive, select, clear }.",
+      "Charts with crossFilter={true} use their index/indexBy field. crossFilter={{ field: 'name' }} overrides.",
+      "CrossFilterProvider is a filter, not a visual interaction — it belongs alongside FilterProvider.",
+    ],
+  },
+
+  // =========================================================================
+  // LinkedHoverProvider
+  // =========================================================================
+  {
+    name: "LinkedHoverProvider",
+    importName: "LinkedHoverProvider",
+    category: "ui" as const,
+    tier: "free",
+    description: "Syncs hover state across sibling charts — crosshairs and tooltips move together.",
+    longDescription:
+      "LinkedHoverProvider wraps multiple charts and synchronizes hover state across them. When the user hovers over a point on one chart, all sibling charts inside the provider show their crosshairs and tooltips at the same x-axis position. Charts auto-participate when inside the provider — no extra prop needed. Shares hoveredIndex (x-axis value) and hoveredSeries across all children.",
+    props: [
+      { name: "children", type: "React.ReactNode", required: true, description: "Charts that should sync hover state." },
+    ],
+    dataShape: `// useLinkedHover() hook return shape:
+interface LinkedHoverState {
+  hoveredIndex: string | number | null;
+  hoveredSeries: string | null;
+}`,
+    minimalExample: `<LinkedHoverProvider>
+  <AreaChart data={revenueData} title="Revenue" />
+  <AreaChart data={usersData} title="Users" />
+</LinkedHoverProvider>`,
+    examples: [
+      {
+        title: "Synchronized hover across two charts",
+        description: "Hovering over one chart shows crosshairs on both. No extra props needed.",
+        code: `<LinkedHoverProvider>
+  <div className="grid grid-cols-2 gap-4">
+    <AreaChart data={revenueData} title="Revenue" format="currency" />
+    <AreaChart data={sessionsData} title="Sessions" format="compact" />
+  </div>
+</LinkedHoverProvider>`,
+      },
+    ],
+    relatedComponents: ["AreaChart", "LineChart", "BarChart", "BarLineChart"],
+    configFields: [],
+    notes: [
+      "Charts auto-participate when inside LinkedHoverProvider — no extra prop needed.",
+      "Visual coordination only — syncs crosshairs and tooltips, does not filter data.",
+      "Shares hoveredIndex (x-axis value) and hoveredSeries across siblings.",
+      "useLinkedHover() hook returns { hoveredIndex, hoveredSeries } for custom usage.",
     ],
   },
 ];

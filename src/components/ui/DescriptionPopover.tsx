@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useId } from "react";
+import { useState, useRef, useId, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,8 +13,21 @@ interface DescriptionPopoverProps {
 
 export function DescriptionPopover({ content, className, maxWidth }: DescriptionPopoverProps) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const popoverId = useId();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  // Recompute position whenever open state changes
+  useEffect(() => {
+    if (!open || !triggerRef.current) { setPos(null); return; }
+    const rect = triggerRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 4, left: rect.left + rect.width / 2 });
+  }, [open]);
 
   function handleEnter() {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -28,6 +42,28 @@ export function DescriptionPopover({ content, className, maxWidth }: Description
     setOpen((prev) => !prev);
   }
 
+  const tooltip = open && pos && mounted ? createPortal(
+    <div
+      ref={tooltipRef}
+      id={popoverId}
+      role="tooltip"
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      className={cn(
+        "fixed z-[9999] -translate-x-1/2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-3 text-xs leading-relaxed text-[var(--foreground)] shadow-xl",
+        !maxWidth && "w-56",
+      )}
+      style={{
+        top: pos.top,
+        left: pos.left,
+        ...(maxWidth ? { width: maxWidth } : {}),
+      }}
+    >
+      <div>{content}</div>
+    </div>,
+    document.body,
+  ) : null;
+
   return (
     <div
       className={cn("relative inline-flex flex-shrink-0", className)}
@@ -35,6 +71,7 @@ export function DescriptionPopover({ content, className, maxWidth }: Description
       onMouseLeave={handleLeave}
     >
       <button
+        ref={triggerRef}
         className="-m-2 flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
         aria-label="More info"
         aria-expanded={open}
@@ -45,21 +82,7 @@ export function DescriptionPopover({ content, className, maxWidth }: Description
       >
         <HelpCircle className="h-3.5 w-3.5" />
       </button>
-      {open && (
-        <div
-          id={popoverId}
-          role="tooltip"
-          onMouseEnter={handleEnter}
-          onMouseLeave={handleLeave}
-          className={cn(
-            "absolute left-1/2 top-7 z-[100] -translate-x-1/2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-3 text-xs leading-relaxed text-[var(--foreground)] opacity-90 shadow-xl",
-            !maxWidth && "w-56",
-          )}
-          style={maxWidth ? { width: maxWidth } : undefined}
-        >
-          <div>{content}</div>
-        </div>
-      )}
+      {tooltip}
     </div>
   );
 }

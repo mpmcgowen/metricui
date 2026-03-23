@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback, useMemo } from "react";
+import { forwardRef, useCallback, useMemo, useRef } from "react";
 import { ResponsivePie } from "@nivo/pie";
 import type {
   ComputedDatum,
@@ -20,6 +20,8 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig, SliceClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toDonutData, type Category } from "@/lib/dataTransform";
+import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -106,6 +108,8 @@ export interface DonutChartProps {
   hideZeroSlices?: boolean;
   /** Click handler for slices */
   onSliceClick?: (slice: SliceClickEvent) => void;
+  /** Enable cross-filter selection. Pass `true` to use "id" as the field, or `{ field }` to override. */
+  crossFilter?: boolean | { field?: string };
   /** Compact layout — reduces margins and default height. Default: false */
   dense?: boolean;
   /** How null / missing data points are handled. No behavioral change for donut; included for API consistency. */
@@ -284,6 +288,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   legend: legendProp,
   hideZeroSlices = true,
   onSliceClick,
+  crossFilter: crossFilterProp,
   dense,
   chartNullMode,
   animate: animateProp,
@@ -298,6 +303,8 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   stale,
 }, ref) {
   assertPeer(ResponsivePie, "@nivo/pie", "DonutChart");
+  const linkedHover = useLinkedHover();
+  const linkedHoverId = useLinkedHoverId();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const localeDefaults = useLocale();
@@ -311,6 +318,12 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   const _resolvedChartNullMode = chartNullMode ?? config.chartNullMode; // API consistency; no behavioral change for donut
   void _resolvedChartNullMode;
   const activeOuterRadiusOffset = activeOuterRadiusOffsetProp ?? (resolvedDense ? 2 : 4);
+
+  // --- Cross-filter ---
+  const crossFilter = useCrossFilter();
+  const crossFilterField = crossFilterProp
+    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? indexProp ?? "id"
+    : undefined;
 
   // --- Resolve data: unified format → DonutDatum[] ---
   const data = useMemo((): DonutDatum[] => {
@@ -382,6 +395,24 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
     [visibleData]
   );
 
+  // --- Stable color map: remembers color assignments across data changes ---
+  const stableColorMap = useRef<Map<string, string>>(new Map());
+  const nextColorIdx = useRef(0);
+
+  // Seed the map from the current full data set (grows monotonically, never forgets)
+  for (const d of data) {
+    const id = String(d.id);
+    if (!stableColorMap.current.has(id)) {
+      // Check for explicit color first
+      if (d.color) {
+        stableColorMap.current.set(id, d.color);
+      } else {
+        stableColorMap.current.set(id, seriesColors[nextColorIdx.current % seriesColors.length]);
+      }
+      nextColorIdx.current++;
+    }
+  }
+
   // --- Color function ---
   const colorFn = useCallback(
     (datum: Omit<ComputedDatum<DonutDatum>, "color" | "fill" | "arc">) => {
@@ -393,11 +424,10 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
       if (datum.data.color) {
         return datum.data.color;
       }
-      // Indexed from palette
-      const idx = data.findIndex((d) => d.id === datum.id);
-      return seriesColors[(idx >= 0 ? idx : 0) % seriesColors.length];
+      // Stable color from map (survives filtering)
+      return stableColorMap.current.get(String(datum.id)) ?? seriesColors[0];
     },
-    [data, seriesColors, seriesStyles]
+    [seriesColors, seriesStyles]
   );
 
   // --- Margin: responsive ---
@@ -472,6 +502,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
         action={action}
         height={resolvedHeight}
         variant={resolvedVariant}
+
         className={classNames?.root ?? className}
         classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
         loading={loading}
@@ -484,6 +515,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
             hidden={hiddenSlices}
             onToggle={toggleSlice}
             toggleable={legendConfig.toggleable !== false}
+            onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
             className={classNames?.legend}
           />
         ) : undefined}
@@ -530,15 +562,18 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
             />
           )}
           onClick={
-            onSliceClick
+            (onSliceClick || (crossFilterProp && crossFilter))
               ? (datum) => {
                   const pct = total > 0 ? (datum.value / total) * 100 : 0;
-                  onSliceClick({
+                  onSliceClick?.({
                     id: String(datum.id),
                     value: datum.value,
                     label: String(datum.label),
                     percentage: pct,
                   });
+                  if (crossFilterProp && crossFilter && crossFilterField) {
+                    crossFilter.select({ field: crossFilterField, value: datum.id });
+                  }
                 }
               : undefined
           }

@@ -34,6 +34,8 @@ interface ChartContainerProps {
   dense?: boolean;
   /** Component name for error boundary diagnostics */
   componentName?: string;
+  /** CSS class for value flash animation (from useValueFlash) */
+  flashClass?: string;
   loading?: boolean;
   empty?: EmptyState;
   error?: ErrorState;
@@ -60,6 +62,7 @@ export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(fu
   variant,
   dense,
   componentName,
+  flashClass,
   loading,
   empty,
   error,
@@ -92,12 +95,14 @@ export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(fu
       id={id}
       data-testid={dataTestId}
       data-component={componentName}
+      data-metric-card=""
       data-variant={resolvedVariant}
       data-dense={resolvedDense ? "true" : undefined}
       className={cn(
         "noise-texture group relative flex h-full flex-col border p-[var(--mu-padding)] transition-all duration-300",
         CARD_CLASSES,
         HOVER_CLASSES,
+        flashClass,
         classNames?.root,
         className
       )}

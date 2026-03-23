@@ -44,6 +44,8 @@ import {
   TrendingUp,
   Tags,
   Bot,
+  Map,
+  Milestone,
 } from "lucide-react";
 
 interface NavItem {
@@ -64,6 +66,7 @@ const nav: { label: string; items: NavItem[] }[] = [
       { title: "Format Engine", href: "/docs/guides/format-engine", icon: Hash },
       { title: "Theming", href: "/docs/guides/theming", icon: Palette },
       { title: "Filtering", href: "/docs/guides/filtering", icon: Calendar },
+      { title: "Interactions", href: "/docs/guides/interactions", icon: Crosshair },
       { title: "Data States", href: "/docs/guides/data-states", icon: AlertCircle },
       { title: "Accessibility", href: "/docs/guides/accessibility", icon: Accessibility },
       { title: "MCP Server", href: "/docs/guides/mcp-server", icon: Bot },
@@ -131,6 +134,13 @@ const nav: { label: string; items: NavItem[] }[] = [
       { title: "SaaS Analytics", href: "/demos/saas", icon: TrendingUp },
       { title: "GitHub Analytics", href: "/demos/github", icon: Github },
       { title: "Wikipedia Live", href: "/demos/wikipedia", icon: Globe },
+      { title: "World Explorer", href: "/demos/world", icon: Map },
+    ],
+  },
+  {
+    label: "More",
+    items: [
+      { title: "Roadmap", href: "/roadmap", icon: Milestone },
     ],
   },
 ];

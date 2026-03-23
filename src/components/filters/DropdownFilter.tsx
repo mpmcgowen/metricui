@@ -254,15 +254,18 @@ export const DropdownFilter = forwardRef<HTMLDivElement, DropdownFilterProps>(
         >
           <span className="truncate max-w-[200px]">{triggerLabel}</span>
           {hasSelection && multiple && (
-            <button
+            <span
+              role="button"
+              tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
                 handleClearAll();
               }}
-              className="rounded-full p-0.5 opacity-60 hover:opacity-100"
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); handleClearAll(); } }}
+              className="rounded-full p-0.5 opacity-60 hover:opacity-100 cursor-pointer"
             >
               <X className="h-3 w-3" />
-            </button>
+            </span>
           )}
           <ChevronDown
             className={cn(

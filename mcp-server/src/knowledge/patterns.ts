@@ -1779,4 +1779,152 @@ export default function Dashboard() {
   );
 }`,
   },
+
+  // =========================================================================
+  // Cross-Filter Dashboard
+  // =========================================================================
+  {
+    name: "Cross-Filter Dashboard",
+    slug: "cross-filter-dashboard",
+    description: "Dashboard with cross-filtering: click a chart to filter siblings. Signal only — dev filters their own data.",
+    tags: ["cross-filter", "filter", "interaction", "dashboard", "provider"],
+    code: `import {
+  MetricProvider,
+  CrossFilterProvider,
+  useCrossFilter,
+  BarChart,
+  DonutChart,
+  AreaChart,
+  DataTable,
+  MetricGrid,
+} from "metricui";
+
+function Dashboard() {
+  return (
+    <MetricProvider theme="emerald">
+      <CrossFilterProvider>
+        <MetricGrid>
+          {/* Click a bar to select a region */}
+          <BarChart
+            data={regionData}
+            keys={["revenue"]}
+            indexBy="region"
+            crossFilter
+            title="Revenue by Region"
+            format="currency"
+          />
+          {/* Click a slice to select a browser */}
+          <DonutChart
+            data={browserData}
+            crossFilter={{ field: "browser" }}
+            title="Browser Share"
+          />
+          {/* These read the selection and show filtered data */}
+          <FilteredContent />
+        </MetricGrid>
+      </CrossFilterProvider>
+    </MetricProvider>
+  );
+}
+
+function FilteredContent() {
+  const { selection, isActive } = useCrossFilter();
+
+  // Dev filters their own data — CrossFilterProvider never touches it
+  const filtered = isActive
+    ? allData.filter(d => d[selection!.field] === selection!.value)
+    : allData;
+
+  return (
+    <>
+      <AreaChart data={toSeries(filtered)} title="Trend" format="currency" />
+      <DataTable data={filtered} columns={columns} title="Details" searchable />
+    </>
+  );
+}`,
+  },
+
+  // =========================================================================
+  // Linked Hover
+  // =========================================================================
+  {
+    name: "Linked Hover Across Charts",
+    slug: "linked-hover",
+    description: "Synchronized hover — crosshairs and tooltips move together across sibling charts.",
+    tags: ["linked-hover", "hover", "sync", "charts", "provider"],
+    code: `import {
+  MetricProvider,
+  LinkedHoverProvider,
+  AreaChart,
+  MetricGrid,
+} from "metricui";
+
+function Dashboard() {
+  return (
+    <MetricProvider theme="indigo">
+      <LinkedHoverProvider>
+        <MetricGrid>
+          {/* Hover one chart, both show crosshairs at the same x position */}
+          <AreaChart data={revenueData} title="Revenue" format="currency" />
+          <AreaChart data={sessionsData} title="Sessions" format="compact" />
+        </MetricGrid>
+      </LinkedHoverProvider>
+    </MetricProvider>
+  );
+}`,
+  },
+
+  // =========================================================================
+  // Value Flash
+  // =========================================================================
+  {
+    name: "Value Flash on Live Updates",
+    slug: "value-flash",
+    description: "Flash a CSS class when a value changes — for live dashboards. Skips first render, respects reduced motion.",
+    tags: ["value-flash", "animation", "live", "hook", "real-time"],
+    code: `import { useValueFlash, KpiCard } from "metricui";
+
+function LiveRevenue({ revenue }: { revenue: number }) {
+  // Returns "mu-value-flash" class when revenue changes, "" otherwise
+  const flashClass = useValueFlash(revenue);
+  // Options: useValueFlash(revenue, { duration: 800, disabled: false })
+
+  return (
+    <div className={flashClass}>
+      <KpiCard title="Live Revenue" value={revenue} format="currency" />
+    </div>
+  );
+}
+
+// The "mu-value-flash" class triggers a brief highlight animation.
+// Skips the first render (no flash on mount).
+// Respects prefers-reduced-motion and MetricProvider animate setting.`,
+  },
+
+  // =========================================================================
+  // Project Setup with CLI
+  // =========================================================================
+  {
+    name: "Project Setup with CLI",
+    slug: "project-setup-cli",
+    description: "One command to scaffold a MetricUI project: detects framework, configures AI tools, generates starter dashboard.",
+    tags: ["init", "cli", "setup", "getting-started", "scaffold"],
+    code: `# Initialize MetricUI in your project
+npx metricui init
+
+# What it does:
+# 1. Detects your framework (Next.js App Router, Next.js Pages, Vite, Create React App)
+# 2. Configures AI tools:
+#    - Cursor: adds .cursor/rules with MetricUI knowledge
+#    - Claude Code: adds CLAUDE.md with component docs
+#    - MCP: adds .mcp.json for the MetricUI MCP server
+# 3. Scaffolds a starter dashboard with MetricProvider, MetricGrid, and example components
+#
+# Safe to re-run — idempotent. Won't overwrite existing files.
+#
+# After running:
+# - Your AI assistant knows all MetricUI components and patterns
+# - You have a working starter dashboard to build on
+# - MCP tools are available for component lookup and validation`,
+  },
 ];

@@ -52,11 +52,16 @@ export function registerPrompts(server: McpServer): void {
 - Multi-select dimension filter → DropdownFilter
 - Active filter chip display → FilterTags
 - Shared filter state context → FilterProvider
+- Click-to-filter across charts (signal only) → CrossFilterProvider + useCrossFilter
+
+**Coordination:**
+- Synced hover/crosshairs across sibling charts → LinkedHoverProvider
+- Flash CSS class when a value changes (live dashboards) → useValueFlash
 
 ## Architecture — ALWAYS follow this
 
 1. Wrap in \`<MetricProvider theme="emerald">\` (or any preset: indigo, rose, amber, cyan, violet, slate, orange)
-2. Wrap in \`<FilterProvider defaultPreset="30d">\` for time filtering
+2. Wrap in \`<FilterProvider defaultPreset="30d">\` for time filtering. Add \`<CrossFilterProvider>\` if charts should cross-filter each other
 3. Use \`<DashboardHeader title="..." lastUpdated={new Date()} actions={<PeriodSelector comparison />}>\` — NOT a raw \`<h1>\`
 4. Use \`<MetricGrid>\` for layout with \`<MetricGrid.Section>\` dividers — NOT manual CSS grid
 5. Every numeric value uses the format engine: \`format="currency"\`, \`format="percent"\`, etc.
@@ -76,6 +81,9 @@ export function registerPrompts(server: McpServer): void {
 - **Callout with rules** — data-driven alerts: \`rules={[{ min: 10, variant: "success", message: "Growth at {value}%" }]}\`
 - **StatusIndicator with pulse** — \`rules={[{ min: 99, color: "emerald" }, { max: 99, color: "red", pulse: true }]}\`
 - **Axis labels** — \`xAxisLabel="Month"\` and \`yAxisLabel="Revenue ($)"\` for context
+- **Cross-filtering** — wrap in \`<CrossFilterProvider>\`, add \`crossFilter\` to charts. Click a bar/slice to set filter, read with \`useCrossFilter()\`, filter your data. Signal only — never changes chart appearance
+- **Linked hover** — wrap charts in \`<LinkedHoverProvider>\`. Crosshairs and tooltips sync across siblings automatically. No extra props needed
+- **Value flash** — \`useValueFlash(value)\` returns "mu-value-flash" class when value changes. Great for live dashboards
 
 ## Format Mapping
 - Revenue/money → \`format="currency"\`

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useMetricConfig } from "@/lib/MetricProvider";
 import { useMetricFilters, PRESET_LABELS } from "@/lib/FilterContext";
 import type { DateRange, PeriodPreset } from "@/lib/FilterContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { X } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -38,6 +39,10 @@ export interface FilterTagsProps {
   showPeriod?: boolean;
   /** Show the comparison mode as a tag. Default: true */
   showComparison?: boolean;
+  /** Show the active cross-filter selection as a tag. Default: true */
+  showCrossFilter?: boolean;
+  /** Custom labels for cross-filter fields */
+  crossFilterLabels?: Record<string, string>;
   /** Dense mode */
   dense?: boolean;
   /** Additional class names */
@@ -83,6 +88,8 @@ interface TagData {
   label: string;
   value: string;
   onDismiss?: () => void;
+  /** Visual variant: "filter" (outlined) or "selection" (solid, for cross-filter) */
+  variant?: "filter" | "selection";
 }
 
 // ---------------------------------------------------------------------------
@@ -105,6 +112,8 @@ export const FilterTags = forwardRef<HTMLDivElement, FilterTagsProps>(
       maxVisible = 0,
       showPeriod = true,
       showComparison = true,
+      showCrossFilter = true,
+      crossFilterLabels,
       dense: denseProp,
       className,
       classNames,
@@ -115,6 +124,7 @@ export const FilterTags = forwardRef<HTMLDivElement, FilterTagsProps>(
   ) {
     const config = useMetricConfig();
     const filters = useMetricFilters();
+    const crossFilter = useCrossFilter();
     const resolvedDense = denseProp ?? config.dense;
 
     const [expanded, setExpanded] = useState(false);
@@ -189,23 +199,39 @@ export const FilterTags = forwardRef<HTMLDivElement, FilterTagsProps>(
       formatPeriod, formatDimension, dismissible, onClear,
     ]);
 
+    // --- Cross-filter selection tag (separate from dimension filters) ---
+    const crossFilterTag = useMemo((): TagData | null => {
+      if (!showCrossFilter || !crossFilter?.isActive || !crossFilter.selection) return null;
+      const { field, value } = crossFilter.selection;
+      const fieldLabel = crossFilterLabels?.[field] ?? labels?.[field] ?? capitalize(field);
+      return {
+        key: "_crossFilter",
+        label: fieldLabel,
+        value: String(value),
+        variant: "selection",
+        onDismiss: () => crossFilter.clear(),
+      };
+    }, [showCrossFilter, crossFilter?.isActive, crossFilter?.selection, crossFilterLabels, labels, crossFilter]);
+
     // --- Clear all handler ---
     const handleClearAll = useCallback(() => {
       if (filters) {
         filters.clearAll();
       }
+      crossFilter?.clear();
       onClearAll?.();
-    }, [filters, onClearAll]);
+    }, [filters, crossFilter, onClearAll]);
 
     // --- Don't render if no active filters ---
-    if (tags.length === 0) return null;
+    const allTags = crossFilterTag ? [crossFilterTag, ...tags] : tags;
+    if (allTags.length === 0) return null;
 
     // --- Visible tags (respect maxVisible) ---
     const visibleTags = maxVisible > 0 && !expanded
-      ? tags.slice(0, maxVisible)
-      : tags;
+      ? allTags.slice(0, maxVisible)
+      : allTags;
     const hiddenCount = maxVisible > 0 && !expanded
-      ? tags.length - maxVisible
+      ? allTags.length - maxVisible
       : 0;
 
     return (
@@ -219,28 +245,41 @@ export const FilterTags = forwardRef<HTMLDivElement, FilterTagsProps>(
           classNames?.root,
         )}
       >
-        {visibleTags.map((tag) => (
-          <span
-            key={tag.key}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/[0.06] font-medium text-[var(--accent)]",
-              resolvedDense ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs",
-              classNames?.chip,
-            )}
-          >
-            <span className="text-[var(--accent)]/60">{tag.label}:</span>
-            <span>{tag.value}</span>
-            {tag.onDismiss && (
-              <button
-                onClick={tag.onDismiss}
-                className="ml-0.5 rounded-full p-0.5 opacity-50 transition-opacity hover:opacity-100"
-                aria-label={`Remove ${tag.label} filter`}
-              >
-                <X className={resolvedDense ? "h-2.5 w-2.5" : "h-3 w-3"} />
-              </button>
-            )}
-          </span>
-        ))}
+        {visibleTags.map((tag) => {
+          const isSelection = tag.variant === "selection";
+          return (
+            <span
+              key={tag.key}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full font-medium",
+                isSelection
+                  ? "border border-[var(--accent)] bg-[var(--accent)]/[0.15] text-[var(--accent)]"
+                  : "border border-[var(--accent)]/20 bg-[var(--accent)]/[0.06] text-[var(--accent)]",
+                resolvedDense ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs",
+                classNames?.chip,
+              )}
+            >
+              {isSelection && (
+                <svg className={resolvedDense ? "h-2.5 w-2.5" : "h-3 w-3"} viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+                  <circle cx="8" cy="8" r="4" />
+                </svg>
+              )}
+              <span className={isSelection ? "text-[var(--accent)]/80" : "text-[var(--accent)]/60"}>
+                {tag.label}:
+              </span>
+              <span>{tag.value}</span>
+              {tag.onDismiss && (
+                <button
+                  onClick={tag.onDismiss}
+                  className="ml-0.5 rounded-full p-0.5 opacity-50 transition-opacity hover:opacity-100"
+                  aria-label={isSelection ? `Clear ${tag.label} selection` : `Remove ${tag.label} filter`}
+                >
+                  <X className={resolvedDense ? "h-2.5 w-2.5" : "h-3 w-3"} />
+                </button>
+              )}
+            </span>
+          );
+        })}
 
         {/* Overflow indicator */}
         {hiddenCount > 0 && (
@@ -256,7 +295,7 @@ export const FilterTags = forwardRef<HTMLDivElement, FilterTagsProps>(
         )}
 
         {/* Clear all */}
-        {clearAll && tags.length > 1 && (
+        {clearAll && allTags.length > 1 && (
           <button
             onClick={handleClearAll}
             className={cn(

@@ -6,25 +6,23 @@ import { StatGroup } from "@/components/cards/StatGroup";
 import { BarChart } from "@/components/charts/BarChart";
 import { BarLineChart } from "@/components/charts/BarLineChart";
 import { DonutChart } from "@/components/charts/DonutChart";
-import { AreaChart } from "@/components/charts/AreaChart";
-import { HeatMap } from "@/components/charts/HeatMap";
 import { DataTable } from "@/components/tables/DataTable";
-import { Badge } from "@/components/ui/Badge";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Callout } from "@/components/ui/Callout";
 import { MetricGrid } from "@/components/layout/MetricGrid";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { MetricProvider } from "@/lib/MetricProvider";
+import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
+import { FilterTags } from "@/components/filters/FilterTags";
 import { countries } from "@/data/world";
 import type { Country } from "@/data/world";
-import { cn } from "@/lib/utils";
 import {
   Globe,
   Users,
   Languages,
   Coins,
-  MapPin,
   Landmark,
 } from "lucide-react";
 
@@ -196,49 +194,151 @@ function deriveData(allCountries: Country[]) {
 }
 
 // ---------------------------------------------------------------------------
+// Cross-filtered country table
+// ---------------------------------------------------------------------------
+
+function CountryTable({ data, tableView }: {
+  data: ReturnType<typeof deriveData>["tableData"];
+  tableView: string;
+}) {
+  return (
+    <DataTable
+      data={data as never[]}
+      columns={
+        [
+          {
+            key: "name" as const,
+            header: "Country",
+            sortable: true,
+            pin: "left" as const,
+            render: (val: unknown, row: Record<string, unknown>) => (
+              <span className="flex items-center gap-2">
+                {Boolean(row.flag) && (
+                  <img
+                    src={String(row.flag)}
+                    alt=""
+                    className="h-4 w-6 rounded-sm object-cover"
+                  />
+                )}
+                <span className="font-medium">{String(val)}</span>
+              </span>
+            ),
+          },
+          {
+            key: "capital" as const,
+            header: "Capital",
+            width: 140,
+          },
+          {
+            key: "region" as const,
+            header: "Region",
+            type: "badge" as const,
+            width: 100,
+            badgeColor: (v: unknown) => {
+              const colors: Record<string, string> = {
+                Africa: "#f59e0b",
+                Americas: "#3b82f6",
+                Asia: "#ef4444",
+                Europe: "#8b5cf6",
+                Oceania: "#10b981",
+              };
+              return colors[String(v)] ?? "#6b7280";
+            },
+          },
+          {
+            key: "population" as const,
+            header: "Population",
+            type: "number" as const,
+            format: "compact" as const,
+            sortable: true,
+            width: 120,
+          },
+          {
+            key: "area" as const,
+            header: "Area (km²)",
+            type: "number" as const,
+            format: "compact" as const,
+            sortable: true,
+            width: 110,
+          },
+          {
+            key: "density" as const,
+            header: "Density",
+            type: "number" as const,
+            sortable: true,
+            width: 90,
+            conditions: [
+              { when: "above" as const, value: 500, color: "red" },
+              {
+                when: "between" as const,
+                min: 100,
+                max: 500,
+                color: "amber",
+              },
+              { when: "below" as const, value: 100, color: "emerald" },
+            ],
+          },
+          {
+            key: "languages" as const,
+            header: "Languages",
+            width: 160,
+          },
+          {
+            key: "currency" as const,
+            header: "Currency",
+            width: 90,
+          },
+        ] as never[]
+      }
+      title={`${tableView === "Top 100" ? "Top 100 Countries" : tableView} (${data.length})`}
+      subtitle="Sorted by population — click headers to sort"
+      pageSize={15}
+      dense
+      searchable
+      multiSort
+      striped
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export default function WorldDashboard() {
-  const data = useMemo(() => deriveData(countries), []);
+function DashboardContent() {
+  const cf = useCrossFilter();
   const [tableView, setTableView] = useState<string>("Top 100");
+
+  // Filter countries by cross-filter (region from bar chart)
+  const filteredCountries = useMemo(() => {
+    if (!cf?.isActive || cf.selection?.field !== "region") return countries;
+    return countries.filter((c) => c.region === cf.selection!.value);
+  }, [cf?.isActive, cf?.selection]);
+
+  // Re-derive all data from filtered countries
+  const allData = useMemo(() => deriveData(countries), []);
+  const data = useMemo(() => deriveData(filteredCountries), [filteredCountries]);
+
+  // Population by region always shows full data (it's the cross-filter source)
+  const populationByRegion = allData.populationByRegion;
 
   const filteredTable = useMemo(() => {
     if (tableView === "Top 100") return data.tableData;
     return data.tableData.filter((c) => c.region === tableView);
   }, [tableView, data.tableData]);
 
-  // Region population as percentage for sparklines
-  const regionPopPcts = useMemo(
-    () =>
-      data.populationByRegion.map((r) =>
-        Math.round((r.population / data.totalPopulation) * 100)
-      ),
-    [data]
-  );
-
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
-        {/* Theme Toggle */}
-        <div className="flex items-center justify-end">
-          <ThemeToggle />
-        </div>
-
-        {/* Header */}
-        <div className="mt-4">
-          <DashboardHeader
-            title="World Data Explorer"
-            subtitle="Population, languages, currencies & geography — 245 countries from REST Countries API"
-            back={{ href: "/docs/kpi-card", label: "Docs" }}
-            variant="flat"
-          />
-        </div>
-
-        <MetricProvider variant="outlined">
+    <>
+          <div className="mt-4">
+            <FilterTags showCrossFilter crossFilterLabels={{ region: "Region" }} />
+          </div>
           <MetricGrid className="mt-6">
             {/* ── Global Overview ── */}
-            <MetricGrid.Section title="Global Overview" />
+            <SectionHeader
+              title="Global Overview"
+              subtitle={cf?.isActive ? `Filtered by ${cf.selection?.field}: ${cf.selection?.value}` : undefined}
+              description="Key metrics across all 245 countries — population, language diversity, and currency coverage"
+            />
 
             <KpiCard
               title="World Population"
@@ -246,14 +346,15 @@ export default function WorldDashboard() {
               format="compact"
               icon={<Users className="h-3.5 w-3.5" />}
               sparkline={{ data: data.populationSparkline, type: "bar" }}
-              description="Top 10 countries by population"
+              description={({ formattedValue }) => `${formattedValue} people across 245 countries. Sparkline shows the top 10 most populous nations.`}
               animate={{ countUp: true }}
             />
             <KpiCard
               title="Countries"
-              value={countries.length}
+              value={filteredCountries.length}
               format="number"
               icon={<Globe className="h-3.5 w-3.5" />}
+              description="Sovereign nations and dependent territories recognized by the REST Countries API."
               animate={{ countUp: true, delay: 100 }}
             />
             <KpiCard
@@ -261,6 +362,7 @@ export default function WorldDashboard() {
               value={data.totalLanguages}
               format="number"
               icon={<Languages className="h-3.5 w-3.5" />}
+              description="Distinct official and recognized languages across all countries. Many nations have multiple official languages."
               animate={{ countUp: true, delay: 200 }}
             />
             <KpiCard
@@ -268,6 +370,7 @@ export default function WorldDashboard() {
               value={data.totalCurrencies}
               format="number"
               icon={<Coins className="h-3.5 w-3.5" />}
+              description={({ value }) => `${value} unique currencies in circulation. Some currencies like the Euro are shared across many nations.`}
               animate={{ countUp: true, delay: 300 }}
             />
 
@@ -282,31 +385,30 @@ export default function WorldDashboard() {
             />
 
             {/* ── Population ── */}
-            <MetricGrid.Section title="Population Distribution" border />
+            <SectionHeader
+              title="Population Distribution"
+              description="Regional population breakdown — click a bar to cross-filter the entire dashboard"
+              border
+            />
 
             <BarChart
-              data={data.populationByRegion}
+              data={populationByRegion}
               index="region"
               categories={["population"]}
               title="Population by Region"
               subtitle="Total population per continent"
+              description="Click a bar to filter the entire dashboard by that region."
               format="compact"
               height={320}
-            />
-            <BarChart
-              preset="horizontal"
-              data={data.subregionData}
-              index="subregion"
-              categories={["population"]}
-              sort="desc"
-              title="Top Subregions"
-              subtitle="Population in millions"
-              format="number"
-              height={420}
+              crossFilter
             />
 
-            {/* ── Languages & Currencies ── */}
-            <MetricGrid.Section title="Languages & Currencies" border />
+            {/* ── Languages ── */}
+            <SectionHeader
+              title="Language Distribution"
+              description="Top 10 languages by number of countries where they are officially spoken"
+              border
+            />
 
             <DonutChart
               data={data.languageData}
@@ -314,30 +416,23 @@ export default function WorldDashboard() {
               categories={["countries"]}
               title="Most Spoken Languages"
               subtitle="By number of countries"
+              description="Top 10 languages ranked by number of countries where they are an official language."
               height={340}
               showPercentage
               innerRadius={0.6}
               centerValue={`${data.totalLanguages}`}
               centerLabel="Total"
             />
-            <DonutChart
-              data={data.currencyData}
-              index="currency"
-              categories={["countries"]}
-              title="Most Used Currencies"
-              subtitle="By number of countries"
-              height={340}
-              showPercentage
-              innerRadius={0.6}
-              centerValue={`${data.totalCurrencies}`}
-              centerLabel="Total"
-            />
 
             {/* ── Geography ── */}
-            <MetricGrid.Section title="Geography & Density" border />
+            <SectionHeader
+              title="Geography & Density"
+              description="Land area vs population density — the dual-axis chart reveals how regions compare on both dimensions"
+              border
+            />
 
             <BarLineChart
-              data={data.regionAreaData}
+              data={allData.regionAreaData}
               index="region"
               categories={[
                 { key: "area", label: "Land Area (km²)", format: "compact" },
@@ -345,8 +440,10 @@ export default function WorldDashboard() {
               ]}
               title="Region Comparison"
               subtitle="Bars = land area, line = population (millions)"
+              description="Click a bar to cross-filter. Dual-axis: bars = area, line = population."
               height={320}
               legend
+              crossFilter
             />
             <BarChart
               preset="horizontal"
@@ -361,7 +458,11 @@ export default function WorldDashboard() {
             />
 
             {/* ── Top Countries ── */}
-            <MetricGrid.Section title="Top Countries by Population" border />
+            <SectionHeader
+              title="Top Countries by Population"
+              description="The 10 most populous nations and their outsized share of global population"
+              border
+            />
 
             <Callout
               variant="info"
@@ -393,10 +494,11 @@ export default function WorldDashboard() {
             />
 
             {/* ── Country Details Table ── */}
-            <MetricGrid.Section
+            <SectionHeader
               title="Country Directory"
+              description="Sortable, searchable table of countries — filter by region with the toggle or cross-filter from charts above"
               border
-              badge={
+              action={
                 <SegmentToggle
                   options={[
                     { value: "Top 100", label: "Top 100" },
@@ -413,103 +515,34 @@ export default function WorldDashboard() {
               }
             />
 
-            <DataTable
-              data={filteredTable as never[]}
-              columns={
-                [
-                  {
-                    key: "name" as const,
-                    header: "Country",
-                    sortable: true,
-                    pin: "left" as const,
-                    render: (val: unknown, row: Record<string, unknown>) => (
-                      <span className="flex items-center gap-2">
-                        {Boolean(row.flag) && (
-                          <img
-                            src={String(row.flag)}
-                            alt=""
-                            className="h-4 w-6 rounded-sm object-cover"
-                          />
-                        )}
-                        <span className="font-medium">{String(val)}</span>
-                      </span>
-                    ),
-                  },
-                  {
-                    key: "capital" as const,
-                    header: "Capital",
-                    width: 140,
-                  },
-                  {
-                    key: "region" as const,
-                    header: "Region",
-                    type: "badge" as const,
-                    width: 100,
-                    badgeColor: (v: unknown) => {
-                      const colors: Record<string, string> = {
-                        Africa: "#f59e0b",
-                        Americas: "#3b82f6",
-                        Asia: "#ef4444",
-                        Europe: "#8b5cf6",
-                        Oceania: "#10b981",
-                      };
-                      return colors[String(v)] ?? "#6b7280";
-                    },
-                  },
-                  {
-                    key: "population" as const,
-                    header: "Population",
-                    type: "number" as const,
-                    format: "compact" as const,
-                    sortable: true,
-                    width: 120,
-                  },
-                  {
-                    key: "area" as const,
-                    header: "Area (km²)",
-                    type: "number" as const,
-                    format: "compact" as const,
-                    sortable: true,
-                    width: 110,
-                  },
-                  {
-                    key: "density" as const,
-                    header: "Density",
-                    type: "number" as const,
-                    sortable: true,
-                    width: 90,
-                    conditions: [
-                      { when: "above" as const, value: 500, color: "red" },
-                      {
-                        when: "between" as const,
-                        min: 100,
-                        max: 500,
-                        color: "amber",
-                      },
-                      { when: "below" as const, value: 100, color: "emerald" },
-                    ],
-                  },
-                  {
-                    key: "languages" as const,
-                    header: "Languages",
-                    width: 160,
-                  },
-                  {
-                    key: "currency" as const,
-                    header: "Currency",
-                    width: 90,
-                  },
-                ] as never[]
-              }
-              title={`${tableView === "Top 100" ? "Top 100 Countries" : tableView} (${filteredTable.length})`}
-              subtitle="Sorted by population — click headers to sort"
-              pageSize={15}
-              dense
-              searchable
-              multiSort
-              striped
+            <CountryTable
+              data={filteredTable}
+              tableView={tableView}
             />
           </MetricGrid>
+    </>
+  );
+}
+
+export default function WorldDashboard() {
+  return (
+    <div className="min-h-screen bg-[var(--background)]">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        <div className="flex items-center justify-end">
+          <ThemeToggle />
+        </div>
+        <div className="mt-4">
+          <DashboardHeader
+            title="World Data Explorer"
+            subtitle="Population, languages, currencies & geography — 245 countries from REST Countries API"
+            back={{ href: "/docs/kpi-card", label: "Docs" }}
+            variant="flat"
+          />
+        </div>
+        <MetricProvider theme="cyan" variant="ghost">
+          <CrossFilterProvider>
+            <DashboardContent />
+          </CrossFilterProvider>
         </MetricProvider>
       </div>
     </div>

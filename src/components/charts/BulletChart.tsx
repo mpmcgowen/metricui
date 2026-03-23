@@ -171,11 +171,49 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
   const { ref: containerRef, width: containerWidth } = useContainerSize();
   const nivoTheme = useChartTheme(containerWidth);
 
-  // --- Resolve data ---
-  const data = useMemo(() => {
-    if (dataProp && dataProp.length > 0) return dataProp as NivoBulletDatum[];
-    if (simpleData && simpleData.length > 0) return simpleToNivo(simpleData);
-    return dataProp as NivoBulletDatum[] ?? [];
+  // --- Resolve and normalize data for readable axis labels ---
+  const { data, scaleSuffix } = useMemo(() => {
+    let raw: NivoBulletDatum[];
+    if (dataProp && dataProp.length > 0) raw = dataProp as NivoBulletDatum[];
+    else if (simpleData && simpleData.length > 0) raw = simpleToNivo(simpleData);
+    else raw = dataProp as NivoBulletDatum[] ?? [];
+
+    // Find the maximum value across all bullets to determine scale
+    let maxVal = 0;
+    for (const d of raw) {
+      for (const v of d.ranges) maxVal = Math.max(maxVal, Math.abs(v));
+      for (const v of d.measures) maxVal = Math.max(maxVal, Math.abs(v));
+      if (d.markers) for (const v of d.markers) maxVal = Math.max(maxVal, Math.abs(v));
+    }
+
+    // Each bullet has its own scale, so normalize per-item
+    const normalized = raw.map((d) => {
+      let itemMax = 0;
+      for (const v of d.ranges) itemMax = Math.max(itemMax, Math.abs(v));
+      for (const v of d.measures) itemMax = Math.max(itemMax, Math.abs(v));
+      if (d.markers) for (const v of d.markers) itemMax = Math.max(itemMax, Math.abs(v));
+
+      let divisor = 1;
+      let suffix = "";
+      if (itemMax >= 1_000_000) { divisor = 1_000_000; suffix = "M"; }
+      else if (itemMax >= 10_000) { divisor = 1_000; suffix = "K"; }
+
+      if (divisor === 1) return d;
+
+      return {
+        ...d,
+        ranges: d.ranges.map((v) => v / divisor),
+        measures: d.measures.map((v) => v / divisor),
+        markers: d.markers?.map((v) => v / divisor),
+      };
+    });
+
+    // Determine a global suffix hint for the component (for display purposes)
+    let globalSuffix = "";
+    if (maxVal >= 1_000_000) globalSuffix = "M";
+    else if (maxVal >= 10_000) globalSuffix = "K";
+
+    return { data: normalized, scaleSuffix: globalSuffix };
   }, [dataProp, simpleData]);
 
   // --- Auto height based on item count ---
@@ -219,6 +257,7 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
         action={action}
         height={resolvedHeight}
         variant={resolvedVariant}
+
         dense={resolvedDense}
         className={classNames?.root ?? className}
         classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
@@ -248,17 +287,23 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
             measureBorderWidth={0}
             measureBorderColor="transparent"
             axisPosition={showAxis ? "after" : "before"}
-            tooltip={({ v0, v1, color }: BulletTooltipProps) => (
-              <ChartTooltip
-                items={[{
-                  color,
-                  label: v1 !== undefined ? "Range" : "Value",
-                  value: v1 !== undefined
-                    ? `${formatValue(v0, format, localeDefaults)} – ${formatValue(v1, format, localeDefaults)}`
-                    : formatValue(v0, format, localeDefaults),
-                }]}
-              />
-            )}
+            tooltip={({ v0, v1, color }: BulletTooltipProps) => {
+              // Tooltip receives normalized values — format uses the original format prop
+              // which handles the display correctly since we show compact values
+              const suffix = scaleSuffix;
+              const fmtTip = (v: number) => suffix ? `${v.toLocaleString(undefined, { maximumFractionDigits: 1 })}${suffix}` : formatValue(v, format, localeDefaults);
+              return (
+                <ChartTooltip
+                  items={[{
+                    color,
+                    label: v1 !== undefined ? "Range" : "Value",
+                    value: v1 !== undefined
+                      ? `${fmtTip(v0)} – ${fmtTip(v1)}`
+                      : fmtTip(v0),
+                  }]}
+                />
+              );
+            }}
             animate={resolvedAnimate}
             motionConfig={resolvedAnimate ? config.motionConfig : undefined}
           />

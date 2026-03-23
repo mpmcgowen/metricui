@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useState, useCallback, useMemo } from "react";
+import { forwardRef, useState, useCallback, useMemo, useRef } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import type {
   BarDatum,
@@ -13,6 +13,8 @@ import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
+import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
@@ -118,6 +120,8 @@ export interface BarChartProps {
   yAxisLabel?: string;
   /** Click handler for bars */
   onBarClick?: (bar: BarClickEvent) => void;
+  /** Enable cross-filtering. `true` uses indexBy as the field, or pass `{ field }` to override. */
+  crossFilter?: boolean | { field?: string };
   /** Compact layout — reduces margins and default height. Default: false */
   dense?: boolean;
   /** How null / missing data points are handled. Default: "gap" */
@@ -525,6 +529,40 @@ function HoverDimLayer(props: BarCustomLayerProps<BarDatum>) {
   );
 }
 
+/**
+ * Linked hover highlight — when a sibling chart emits a hovered index,
+ * highlight the matching bar group with a subtle background band.
+ */
+function createLinkedHoverBarLayer(
+  hoveredIndex: string | number | null,
+  sourceId: string | undefined,
+  myId: string,
+) {
+  return function LinkedHoverBarLayer(props: BarCustomLayerProps<BarDatum>) {
+    if (hoveredIndex == null || sourceId === myId) return null;
+    const { bars, innerHeight } = props;
+    // Find bars matching the hovered index
+    const matchingBars = bars.filter((b) => String(b.data.indexValue) === String(hoveredIndex));
+    if (matchingBars.length === 0) return null;
+    // Get the x extent of the matching bar group
+    const minX = Math.min(...matchingBars.map((b) => b.x));
+    const maxX = Math.max(...matchingBars.map((b) => b.x + b.width));
+    const pad = 4;
+    return (
+      <rect
+        x={minX - pad}
+        y={0}
+        width={maxX - minX + pad * 2}
+        height={innerHeight}
+        fill="var(--accent)"
+        opacity={0.06}
+        rx={4}
+        style={{ pointerEvents: "none", transition: "opacity 150ms ease" }}
+      />
+    );
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -568,6 +606,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   xAxisLabel,
   yAxisLabel,
   onBarClick,
+  crossFilter: crossFilterProp,
   dense,
   chartNullMode,
   animate: animateProp,
@@ -614,6 +653,13 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? denseValues.chartHeight;
   const resolvedChartNullMode = chartNullMode ?? config.chartNullMode;
+  const linkedHover = useLinkedHover();
+  const linkedHoverId = useLinkedHoverId();
+  const barHoverRef = useRef<string | number | null>(null);
+  const crossFilter = useCrossFilter();
+  const crossFilterField = crossFilterProp
+    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? indexBy
+    : undefined;
 
   // --- Deprecation warnings ---
   if (process.env.NODE_ENV !== "production") {
@@ -781,6 +827,11 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
       );
     }
 
+    // Linked hover highlight from sibling charts
+    if (linkedHover) {
+      layers.push(createLinkedHoverBarLayer(linkedHover.hoveredIndex, linkedHover.sourceId, linkedHoverId) as BarLayer<BarDatum>);
+    }
+
     layers.push("bars", "markers");
     layers.push("legends", "annotations");
 
@@ -795,6 +846,9 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
     visibleKeys,
     targetColor,
     comparisonColor,
+    linkedHover?.hoveredIndex,
+    linkedHover?.sourceId,
+    linkedHoverId,
   ]);
 
   // --- Responsive margins ---
@@ -923,7 +977,18 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   );
 
   return (
-    <div ref={ref} id={id} data-testid={dataTestId} style={{ minWidth: 120, height: "100%" }}>
+    <div
+      ref={ref}
+      id={id}
+      data-testid={dataTestId}
+      style={{ minWidth: 120, height: "100%" }}
+      onMouseLeave={() => {
+        if (linkedHover) {
+          barHoverRef.current = null;
+          linkedHover.setHoveredIndex(null, linkedHoverId);
+        }
+      }}
+    >
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="BarChart"
         title={title}
@@ -933,6 +998,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
         action={action}
         height={resolvedHeight}
         variant={resolvedVariant}
+
         className={classNames?.root ?? className}
         loading={loading}
         empty={empty}
@@ -944,6 +1010,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
             hidden={hiddenKeys}
             onToggle={toggleKey}
             toggleable={legendConfig.toggleable !== false}
+            onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
           />
         ) : undefined}
       >
@@ -981,6 +1048,11 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
           axisBottom={axisBottom}
           axisLeft={axisLeft}
           tooltip={({ indexValue }: BarTooltipProps<BarDatum>) => {
+            // Emit to linked hover context
+            if (linkedHover && barHoverRef.current !== indexValue) {
+              barHoverRef.current = indexValue;
+              setTimeout(() => linkedHover.setHoveredIndex(indexValue, linkedHoverId), 0);
+            }
             const row = chartData.find((d) => String(d[indexBy]) === String(indexValue));
             const tooltipFormat = isPercent ? ("percent" as FormatOption) : format;
             return (
@@ -1000,15 +1072,19 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
           motionConfig={resolvedAnimate ? config.motionConfig : undefined}
           layers={customLayers}
           onClick={
-            onBarClick
+            (onBarClick || (crossFilterProp && crossFilter))
               ? (datum: ComputedDatum<BarDatum> & { color: string }) => {
-                  onBarClick({
+                  const event = {
                     id: datum.id,
                     value: datum.value,
                     label: String(datum.indexValue),
                     key: String(datum.id),
                     indexValue: datum.indexValue,
-                  });
+                  };
+                  onBarClick?.(event);
+                  if (crossFilterProp && crossFilter && crossFilterField) {
+                    crossFilter.select({ field: crossFilterField, value: datum.indexValue });
+                  }
                 }
               : undefined
           }

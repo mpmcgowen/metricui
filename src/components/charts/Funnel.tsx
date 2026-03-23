@@ -13,6 +13,7 @@ import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { SERIES_COLORS } from "@/lib/chartColors";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
 import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
@@ -76,6 +77,8 @@ export interface FunnelChartProps {
   colors?: string[];
   /** Legend configuration. Default: hidden */
   legend?: boolean | LegendConfig;
+  /** Emit cross-filter selection on part click. Defaults field to "id". */
+  crossFilter?: boolean | { field?: string };
   /** Click handler for funnel parts */
   onPartClick?: (part: {
     id: string;
@@ -131,6 +134,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   currentPartSizeExtension = 10,
   colors: chartColors,
   legend: legendProp,
+  crossFilter: crossFilterProp,
   onPartClick,
   dense,
   animate: animateProp,
@@ -145,6 +149,10 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   stale,
 }, ref) {
   assertPeer(ResponsiveFunnel, "@nivo/funnel", "Funnel");
+  const crossFilter = useCrossFilter();
+  const crossFilterField = crossFilterProp
+    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "id"
+    : undefined;
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const localeDefaults = useLocale();
@@ -320,6 +328,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
         action={action}
         height={resolvedHeight}
         variant={resolvedVariant}
+
         dense={resolvedDense}
         className={classNames?.root ?? className}
         classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
@@ -387,17 +396,22 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
               );
             }}
             onClick={
-              onPartClick
+              (onPartClick || (crossFilterProp && crossFilter))
                 ? (part) => {
-                    const pct = firstValue > 0
-                      ? (part.data.value / firstValue) * 100
-                      : 0;
-                    onPartClick({
-                      id: String(part.data.id),
-                      value: part.data.value,
-                      label: String(part.data.label ?? part.data.id),
-                      percentage: pct,
-                    });
+                    if (onPartClick) {
+                      const pct = firstValue > 0
+                        ? (part.data.value / firstValue) * 100
+                        : 0;
+                      onPartClick({
+                        id: String(part.data.id),
+                        value: part.data.value,
+                        label: String(part.data.label ?? part.data.id),
+                        percentage: pct,
+                      });
+                    }
+                    if (crossFilterProp && crossFilter && crossFilterField) {
+                      crossFilter.select({ field: crossFilterField, value: String(part.data.id) });
+                    }
                   }
                 : undefined
             }

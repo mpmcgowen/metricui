@@ -19,7 +19,9 @@ import { MetricProvider } from "@/lib/MetricProvider";
 import { PeriodSelector } from "@/components/filters/PeriodSelector";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
-import { FilterProvider } from "@/lib/FilterContext";
+import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
+import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
+import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
 import { FilterTags } from "@/components/filters/FilterTags";
 import {
   repoStats,
@@ -113,35 +115,155 @@ function engagementScore(comments: number, reactions: number, ageDays: number): 
 }
 
 // ---------------------------------------------------------------------------
+// Helpers — date filtering
+// ---------------------------------------------------------------------------
+
+/** Convert a unix timestamp (seconds) to a Date */
+function weekTsToDate(ts: number): Date {
+  return new Date(ts * 1000);
+}
+
+/** Check if a Date falls within a DateRange (inclusive) */
+function inRange(d: Date, start: Date, end: Date): boolean {
+  return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function GitHubDashboard() {
-  // --- Commit activity as flat rows (unified format) ---
+  return (
+    <div className="min-h-screen bg-[var(--background)]">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        {/* ── Code Hero ── */}
+        <div className="flex items-center justify-between">
+          <div />
+          <ThemeToggle />
+        </div>
+        <SourceReveal />
+
+        {/* ── Header ── */}
+        <div className="mt-8">
+          <DashboardHeader
+            title="facebook/react"
+            subtitle={`${repoStats.description} — Repository Analytics`}
+            back={{ href: "/docs/kpi-card", label: "Docs" }}
+            variant="flat"
+          />
+        </div>
+
+        <FilterProvider defaultPreset="90d">
+        <CrossFilterProvider>
+        <DashboardContent />
+        </CrossFilterProvider>
+        </FilterProvider>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// DashboardContent — reads filter state, derives all data
+// ---------------------------------------------------------------------------
+
+function DashboardContent() {
+  const filters = useMetricFilters();
+  const crossFilter = useCrossFilter();
+  const [view, setView] = useState<string>("Issues");
+  const [labelFilter, setLabelFilter] = useState<string[]>([]);
+
+  // --- Period-filtered commit activity ---
+  const periodCommits = useMemo(() => {
+    if (!filters?.period) return commitActivity;
+    return commitActivity.filter((w) => {
+      const weekDate = weekTsToDate(w.week);
+      return inRange(weekDate, filters.period!.start, filters.period!.end);
+    });
+  }, [filters?.period]);
+
+  // Comparison-period commits (for previous period badges)
+  const comparisonCommits = useMemo(() => {
+    if (!filters?.comparisonPeriod) return null;
+    return commitActivity.filter((w) => {
+      const weekDate = weekTsToDate(w.week);
+      return inRange(weekDate, filters.comparisonPeriod!.start, filters.comparisonPeriod!.end);
+    });
+  }, [filters?.comparisonPeriod]);
+
+  // --- Period-filtered issues ---
+  const periodIssues = useMemo(() => {
+    let issues = recentIssues;
+    if (filters?.period) {
+      issues = issues.filter((i) =>
+        inRange(new Date(i.createdAt), filters.period!.start, filters.period!.end)
+      );
+    }
+    return issues;
+  }, [filters?.period]);
+
+  // --- Period-filtered PRs ---
+  const periodPulls = useMemo(() => {
+    let pulls = recentPulls;
+    if (filters?.period) {
+      pulls = pulls.filter((p) =>
+        inRange(new Date(p.createdAt), filters.period!.start, filters.period!.end)
+      );
+    }
+    return pulls;
+  }, [filters?.period]);
+
+  // --- Period-filtered releases ---
+  const periodReleases = useMemo(() => {
+    let rels = releases;
+    if (filters?.period) {
+      rels = rels.filter((r) =>
+        inRange(new Date(r.publishedAt), filters.period!.start, filters.period!.end)
+      );
+    }
+    return rels;
+  }, [filters?.period]);
+
+  // --- Cross-filter: if a day-of-week is selected, narrow commits further ---
+  const activeDayFilter = crossFilter?.selection?.field === "day" ? String(crossFilter.selection.value) : null;
+  // Commit area data (flat rows for AreaChart)
   const commitAreaData = useMemo(
-    () => commitActivity.map((w) => ({
+    () => periodCommits.map((w) => ({
       week: weekTimestampToLabel(w.week),
-      commits: w.total,
+      commits: activeDayFilter
+        ? w.days[DAY_NAMES.indexOf(activeDayFilter)] ?? 0
+        : w.total,
     })),
-    []
+    [periodCommits, activeDayFilter]
   );
 
   // Sparkline from weekly totals
   const commitSparkline = useMemo(
-    () => commitActivity.map((w) => w.total),
-    []
+    () => periodCommits.map((w) =>
+      activeDayFilter
+        ? w.days[DAY_NAMES.indexOf(activeDayFilter)] ?? 0
+        : w.total
+    ),
+    [periodCommits, activeDayFilter]
   );
 
-  // Total commits in last 52 weeks
+  // Total commits
   const totalCommits = useMemo(
-    () => commitActivity.reduce((sum, w) => sum + w.total, 0),
-    []
+    () => commitSparkline.reduce((sum, v) => sum + v, 0),
+    [commitSparkline]
   );
+
+  // Comparison total
+  const comparisonTotalCommits = useMemo(() => {
+    if (!comparisonCommits) return null;
+    return comparisonCommits.reduce((sum, w) =>
+      sum + (activeDayFilter ? (w.days[DAY_NAMES.indexOf(activeDayFilter)] ?? 0) : w.total), 0);
+  }, [comparisonCommits, activeDayFilter]);
 
   // Commits per day-of-week for bar chart
   const commitsByDay = useMemo(() => {
     const totals = [0, 0, 0, 0, 0, 0, 0];
-    for (const w of commitActivity) {
+    for (const w of periodCommits) {
       for (let d = 0; d < 7; d++) {
         totals[d] += w.days[d];
       }
@@ -150,10 +272,10 @@ export default function GitHubDashboard() {
       day: DAY_NAMES[i],
       commits: count,
     }));
-  }, []);
+  }, [periodCommits]);
 
-  // Heatmap: day-of-week x week as flat rows (unified format)
-  const recentWeeks = useMemo(() => commitActivity.slice(-26), []);
+  // Heatmap: day-of-week x week — use last 26 from period-filtered set
+  const recentWeeks = useMemo(() => periodCommits.slice(-26), [periodCommits]);
   const weekLabels = useMemo(() => recentWeeks.map((w) => weekTimestampToLabel(w.week)), [recentWeeks]);
   const heatmapData = useMemo(() => {
     return DAY_NAMES.map((day, dayIdx) => {
@@ -165,7 +287,7 @@ export default function GitHubDashboard() {
     });
   }, [recentWeeks, weekLabels]);
 
-  // Language breakdown as flat rows (unified format)
+  // Language breakdown as flat rows (static — not time-dependent)
   const languageData = useMemo(() => {
     const total = Object.values(languages).reduce((a, b) => a + b, 0);
     return Object.entries(languages)
@@ -176,15 +298,15 @@ export default function GitHubDashboard() {
       }));
   }, []);
 
-  // PR stats
+  // PR stats (from period-filtered data)
   const prStats = useMemo(() => {
-    const merged = recentPulls.filter((p) => p.mergedAt !== null).length;
-    const open = recentPulls.filter((p) => p.state === "open").length;
-    const closed = recentPulls.filter(
+    const merged = periodPulls.filter((p) => p.mergedAt !== null).length;
+    const open = periodPulls.filter((p) => p.state === "open").length;
+    const closed = periodPulls.filter(
       (p) => p.state === "closed" && p.mergedAt === null
     ).length;
     return { merged, open, closed };
-  }, []);
+  }, [periodPulls]);
 
   // Issue table columns
   const issueColumns = useMemo(
@@ -310,23 +432,20 @@ export default function GitHubDashboard() {
   // Release table
   const releaseData = useMemo(
     () =>
-      releases.map((r) => ({
+      periodReleases.map((r) => ({
         tag: r.tag,
         name: r.name,
         author: r.author,
         published: formatDate(r.publishedAt),
         prerelease: r.prerelease,
       })),
-    []
+    [periodReleases]
   );
 
-  const [view, setView] = useState<string>("Issues");
-  const [labelFilter, setLabelFilter] = useState<string[]>([]);
-
-  // Unique labels for dropdown
+  // Unique labels for dropdown (from period-filtered issues)
   const allLabels = useMemo(() => {
     const labelSet = new Set<string>();
-    for (const issue of recentIssues) {
+    for (const issue of periodIssues) {
       for (const l of issue.labels) {
         if (!["CLA Signed", "Resolution: Stale"].includes(l)) {
           labelSet.add(l);
@@ -336,40 +455,26 @@ export default function GitHubDashboard() {
     return [...labelSet].sort().map((l) => ({
       value: l,
       label: l,
-      count: recentIssues.filter((i) => i.labels.includes(l)).length,
+      count: periodIssues.filter((i) => i.labels.includes(l)).length,
     }));
-  }, []);
+  }, [periodIssues]);
 
-  // Filtered issues
+  // Filtered issues (period + label filter)
   const filteredIssues = useMemo(() => {
-    if (labelFilter.length === 0) return recentIssues;
-    return recentIssues.filter((i) =>
+    if (labelFilter.length === 0) return periodIssues;
+    return periodIssues.filter((i) =>
       labelFilter.some((l) => i.labels.includes(l))
     );
-  }, [labelFilter]);
+  }, [labelFilter, periodIssues]);
+
+  // Open issue count — from period-filtered set
+  const openIssueCount = useMemo(
+    () => filteredIssues.filter((i) => i.state === "open").length,
+    [filteredIssues]
+  );
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
-        {/* ── Code Hero ── */}
-        <div className="flex items-center justify-between">
-          <div />
-          <ThemeToggle />
-        </div>
-        <SourceReveal />
-
-        {/* ── Header ── */}
-        <div className="mt-8">
-          <DashboardHeader
-            title="facebook/react"
-            subtitle={`${repoStats.description} — Repository Analytics`}
-            back={{ href: "/docs/kpi-card", label: "Docs" }}
-            variant="flat"
-          />
-        </div>
-
-        <FilterProvider defaultPreset="90d">
-
+    <>
         {/* ── Period Selector ── */}
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -379,8 +484,8 @@ export default function GitHubDashboard() {
             />
             <SegmentToggle
               options={[
-                { value: "Issues", label: "Issues", icon: <CircleDot className="h-3.5 w-3.5" />, badge: labelFilter.length > 0 ? filteredIssues.length : recentIssues.length },
-                { value: "Pull Requests", label: "Pull Requests", icon: <GitPullRequest className="h-3.5 w-3.5" />, badge: recentPulls.length },
+                { value: "Issues", label: "Issues", icon: <CircleDot className="h-3.5 w-3.5" />, badge: labelFilter.length > 0 ? filteredIssues.length : periodIssues.length },
+                { value: "Pull Requests", label: "Pull Requests", icon: <GitPullRequest className="h-3.5 w-3.5" />, badge: periodPulls.length },
               ]}
               value={view}
               onChange={(v) => setView(v as string)}
@@ -424,7 +529,8 @@ export default function GitHubDashboard() {
 
         <FilterTags className="mt-3" />
 
-        <MetricProvider variant="outlined">
+        <MetricProvider theme="slate" variant="outlined">
+        <LinkedHoverProvider>
         <MetricGrid className="mt-6">
 
           {/* ── Overview ── */}
@@ -434,6 +540,7 @@ export default function GitHubDashboard() {
             value={repoStats.stars}
             format="compact"
             icon={<Star className="h-3.5 w-3.5" />}
+            description="Total GitHub stars. A measure of community interest and project visibility."
             animate={{ countUp: true }}
           />
           <KpiCard
@@ -441,22 +548,25 @@ export default function GitHubDashboard() {
             value={repoStats.forks}
             format="compact"
             icon={<GitFork className="h-3.5 w-3.5" />}
+            description="Active forks of the repository. Indicates downstream development and contribution potential."
             animate={{ countUp: true, delay: 100 }}
           />
           <KpiCard
             title="Open Issues"
-            value={labelFilter.length > 0 ? filteredIssues.length : repoStats.openIssues}
+            value={labelFilter.length > 0 ? openIssueCount : periodIssues.filter((i) => i.state === "open").length}
             format="number"
-            description={labelFilter.length > 0 ? `Filtered from ${repoStats.openIssues}` : undefined}
+            description={labelFilter.length > 0 ? `Showing ${openIssueCount} open of ${filteredIssues.length} filtered issues.` : `Issues created in the selected period that are currently open.`}
             icon={<CircleDot className="h-3.5 w-3.5" />}
             animate={{ countUp: true, delay: 200 }}
           />
           <KpiCard
-            title="Commits (52 weeks)"
+            title={`Commits${activeDayFilter ? ` (${activeDayFilter})` : ""}`}
             value={totalCommits}
             format="number"
             sparkline={{ data: commitSparkline, type: "bar" }}
             icon={<GitPullRequest className="h-3.5 w-3.5" />}
+            comparison={comparisonTotalCommits != null ? { value: comparisonTotalCommits, label: "prev period" } : undefined}
+            description={({ value }) => `${value.toLocaleString()} commits${activeDayFilter ? ` on ${activeDayFilter}s` : ""} in the selected period. Sparkline shows weekly volume.`}
             animate={{ countUp: true, delay: 300 }}
           />
           <StatGroup
@@ -473,7 +583,7 @@ export default function GitHubDashboard() {
               },
               {
                 label: "Latest Release",
-                value: releases[0]?.tag ?? "\u2014",
+                value: (periodReleases[0]?.tag ?? releases[0]?.tag) ?? "\u2014",
                 icon: <Tag className="h-3 w-3" />,
               },
               {
@@ -495,15 +605,18 @@ export default function GitHubDashboard() {
             index="day"
             categories={weekLabels}
             title="Contribution Activity"
-            subtitle="Last 26 weeks — commits by day of week"
+            subtitle={`Last ${recentWeeks.length} weeks — commits by day of week`}
+            description="GitHub-style contribution heatmap. Darker cells indicate more commits on that day."
             height={220}
+            crossFilter
           />
           <AreaChart
             data={commitAreaData}
             index="week"
             categories={["commits"]}
             title="Weekly Commits"
-            subtitle="52-week trend"
+            subtitle={`${periodCommits.length}-week trend${activeDayFilter ? ` (${activeDayFilter}s only)` : ""}`}
+            description="Total commits to the default branch per week. Spikes often correlate with release cycles."
             format="number"
             height={280}
             curve="monotoneX"
@@ -517,15 +630,18 @@ export default function GitHubDashboard() {
             title="Commits by Day"
             format="number"
             height={280}
+            crossFilter
           />
           <DonutChart
             data={languageData}
             index="language"
             categories={["share"]}
             title="Languages"
+            description="Percentage of codebase by language, measured in bytes via GitHub's linguist."
             height={280}
             showPercentage
             innerRadius={0.65}
+            crossFilter
           />
 
           {/* ── Pull Requests & Issues ── */}
@@ -648,7 +764,7 @@ export default function GitHubDashboard() {
             />
           ) : (
             <DataTable
-              data={recentPulls as never[]}
+              data={periodPulls as never[]}
               columns={prColumns as never[]}
               title="Recent Pull Requests"
               pageSize={8}
@@ -765,11 +881,11 @@ export default function GitHubDashboard() {
           <MetricGrid.Section title="Releases" border />
           <Callout
             variant="info"
-            title={`Latest Release: ${releases[0]?.tag ?? "—"}`}
+            title={`Latest Release: ${(periodReleases[0]?.tag ?? releases[0]?.tag) ?? "—"}`}
             icon={<Tag className="h-5 w-5" />}
             dense
           >
-            {releases[0]?.name} — published {formatDate(releases[0]?.publishedAt ?? "")} by {releases[0]?.author}
+            {(periodReleases[0] ?? releases[0])?.name} — published {formatDate((periodReleases[0] ?? releases[0])?.publishedAt ?? "")} by {(periodReleases[0] ?? releases[0])?.author}
           </Callout>
           <DataTable
             data={releaseData}
@@ -779,10 +895,9 @@ export default function GitHubDashboard() {
           />
 
         </MetricGrid>
+        </LinkedHoverProvider>
         </MetricProvider>
-        </FilterProvider>
-      </div>
-    </div>
+    </>
   );
 }
 

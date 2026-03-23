@@ -864,6 +864,57 @@ export const TYPES: TypeDef[] = [
     relatedTypes: ["DropdownFilterProps"],
   },
 
+  // === Cross-Filter Types ===
+
+  {
+    name: "CrossFilterSelection",
+    kind: "interface",
+    definition: `interface CrossFilterSelection {
+  field: string;   // The field name (e.g. "region", "browser")
+  value: string;   // The selected value (e.g. "US", "Chrome")
+}`,
+    description: "The active cross-filter selection. Null when nothing is selected.",
+    relatedTypes: ["CrossFilterState"],
+  },
+  {
+    name: "CrossFilterState",
+    kind: "interface",
+    definition: `interface CrossFilterState {
+  selection: CrossFilterSelection | null;
+  isActive: boolean;
+  select: (field: string, value: string) => void;
+  clear: () => void;
+}`,
+    description: "The full cross-filter state returned by useCrossFilter(). Signal only — holds the selection but never touches data or visuals.",
+    relatedTypes: ["CrossFilterSelection"],
+  },
+
+  // === Linked Hover Types ===
+
+  {
+    name: "LinkedHoverState",
+    kind: "interface",
+    definition: `interface LinkedHoverState {
+  hoveredIndex: string | number | null;
+  hoveredSeries: string | null;
+}`,
+    description: "The linked hover state shared across charts inside a LinkedHoverProvider. Read via useLinkedHover().",
+    relatedTypes: [],
+  },
+
+  // === Value Flash Types ===
+
+  {
+    name: "ValueFlashOptions",
+    kind: "interface",
+    definition: `interface ValueFlashOptions {
+  duration?: number;   // Flash duration in ms. Default: 600
+  disabled?: boolean;  // Disable the flash effect
+}`,
+    description: "Options for the useValueFlash hook. The hook returns a CSS class 'mu-value-flash' when the watched value changes. Skips first render, respects prefers-reduced-motion and MetricProvider animate.",
+    relatedTypes: [],
+  },
+
   // === SegmentToggle Types ===
 
   {

@@ -222,6 +222,35 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Value flash — brief colored ring on data change
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes mu-value-flash {
+  0%   { box-shadow: 0 0 0 0 var(--accent); }
+  30%  { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.mu-value-flash {
+  animation: mu-value-flash 600ms ease-out;
+  border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mu-value-flash {
+    animation: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Cross-filter dim transition
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.mu-cross-dim {
+  transition: opacity 200ms ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Touch device: show hover-only actions at reduced opacity
    ═══════════════════════════════════════════════════════════════════════════ */
 

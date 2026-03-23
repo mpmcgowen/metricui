@@ -88,24 +88,24 @@ describe("formatValue — number", () => {
 // ---------------------------------------------------------------------------
 
 describe("formatValue — percent", () => {
-  it("formats whole percent with one decimal", () => {
-    expect(formatValue(4.2, "percent")).toBe("4.2%");
+  it("formats whole percent with zero decimals by default", () => {
+    expect(formatValue(4.2, "percent")).toBe("4%");
   });
 
   it("formats integer percent", () => {
-    expect(formatValue(100, "percent")).toBe("100.0%");
+    expect(formatValue(100, "percent")).toBe("100%");
   });
 
   it("handles decimal input mode", () => {
-    expect(formatValue(0.12, fmt("percent", { percentInput: "decimal" }))).toBe("12.0%");
+    expect(formatValue(0.12, fmt("percent", { percentInput: "decimal" }))).toBe("12%");
   });
 
   it("handles zero", () => {
-    expect(formatValue(0, "percent")).toBe("0.0%");
+    expect(formatValue(0, "percent")).toBe("0%");
   });
 
   it("handles negative percent", () => {
-    expect(formatValue(-3.5, "percent")).toBe("-3.5%");
+    expect(formatValue(-3.5, "percent")).toBe("-4%");
   });
 
   it("respects custom precision", () => {
@@ -226,7 +226,7 @@ describe("formatValue — prefix / suffix", () => {
   });
 
   it("adds both prefix and suffix", () => {
-    expect(formatValue(42, fmt("percent", { prefix: "≈", suffix: " avg" }))).toBe("≈42.0% avg");
+    expect(formatValue(42, fmt("percent", { prefix: "≈", suffix: " avg" }))).toBe("≈42% avg");
   });
 });
 
@@ -495,7 +495,7 @@ describe("fmt helper", () => {
   it("creates a percent config", () => {
     const config = fmt("percent");
     expect(config.style).toBe("percent");
-    expect(config.precision).toBe(1);
+    expect(config.precision).toBe(0);
   });
 
   it("creates a duration config", () => {
@@ -537,12 +537,12 @@ describe("formatValue — edge cases", () => {
   it("handles value = 0 for all styles", () => {
     expect(formatValue(0, "number")).toBe("0");
     expect(formatValue(0, "currency")).toBe("$0");
-    expect(formatValue(0, "percent")).toBe("0.0%");
+    expect(formatValue(0, "percent")).toBe("0%");
     expect(formatValue(0, "duration")).toBe("0s");
   });
 
   it("handles very small positive values", () => {
     expect(formatValue(0.001, "number")).toBe("0");
-    expect(formatValue(0.001, "percent")).toBe("0.0%");
+    expect(formatValue(0.001, "percent")).toBe("0%");
   });
 });

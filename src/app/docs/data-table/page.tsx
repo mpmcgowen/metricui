@@ -232,86 +232,30 @@ export default function DataTableDocs() {
             a monospace font for easy scanning; text columns use the body font.
           </p>
 
-          <div className="mb-6 overflow-x-auto rounded-lg border border-[var(--card-border)]">
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-                  <th className="px-4 py-2.5 text-left font-semibold text-[var(--foreground)]">Type</th>
-                  <th className="px-4 py-2.5 text-left font-semibold text-[var(--foreground)]">Renders as</th>
-                  <th className="px-4 py-2.5 text-left font-semibold text-[var(--foreground)]">Align</th>
-                  <th className="px-4 py-2.5 text-left font-semibold text-[var(--foreground)]">Font</th>
-                </tr>
-              </thead>
-              <tbody className="text-[var(--muted)]">
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;text&quot;</code></td>
-                  <td className="px-4 py-2">Plain text</td>
-                  <td className="px-4 py-2">Left</td>
-                  <td className="px-4 py-2">Body</td>
-                </tr>
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;number&quot;</code></td>
-                  <td className="px-4 py-2">Locale-formatted number</td>
-                  <td className="px-4 py-2">Right</td>
-                  <td className="px-4 py-2">Mono</td>
-                </tr>
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;currency&quot;</code></td>
-                  <td className="px-4 py-2">Currency-formatted (e.g. $4,999)</td>
-                  <td className="px-4 py-2">Right</td>
-                  <td className="px-4 py-2">Mono</td>
-                </tr>
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;percent&quot;</code></td>
-                  <td className="px-4 py-2">Percent with sign (e.g. +18.3%)</td>
-                  <td className="px-4 py-2">Right</td>
-                  <td className="px-4 py-2">Mono</td>
-                </tr>
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;badge&quot;</code></td>
-                  <td className="px-4 py-2">Semantic Badge component</td>
-                  <td className="px-4 py-2">Left</td>
-                  <td className="px-4 py-2">Body</td>
-                </tr>
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;sparkline&quot;</code></td>
-                  <td className="px-4 py-2">Inline Sparkline chart</td>
-                  <td className="px-4 py-2">Center</td>
-                  <td className="px-4 py-2">N/A</td>
-                </tr>
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;status&quot;</code></td>
-                  <td className="px-4 py-2">StatusIndicator with rules</td>
-                  <td className="px-4 py-2">Left</td>
-                  <td className="px-4 py-2">Body</td>
-                </tr>
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;progress&quot;</code></td>
-                  <td className="px-4 py-2">ProgressBar (0-100)</td>
-                  <td className="px-4 py-2">Center</td>
-                  <td className="px-4 py-2">N/A</td>
-                </tr>
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;bar&quot;</code></td>
-                  <td className="px-4 py-2">Inline horizontal bar</td>
-                  <td className="px-4 py-2">Right</td>
-                  <td className="px-4 py-2">Mono</td>
-                </tr>
-                <tr className="border-b border-[var(--card-border)]/50">
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;link&quot;</code></td>
-                  <td className="px-4 py-2">Clickable link with icon</td>
-                  <td className="px-4 py-2">Left</td>
-                  <td className="px-4 py-2">Body</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2"><code className="font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">&quot;date&quot;</code></td>
-                  <td className="px-4 py-2">Locale-formatted date</td>
-                  <td className="px-4 py-2">Left</td>
-                  <td className="px-4 py-2">Body</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={[
+              { type: '"text"', renders: "Plain text", align: "Left", font: "Body" },
+              { type: '"number"', renders: "Locale-formatted number", align: "Right", font: "Mono" },
+              { type: '"currency"', renders: "Currency-formatted (e.g. $4,999)", align: "Right", font: "Mono" },
+              { type: '"percent"', renders: "Percent with sign (e.g. +18.3%)", align: "Right", font: "Mono" },
+              { type: '"badge"', renders: "Semantic Badge component", align: "Left", font: "Body" },
+              { type: '"sparkline"', renders: "Inline Sparkline chart", align: "Center", font: "N/A" },
+              { type: '"status"', renders: "StatusIndicator with rules", align: "Left", font: "Body" },
+              { type: '"progress"', renders: "ProgressBar (0-100)", align: "Center", font: "N/A" },
+              { type: '"bar"', renders: "Inline horizontal bar", align: "Right", font: "Mono" },
+              { type: '"link"', renders: "Clickable link with icon", align: "Left", font: "Body" },
+              { type: '"date"', renders: "Locale-formatted date", align: "Left", font: "Body" },
+            ]}
+            columns={[
+              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+              { key: "renders", header: "Renders as" },
+              { key: "align", header: "Align" },
+              { key: "font", header: "Font" },
+            ]}
+            dense
+            variant="ghost"
+            className="mb-6"
+          />
 
           <ComponentExample
             code={`const columns: ColumnDef<ProductRow>[] = [
