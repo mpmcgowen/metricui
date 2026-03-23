@@ -346,7 +346,7 @@ function DashboardContent() {
               format="compact"
               icon={<Users className="h-3.5 w-3.5" />}
               sparkline={{ data: data.populationSparkline, type: "bar" }}
-              description={({ formattedValue }) => `${formattedValue} people across 245 countries. Sparkline shows the top 10 most populous nations.`}
+              description={({ formatted }) => `${formatted.value} people across ${filteredCountries.length} countries. Sparkline shows the top 10 most populous nations.`}
               animate={{ countUp: true }}
             />
             <KpiCard
