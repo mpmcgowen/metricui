@@ -89,8 +89,9 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
 }
 
 /**
- * Find all fonts used in the element, fetch them, base64-encode,
- * and return a <style> element with @font-face rules.
+ * Embed all page fonts as base64 @font-face rules.
+ * Uses document.fonts API + stylesheet scanning to find font URLs,
+ * fetches them, and injects inline rules so html2canvas can use them.
  */
 async function embedFonts(element: HTMLElement): Promise<HTMLStyleElement | null> {
   // Collect unique font families used in the element
@@ -100,65 +101,108 @@ async function embedFonts(element: HTMLElement): Promise<HTMLStyleElement | null
     const computed = getComputedStyle(el as Element);
     const family = computed.fontFamily;
     if (family) {
-      // Parse individual font names from the family string
       for (const f of family.split(",")) {
         const name = f.trim().replace(/["']/g, "");
-        if (name && !isGenericFont(name)) {
-          fontFamilies.add(name);
-        }
+        if (name && !isGenericFont(name)) fontFamilies.add(name);
       }
     }
   }
 
   if (fontFamilies.size === 0) return null;
 
-  // Find @font-face rules from document stylesheets
-  const fontFaceRules: { family: string; src: string; weight: string; style: string }[] = [];
+  // Strategy 1: Use document.fonts API to find loaded FontFace objects
+  const fontFaceCss: string[] = [];
+  const processedUrls = new Set<string>();
 
-  for (const sheet of document.styleSheets) {
-    try {
-      for (const rule of sheet.cssRules) {
-        if (rule instanceof CSSFontFaceRule) {
-          const family = rule.style.getPropertyValue("font-family").replace(/["']/g, "").trim();
-          if (fontFamilies.has(family)) {
-            const src = rule.style.getPropertyValue("src");
-            const weight = rule.style.getPropertyValue("font-weight") || "400";
-            const style = rule.style.getPropertyValue("font-style") || "normal";
-            if (src) {
-              fontFaceRules.push({ family, src, weight, style });
-            }
-          }
-        }
-      }
-    } catch {
-      // Cross-origin stylesheet — skip
+  if ("fonts" in document) {
+    for (const face of document.fonts) {
+      const family = face.family.replace(/["']/g, "").trim();
+      if (!fontFamilies.has(family)) continue;
+
+      // FontFace doesn't expose the URL directly, but we can try
+      // to find it from the CSS source
+      const cssSource = (face as unknown as { src?: string }).src;
+      if (!cssSource) continue;
+
+      const urlMatch = String(cssSource).match(/url\(["']?([^"')]+)["']?\)/);
+      if (!urlMatch || processedUrls.has(urlMatch[1])) continue;
+      processedUrls.add(urlMatch[1]);
+
+      try {
+        const response = await fetch(urlMatch[1]);
+        const blob = await response.blob();
+        const base64 = await blobToBase64(blob);
+        const format = urlMatch[1].includes(".woff2") ? "woff2" : urlMatch[1].includes(".woff") ? "woff" : "truetype";
+        fontFaceCss.push(`@font-face { font-family: "${family}"; src: url(${base64}) format("${format}"); font-weight: ${face.weight || "400"}; font-style: ${face.style || "normal"}; }`);
+      } catch { /* skip */ }
     }
   }
 
-  if (fontFaceRules.length === 0) return null;
-
-  // Fetch and base64-encode each font URL
-  const fontFaceCss: string[] = [];
-
-  for (const rule of fontFaceRules) {
-    // Extract URL from src
-    const urlMatch = rule.src.match(/url\(["']?([^"')]+)["']?\)/);
-    if (!urlMatch) continue;
-
+  // Strategy 2: Scan stylesheets for @font-face rules
+  for (const sheet of document.styleSheets) {
     try {
-      const response = await fetch(urlMatch[1]);
-      const blob = await response.blob();
-      const base64 = await blobToBase64(blob);
-      const format = urlMatch[1].endsWith(".woff2") ? "woff2" : urlMatch[1].endsWith(".woff") ? "woff" : "truetype";
+      for (const rule of sheet.cssRules) {
+        if (!(rule instanceof CSSFontFaceRule)) continue;
+        const family = rule.style.getPropertyValue("font-family").replace(/["']/g, "").trim();
+        if (!fontFamilies.has(family)) continue;
+        const src = rule.style.getPropertyValue("src");
+        if (!src) continue;
+        const urlMatch = src.match(/url\(["']?([^"')]+)["']?\)/);
+        if (!urlMatch || processedUrls.has(urlMatch[1])) continue;
+        processedUrls.add(urlMatch[1]);
 
-      fontFaceCss.push(`@font-face {
-  font-family: "${rule.family}";
-  src: url(${base64}) format("${format}");
-  font-weight: ${rule.weight};
-  font-style: ${rule.style};
-}`);
-    } catch {
-      // Font fetch failed — skip
+        try {
+          const response = await fetch(urlMatch[1]);
+          const blob = await response.blob();
+          const base64 = await blobToBase64(blob);
+          const format = urlMatch[1].includes(".woff2") ? "woff2" : urlMatch[1].includes(".woff") ? "woff" : "truetype";
+          const weight = rule.style.getPropertyValue("font-weight") || "400";
+          const style = rule.style.getPropertyValue("font-style") || "normal";
+          fontFaceCss.push(`@font-face { font-family: "${family}"; src: url(${base64}) format("${format}"); font-weight: ${weight}; font-style: ${style}; }`);
+        } catch { /* skip */ }
+      }
+    } catch { /* cross-origin — skip */ }
+  }
+
+  // Strategy 3: Scan all <style> and <link> tags in <head> for @font-face with matching families
+  if (fontFaceCss.length === 0) {
+    const styleEls = document.querySelectorAll("style");
+    for (const styleEl of styleEls) {
+      const text = styleEl.textContent ?? "";
+      // Match @font-face blocks
+      const faceRegex = /@font-face\s*\{[^}]*\}/g;
+      let match;
+      while ((match = faceRegex.exec(text)) !== null) {
+        const block = match[0];
+        // Check if this font-face is for a family we need
+        const familyMatch = block.match(/font-family:\s*["']?([^;"']+)["']?/);
+        if (!familyMatch) continue;
+        const family = familyMatch[1].trim();
+
+        // Check against our needed families (Next.js uses generated class names as family)
+        // Also check if any needed family is a substring (Next.js might use __DM_Sans_xxxxx)
+        let needed = fontFamilies.has(family);
+        if (!needed) {
+          for (const f of fontFamilies) {
+            if (family.includes(f) || f.includes(family)) { needed = true; break; }
+          }
+        }
+        if (!needed) continue;
+
+        const urlMatch = block.match(/url\(["']?([^"')]+)["']?\)/);
+        if (!urlMatch || processedUrls.has(urlMatch[1])) continue;
+        processedUrls.add(urlMatch[1]);
+
+        try {
+          const response = await fetch(urlMatch[1]);
+          const blob = await response.blob();
+          const base64 = await blobToBase64(blob);
+          const format = urlMatch[1].includes(".woff2") ? "woff2" : "truetype";
+          // Reconstruct the @font-face with embedded data
+          const newBlock = block.replace(/url\(["']?[^"')]+["']?\)/, `url(${base64})`);
+          fontFaceCss.push(newBlock);
+        } catch { /* skip */ }
+      }
     }
   }
 
