@@ -551,7 +551,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
           <ExportButton
             title={typeof title === "string" ? title : "KPI"}
             targetRef={cardRef}
-            data={exportData}
+            data={exportData ?? [{ [typeof title === "string" ? title : "Metric"]: formattedValue }]}
             copyValue={formattedValue}
             dense={resolvedDense}
           />
