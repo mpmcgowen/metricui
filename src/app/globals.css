@@ -432,11 +432,6 @@
     display: none !important;
   }
 
-  /* --- SVGs must fit their containers --- */
-  svg {
-    max-width: 100% !important;
-  }
-
   /* --- Cards don't split across pages --- */
   [data-metric-card] {
     break-inside: avoid !important;
