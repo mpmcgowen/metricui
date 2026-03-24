@@ -1,7 +1,6 @@
 "use client";
 
 import { cn, withOpacity } from "@/lib/utils";
-import { CARD_CLASSES, HOVER_CLASSES } from "@/lib/styles";
 import {
   formatValue,
   formatValueRaw,
@@ -45,8 +44,7 @@ import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useCopyToClipboard } from "@/lib/useCopyToClipboard";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
-import { ExportButton } from "@/components/ui/ExportButton";
-import { DataStateWrapper, KpiSkeletonContent } from "@/components/ui/DataStateWrapper";
+import { CardShell } from "@/components/ui/CardShell";
 import {
   TrendingUp,
   TrendingDown,
@@ -55,7 +53,7 @@ import {
   Check,
   ArrowUpRight as DrillIcon,
 } from "lucide-react";
-import { forwardRef, useState, useRef } from "react";
+import { forwardRef, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -276,9 +274,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   const resolvedVariant = variant ?? config.variant;
   const resolvedAnimate = animate ?? config.animate;
   const resolvedDense = dense ?? config.dense;
-  const resolvedExportable = exportableProp !== undefined ? !!exportableProp : config.exportable;
   const exportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
-  const cardRef = useRef<HTMLDivElement>(null);
 
   // --- Merge config groupings with flat props (configs take precedence) ---
   const sparklineData = sparklineConfig?.data ?? sparklineDataProp;
@@ -412,47 +408,15 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   const { copied, copy } = useCopyToClipboard();
   const [hovered, setHovered] = useState(false);
 
-  // --- Data state early returns (must be AFTER all hooks) ---
-  if (loading) return (
-    <div
-      ref={ref as React.Ref<HTMLDivElement>}
-      id={id}
-      data-testid={dataTestId}
-      data-metric-card=""
-      data-variant={bare ? undefined : resolvedVariant}
-      data-dense={resolvedDense ? "true" : undefined}
-      className={cn(
-        bare
-          ? cn("mu-container group relative", "px-[var(--mu-padding-x-bare)] py-[var(--mu-padding-y-bare)] sm:px-[var(--mu-padding-x-bare-sm)]")
-          : cn(
-              "noise-texture group relative border transition-all duration-300",
-              CARD_CLASSES,
-              "p-[var(--mu-padding)]",
-            ),
-        className,
-        classNames?.root,
-      )}
-    >
-      <KpiSkeletonContent />
-    </div>
-  );
-  if (error) return <DataStateWrapper error={error}><div /></DataStateWrapper>;
-  if (empty) return <DataStateWrapper empty={empty}><div /></DataStateWrapper>;
-
-  const isClickable = !!(onClick || href || drillDown);
-  const Wrapper = href ? "a" : "div";
-  const wrapperProps = href ? { href } : {};
-
+  // --- Derived values for render ---
   const hasSparkline = sparklineData && sparklineData.length > 0;
 
-  // --- Trend badge colors ---
   const trendColors = {
     positive: "text-[var(--mu-color-positive)]",
     negative: "text-[var(--mu-color-negative)]",
     neutral: "text-[var(--muted)]",
   };
 
-  // --- Sparkline tooltip formatter ---
   const sparklineTooltipFormatter = (v: number) => formatValue(v, format, localeDefaults);
 
   const showTitle = titlePosition !== "hidden";
@@ -493,282 +457,247 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
     </>
   );
 
+  // --- Drill-down indicator icon ---
+  const drillDownIcon = drillDown ? (
+    <span className="absolute bottom-2 right-2 text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-60" aria-hidden>
+      <DrillIcon className="h-3 w-3" />
+    </span>
+  ) : undefined;
+
   return (
-    <Wrapper
-      {...wrapperProps}
-      ref={!href ? ((el: unknown) => {
-        (cardRef as React.MutableRefObject<HTMLElement | null>).current = el as HTMLElement | null;
-        if (typeof ref === "function") ref(el as never);
-        else if (ref) (ref as React.MutableRefObject<never>).current = el as never;
-      }) as never : undefined}
+    <CardShell
+      ref={ref as React.Ref<HTMLElement>}
       id={id}
       data-testid={dataTestId}
-      data-metric-card=""
+      componentName="KpiCard"
       onClick={onClick ?? (drillDown ? drillDown.onClick : undefined)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      data-variant={bare ? undefined : resolvedVariant}
-      data-dense={resolvedDense ? "true" : undefined}
+      href={href}
+      clickable={!!(onClick || href || drillDown)}
+      variant={resolvedVariant}
+      dense={resolvedDense}
+      bare={bare}
+      accent={accent}
+      highlight={highlight}
+      skeletonType="kpi"
+      loading={loading}
+      empty={empty}
+      error={error}
+      stale={stale}
+      exportable={exportableProp}
+      exportData={exportData ?? [{ [typeof title === "string" ? title : "Metric"]: formattedValue }]}
+      copyValue={formattedValue}
       className={cn(
-        "h-full",
-        bare
-          ? cn("mu-container group relative", "px-[var(--mu-padding-x-bare)] py-[var(--mu-padding-y-bare)] sm:px-[var(--mu-padding-x-bare-sm)]")
-          : cn(
-              "noise-texture group relative border transition-all duration-300",
-              CARD_CLASSES,
-              "p-[var(--mu-padding)]",
-              isClickable && "cursor-pointer",
-              HOVER_CLASSES,
-              conditionStyles?.glow && `shadow-lg ${conditionStyles.glow}`,
-            ),
+        conditionStyles?.glow && `shadow-lg ${conditionStyles.glow}`,
         className,
-        classNames?.root,
       )}
-      style={bare ? undefined : {
-        ...(accent ? { borderColor: accent } : {}),
-        ...(highlight && typeof highlight !== "string" ? {
-          boxShadow: "0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent)",
-          outline: "2px solid color-mix(in srgb, var(--accent) 30%, transparent)",
-          outlineOffset: "2px",
-        } : {}),
-        ...(typeof highlight === "string" ? {
-          boxShadow: `0 0 0 2px ${withOpacity(highlight, 0.3)}`,
-          outline: `2px solid ${withOpacity(highlight, 0.3)}`,
-          outlineOffset: "2px",
-        } : {}),
-        ...(conditionIsCustom && conditionColor ? {
-          boxShadow: `0 10px 15px -3px ${withOpacity(conditionColor, 0.1)}`,
-        } : {}),
-        ...(isLinkedHovered ? {
-          boxShadow: "0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent)",
-          outline: "2px solid color-mix(in srgb, var(--accent) 30%, transparent)",
-          outlineOffset: "2px",
-        } : {}),
-      } as React.CSSProperties}
+      classNames={classNames ? {
+        root: classNames.root,
+        footnote: cn("mu-footnote", textAlignClass, classNames.footnote),
+      } : {
+        footnote: cn("mu-footnote", textAlignClass),
+      }}
+      style={{
+        ...(conditionIsCustom && conditionColor ? { boxShadow: `0 10px 15px -3px ${withOpacity(conditionColor, 0.1)}` } : {}),
+        ...(isLinkedHovered ? { boxShadow: "0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent)", outline: "2px solid color-mix(in srgb, var(--accent) 30%, transparent)", outlineOffset: "2px" } : {}),
+      }}
+      footnote={resolvedFootnote ?? undefined}
+      drillDownIcon={drillDownIcon}
     >
-      {/* Export button */}
-      {resolvedExportable && (
-        <div className="absolute right-2 top-2 z-10">
-          <ExportButton
-            title={typeof title === "string" ? title : "KPI"}
-            targetRef={cardRef}
-            data={exportData ?? [{ [typeof title === "string" ? title : "Metric"]: formattedValue }]}
-            copyValue={formattedValue}
-            dense={resolvedDense}
-          />
-        </div>
-      )}
-      {/* Stale indicator */}
-      {stale && (
-        <div className="absolute right-3 top-3">
-          <DataStateWrapper stale={stale}><div /></DataStateWrapper>
-        </div>
-      )}
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {/* ── Title (top) ── */}
+        {titlePosition === "top" && titleBlock}
 
-      {/* ── Title (top) ── */}
-      {titlePosition === "top" && titleBlock}
-
-      {/* ── Value + Sparkline row ── */}
-      <div className={cn(
-        "flex items-end gap-4",
-        titleAlign === "center" ? "justify-center" : titleAlign === "right" ? "justify-end" : "justify-between",
-        showTitle && titlePosition === "top" ? "mt-3" : "",
-      )}>
-        <div className={cn("min-w-0", textAlignClass)}>
-          {/* Value */}
-          <div className={cn("flex items-baseline gap-1.5", alignClass)}>
-            <span
-              className={cn(
-                "font-[family-name:var(--font-mono)] font-semibold leading-none tracking-tight transition-colors",
-                bare ? "text-[length:var(--mu-value-size-bare)]" : "text-[length:var(--mu-value-size)]",
-                valueColorClass,
-                classNames?.value,
-              )}
-              style={conditionIsCustom && conditionColor ? { color: conditionColor } : undefined}
-              title={
-                tooltip?.content && typeof tooltip.content === "string"
-                  ? tooltip.content
-                  : rawValue
-              }
-            >
-              {formattedValue}
-            </span>
-
-            {copyable && !valueIsInert && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  copy(rawValue);
-                  onCopy?.(rawValue);
-                }}
-                className="mu-hover-action -m-2.5 flex-shrink-0 p-2.5 text-[var(--muted)] opacity-0 transition-opacity group-hover:opacity-60 hover:!opacity-100 focus:opacity-100"
-                aria-label="Copy value"
-              >
-                {copied ? (
-                  <Check className="h-3 w-3 text-emerald-500" />
-                ) : (
-                  <Copy className="h-3 w-3" />
+        {/* ── Value + Sparkline row ── */}
+        <div className={cn(
+          "flex items-end gap-4",
+          titleAlign === "center" ? "justify-center" : titleAlign === "right" ? "justify-end" : "justify-between",
+          showTitle && titlePosition === "top" ? "mt-3" : "",
+        )}>
+          <div className={cn("min-w-0", textAlignClass)}>
+            {/* Value */}
+            <div className={cn("flex items-baseline gap-1.5", alignClass)}>
+              <span
+                className={cn(
+                  "font-[family-name:var(--font-mono)] font-semibold leading-none tracking-tight transition-colors",
+                  bare ? "text-[length:var(--mu-value-size-bare)]" : "text-[length:var(--mu-value-size)]",
+                  valueColorClass,
+                  classNames?.value,
                 )}
-              </button>
+                style={conditionIsCustom && conditionColor ? { color: conditionColor } : undefined}
+                title={
+                  tooltip?.content && typeof tooltip.content === "string"
+                    ? tooltip.content
+                    : rawValue
+                }
+              >
+                {formattedValue}
+              </span>
+
+              {copyable && !valueIsInert && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    copy(rawValue);
+                    onCopy?.(rawValue);
+                  }}
+                  className="mu-hover-action -m-2.5 flex-shrink-0 p-2.5 text-[var(--muted)] opacity-0 transition-opacity group-hover:opacity-60 hover:!opacity-100 focus:opacity-100"
+                  aria-label="Copy value"
+                >
+                  {copied ? (
+                    <Check className="h-3 w-3 text-emerald-500" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Comparisons */}
+            {compResults.length > 0 && (
+              <div className={cn("mt-2 flex flex-col gap-1", titleAlign === "center" && "items-center", titleAlign === "right" && "items-end")}>
+                {compResults.map((comp, idx) => {
+                  const trend = comp.trend;
+                  const label = idx === 0 ? resolvedComparisonLabel : comparisons[idx]?.label;
+                  return (
+                    <div key={idx} className="flex items-center gap-1.5">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-0.5 text-xs font-semibold",
+                          trendColors[trend]
+                        )}
+                      >
+                        {getTrendIcon(trend)}
+                        {comp.label}
+                      </span>
+                      {label && (
+                        <span className="text-[11px] text-[var(--muted)]">
+                          {label}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
-          {/* Comparisons */}
-          {compResults.length > 0 && (
-            <div className={cn("mt-2 flex flex-col gap-1", titleAlign === "center" && "items-center", titleAlign === "right" && "items-end")}>
-              {compResults.map((comp, idx) => {
-                const trend = comp.trend;
-                const label = idx === 0 ? resolvedComparisonLabel : comparisons[idx]?.label;
-                return (
-                  <div key={idx} className="flex items-center gap-1.5">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-0.5 text-xs font-semibold",
-                        trendColors[trend]
-                      )}
-                    >
-                      {getTrendIcon(trend)}
-                      {comp.label}
-                    </span>
-                    {label && (
-                      <span className="text-[11px] text-[var(--muted)]">
-                        {label}
-                      </span>
-                    )}
+          {/* Sparkline — right side (only in left-align mode) */}
+          {titleAlign === "left" && hasSparkline && (
+            <div className="mu-sparkline-slot h-10 w-20 flex-shrink-0 opacity-40 transition-opacity duration-300 group-hover:opacity-80">
+              {(
+                <div className="relative h-full w-full">
+                  {sparklinePreviousPeriod && sparklinePreviousPeriod.length > 0 && (
+                    <div className="absolute inset-0 opacity-25">
+                      <Sparkline
+                        data={sparklinePreviousPeriod}
+                        trend="neutral"
+                        type={sparklineType}
+                      />
+                    </div>
+                  )}
+                  <div className={cn(
+                    "h-full w-full",
+                    sparklinePreviousPeriod && "absolute inset-0"
+                  )}>
+                    <Sparkline
+                      data={sparklineData!}
+                      trend={primaryTrend}
+                      type={sparklineType}
+                      interactive={sparklineInteractive}
+                      formatTooltip={sparklineTooltipFormatter}
+                    />
                   </div>
-                );
-              })}
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Sparkline — right side (only in left-align mode) */}
-        {titleAlign === "left" && hasSparkline && (
-          <div className="mu-sparkline-slot h-10 w-20 flex-shrink-0 opacity-40 transition-opacity duration-300 group-hover:opacity-80">
-            {(
-              <div className="relative h-full w-full">
-                {sparklinePreviousPeriod && sparklinePreviousPeriod.length > 0 && (
-                  <div className="absolute inset-0 opacity-25">
-                    <Sparkline
-                      data={sparklinePreviousPeriod}
-                      trend="neutral"
-                      type={sparklineType}
-                    />
-                  </div>
-                )}
-                <div className={cn(
-                  "h-full w-full",
-                  sparklinePreviousPeriod && "absolute inset-0"
-                )}>
-                  <Sparkline
-                    data={sparklineData!}
-                    trend={primaryTrend}
-                    type={sparklineType}
-                    interactive={sparklineInteractive}
-                    formatTooltip={sparklineTooltipFormatter}
-                  />
+        {/* ── Sparkline below value (center/right align) ── */}
+        {hasSparkline && titleAlign !== "left" && (
+          <div className={cn(
+            "mu-sparkline-slot mt-3 h-8 w-24 opacity-40 transition-opacity duration-300 group-hover:opacity-80",
+            titleAlign === "center" ? "mx-auto" : "ml-auto"
+          )}>
+            <div className="relative h-full w-full">
+              {sparklinePreviousPeriod && sparklinePreviousPeriod.length > 0 && (
+                <div className="absolute inset-0 opacity-25">
+                  <Sparkline data={sparklinePreviousPeriod} trend="neutral" type={sparklineType} />
                 </div>
+              )}
+              <div className={cn("h-full w-full", sparklinePreviousPeriod && "absolute inset-0")}>
+                <Sparkline
+                  data={sparklineData!}
+                  trend={primaryTrend}
+                  type={sparklineType}
+                  interactive={sparklineInteractive}
+                  formatTooltip={sparklineTooltipFormatter}
+                />
               </div>
-            )}
+            </div>
           </div>
         )}
-      </div>
 
-      {/* ── Sparkline below value (center/right align) ── */}
-      {hasSparkline && titleAlign !== "left" && (
-        <div className={cn(
-          "mu-sparkline-slot mt-3 h-8 w-24 opacity-40 transition-opacity duration-300 group-hover:opacity-80",
-          titleAlign === "center" ? "mx-auto" : "ml-auto"
-        )}>
-          <div className="relative h-full w-full">
-            {sparklinePreviousPeriod && sparklinePreviousPeriod.length > 0 && (
-              <div className="absolute inset-0 opacity-25">
-                <Sparkline data={sparklinePreviousPeriod} trend="neutral" type={sparklineType} />
-              </div>
-            )}
-            <div className={cn("h-full w-full", sparklinePreviousPeriod && "absolute inset-0")}>
-              <Sparkline
-                data={sparklineData!}
-                trend={primaryTrend}
-                type={sparklineType}
-                interactive={sparklineInteractive}
-                formatTooltip={sparklineTooltipFormatter}
+        {/* ── Title (bottom) ── */}
+        {titlePosition === "bottom" && (
+          <div className="mt-3">
+            {titleBlock}
+          </div>
+        )}
+
+        {/* ── Goal progress ── */}
+        {goalProgress && goal && (goal.showProgress !== false) && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-[var(--muted)]">
+                {goal.label ?? "Target"}
+                {goal.showTarget && (
+                  <span className="ml-1 font-[family-name:var(--font-mono)]">
+                    ({formatValue(goal.value, format, localeDefaults)})
+                  </span>
+                )}
+              </span>
+              <span
+                className={cn(
+                  "font-[family-name:var(--font-mono)] font-semibold",
+                  !goalProgress.isComplete && "text-[var(--foreground)] opacity-70"
+                )}
+                style={goalProgress.isComplete
+                  ? { color: goal.completeColor && isCustomColor(goal.completeColor) ? goal.completeColor : undefined }
+                  : undefined
+                }
+              >
+                {goal.showRemaining && !goalProgress.isComplete
+                  ? `${formatValue(goalProgress.remaining, format, localeDefaults)} left`
+                  : `${Math.round(goalProgress.progress)}%`
+                }
+              </span>
+            </div>
+            <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-[var(--card-border)]">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-1000 ease-out",
+                  !goal.color && !goalProgress.isComplete && "bg-[var(--accent)]",
+                  !goal.completeColor && goalProgress.isComplete && "bg-emerald-500"
+                )}
+                style={{
+                  width: `${Math.min(goalProgress.progress, 100)}%`,
+                  ...(goalProgress.isComplete && goal.completeColor
+                    ? { backgroundColor: isCustomColor(goal.completeColor) ? goal.completeColor : undefined }
+                    : goal.color
+                      ? { backgroundColor: isCustomColor(goal.color) ? goal.color : undefined }
+                      : {}
+                  ),
+                }}
               />
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ── Title (bottom) ── */}
-      {titlePosition === "bottom" && (
-        <div className="mt-3">
-          {titleBlock}
-        </div>
-      )}
-
-      {/* ── Goal progress ── */}
-      {goalProgress && goal && (goal.showProgress !== false) && (
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-[var(--muted)]">
-              {goal.label ?? "Target"}
-              {goal.showTarget && (
-                <span className="ml-1 font-[family-name:var(--font-mono)]">
-                  ({formatValue(goal.value, format, localeDefaults)})
-                </span>
-              )}
-            </span>
-            <span
-              className={cn(
-                "font-[family-name:var(--font-mono)] font-semibold",
-                !goalProgress.isComplete && "text-[var(--foreground)] opacity-70"
-              )}
-              style={goalProgress.isComplete
-                ? { color: goal.completeColor && isCustomColor(goal.completeColor) ? goal.completeColor : undefined }
-                : undefined
-              }
-            >
-              {goal.showRemaining && !goalProgress.isComplete
-                ? `${formatValue(goalProgress.remaining, format, localeDefaults)} left`
-                : `${Math.round(goalProgress.progress)}%`
-              }
-            </span>
-          </div>
-          <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-[var(--card-border)]">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-1000 ease-out",
-                !goal.color && !goalProgress.isComplete && "bg-[var(--accent)]",
-                !goal.completeColor && goalProgress.isComplete && "bg-emerald-500"
-              )}
-              style={{
-                width: `${Math.min(goalProgress.progress, 100)}%`,
-                ...(goalProgress.isComplete && goal.completeColor
-                  ? { backgroundColor: isCustomColor(goal.completeColor) ? goal.completeColor : undefined }
-                  : goal.color
-                    ? { backgroundColor: isCustomColor(goal.color) ? goal.color : undefined }
-                    : {}
-                ),
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── Footnote ── */}
-      {resolvedFootnote && (
-        <p className={cn("mu-footnote mt-3 text-[10px] leading-snug text-[var(--muted)] opacity-75", textAlignClass)}>
-          {resolvedFootnote}
-        </p>
-      )}
-
-      {/* Drill-down indicator — subtle corner icon on hover */}
-      {drillDown && (
-        <span className="absolute bottom-2 right-2 text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-60" aria-hidden>
-          <DrillIcon className="h-3 w-3" />
-        </span>
-      )}
-    </Wrapper>
+        )}
+      </div>
+    </CardShell>
   );
 });
 
