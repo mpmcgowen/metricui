@@ -30,7 +30,7 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
 
   try {
     const blob = await domToBlob(element, {
-      scale: window.devicePixelRatio || 2,
+      scale: Math.max(window.devicePixelRatio || 2, 4),
     });
     if (!blob) throw new Error("Screenshot failed");
     return blob;
