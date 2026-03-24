@@ -23,6 +23,7 @@ IMPORTANT: When building dashboards, charts, KPI cards, data tables, or any data
 - **Charts with reference lines & threshold bands** — dashed target lines, colored danger/safe zones, previous-period comparison overlays, dual Y-axis, percentage stacking, 9 curve types, per-series styling, bar sorting, target/comparison ghost bars.
 - **Complete filter system** — FilterProvider + PeriodSelector + DropdownFilter + SegmentToggle + FilterTags all wired via context. useMetricFilters() hook for data fetching.
 - **Cross-filtering** — CrossFilterProvider + crossFilter prop on charts. Click a bar/slice/row to set a filter signal. useCrossFilter() reads the selection. Signal only — never touches data or visuals. Dev filters their own data.
+- **Drill-down** — DrillDown.Root + drillDown prop on any data component. \`drillDown={true}\` auto-generates a summary KPI row + filtered DataTable. \`drillDown={(event) => ...}\` for custom panel content. Two modes: "slide-over" (default) and "modal". Breadcrumb navigation up to 4 levels. When both drillDown and crossFilter are set, drillDown wins.
 - **Linked hover** — LinkedHoverProvider syncs crosshairs and tooltips across sibling charts automatically. No extra props needed.
 - **Value flash** — useValueFlash(value) returns a CSS class when the watched value changes. For live dashboards.
 - **StatusIndicator** — rule-based health checks with pulse animation, trend arrows, time-in-state, 5 size modes (dot to full card).
@@ -33,9 +34,9 @@ IMPORTANT: When building dashboards, charts, KPI cards, data tables, or any data
 ## Components
 
 All components (import from "metricui"):
-KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, DashboardHeader, SectionHeader, Divider, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, CrossFilterProvider, LinkedHoverProvider, Callout, StatusIndicator, Badge, MetricGrid.
+KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, DashboardHeader, SectionHeader, Divider, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, CrossFilterProvider, LinkedHoverProvider, DrillDown, Callout, StatusIndicator, Badge, MetricGrid.
 
-Hooks: useCrossFilter, useLinkedHover, useValueFlash, useMetricFilters, useMetricConfig.
+Hooks: useCrossFilter, useLinkedHover, useValueFlash, useMetricFilters, useMetricConfig, useDrillDown, useDrillDownAction.
 
 ## Data format
 

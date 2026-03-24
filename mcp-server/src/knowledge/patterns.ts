@@ -1927,4 +1927,115 @@ npx metricui init
 # - You have a working starter dashboard to build on
 # - MCP tools are available for component lookup and validation`,
   },
+
+  // =========================================================================
+  // Zero-Config Drill-Down
+  // =========================================================================
+  {
+    name: "Zero-Config Drill-Down",
+    slug: "zero-config-drilldown",
+    description: "Add drillDown={true} to any chart inside a DrillDown.Root. Clicking a bar/slice/row auto-generates a summary KPI row + filtered DataTable from the chart's source data.",
+    tags: ["drill-down", "drilldown", "detail", "panel", "click", "interactive"],
+    code: `import { DrillDown, BarChart, MetricProvider, MetricGrid } from "metricui";
+
+function Dashboard() {
+  return (
+    <MetricProvider theme="indigo">
+      <DrillDown.Root>
+        <MetricGrid>
+          <BarChart
+            data={salesByRegion}
+            index="region"
+            categories={["revenue", "orders"]}
+            title="Sales by Region"
+            format="currency"
+            drillDown
+          />
+          <DonutChart
+            data={browserShare}
+            title="Browser Share"
+            drillDown
+            drillDownMode="modal"
+          />
+        </MetricGrid>
+      </DrillDown.Root>
+    </MetricProvider>
+  );
+}
+
+// drillDown={true} auto-generates the panel content:
+// - Summary KPI row showing the clicked element's values
+// - Filtered DataTable from the chart's source data
+//
+// drillDownMode controls presentation:
+// - "slide-over" (default): slides from right, full height
+// - "modal": centered, compact
+//
+// Navigation: breadcrumbs, back arrow, close X, Escape key, backdrop click.
+// When both drillDown and crossFilter are set, drillDown wins.`,
+  },
+
+  // =========================================================================
+  // Custom Drill-Down with Nested Navigation
+  // =========================================================================
+  {
+    name: "Custom Drill-Down with Nested Navigation",
+    slug: "custom-drilldown-nested",
+    description: "Pass a render function to drillDown for full control over the panel content. Nest drillDown components inside for multi-level navigation (up to 4 levels).",
+    tags: ["drill-down", "drilldown", "custom", "nested", "navigation", "breadcrumbs"],
+    code: `import { DrillDown, BarChart, KpiCard, DataTable, MetricGrid, useDrillDown } from "metricui";
+
+function Dashboard() {
+  return (
+    <DrillDown.Root>
+      <BarChart
+        data={salesByRegion}
+        index="region"
+        categories={["revenue", "orders"]}
+        title="Sales by Region"
+        format="currency"
+        drillDown={(event) => (
+          <MetricGrid>
+            <KpiCard title="Region" value={event.indexValue} />
+            <KpiCard
+              title="Revenue"
+              value={event.data.revenue as number}
+              format="currency"
+            />
+            <KpiCard
+              title="Orders"
+              value={event.data.orders as number}
+              format="compact"
+            />
+            {/* Nested drill-down: clicking a row opens a third level */}
+            <DataTable
+              data={getOrdersForRegion(event.indexValue)}
+              columns={orderColumns}
+              title={\`Orders in \${event.indexValue}\`}
+              drillDown={(rowEvent) => (
+                <OrderDetail order={rowEvent.row} />
+              )}
+            />
+          </MetricGrid>
+        )}
+      />
+    </DrillDown.Root>
+  );
+}
+
+// Reading drill state in custom components:
+function DrillBreadcrumbs() {
+  const { isOpen, breadcrumbs, depth, back, close } = useDrillDown();
+  if (!isOpen) return null;
+  return (
+    <nav>
+      {breadcrumbs.map((crumb, i) => (
+        <span key={i}>{crumb}</span>
+      ))}
+      <button onClick={back}>Back</button>
+      <button onClick={close}>Close</button>
+    </nav>
+  );
+}`,
+  },
 ];

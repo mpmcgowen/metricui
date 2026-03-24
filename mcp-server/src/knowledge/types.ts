@@ -915,6 +915,40 @@ export const TYPES: TypeDef[] = [
     relatedTypes: [],
   },
 
+  // === Drill-Down Types ===
+
+  {
+    name: "DrillDownTrigger",
+    kind: "interface",
+    definition: `interface DrillDownTrigger {
+  label: string;         // Breadcrumb label for this drill level
+  source: string;        // Component type that triggered the drill (e.g. "BarChart", "DataTable")
+  data: Record<string, unknown>; // The clicked element's data
+}`,
+    description: "Describes the trigger that opened a drill-down panel. Used internally by the drill stack and exposed via useDrillDown() breadcrumbs.",
+    relatedTypes: ["DrillDownState", "DrillDownMode"],
+  },
+  {
+    name: "DrillDownMode",
+    kind: "type",
+    definition: `type DrillDownMode = "slide-over" | "modal";`,
+    description: '"slide-over" (default): panel slides from the right, full height. "modal": centered, compact overlay. Set via drillDownMode prop on any data component or defaultMode on DrillDown.Root.',
+    relatedTypes: ["DrillDownTrigger", "DrillDownState"],
+  },
+  {
+    name: "DrillDownState",
+    kind: "interface",
+    definition: `interface DrillDownState {
+  isOpen: boolean;                // Whether the drill panel is visible
+  breadcrumbs: string[];          // Labels for each level in the stack
+  depth: number;                  // Current nesting depth (0 = closed)
+  back: () => void;               // Pop one level
+  close: () => void;              // Close all levels
+}`,
+    description: "The drill-down state returned by useDrillDown(). Read-only view of the drill stack with navigation actions.",
+    relatedTypes: ["DrillDownTrigger", "DrillDownMode"],
+  },
+
   // === SegmentToggle Types ===
 
   {

@@ -54,6 +54,12 @@ export function registerPrompts(server: McpServer): void {
 - Shared filter state context → FilterProvider
 - Click-to-filter across charts (signal only) → CrossFilterProvider + useCrossFilter
 
+**Drill-Down:**
+- Click-to-detail on any chart, table, or card → DrillDown.Root + \`drillDown\` prop
+- Zero-config auto-table: \`drillDown={true}\` → auto-generates summary KPI row + filtered DataTable
+- Custom content: \`drillDown={(event) => <CustomContent />}\` → full control over panel
+- Two modes: \`drillDownMode="slide-over"\` (default) or \`"modal"\`
+
 **Coordination:**
 - Synced hover/crosshairs across sibling charts → LinkedHoverProvider
 - Flash CSS class when a value changes (live dashboards) → useValueFlash
@@ -82,6 +88,7 @@ export function registerPrompts(server: McpServer): void {
 - **StatusIndicator with pulse** — \`rules={[{ min: 99, color: "emerald" }, { max: 99, color: "red", pulse: true }]}\`
 - **Axis labels** — \`xAxisLabel="Month"\` and \`yAxisLabel="Revenue ($)"\` for context
 - **Cross-filtering** — wrap in \`<CrossFilterProvider>\`, add \`crossFilter\` to charts. Click a bar/slice to set filter, read with \`useCrossFilter()\`, filter your data. Signal only — never changes chart appearance
+- **Drill-down** — wrap in \`<DrillDown.Root>\`, add \`drillDown\` to charts/tables/cards. \`drillDown={true}\` auto-generates a summary + DataTable. \`drillDown={(event) => ...}\` for custom content. \`drillDownMode="slide-over"\` or \`"modal"\`. When both drillDown and crossFilter are set, drillDown wins
 - **Linked hover** — wrap charts in \`<LinkedHoverProvider>\`. Crosshairs and tooltips sync across siblings automatically. No extra props needed
 - **Value flash** — \`useValueFlash(value)\` returns "mu-value-flash" class when value changes. Great for live dashboards
 

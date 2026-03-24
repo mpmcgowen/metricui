@@ -14,7 +14,7 @@ npx metricui init
 ## Import
 
 ```tsx
-import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, LinkedHoverProvider, useLinkedHover, useValueFlash } from "metricui";
+import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction } from "metricui";
 import "metricui/styles.css";
 ```
 
@@ -3752,3 +3752,104 @@ function LiveMetric({ value }) {
 - Respects `MetricProvider.animate` and `prefers-reduced-motion`
 - Options: `useValueFlash(value, { duration: 800, disabled: false })`
 - Works with any data type (uses deep comparison for objects/arrays)
+
+---
+
+## Drill-Down
+
+Click a chart bar, donut slice, KPI card, or table row to open a detail panel. Two tiers: zero-config auto-table, or full custom content.
+
+### Setup
+
+Wrap your dashboard in `DrillDown.Root` and add `drillDown` to any data component:
+
+```tsx
+import { DrillDown, BarChart } from "metricui";
+
+<DrillDown.Root>
+  <BarChart
+    data={salesByRegion}
+    index="region"
+    categories={["revenue", "orders"]}
+    drillDown
+    title="Sales by Region"
+  />
+</DrillDown.Root>
+```
+
+### Zero-Config (`drillDown={true}`)
+
+Auto-generates a summary KPI row + filtered DataTable from the chart's source data. No render function needed.
+
+```tsx
+<BarChart data={data} index="region" categories={["revenue"]} drillDown />
+<DonutChart data={slices} drillDown />
+<DataTable data={rows} columns={cols} drillDown />
+```
+
+### Custom Content (`drillDown={(event) => ...}`)
+
+Full control over what appears in the panel. The event contains the clicked element's data.
+
+```tsx
+<BarChart
+  data={salesByRegion}
+  index="region"
+  categories={["revenue", "orders"]}
+  drillDown={(event) => (
+    <MetricGrid>
+      <KpiCard title="Region" value={event.indexValue} />
+      <KpiCard title="Revenue" value={event.data.revenue} format="currency" />
+      <DataTable
+        data={getOrdersForRegion(event.indexValue)}
+        columns={orderColumns}
+        drillDown
+      />
+    </MetricGrid>
+  )}
+/>
+```
+
+### Presentation Mode (`drillDownMode`)
+
+```tsx
+// Slide-over (default) — slides from right, full height
+<BarChart data={data} drillDown drillDownMode="slide-over" />
+
+// Modal — centered, compact
+<DonutChart data={data} drillDown drillDownMode="modal" />
+
+// Default mode on the root
+<DrillDown.Root defaultMode="modal">
+  ...
+</DrillDown.Root>
+```
+
+### Hooks
+
+```tsx
+import { useDrillDown, useDrillDownAction } from "metricui";
+
+// Read drill state
+const { isOpen, breadcrumbs, depth, back, close } = useDrillDown();
+
+// Imperatively open a drill panel
+const openDrill = useDrillDownAction();
+openDrill({ label: "Order #123", source: "custom" }, <OrderDetail id="123" />);
+```
+
+### Navigation
+
+- Breadcrumbs shown for nested drills (up to 4 levels)
+- Back arrow pops one level
+- Close X closes all levels
+- Escape key closes the panel
+- Backdrop click closes the panel
+
+### Supported Components
+
+All 12 data components: BarChart, DonutChart, AreaChart, LineChart (via AreaChart), HeatMap, BarLineChart, Funnel, Waterfall, DataTable, KpiCard, StatGroup, Gauge, Callout.
+
+### Priority
+
+When both `drillDown` and `crossFilter` are set on the same component, `drillDown` wins

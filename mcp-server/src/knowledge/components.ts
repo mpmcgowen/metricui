@@ -379,7 +379,8 @@ type ComparisonMode = "previous" | "year-over-year" | "none";`,
       { name: "tooltip", type: "TooltipConfig", required: false, description: "Custom tooltip configuration for the value." },
       { name: "onClick", type: "() => void", required: false, description: "Click handler for the entire card." },
       { name: "href", type: "string", required: false, description: "Turns the card into a link (<a> tag)." },
-      { name: "drillDown", type: "DrillDownConfig", required: false, description: "Drill-down action shown on hover in the bottom-right corner." },
+      { name: "drillDown", type: "boolean | DrillDownConfig | ((event: { value: number | string; title: string }) => React.ReactNode)", required: false, description: "Enable drill-down on card click. `true` auto-generates a detail panel. Pass a DrillDownConfig for the legacy hover-corner link. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper for boolean/function modes." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
       { name: "copyable", type: "boolean", required: false, description: "Show a copy button that copies the raw formatted value to clipboard." },
       { name: "animate", type: "boolean | AnimationConfig", required: false, description: "Enable count-up animation. `true` enables default, or pass AnimationConfig for fine control. Falls back to config.animate." },
       { name: "highlight", type: "boolean | string", required: false, description: "Attention ring around the card. `true` uses accent color, or pass a CSS color string." },
@@ -501,6 +502,8 @@ interface KpiCardData {
       { name: "onStatClick", type: "(stat: StatItem, index: number) => void", required: false, description: "Click handler for individual stats." },
       { name: "nullDisplay", type: 'NullDisplay', required: false, default: '"dash"', description: "What to show when a stat value is null/undefined. Falls back to config.nullDisplay." },
       { name: "animate", type: "boolean", required: false, default: "true", description: "Enable/disable animations. Currently reserved for future use." },
+      { name: "drillDown", type: "boolean | ((event: { stat: StatItem; index: number }) => React.ReactNode)", required: false, description: "Enable drill-down on stat click. `true` auto-generates a detail panel. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `interface StatItem {
   label: string;
@@ -619,6 +622,8 @@ interface KpiCardData {
       { name: "error", type: "ErrorState", required: false, description: "Error state configuration." },
       { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
       { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on click. true uses the index field, { field } overrides. Emits selection via CrossFilterProvider — does NOT change chart appearance. Dev reads selection with useCrossFilter() and filters their own data." },
+      { name: "drillDown", type: "boolean | ((event: { indexValue: string; data: Record<string, unknown> }) => React.ReactNode)", required: false, description: "Enable drill-down on click. `true` auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper. When both drillDown and crossFilter are set, drillDown wins." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `// Full series format
 type Datum = { x: string | number; y: number | null };
@@ -735,6 +740,8 @@ type SimpleData = { label: string; value: number | null }[];`,
       "Comparison data renders as dashed lines at 50% opacity.",
       "simpleData is converted to full series format internally; `data` takes precedence when non-empty.",
       "crossFilter prop emits a selection signal on click — it does NOT change the chart's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
+      "drillDown={true} auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for custom panel content. Requires DrillDown.Root wrapper.",
+      "When both drillDown and crossFilter are set on the same component, drillDown wins.",
     ],
   },
 
@@ -901,6 +908,8 @@ type SeriesData = { id: string; data: Datum[] };`,
       { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
       { name: "grouped", type: "boolean", required: false, description: "Legacy grouped mode.", deprecated: 'Use groupMode="grouped" instead' },
       { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on click. true uses the indexBy field, { field } overrides. Emits selection via CrossFilterProvider — does NOT change chart appearance. Dev reads selection with useCrossFilter() and filters their own data." },
+      { name: "drillDown", type: "boolean | ((event: { indexValue: string; data: Record<string, unknown> }) => React.ReactNode)", required: false, description: "Enable drill-down on click. `true` auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper. When both drillDown and crossFilter are set, drillDown wins." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `// Each row has an index field + numeric fields for each key
 type BarData = Record<string, string | number>[];
@@ -1023,6 +1032,8 @@ const indexBy = "month";`,
       "Horizontal layout auto-computes left margin from longest category label.",
       "The HoverDimLayer dims non-hovered bar groups for visual focus.",
       "crossFilter prop emits a selection signal on click — it does NOT change the chart's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
+      "drillDown={true} auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for custom panel content. Requires DrillDown.Root wrapper.",
+      "When both drillDown and crossFilter are set on the same component, drillDown wins.",
     ],
   },
 
@@ -1079,6 +1090,8 @@ const indexBy = "month";`,
       { name: "classNames", type: "{ root?: string; header?: string; chart?: string; legend?: string }", required: false, description: "Sub-element class name overrides." },
       { name: "id", type: "string", required: false, description: "HTML id attribute." },
       { name: "data-testid", type: "string", required: false, description: "Test id." },
+      { name: "drillDown", type: "boolean | ((event: { indexValue: string; data: Record<string, unknown> }) => React.ReactNode)", required: false, description: "Enable drill-down on click. `true` auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `// Bar data: same as BarChart
 type BarData = Record<string, string | number>[];
@@ -1138,6 +1151,7 @@ type LineSeriesData = { id: string; data: { x: string | number; y: number | null
       "The right Y-axis scale is computed from line data min/max with 5% padding.",
       "Line colors default to config.colors offset by the number of bar keys.",
       "Combined legend shows both bar keys and line series with toggle support.",
+      "drillDown={true} auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for custom panel content. Requires DrillDown.Root wrapper.",
     ],
   },
 
@@ -1198,6 +1212,8 @@ type LineSeriesData = { id: string; data: { x: string | number; y: number | null
       { name: "error", type: "ErrorState", required: false, description: "Error state." },
       { name: "stale", type: "StaleState", required: false, description: "Stale indicator." },
       { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on click. true uses the slice id field, { field } overrides. Emits selection via CrossFilterProvider — does NOT change chart appearance. Dev reads selection with useCrossFilter() and filters their own data." },
+      { name: "drillDown", type: "boolean | ((event: { id: string; value: number; label: string; percentage: number }) => React.ReactNode)", required: false, description: "Enable drill-down on slice click. `true` auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper. When both drillDown and crossFilter are set, drillDown wins." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `interface DonutDatum {
   id: string;
@@ -1265,6 +1281,8 @@ type SimpleDonutData = Record<string, number>;
       "Set innerRadius to 0 for a pie chart (no hole).",
       "Stable color assignments — DonutChart remembers which color belongs to which slice across data changes. Filtering down to one slice keeps its original color. No dev action needed.",
       "crossFilter prop emits a selection signal on click — it does NOT change the chart's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
+      "drillDown={true} auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for custom panel content. Requires DrillDown.Root wrapper.",
+      "When both drillDown and crossFilter are set on the same component, drillDown wins.",
     ],
   },
 
@@ -1404,6 +1422,8 @@ type SparklineData = (number | null)[];`,
       { name: "multiSort", type: "boolean", required: false, default: "false", description: "Enable Shift+click multi-column sorting. Default: false (single sort)." },
       { name: "renderExpanded", type: "(row: T, index: number) => React.ReactNode", required: false, description: "Render expanded detail panel below a row. Enables chevron toggle on each row." },
       { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on row click. true uses the first column key, { field } overrides. Emits selection via CrossFilterProvider — does NOT change table appearance. Dev reads selection with useCrossFilter() and filters their own data." },
+      { name: "drillDown", type: "boolean | ((event: { row: T; index: number }) => React.ReactNode)", required: false, description: "Enable drill-down on row click. `true` auto-generates a summary KPI row + detail view from the row data. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper. When both drillDown and crossFilter are set, drillDown wins." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `type ColumnType = "text" | "number" | "currency" | "percent" | "link" | "badge" | "sparkline" | "status" | "progress" | "date" | "bar";
 
@@ -1530,6 +1550,8 @@ interface FooterRow {
       "renderExpanded adds a chevron toggle column. Clicking a row expands/collapses the detail panel.",
       "rowConditions apply CSS classes to rows matching predicates — useful for highlighting warnings or critical rows.",
       "crossFilter prop emits a selection signal on row click — it does NOT change the table's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
+      "drillDown={true} auto-generates a summary KPI row + detail view from the clicked row. Pass a render function for custom panel content. Requires DrillDown.Root wrapper.",
+      "When both drillDown and crossFilter are set on the same component, drillDown wins.",
     ],
   },
 
@@ -1633,6 +1655,8 @@ interface FooterRow {
       { name: "classNames", type: "{ root?: string; arc?: string; value?: string; title?: string }", required: false, description: "Sub-element class overrides." },
       { name: "id", type: "string", required: false, description: "HTML id attribute." },
       { name: "data-testid", type: "string", required: false, description: "Test id for testing frameworks." },
+      { name: "drillDown", type: "boolean | ((event: { value: number; title: string }) => React.ReactNode)", required: false, description: "Enable drill-down on gauge click. `true` auto-generates a detail panel. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: undefined,
     minimalExample: `<Gauge value={73} title="CPU Usage" format="percent" />`,
@@ -1739,6 +1763,8 @@ interface FooterRow {
       { name: "error", type: "ErrorState", required: false, description: "Error state." },
       { name: "stale", type: "StaleState", required: false, description: "Stale indicator." },
       { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on click. true uses the row id field, { field } overrides. Emits selection via CrossFilterProvider — does NOT change chart appearance. Dev reads selection with useCrossFilter() and filters their own data." },
+      { name: "drillDown", type: "boolean | ((event: { serieId: string; x: string; y: number }) => React.ReactNode)", required: false, description: "Enable drill-down on cell click. `true` auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper. When both drillDown and crossFilter are set, drillDown wins." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `// Each series is a row, each datum is a column
 type HeatMapSeries = {
@@ -1817,6 +1843,8 @@ const simpleData = {
       "Sequential color scale uses blues scheme. Diverging uses red-yellow-green.",
       "Custom colors array overrides the preset color scales.",
       "crossFilter prop emits a selection signal on click — it does NOT change the chart's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
+      "drillDown={true} auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for custom panel content. Requires DrillDown.Root wrapper.",
+      "When both drillDown and crossFilter are set on the same component, drillDown wins.",
     ],
   },
   // =========================================================================
@@ -1950,6 +1978,8 @@ type StatusSize = "dot" | "sm" | "md" | "lg" | "card";`,
       { name: "classNames", type: "{ root?: string; icon?: string; title?: string; body?: string; metric?: string; action?: string }", required: false, description: "Sub-element class overrides." },
       { name: "id", type: "string", required: false, description: "HTML id attribute." },
       { name: "data-testid", type: "string", required: false, description: "Test id." },
+      { name: "drillDown", type: "boolean | ((event: { value: number | null; variant: CalloutVariant }) => React.ReactNode)", required: false, description: "Enable drill-down on callout click. `true` auto-generates a detail panel. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `interface CalloutRule {
   min?: number;     // Minimum value (inclusive). Omit for fallback.
@@ -2200,6 +2230,8 @@ type CalloutVariant = "info" | "warning" | "success" | "error";`,
       { name: "empty", type: "EmptyState", required: false, description: "Empty state." },
       { name: "error", type: "ErrorState", required: false, description: "Error state." },
       { name: "stale", type: "StaleState", required: false, description: "Stale indicator." },
+      { name: "drillDown", type: "boolean | ((event: { id: string; value: number; label: string; percentage: number }) => React.ReactNode)", required: false, description: "Enable drill-down on stage click. `true` auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `interface FunnelDatumInput {
   id: string;        // Unique identifier
@@ -2271,6 +2303,7 @@ type SimpleFunnelData = Record<string, number>;
       "Conversion rate annotations are rendered as a custom SVG layer.",
       "Tooltips show absolute value and percentage of the first stage's value.",
       "The onPartClick callback includes a percentage field (relative to first stage).",
+      "drillDown={true} auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for custom panel content. Requires DrillDown.Root wrapper.",
     ],
   },
 
@@ -2443,6 +2476,8 @@ interface SimpleBulletData {
       { name: "empty", type: "EmptyState", required: false, description: "Empty state." },
       { name: "error", type: "ErrorState", required: false, description: "Error state." },
       { name: "stale", type: "StaleState", required: false, description: "Stale indicator." },
+      { name: "drillDown", type: "boolean | ((event: { label: string; value: number; runningTotal: number }) => React.ReactNode)", required: false, description: "Enable drill-down on bar click. `true` auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper." },
+      { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
     ],
     dataShape: `interface WaterfallItem {
   label: string;          // Display label
@@ -2503,6 +2538,7 @@ interface SimpleBulletData {
       "Items with type 'subtotal' show the running total without resetting. Items with type 'total' show and reset.",
       "Tooltips show item value plus running total for non-total items.",
       "Custom colors per bar override the default positive/negative/total coloring.",
+      "drillDown={true} auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for custom panel content. Requires DrillDown.Root wrapper.",
     ],
   },
 
@@ -2891,6 +2927,97 @@ interface LinkedHoverState {
       "Visual coordination only — syncs crosshairs and tooltips, does not filter data.",
       "Shares hoveredIndex (x-axis value) and hoveredSeries across siblings.",
       "useLinkedHover() hook returns { hoveredIndex, hoveredSeries } for custom usage.",
+    ],
+  },
+
+  // =========================================================================
+  // DrillDown.Root
+  // =========================================================================
+  {
+    name: "DrillDown.Root",
+    importName: "DrillDown",
+    category: "ui" as const,
+    tier: "free",
+    description: "Provider wrapper that manages the drill-down stack and renders the overlay panel. Wrap your dashboard (or a section) in DrillDown.Root to enable drill-down on child components.",
+    longDescription:
+      "DrillDown.Root is the context provider for the drill-down system. It manages a stack of drill panels (up to 4 levels deep), renders the slide-over or modal overlay, and provides breadcrumb navigation, back/close buttons, and Escape/backdrop-click dismissal. Any child component with a `drillDown` prop will open its panel inside this root. Use `useDrillDown()` to read state (isOpen, breadcrumbs, depth) and `useDrillDownAction()` to imperatively open drills.",
+    props: [
+      { name: "children", type: "React.ReactNode", required: true, description: "Dashboard content that contains components with drillDown props." },
+      { name: "defaultMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Default presentation mode for drill panels. "slide-over" slides from the right, full height. "modal" renders centered and compact. Individual components can override via drillDownMode.' },
+      { name: "maxDepth", type: "number", required: false, default: "4", description: "Maximum nesting depth for drill-down navigation." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names for the overlay container." },
+    ],
+    minimalExample: `<DrillDown.Root>
+  <BarChart data={data} index="region" categories={["revenue"]} drillDown />
+</DrillDown.Root>`,
+    examples: [
+      {
+        title: "Zero-config drill-down",
+        description: "Wrap in DrillDown.Root and add drillDown={true} to any chart. Clicking a bar auto-generates a summary KPI row + filtered DataTable.",
+        code: `import { DrillDown, BarChart, MetricProvider } from "metricui";
+
+<MetricProvider theme="indigo">
+  <DrillDown.Root>
+    <BarChart
+      data={salesByRegion}
+      index="region"
+      categories={["revenue", "orders"]}
+      drillDown
+      title="Sales by Region"
+    />
+  </DrillDown.Root>
+</MetricProvider>`,
+      },
+      {
+        title: "Custom drill-down with nested navigation",
+        description: "Pass a render function for full control. The event contains the clicked element's data. Nest another drillDown component inside for multi-level navigation.",
+        code: `import { DrillDown, BarChart, KpiCard, DataTable, MetricGrid } from "metricui";
+
+<DrillDown.Root>
+  <BarChart
+    data={salesByRegion}
+    index="region"
+    categories={["revenue", "orders"]}
+    title="Sales by Region"
+    drillDown={(event) => (
+      <MetricGrid>
+        <KpiCard title="Region" value={event.indexValue} />
+        <KpiCard title="Revenue" value={event.data.revenue} format="currency" />
+        <DataTable
+          data={getOrdersForRegion(event.indexValue)}
+          columns={orderColumns}
+          title={\`Orders in \${event.indexValue}\`}
+          drillDown
+        />
+      </MetricGrid>
+    )}
+  />
+</DrillDown.Root>`,
+      },
+      {
+        title: "Modal presentation mode",
+        description: "Use drillDownMode='modal' for a centered, compact overlay instead of a full-height slide-over.",
+        code: `<DrillDown.Root>
+  <DonutChart
+    data={browserShare}
+    title="Browser Share"
+    drillDown
+    drillDownMode="modal"
+  />
+</DrillDown.Root>`,
+      },
+    ],
+    relatedComponents: ["BarChart", "DonutChart", "AreaChart", "HeatMap", "BarLineChart", "Funnel", "Waterfall", "DataTable", "KpiCard", "StatGroup", "Gauge", "Callout"],
+    configFields: [],
+    notes: [
+      "DrillDown.Root must wrap any components that use the drillDown prop.",
+      "drillDown={true} auto-generates a summary KPI row + filtered DataTable from the component's source data — zero config needed.",
+      "drillDown={(event) => <CustomContent />} gives full control over what appears in the panel.",
+      "Two presentation modes: 'slide-over' (default, full height from right) and 'modal' (centered, compact).",
+      "Navigation: breadcrumbs for nested drills (up to 4 levels), back arrow, close X, Escape key, backdrop click.",
+      "When both drillDown and crossFilter are set on the same component, drillDown wins.",
+      "useDrillDown() returns { isOpen, breadcrumbs, depth, back, close } for reading state in custom components.",
+      "useDrillDownAction() returns openDrill(trigger, content) for imperative use outside of chart click handlers.",
     ],
   },
 ];

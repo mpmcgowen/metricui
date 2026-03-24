@@ -371,6 +371,7 @@ function Dashboard() {
               { label: "Signal only", desc: "The crossFilter prop only emits clicks into context — it never changes the chart's data or appearance" },
               { label: "No provider", desc: "Without a CrossFilterProvider, the crossFilter prop is silently ignored — safe to leave on" },
               { label: "Stable colors", desc: "DonutChart remembers color assignments — filtering won't change a slice's color" },
+              { label: "Drill-down priority", desc: "When both drillDown and crossFilter are set on the same component, drillDown wins. The click opens the drill panel instead of emitting a cross-filter signal" },
             ].map((item) => (
               <div key={item.label} className="flex gap-3 text-[14px] leading-relaxed text-[var(--muted)]">
                 <span className="mt-0.5 flex-shrink-0 font-semibold text-[var(--foreground)]">{item.label}:</span>

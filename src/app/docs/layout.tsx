@@ -33,6 +33,7 @@ import {
   BookOpen,
   Layers,
   Rocket,
+  PanelRightOpen,
   Hash,
   Palette,
   AlertCircle,
@@ -111,6 +112,7 @@ const nav: { label: string; items: NavItem[] }[] = [
       { title: "StatusIndicator", href: "/docs/status-indicator", icon: CircleDot },
       { title: "Callout", href: "/docs/callout", icon: MessageSquare },
       { title: "Badge", href: "/docs/badge", icon: Tag },
+      { title: "Drill Down", href: "/docs/drill-down", icon: PanelRightOpen },
     ],
   },
   {
