@@ -445,11 +445,17 @@ function DashboardContent() {
   const openDrill = useDrillDownAction();
   const tableView = filters?.dimensions?.tableView?.[0] ?? "Top 100";
 
-  // Filter countries by cross-filter (region from bar chart)
+  // Filter countries by segment toggle + cross-filter
   const filteredCountries = useMemo(() => {
-    if (!cf?.isActive || cf.selection?.field !== "region") return countries;
-    return countries.filter((c) => c.region === cf.selection!.value);
-  }, [cf?.isActive, cf?.selection]);
+    let result = countries;
+    if (tableView !== "Top 100") {
+      result = result.filter((c) => c.region === tableView);
+    }
+    if (cf?.isActive && cf.selection?.field === "region") {
+      result = result.filter((c) => c.region === cf.selection!.value);
+    }
+    return result;
+  }, [tableView, cf?.isActive, cf?.selection]);
 
   // Re-derive all data from filtered countries
   const allData = useMemo(() => deriveData(countries), []);
