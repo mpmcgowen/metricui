@@ -143,7 +143,6 @@ export default function GitHubDashboard() {
           <div />
           <ThemeToggle />
         </div>
-        <SourceReveal />
 
         {/* ── Header ── */}
         <div className="mt-8">
@@ -519,7 +518,7 @@ function DashboardContent() {
           <StatusIndicator value={1} size="sm" rules={[{ min: 1, color: "blue", label: "Docs" }]} />
         </div>
 
-        <MetricProvider theme="slate" variant="outlined">
+        <MetricProvider theme="slate" variant="outlined" exportable>
         <LinkedHoverProvider>
         <MetricGrid className="mt-6">
 

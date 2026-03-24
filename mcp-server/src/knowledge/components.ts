@@ -2722,6 +2722,7 @@ type DashboardStatus = "live" | "stale" | "offline" | "loading";`,
     props: [
       { name: "defaultPreset", type: "PeriodPreset", required: false, description: "Default time period preset on mount. E.g., '30d', '7d', 'quarter'." },
       { name: "defaultDimensions", type: "Record<string, string[]>", required: false, description: "Default dimension filter values. E.g., { region: ['US', 'EU'], plan: ['pro'] }." },
+      { name: "referenceDate", type: "Date", required: false, description: "Anchors preset date calculations to a historical date instead of now. Useful for demos and tests with historical data. E.g., referenceDate={new Date('2024-12-31')} makes '30d' calculate from Dec 31 instead of today." },
       { name: "children", type: "React.ReactNode", required: true, description: "Child components that can read/write filter context." },
     ],
     dataShape: `// useMetricFilters() hook return shape:

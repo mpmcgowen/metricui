@@ -832,7 +832,7 @@ export default function WorldDashboard() {
             variant="flat"
           />
         </div>
-        <MetricProvider theme="cyan" variant="ghost">
+        <MetricProvider theme="cyan" variant="ghost" exportable>
           <FilterProvider>
             <CrossFilterProvider>
               <DrillDown.Root>

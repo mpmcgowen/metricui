@@ -342,7 +342,6 @@ function WikipediaDashboardInner() {
           <div />
           <ThemeToggle />
         </div>
-        <SourceReveal />
 
         {/* \u2500\u2500 Dashboard Header \u2500\u2500 */}
         <div className="mt-8">
@@ -405,7 +404,7 @@ function WikipediaDashboardInner() {
           </FilterBar.Primary>
         </FilterBar>
 
-        <MetricProvider loading={loading} variant="elevated" theme="violet">
+        <MetricProvider loading={loading} variant="elevated" theme="violet" exportable>
           <LinkedHoverProvider>
           <MetricGrid className="mt-6">
 

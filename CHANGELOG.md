@@ -5,6 +5,45 @@ All notable changes to MetricUI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-03-24
+
+### Added
+
+- **FilterBar** — collapsible filter container with auto-tags, badge, active filter count, clear-all button, smooth accordion animation. Supports `FilterBar.Primary` / `FilterBar.Secondary` slots for organizing filters.
+- **DrillDown system** — click any component to open a detail panel. `DrillDown.Root` provider manages the drill stack with breadcrumb navigation. Two presentation modes: slide-over (right panel) and modal (centered). Nested drills up to 4 levels with auto-breadcrumbs. Escape/back/backdrop to close.
+- **`drillDown` prop** on all 12 data components. `drillDown={true}` for zero-config auto-table, `drillDown={(event) => <content>}` for full control. DrillDown beats crossFilter when both are set.
+- **Export system** — `exportable` prop on MetricProvider (global) or per-component. PNG image, CSV download, clipboard copy. Clean filenames: "Revenue by Country — DevTools — Mar 24, 2026.csv". Filter context metadata in CSV exports.
+- **CardShell** — unified card wrapper replacing duplicated shell code. KpiCard, all charts, DataTable, StatusIndicator now share one card architecture. New features added to CardShell automatically work on every data component.
+- **Auto empty states** — components auto-detect empty data and show a smart default message. Three tiers: automatic ("Nothing to show — try adjusting your filters"), global override via `MetricProvider.emptyState`, per-component override via `empty` prop.
+- **`useCrossFilteredData` hook** — one-line convenience for filtering data by cross-filter selection.
+- **`referenceDate` prop on FilterProvider** — anchor preset calculations (Last 30 days, YTD, etc.) to a historical date instead of today. Essential for demos and tests with historical data.
+- **`ExportableConfig` type** — unified `boolean | { data: Record<string, unknown>[] }` for export configuration. Pass `{ data: rawData }` to override CSV export data (show summary chart, export detail).
+- **`drillDownMode` prop** — per-component control of drill presentation (slide-over or modal).
+- **`badge` prop on FilterBar** — dev-controlled inline badge for result counts or status.
+- **`collapsible` prop on FilterBar** — manual expand/collapse with accordion animation.
+- **SegmentToggle clears dimension on default value** — selecting the default option clears the FilterContext dimension instead of writing it.
+- All 4 demos: FilterBar, rich drill-downs (30+ total), export enabled, all filters wired to FilterContext.
+
+### Changed
+
+- **Unified card architecture** — KpiCard, ChartContainer, DataTable, StatusIndicator all use CardShell internally. One code path for card chrome, variant, dense, data states, export, drill-down.
+- **All SegmentToggles and DropdownFilters use `field` prop** — no more local state bypass, everything writes to FilterContext for consistent collapsed summary display.
+- **SegmentToggle animation speed** — reduced from 1200ms (spring duration) to 200ms for snappy toggling.
+- **PeriodSelector comparison** — wired with real data in SaaS demo. Comparison periods derive from filtered datasets.
+- **SaaS demo completely rebuilt** — 500 generated accounts, all KPIs/charts derived from filtered data, full period + industry + country cross-filter cascade.
+- MCP server and llms.txt updated for all 0.4 features.
+
+### Fixed
+
+- Export dropdown z-index (portal to document.body)
+- Export button click triggering drill-down (stopPropagation on dropdown container)
+- PNG export tainted canvas (html2canvas + CSS variable pre-resolution)
+- Export dropdown visible in captures (.mu-exporting CSS class)
+- PeriodSelector nested button hydration error (span with role="button")
+- Nivo tooltip render loop in AreaChart/BarChart (setTimeout vs queueMicrotask)
+- Description popover z-index (portal to document.body)
+- Value flash border-radius inheritance
+
 ## [0.3.0] - 2026-03-23
 
 ### Added
@@ -59,6 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Built-in data states (loading, empty, error, stale)
 - MCP server for AI-assisted dashboard generation
 
+[0.4.0]: https://github.com/mpmcgowen/metricui/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mpmcgowen/metricui/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/mpmcgowen/metricui/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/mpmcgowen/metricui/releases/tag/v0.2.0
