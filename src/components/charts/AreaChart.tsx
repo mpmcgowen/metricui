@@ -1010,6 +1010,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
       empty={empty}
       error={error}
       stale={stale}
+      exportData={dataProp as Record<string, unknown>[]}
       below={<>
         {legendConfig && (
           <ChartLegend

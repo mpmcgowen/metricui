@@ -347,6 +347,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
         empty={empty}
         error={error}
         stale={stale}
+        exportData={dataProp as unknown as Record<string, unknown>[]}
         below={<>
           {legendConfig && (
             <ChartLegend

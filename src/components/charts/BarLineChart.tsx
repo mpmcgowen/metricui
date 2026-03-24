@@ -613,6 +613,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
         empty={empty}
         error={error}
         stale={stale}
+        exportData={barData as Record<string, unknown>[]}
         below={legendConfig ? (
           <ChartLegend
             items={legendItems}

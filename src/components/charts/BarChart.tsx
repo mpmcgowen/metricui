@@ -1015,6 +1015,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
         empty={empty}
         error={error}
         stale={stale}
+        exportData={rawData as Record<string, unknown>[]}
         below={legendConfig ? (
           <ChartLegend
             items={legendItems}

@@ -307,6 +307,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
         empty={empty}
         error={error}
         stale={stale}
+        exportData={dataProp as Record<string, unknown>[]}
       >
         <div style={{ height: resolvedHeight }}>
           <ResponsiveHeatMap

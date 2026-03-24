@@ -520,6 +520,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
         empty={empty}
         error={error}
         stale={stale}
+        exportData={dataProp as Record<string, unknown>[]}
         below={legendConfig ? (
           <ChartLegend
             items={legendItems}

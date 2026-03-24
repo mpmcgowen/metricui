@@ -438,6 +438,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
         empty={empty}
         error={error}
         stale={stale}
+        exportData={rawData as unknown as Record<string, unknown>[]}
       >
         <div style={{ height: resolvedHeight }}>
           <ResponsiveBar
