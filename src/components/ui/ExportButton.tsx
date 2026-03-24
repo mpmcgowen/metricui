@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Download, Image, FileSpreadsheet, Clipboard, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -42,15 +43,25 @@ export function ExportButton({
 }: ExportButtonProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => setMounted(true), []);
   const filters = useMetricFilters();
   const cf = useCrossFilter();
 
-  // Close on outside click
+  // Position dropdown and close on outside click
   useEffect(() => {
     if (!open) return;
+    if (triggerBtnRef.current) {
+      const rect = triggerBtnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.right });
+    }
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+          triggerBtnRef.current && !triggerBtnRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
@@ -120,6 +131,7 @@ export function ExportButton({
   return (
     <div ref={dropdownRef} className={cn("relative", className)}>
       <button
+        ref={triggerBtnRef}
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         className={cn(
           "rounded-md p-1 text-[var(--muted)] opacity-0 transition-all",
@@ -132,11 +144,11 @@ export function ExportButton({
         {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Download className="h-3 w-3" />}
       </button>
 
-      {open && (
+      {open && mounted && createPortal(
         <div
-          className={cn(
-            "absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-1 shadow-xl",
-          )}
+          ref={dropdownRef}
+          className="fixed z-[9999] min-w-[160px] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-1 shadow-xl"
+          style={{ top: pos.top, left: pos.left, transform: "translateX(-100%)" }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -162,7 +174,8 @@ export function ExportButton({
             <Clipboard className="h-3 w-3" />
             {copyValue ? "Copy value" : "Copy to clipboard"}
           </button>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
