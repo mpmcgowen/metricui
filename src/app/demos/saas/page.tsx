@@ -638,7 +638,7 @@ function DashboardContent() {
 
 export default function SaaSDashboard() {
   return (
-    <MetricProvider theme="emerald">
+    <MetricProvider theme="emerald" exportable>
       <div className="min-h-screen bg-[var(--background)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
           <FilterProvider defaultPreset="ytd" referenceDate={new Date(2024, 11, 31)}>

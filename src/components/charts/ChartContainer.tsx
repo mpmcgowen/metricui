@@ -1,9 +1,10 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { CARD_CLASSES, HOVER_CLASSES } from "@/lib/styles";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
+import { ExportButton } from "@/components/ui/ExportButton";
 import { ChartSkeletonContent, DataStateWrapper } from "@/components/ui/DataStateWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useMetricConfig } from "@/lib/MetricProvider";
@@ -40,6 +41,10 @@ interface ChartContainerProps {
   empty?: EmptyState;
   error?: ErrorState;
   stale?: StaleState;
+  /** Enable export. Inherits from MetricProvider when unset. */
+  exportable?: boolean;
+  /** Raw data for CSV export. Passed through from chart component. */
+  exportData?: Record<string, unknown>[];
 }
 
 // ---------------------------------------------------------------------------
@@ -67,11 +72,15 @@ export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(fu
   empty,
   error,
   stale,
+  exportable,
+  exportData,
 }, ref) {
   const config = useMetricConfig();
   const resolvedVariant = variant ?? config.variant;
   const resolvedDense = dense ?? config.dense;
   const resolvedLoading = loading ?? config.loading;
+  const resolvedExportable = exportable ?? config.exportable;
+  const cardRef = useRef<HTMLDivElement>(null);
 
   if (resolvedLoading) return (
     <div data-variant={resolvedVariant} data-dense={resolvedDense ? "true" : undefined} className={cn("noise-texture border p-[var(--mu-padding)]", CARD_CLASSES)}>
@@ -91,7 +100,11 @@ export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(fu
 
   return (
     <div
-      ref={ref}
+      ref={(el) => {
+        (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        if (typeof ref === "function") ref(el);
+        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      }}
       id={id}
       data-testid={dataTestId}
       data-component={componentName}
@@ -136,7 +149,17 @@ export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(fu
               </p>
             )}
           </div>
-          {action && <div className="flex-shrink-0">{action}</div>}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {action}
+            {resolvedExportable && (
+              <ExportButton
+                title={title ?? componentName ?? "Chart"}
+                targetRef={cardRef}
+                data={exportData}
+                dense={resolvedDense}
+              />
+            )}
+          </div>
         </div>
       )}
 

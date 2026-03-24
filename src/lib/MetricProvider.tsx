@@ -64,6 +64,8 @@ export interface MetricConfig {
   loading: boolean;
   /** Noise texture on card surfaces. Default: true */
   texture: boolean;
+  /** Global export toggle — when true, all components show export buttons. Default: false */
+  exportable: boolean;
 }
 
 /** Fully-resolved defaults — used when no provider is present. */
@@ -81,6 +83,7 @@ const DEFAULT_CONFIG: MetricConfig = {
   errorState: {},
   loading: false,
   texture: true,
+  exportable: false,
 };
 
 export { DEFAULT_CONFIG as DEFAULT_METRIC_CONFIG };

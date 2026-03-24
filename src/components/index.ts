@@ -63,6 +63,7 @@ export { Divider } from "./ui/Divider";
 export type { DividerProps } from "./ui/Divider";
 export { DrillDown, useDrillDown, useDrillDownAction } from "./ui/DrillDown";
 export type { DrillDownTrigger, DrillDownState } from "./ui/DrillDown";
+export { ExportButton } from "./ui/ExportButton";
 export { ErrorBoundary } from "./ui/ErrorBoundary";
 export { ProgressBar } from "./ui/ProgressBar";
 export { DetailGrid } from "./ui/DetailGrid";
