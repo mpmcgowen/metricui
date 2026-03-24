@@ -77,13 +77,15 @@ export function ExportButton({
 
   const handlePng = useCallback(async () => {
     if (!targetRef.current) return;
+    // Close dropdown and wait for render before capturing
+    setOpen(false);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     try {
       const blob = await captureElementAsPng(targetRef.current);
       downloadFile(blob, exportFilename(title, "png", filterLabel));
     } catch (err) {
       console.error("PNG export failed:", err);
     }
-    setOpen(false);
   }, [targetRef, title, filterLabel]);
 
   const handleCsv = useCallback(() => {
@@ -94,6 +96,8 @@ export function ExportButton({
   }, [data, columns, title, filterLabel, filterString]);
 
   const handleCopy = useCallback(async () => {
+    setOpen(false);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     if (copyValue) {
       await copyToClipboard(copyValue);
     } else if (targetRef.current) {

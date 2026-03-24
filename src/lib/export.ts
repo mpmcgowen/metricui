@@ -35,8 +35,8 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
     const svgEl = el as SVGElement;
     const computed = getComputedStyle(svgEl);
 
-    // Inline fill/stroke that use CSS variables
-    for (const attr of ["fill", "stroke", "color"] as const) {
+    // Inline fill/stroke/font that use CSS variables or need resolving
+    for (const attr of ["fill", "stroke", "color", "font-family", "font-size"] as const) {
       const inline = svgEl.style.getPropertyValue(attr);
       const attrVal = svgEl.getAttribute(attr);
       if ((attrVal && attrVal.includes("var(")) || (inline && inline.includes("var("))) {
@@ -47,6 +47,16 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
         }
       }
     }
+  });
+
+  // Resolve fonts on SVG text elements (html2canvas needs explicit font-family)
+  element.querySelectorAll("svg text").forEach((el) => {
+    const textEl = el as SVGTextElement;
+    const computed = getComputedStyle(textEl);
+    resolvedVars.push({ el: textEl, attr: "font-family", original: textEl.style.fontFamily });
+    resolvedVars.push({ el: textEl, attr: "font-size", original: textEl.style.fontSize });
+    textEl.style.fontFamily = computed.fontFamily;
+    textEl.style.fontSize = computed.fontSize;
   });
 
   // Also resolve CSS var colors on non-SVG text elements
