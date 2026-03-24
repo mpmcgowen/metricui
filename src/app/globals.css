@@ -435,13 +435,10 @@
     transform: none !important;
   }
 
-  /* Keep card borders visible and clip overflow */
+  /* Keep card borders visible */
   [data-metric-card] {
     border: 1px solid #e5e5e5 !important;
     box-shadow: none !important;
-    overflow: hidden !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
   }
 
   /* --- Noise texture off --- */
