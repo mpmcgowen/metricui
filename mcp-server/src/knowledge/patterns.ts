@@ -1976,6 +1976,78 @@ function Dashboard() {
   },
 
   // =========================================================================
+  // FilterBar Layout
+  // =========================================================================
+  {
+    name: "FilterBar with Primary/Secondary Filters",
+    slug: "filter-bar",
+    description: "FilterBar container with PeriodSelector in primary slot, DropdownFilters in collapsible secondary slot, auto FilterTags, and a result count badge.",
+    tags: ["filter-bar", "filters", "layout", "period", "dropdown", "tags", "collapsible"],
+    code: `import { FilterProvider, FilterBar, PeriodSelector, SegmentToggle, DropdownFilter, useMetricFilters } from "metricui";
+
+function Dashboard({ data }) {
+  return (
+    <FilterProvider defaultPreset="30d">
+      <FilterBar badge={<ResultCount />} collapsible defaultCollapsed={false}>
+        <FilterBar.Primary>
+          <PeriodSelector comparison />
+          <SegmentToggle options={["All", "Enterprise", "SMB"]} field="segment" />
+        </FilterBar.Primary>
+        <FilterBar.Secondary>
+          <DropdownFilter label="Region" options={regions} field="region" multiple />
+          <DropdownFilter label="Plan" options={plans} field="plan" multiple />
+        </FilterBar.Secondary>
+      </FilterBar>
+      {/* FilterTags are auto-rendered by FilterBar */}
+      <DashboardContent data={data} />
+    </FilterProvider>
+  );
+}
+
+function ResultCount() {
+  const filters = useMetricFilters();
+  const count = useFilteredCount(filters);
+  return <span className="text-sm text-muted">{count} results</span>;
+}`,
+  },
+
+  // =========================================================================
+  // Export System
+  // =========================================================================
+  {
+    name: "Export System",
+    slug: "export-system",
+    description: "Enable PNG/CSV/clipboard exports globally or per-component with the exportable prop.",
+    tags: ["export", "png", "csv", "clipboard", "download", "exportable"],
+    code: `import { MetricProvider, KpiCard, AreaChart, DataTable } from "metricui";
+
+function Dashboard() {
+  return (
+    // Enable export globally for all components
+    <MetricProvider exportable>
+      {/* KpiCard: exports single value as CSV by default */}
+      <KpiCard title="Revenue" value={142300} format="currency" />
+
+      {/* Override: export a detail breakdown table instead */}
+      <KpiCard title="Revenue" value={142300} format="currency"
+        exportable={{ data: revenueByRegion }} />
+
+      {/* Charts: auto-export source data as CSV */}
+      <AreaChart data={revenueTimeSeries} format="currency" title="Revenue Over Time" />
+
+      {/* DataTable: auto-exports visible rows */}
+      <DataTable data={transactions} columns={columns} title="Transactions" />
+
+      {/* Disable export on a specific component */}
+      <KpiCard title="Internal Metric" value={42} exportable={false} />
+    </MetricProvider>
+  );
+}
+// Filenames: "Revenue — Last 30 days — 2024-03-15.csv"
+// Filter context metadata is included in CSV headers.`,
+  },
+
+  // =========================================================================
   // Custom Drill-Down with Nested Navigation
   // =========================================================================
   {

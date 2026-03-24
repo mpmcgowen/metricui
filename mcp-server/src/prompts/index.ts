@@ -52,6 +52,7 @@ export function registerPrompts(server: McpServer): void {
 - Multi-select dimension filter → DropdownFilter
 - Active filter chip display → FilterTags
 - Shared filter state context → FilterProvider
+- Structured filter layout container (auto tags, badge, collapsible) → FilterBar
 - Click-to-filter across charts (signal only) → CrossFilterProvider + useCrossFilter
 
 **Drill-Down:**
@@ -71,8 +72,10 @@ export function registerPrompts(server: McpServer): void {
 3. Use \`<DashboardHeader title="..." lastUpdated={new Date()} actions={<PeriodSelector comparison />}>\` — NOT a raw \`<h1>\`
 4. Use \`<MetricGrid>\` for layout with \`<MetricGrid.Section>\` dividers — NOT manual CSS grid
 5. Every numeric value uses the format engine: \`format="currency"\`, \`format="percent"\`, etc.
-6. Handle data states: \`loading\`, \`empty\`, \`error\` props
-7. All imports from \`"metricui"\`
+6. Handle data states: \`loading\`, \`empty\`, \`error\` props — CardShell auto-detects empty data and shows a smart default message
+7. Enable exports: \`<MetricProvider exportable>\` adds PNG/CSV/clipboard export to all data components. Override per-component with \`exportable={{ data: rows }}\` or \`exportable={false}\`
+8. Use \`<FilterBar>\` with Primary/Secondary slots instead of manually laying out filter controls
+9. All imports from \`"metricui"\`
 
 ## Make It Impressive — Use These Features
 
@@ -91,6 +94,11 @@ export function registerPrompts(server: McpServer): void {
 - **Drill-down** — wrap in \`<DrillDown.Root>\`, add \`drillDown\` to charts/tables/cards. \`drillDown={true}\` auto-generates a summary + DataTable. \`drillDown={(event) => ...}\` for custom content. \`drillDownMode="slide-over"\` or \`"modal"\`. When both drillDown and crossFilter are set, drillDown wins
 - **Linked hover** — wrap charts in \`<LinkedHoverProvider>\`. Crosshairs and tooltips sync across siblings automatically. No extra props needed
 - **Value flash** — \`useValueFlash(value)\` returns "mu-value-flash" class when value changes. Great for live dashboards
+- **Export** — \`<MetricProvider exportable>\` adds a dropdown (PNG/CSV/clipboard) to every data component. KPI cards export single value by default, override with \`exportable={{ data: detailRows }}\`. Charts auto-export source data. Clean filenames with filter context metadata
+- **FilterBar** — \`<FilterBar collapsible badge={<Count />}>\` with \`FilterBar.Primary\` and \`FilterBar.Secondary\` slots. Auto-renders FilterTags, active filter count, clear-all
+- **Auto empty states** — CardShell auto-detects empty data and shows "Nothing to show — try adjusting your filters". Override globally via MetricProvider.emptyState or per-component via \`empty\` prop
+- **useCrossFilteredData** — one-line convenience: \`const data = useCrossFilteredData(allData, "country")\` — returns filtered or original data based on active cross-filter
+- **referenceDate** — \`<FilterProvider referenceDate={new Date('2024-12-31')}>\` anchors preset calculations to a historical date instead of now
 
 ## Format Mapping
 - Revenue/money → \`format="currency"\`

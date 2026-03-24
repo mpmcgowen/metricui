@@ -14,7 +14,7 @@ npx metricui init
 ## Import
 
 ```tsx
-import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction } from "metricui";
+import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, useCrossFilteredData, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction, ExportButton } from "metricui";
 import "metricui/styles.css";
 ```
 
@@ -3181,6 +3181,7 @@ import { FilterProvider } from "metricui";
 
 - `defaultPreset`: PeriodPreset — Initial preset. Default: none (no period selected).
 - `defaultComparison`: ComparisonMode — Initial comparison mode. Default: "none".
+- `referenceDate`: Date — Anchors preset date calculations to a historical date instead of now. Useful for demos and tests with historical data. E.g., `referenceDate={new Date('2024-12-31')}` makes "30d" calculate from Dec 31 instead of today.
 - `children`: React.ReactNode
 
 ### useMetricFilters()
@@ -3853,3 +3854,160 @@ All 12 data components: BarChart, DonutChart, AreaChart, LineChart (via AreaChar
 ### Priority
 
 When both `drillDown` and `crossFilter` are set on the same component, `drillDown` wins
+
+---
+
+## FilterBar
+
+A container component for dashboard filters with auto-generated FilterTags, badge slot, collapsible accordion, active filter count, and clear-all. Place inside a FilterProvider.
+
+```tsx
+import { FilterBar, FilterProvider, PeriodSelector, SegmentToggle, DropdownFilter } from "metricui";
+
+<FilterProvider defaultPreset="30d">
+  <FilterBar
+    badge={<span className="text-sm text-muted">{filteredCount} results</span>}
+    collapsible
+    defaultCollapsed={false}
+  >
+    <FilterBar.Primary>
+      <PeriodSelector comparison />
+      <SegmentToggle options={["All", "Enterprise", "SMB"]} field="segment" />
+    </FilterBar.Primary>
+    <FilterBar.Secondary>
+      <DropdownFilter label="Region" options={regions} field="region" multiple />
+      <DropdownFilter label="Plan" options={plans} field="plan" multiple />
+    </FilterBar.Secondary>
+  </FilterBar>
+</FilterProvider>
+```
+
+### FilterBar Props
+
+- `children`: React.ReactNode (required) — Use FilterBar.Primary and FilterBar.Secondary slots.
+- `tags`: boolean | FilterTagsProps — default: true — Controls FilterTags. true: auto-renders. false: hides. Object: passes through to FilterTags (e.g., `{ exclude: ['_period'], maxVisible: 3 }`).
+- `badge`: React.ReactNode — Inline right-aligned badge content (result counts, status, etc.).
+- `collapsible`: boolean — default: false — Enable accordion for secondary filters.
+- `defaultCollapsed`: boolean — default: false — Initial collapsed state when collapsible is true.
+- `dense`: boolean — default: false — Compact mode. Falls back to MetricProvider config.
+- `className`: string
+- `classNames`: `{ root?, primary?, secondary?, tags?, badge? }`
+- `id`: string
+- `data-testid`: string
+
+### FilterBar.Primary / FilterBar.Secondary
+
+Named slot components that render in the primary (always visible) and secondary (collapsible) rows. No extra props — just wrap your filter controls.
+
+```tsx
+<FilterBar.Primary>
+  <PeriodSelector comparison />
+</FilterBar.Primary>
+<FilterBar.Secondary>
+  <DropdownFilter label="Region" options={regions} field="region" multiple />
+</FilterBar.Secondary>
+```
+
+### Behavior
+
+- FilterBar.Primary always stays visible. FilterBar.Secondary collapses when `collapsible` is true.
+- Active filter count and clear-all button are automatically shown when filters are active.
+- `tags={true}` (default) auto-renders FilterTags with sensible defaults below the filter controls.
+- Must be inside a FilterProvider.
+
+---
+
+## Export System
+
+Enable PNG/CSV/clipboard exports on any data component via the `exportable` prop.
+
+### Setup
+
+```tsx
+import { MetricProvider } from "metricui";
+
+// Enable globally for all data components
+<MetricProvider exportable>
+  {children}
+</MetricProvider>
+```
+
+### ExportableConfig Type
+
+```ts
+type ExportableConfig = boolean | { data: Record<string, unknown>[] };
+```
+
+- `true` — auto-export. Charts export source data, KPI cards export single value row.
+- `{ data: rows[] }` — override with custom data for CSV export.
+- `false` — disable export on a specific component (overrides global).
+
+### Per-Component Override
+
+```tsx
+// KpiCard: single value exported by default, override with detail data
+<KpiCard
+  title="Revenue"
+  value={142300}
+  format="currency"
+  exportable={{ data: revenueByRegion }}
+/>
+
+// Charts: auto-export source data (no override needed)
+<AreaChart data={timeSeries} title="Revenue Over Time" format="currency" />
+
+// Disable export on a specific component
+<KpiCard title="Internal" value={42} exportable={false} />
+```
+
+### Export Behavior
+
+- ExportButton renders a dropdown in the card header with PNG, CSV, and clipboard options.
+- Clean filenames: "Title — Filters — Date.ext" (e.g., "Revenue — Last 30 days — 2024-03-15.csv").
+- Filter context metadata is included in CSV export headers.
+- Charts auto-detect source data from their `data` prop — no manual `{ data }` override needed.
+- KPI cards export a single value row by default. Override with `{ data: detailRows }` for a detail breakdown.
+
+---
+
+## CardShell (Unified Card Architecture)
+
+CardShell is the single card wrapper used by all data components internally. You never use it directly — it powers KpiCard, all charts (via ChartContainer), DataTable, and StatusIndicator.
+
+### Why It Matters
+
+Any feature added to CardShell automatically works on every data component. Current CardShell features:
+- Card chrome (title, subtitle, description, footnote, action slot)
+- Visual variants (`variant` prop)
+- Dense mode (`dense` prop)
+- Data states (loading, empty, error, stale)
+- Export system (`exportable` prop + ExportButton)
+- Drill-down integration
+- Auto empty state detection
+
+### Auto Empty States
+
+CardShell automatically detects when a component has no data (exportData.length === 0) and shows:
+
+> "Nothing to show — try adjusting your filters"
+
+Three override tiers:
+1. **Automatic** — works out of the box, no props needed.
+2. **Global** — `<MetricProvider emptyState={{ message: "No data available" }}>` overrides the default message for all components.
+3. **Per-component** — `empty={{ message: "No revenue data", icon: <Icon />, action: <Button /> }}` overrides on a single component.
+
+---
+
+## useCrossFilteredData Hook
+
+One-line convenience hook for applying cross-filter selections to your data.
+
+```tsx
+import { useCrossFilteredData } from "metricui";
+
+const data = useCrossFilteredData(allData, "country");
+// When "US" is selected via cross-filter: allData.filter(row => row.country === "US")
+// When nothing selected: allData (unfiltered)
+```
+
+For multi-filter scenarios (e.g., dropdown + cross-filter), use `useCrossFilter()` directly.

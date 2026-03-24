@@ -64,13 +64,14 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
     cleanup.push(() => { textEl.style.fontFamily = origFamily; textEl.style.fontSize = origSize; });
   });
 
-  // 4. Resolve color-mix() and var() on all elements (html2canvas can't parse them)
+  // 4. Resolve ALL inline styles with color-mix/var/color() (html2canvas can't parse them)
   const allEls = [element, ...element.querySelectorAll("*")] as HTMLElement[];
+  const colorProps = ["color", "background-color", "border-color", "outline-color", "box-shadow", "outline", "background", "border"] as const;
   for (const el of allEls) {
     const computed = getComputedStyle(el);
-    for (const prop of ["color", "background-color", "border-color", "outline-color", "box-shadow"] as const) {
+    for (const prop of colorProps) {
       const raw = el.style.getPropertyValue(prop);
-      if (raw && (raw.includes("color-mix") || raw.includes("var("))) {
+      if (raw && (raw.includes("color-mix") || raw.includes("var(") || raw.includes("color("))) {
         const resolved = computed.getPropertyValue(prop);
         el.style.setProperty(prop, resolved);
         cleanup.push(() => el.style.setProperty(prop, raw));
@@ -83,12 +84,21 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
   cleanup.push(() => element.classList.remove("mu-exporting"));
 
   try {
+    // Temporarily suppress console errors from html2canvas parsing unsupported CSS color functions
+    const origError = console.error;
+    console.error = (...args: unknown[]) => {
+      if (typeof args[0] === "string" && args[0].includes("unsupported color function")) return;
+      origError.apply(console, args);
+    };
+
     const canvas = await html2canvas(element, {
       scale,
       backgroundColor: null,
       useCORS: true,
       logging: false,
     });
+
+    console.error = origError;
 
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
