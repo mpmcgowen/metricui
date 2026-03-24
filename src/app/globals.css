@@ -414,7 +414,10 @@
   [data-position] /* FilterBar */,
   button[aria-expanded] /* dropdowns */,
   [role="dialog"] /* drill-down panel */,
-  [data-component="Callout"] /* alerts/warnings — contextual, not for print */ {
+  [data-component="Callout"] /* alerts/warnings — contextual, not for print */,
+  [data-component="DashboardHeader"] [href] /* back link */,
+  [data-component="DashboardHeader"] [data-status] /* live/stale badge */,
+  [class*="pagination"] /* table pagination */ {
     display: none !important;
   }
 
@@ -432,10 +435,11 @@
     transform: none !important;
   }
 
-  /* Keep card borders visible */
+  /* Keep card borders visible and clip overflow */
   [data-metric-card] {
     border: 1px solid #e5e5e5 !important;
     box-shadow: none !important;
+    overflow: hidden !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
