@@ -21,27 +21,48 @@ export function exportFilename(
 }
 
 /**
- * Capture a DOM element as a PNG blob.
- *
- * Strategy: find the SVG inside the element (Nivo charts render as SVG),
- * serialize it with inline styles, and render to canvas. Falls back to
- * capturing the full element if no SVG is found.
+ * Capture a DOM element as a PNG blob using html2canvas.
+ * Adds .mu-exporting class to hide UI elements and fix truncation.
  */
 export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
+  const html2canvas = (await import("html2canvas")).default;
   const scale = window.devicePixelRatio || 2;
 
-  // Hide export UI during capture
+  // Resolve all CSS variables on SVG elements before capture
+  // (html2canvas can't resolve var() in SVG attributes)
+  const resolvedVars: { el: SVGElement | HTMLElement; attr: string; original: string }[] = [];
+  element.querySelectorAll("svg *").forEach((el) => {
+    const svgEl = el as SVGElement;
+    const computed = getComputedStyle(svgEl);
+
+    // Inline fill/stroke that use CSS variables
+    for (const attr of ["fill", "stroke", "color"] as const) {
+      const inline = svgEl.style.getPropertyValue(attr);
+      const attrVal = svgEl.getAttribute(attr);
+      if ((attrVal && attrVal.includes("var(")) || (inline && inline.includes("var("))) {
+        const resolved = computed.getPropertyValue(attr);
+        if (resolved) {
+          resolvedVars.push({ el: svgEl, attr, original: svgEl.style.getPropertyValue(attr) });
+          svgEl.style.setProperty(attr, resolved);
+        }
+      }
+    }
+  });
+
+  // Also resolve CSS var colors on non-SVG text elements
+  element.querySelectorAll("[class*='text-[var(']").forEach((el) => {
+    const htmlEl = el as HTMLElement;
+    const computed = getComputedStyle(htmlEl);
+    const color = computed.color;
+    if (color) {
+      resolvedVars.push({ el: htmlEl, attr: "color", original: htmlEl.style.color });
+      htmlEl.style.color = color;
+    }
+  });
+
   element.classList.add("mu-exporting");
 
   try {
-    // Try SVG-direct capture first (best quality for charts)
-    const svg = element.querySelector("svg");
-    if (svg) {
-      return await captureSvgAsPng(svg, element, scale);
-    }
-
-    // Fallback: capture the full element via html2canvas
-    const html2canvas = (await import("html2canvas")).default;
     const canvas = await html2canvas(element, {
       scale,
       backgroundColor: null,
@@ -49,123 +70,23 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
       logging: false,
     });
 
-    return canvasToBlob(canvas);
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error("Canvas toBlob failed"));
+      }, "image/png");
+    });
   } finally {
     element.classList.remove("mu-exporting");
-  }
-}
-
-/**
- * Capture an SVG element as a high-quality PNG.
- * Inlines computed styles so the rendered image matches the screen.
- */
-async function captureSvgAsPng(svg: SVGElement, container: HTMLElement, scale: number): Promise<Blob> {
-  const rect = container.getBoundingClientRect();
-  const svgRect = svg.getBoundingClientRect();
-
-  // Clone the SVG and inline all computed styles
-  const clone = svg.cloneNode(true) as SVGElement;
-  inlineStyles(svg, clone);
-
-  // Set explicit dimensions on the clone
-  clone.setAttribute("width", String(svgRect.width));
-  clone.setAttribute("height", String(svgRect.height));
-
-  // Get computed background color from the container
-  const bgColor = getComputedStyle(container).backgroundColor;
-
-  // Serialize to string
-  const serializer = new XMLSerializer();
-  const svgString = serializer.serializeToString(clone);
-  const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(svgBlob);
-
-  // Render full container width (includes title, subtitle, padding)
-  const canvas = document.createElement("canvas");
-  canvas.width = rect.width * scale;
-  canvas.height = rect.height * scale;
-  const ctx = canvas.getContext("2d")!;
-  ctx.scale(scale, scale);
-
-  // Draw background
-  if (bgColor && bgColor !== "rgba(0, 0, 0, 0)") {
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, rect.width, rect.height);
-  }
-
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      // Position SVG within the container (offset from container top-left)
-      const offsetX = svgRect.left - rect.left;
-      const offsetY = svgRect.top - rect.top;
-      ctx.drawImage(img, offsetX, offsetY, svgRect.width, svgRect.height);
-      URL.revokeObjectURL(url);
-
-      // Also capture the title/header text as an overlay
-      // For now, add title as text on the canvas
-      const titleEl = container.querySelector("[class*='uppercase']") as HTMLElement;
-      const subtitleEl = container.querySelector("[class*='mu-chart-subtitle']") as HTMLElement;
-
-      if (titleEl) {
-        const titleStyle = getComputedStyle(titleEl);
-        ctx.font = `${titleStyle.fontWeight} ${titleStyle.fontSize} ${titleStyle.fontFamily}`;
-        ctx.fillStyle = titleStyle.color;
-        const titleRect = titleEl.getBoundingClientRect();
-        ctx.fillText(titleEl.textContent ?? "", titleRect.left - rect.left, titleRect.top - rect.top + parseFloat(titleStyle.fontSize));
+    // Restore original styles
+    for (const { el, attr, original } of resolvedVars) {
+      if (original) {
+        el.style.setProperty(attr, original);
+      } else {
+        el.style.removeProperty(attr);
       }
-
-      if (subtitleEl) {
-        const subStyle = getComputedStyle(subtitleEl);
-        ctx.font = `${subStyle.fontWeight} ${subStyle.fontSize} ${subStyle.fontFamily}`;
-        ctx.fillStyle = subStyle.color;
-        const subRect = subtitleEl.getBoundingClientRect();
-        ctx.fillText(subtitleEl.textContent ?? "", subRect.left - rect.left, subRect.top - rect.top + parseFloat(subStyle.fontSize));
-      }
-
-      canvasToBlob(canvas).then(resolve).catch(reject);
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-/**
- * Recursively inline computed styles from source to clone.
- * This ensures the SVG renders identically when serialized.
- */
-function inlineStyles(source: Element, clone: Element) {
-  const computed = getComputedStyle(source);
-  const cloneEl = clone as SVGElement | HTMLElement;
-
-  // Key SVG-relevant properties
-  const props = [
-    "fill", "stroke", "stroke-width", "stroke-dasharray", "stroke-linecap",
-    "stroke-linejoin", "opacity", "font-family", "font-size", "font-weight",
-    "text-anchor", "dominant-baseline", "letter-spacing", "color",
-  ];
-
-  for (const prop of props) {
-    const val = computed.getPropertyValue(prop);
-    if (val) {
-      cloneEl.style.setProperty(prop, val);
     }
   }
-
-  const sourceChildren = source.children;
-  const cloneChildren = clone.children;
-  for (let i = 0; i < sourceChildren.length && i < cloneChildren.length; i++) {
-    inlineStyles(sourceChildren[i], cloneChildren[i]);
-  }
-}
-
-function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error("Canvas toBlob failed"));
-    }, "image/png");
-  });
 }
 
 /**
