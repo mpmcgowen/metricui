@@ -21,6 +21,7 @@ import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { FilterBar } from "@/components/filters/FilterBar";
+import { DrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
 import { useWikipediaStream } from "@/lib/useWikipediaStream";
 import type { WikiEdit } from "@/lib/useWikipediaStream";
 import {
@@ -75,7 +76,9 @@ export default function WikipediaDashboard() {
   return (
     <FilterProvider>
       <CrossFilterProvider>
-        <WikipediaDashboardInner />
+        <DrillDown.Root>
+          <WikipediaDashboardInner />
+        </DrillDown.Root>
       </CrossFilterProvider>
     </FilterProvider>
   );
@@ -85,6 +88,7 @@ function WikipediaDashboardInner() {
   const { connected, loading, recentEdits, stats } = useWikipediaStream();
   const crossFilter = useCrossFilter();
   const filters = useMetricFilters();
+  const openDrill = useDrillDownAction();
   const editFilter = filters?.dimensions?.editType?.[0] ?? "All Edits";
   const wikiFilter = filters?.dimensions?.wiki ?? [];
 
@@ -415,6 +419,56 @@ function WikipediaDashboardInner() {
               icon={<Pencil className="h-3.5 w-3.5" />}
               description="Cumulative edits received since connecting to the EventStream. Resets on page reload."
               animate={{ countUp: true }}
+              drillDown={{
+                label: "Edits breakdown by wiki",
+                onClick: () => {
+                  const wikiData = Object.entries(filteredStats.editsByWiki)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 15)
+                    .map(([wiki, edits]) => ({ wiki: wikiLabel(wiki), edits }));
+                  const recentForTable = filteredEdits.slice(0, 30).map((e) => ({
+                    title: e.title,
+                    user: e.user,
+                    wiki: wikiLabel(e.wiki),
+                    type: e.type,
+                    bot: e.bot ? "bot" : "human",
+                    timestamp: timeAgo(e.timestamp),
+                  }));
+                  openDrill(
+                    { title: `${filteredStats.totalEdits} Total Edits`, field: "edits" },
+                    <MetricGrid>
+                      <KpiCard title="Total Edits" value={filteredStats.totalEdits} format="number" />
+                      <KpiCard title="Active Wikis" value={Object.keys(filteredStats.editsByWiki).length} format="number" />
+                      <KpiCard title="Unique Editors" value={filteredStats.uniqueEditors} format="number" />
+                      <BarChart
+                        data={wikiData}
+                        index="wiki"
+                        categories={["edits"]}
+                        title="Edits by Wiki"
+                        format="number"
+                        height={300}
+                        sort="desc"
+                        layout="horizontal"
+                      />
+                      <DataTable
+                        data={recentForTable as never[]}
+                        columns={[
+                          { key: "title", header: "Page", sortable: true },
+                          { key: "user", header: "Editor" },
+                          { key: "wiki", header: "Wiki" },
+                          { key: "type", header: "Type" },
+                          { key: "bot", header: "Bot?" },
+                          { key: "timestamp", header: "When" },
+                        ]}
+                        title="Recent Edits"
+                        pageSize={10}
+                        dense
+                        searchable
+                      />
+                    </MetricGrid>,
+                  );
+                },
+              }}
             />
             <KpiCard
               title="Edit Rate"
@@ -424,6 +478,27 @@ function WikipediaDashboardInner() {
               icon={<Zap className="h-3.5 w-3.5" />}
               description="Rolling average of edits per second over the last 30-second window."
               animate={{ countUp: true }}
+              drillDown={{
+                label: "Edit velocity detail",
+                onClick: () => openDrill(
+                  { title: `Edit Rate: ${filteredStats.editRate}/sec`, field: "editRate" },
+                  <MetricGrid>
+                    <KpiCard title="Edit Rate" value={filteredStats.editRate} format={{ style: "custom", suffix: "/sec" }} />
+                    <KpiCard title="Edits / Min" value={filteredStats.editsPerMinute} format="number" />
+                    <KpiCard title="Bot Ratio" value={botRatio} format="percent" />
+                    {editVelocityData.length > 0 && (
+                      <LineChart
+                        data={editVelocityData}
+                        title="Edit Velocity (Expanded)"
+                        subtitle="Human vs bot edits per 5s window"
+                        format="number"
+                        height={320}
+                        stacked
+                      />
+                    )}
+                  </MetricGrid>,
+                ),
+              }}
             />
             <KpiCard
               title="Unique Editors"
@@ -494,14 +569,50 @@ function WikipediaDashboardInner() {
               index="wiki"
               categories={["edits"]}
               title="Edits by Language"
-              subtitle="Top 10 most active wikis"
-              description="Edit count per wiki language edition since connection. English Wikipedia typically dominates."
+              subtitle="Top 10 most active wikis — click to see wiki detail"
+              description="Edit count per wiki language edition since connection. Click a bar to drill into that wiki's edits."
               format="number"
               height={300}
               sort="desc"
               layout="horizontal"
               loading={topWikis.length === 0}
-              crossFilter={{ field: "wiki" }}
+              drillDown={(event) => {
+                const wikiDisplayName = String(event.indexValue);
+                const wikiKey = Object.entries(WIKI_LABELS).find(([, label]) => label === wikiDisplayName)?.[0]
+                  ?? wikiDisplayName.toLowerCase() + "wiki";
+                const wikiEdits = filteredEdits.filter((e) => e.wiki === wikiKey);
+                const recentWikiEdits = wikiEdits.slice(0, 30).map((e) => ({
+                  title: e.title,
+                  user: e.user,
+                  type: e.type,
+                  bot: e.bot ? "bot" : "human",
+                  timestamp: timeAgo(e.timestamp),
+                  delta: e.lengthOld != null && e.lengthNew != null ? e.lengthNew - e.lengthOld : null,
+                }));
+                const botCount = wikiEdits.filter((e) => e.bot).length;
+                const wBotRatio = wikiEdits.length > 0 ? Math.round((botCount / wikiEdits.length) * 100) : 0;
+                return (
+                  <MetricGrid>
+                    <KpiCard title={`${wikiDisplayName} Edits`} value={wikiEdits.length} format="number" />
+                    <KpiCard title="Unique Editors" value={new Set(wikiEdits.map((e) => e.user)).size} format="number" />
+                    <KpiCard title="Bot Ratio" value={wBotRatio} format="percent" />
+                    <DataTable
+                      data={recentWikiEdits as never[]}
+                      columns={[
+                        { key: "title", header: "Page", sortable: true },
+                        { key: "user", header: "Editor" },
+                        { key: "type", header: "Type" },
+                        { key: "bot", header: "Bot?" },
+                        { key: "timestamp", header: "When" },
+                      ]}
+                      title={`Recent ${wikiDisplayName} Edits`}
+                      pageSize={10}
+                      dense
+                      searchable
+                    />
+                  </MetricGrid>
+                );
+              }}
             />
             <DonutChart
               data={editTypeData}
@@ -514,7 +625,38 @@ function WikipediaDashboardInner() {
               centerValue={filteredStats.totalEdits.toLocaleString()}
               centerLabel="total"
               loading={editTypeData.length === 0}
-              crossFilter={{ field: "type" }}
+              drillDown={(event) => {
+                const editType = event.id.toLowerCase();
+                const typeEdits = filteredEdits.filter((e) => e.type.toLowerCase() === editType);
+                const recentTypeEdits = typeEdits.slice(0, 30).map((e) => ({
+                  title: e.title,
+                  user: e.user,
+                  wiki: wikiLabel(e.wiki),
+                  bot: e.bot ? "bot" : "human",
+                  timestamp: timeAgo(e.timestamp),
+                }));
+                return (
+                  <MetricGrid>
+                    <KpiCard title={`${event.id} Edits`} value={typeEdits.length} format="number" />
+                    <KpiCard title="% of Total" value={event.percentage} format="percent" />
+                    <KpiCard title="Unique Editors" value={new Set(typeEdits.map((e) => e.user)).size} format="number" />
+                    <DataTable
+                      data={recentTypeEdits as never[]}
+                      columns={[
+                        { key: "title", header: "Page", sortable: true },
+                        { key: "user", header: "Editor" },
+                        { key: "wiki", header: "Wiki" },
+                        { key: "bot", header: "Bot?" },
+                        { key: "timestamp", header: "When" },
+                      ]}
+                      title={`Recent ${event.id} Edits`}
+                      pageSize={10}
+                      dense
+                      searchable
+                    />
+                  </MetricGrid>
+                );
+              }}
             />
             <Gauge
               value={botRatio}
@@ -536,11 +678,52 @@ function WikipediaDashboardInner() {
               data={filteredEdits as never[]}
               columns={editColumns as never[]}
               title={editFilter === "All Edits" ? "Recent Edits" : `Recent Edits (${editFilter})`}
-              subtitle="Last 50 edits — click a row to expand details"
+              subtitle="Last 50 edits — click a row for edit detail"
               pageSize={15}
               dense
               multiSort
               searchable
+              drillDown={(row) => {
+                const edit = row as unknown as WikiEdit;
+                const delta = edit.lengthOld != null && edit.lengthNew != null ? edit.lengthNew - edit.lengthOld : null;
+                return (
+                  <MetricGrid>
+                    <StatGroup
+                      stats={[
+                        { label: "Page", value: edit.title },
+                        { label: "Editor", value: edit.user },
+                        { label: "Wiki", value: wikiLabel(edit.wiki) },
+                        { label: "Type", value: edit.type },
+                        { label: "Bot", value: edit.bot ? "Yes" : "No" },
+                        { label: "Time", value: timeAgo(edit.timestamp) },
+                      ]}
+                      dense
+                    />
+                    {delta !== null && (
+                      <>
+                        <KpiCard title="Size Change" value={delta} format={{ style: "custom", suffix: " bytes" }} conditions={[
+                          { when: "above" as const, value: 0, color: "emerald" },
+                          { when: "below" as const, value: 0, color: "red" },
+                        ]} />
+                        <KpiCard title="Before" value={edit.lengthOld ?? 0} format={{ style: "custom", suffix: " B" }} />
+                        <KpiCard title="After" value={edit.lengthNew ?? 0} format={{ style: "custom", suffix: " B" }} />
+                      </>
+                    )}
+                    {edit.comment && (
+                      <StatGroup
+                        stats={[{ label: "Edit Comment", value: edit.comment }]}
+                        dense
+                      />
+                    )}
+                    {edit.minor && (
+                      <StatGroup
+                        stats={[{ label: "Minor Edit", value: "Yes" }]}
+                        dense
+                      />
+                    )}
+                  </MetricGrid>
+                );
+              }}
               renderExpanded={renderEditExpanded as never}
               rowConditions={[
                 { when: (row: Record<string, unknown>) => row.bot === true, className: "bg-blue-50/30 dark:bg-blue-950/15" },

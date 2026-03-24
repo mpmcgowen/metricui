@@ -17,6 +17,8 @@ import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
 import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { FilterBar } from "@/components/filters/FilterBar";
+import { DrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
+import { formatValue } from "@/lib/format";
 import { countries } from "@/data/world";
 import type { Country } from "@/data/world";
 import {
@@ -292,12 +294,40 @@ function CountryTable({ data, tableView }: {
         ] as never[]
       }
       title={`${tableView === "Top 100" ? "Top 100 Countries" : tableView} (${data.length})`}
-      subtitle="Sorted by population — click headers to sort"
+      subtitle="Sorted by population — click a row for country details"
       pageSize={15}
       dense
       searchable
       multiSort
       striped
+      drillDown={(row) => {
+        const countryName = String(row.name);
+        const country = countries.find((c) => c.name === countryName);
+        if (!country) return <div>Country not found</div>;
+        const density = country.area > 0 ? Math.round(country.population / country.area) : 0;
+        return (
+          <MetricGrid>
+            <KpiCard title="Population" value={country.population} format="compact" icon={<Users className="h-3.5 w-3.5" />} />
+            <KpiCard title="Area" value={country.area} format={{ style: "custom", suffix: " km\u00B2" }} />
+            <KpiCard title="Density" value={density} format={{ style: "custom", suffix: " /km\u00B2" }} />
+            <StatGroup
+              stats={[
+                { label: "Capital", value: country.capital || "\u2014" },
+                { label: "Region", value: country.region },
+                { label: "Subregion", value: country.subregion || "\u2014" },
+              ]}
+              dense
+            />
+            <StatGroup
+              stats={[
+                { label: "Languages", value: country.languages.join(", ") || "\u2014" },
+                { label: "Currencies", value: country.currencies.map((c) => `${c.code} (${c.symbol})`).join(", ") || "\u2014" },
+              ]}
+              dense
+            />
+          </MetricGrid>
+        );
+      }}
     />
   );
 }
@@ -306,9 +336,112 @@ function CountryTable({ data, tableView }: {
 // Component
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Nested drill components — must be separate to call useDrillDownAction()
+// ---------------------------------------------------------------------------
+
+function SubregionDrill({ region, allCountries }: { region: string; allCountries: Country[] }) {
+  const openDrill = useDrillDownAction();
+  const regionCountries = allCountries.filter((c) => c.region === region);
+
+  const subregionData = useMemo(() => {
+    const map = new Map<string, { population: number; count: number }>();
+    for (const c of regionCountries) {
+      if (!c.subregion) continue;
+      const prev = map.get(c.subregion) ?? { population: 0, count: 0 };
+      map.set(c.subregion, { population: prev.population + c.population, count: prev.count + 1 });
+    }
+    return [...map.entries()]
+      .sort((a, b) => b[1].population - a[1].population)
+      .map(([subregion, d]) => ({ subregion, population: d.population, countries: d.count }));
+  }, [regionCountries]);
+
+  return (
+    <MetricGrid>
+      <KpiCard title="Countries" value={regionCountries.length} format="number" />
+      <KpiCard title="Population" value={regionCountries.reduce((s, c) => s + c.population, 0)} format="compact" />
+      <KpiCard title="Subregions" value={subregionData.length} format="number" />
+      <BarChart
+        data={subregionData.map((d) => ({ subregion: d.subregion, population: d.population }))}
+        index="subregion"
+        categories={["population"]}
+        title={`Subregions of ${region}`}
+        subtitle="Click a bar to drill deeper"
+        format="compact"
+        height={300}
+        sort="desc"
+        layout="horizontal"
+        drillDown={(event) => {
+          const subregion = String(event.indexValue);
+          const subCountries = regionCountries.filter((c) => c.subregion === subregion);
+          return (
+            <MetricGrid>
+              <KpiCard title="Countries" value={subCountries.length} format="number" />
+              <KpiCard title="Population" value={subCountries.reduce((s, c) => s + c.population, 0)} format="compact" />
+              <DataTable
+                data={subCountries.map((c) => ({
+                  name: c.name,
+                  capital: c.capital || "\u2014",
+                  population: c.population,
+                  area: c.area,
+                  languages: c.languages.slice(0, 3).join(", "),
+                  flag: c.flag,
+                })) as never[]}
+                columns={[
+                  { key: "name", header: "Country", sortable: true, render: (val: unknown, row: Record<string, unknown>) => (
+                    <span className="flex items-center gap-2">
+                      {Boolean(row.flag) && <img src={String(row.flag)} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+                      <span className="font-medium">{String(val)}</span>
+                    </span>
+                  ) },
+                  { key: "capital", header: "Capital" },
+                  { key: "population", header: "Population", format: "compact" as const, sortable: true, align: "right" as const },
+                  { key: "area", header: "Area (km\u00B2)", format: "compact" as const, sortable: true, align: "right" as const },
+                  { key: "languages", header: "Languages" },
+                ]}
+                title={`${subregion} Countries`}
+                pageSize={15}
+                dense
+                searchable
+              />
+            </MetricGrid>
+          );
+        }}
+      />
+      <DataTable
+        data={regionCountries.map((c) => ({
+          name: c.name,
+          subregion: c.subregion || "\u2014",
+          population: c.population,
+          area: c.area,
+          languages: c.languages.slice(0, 3).join(", "),
+          flag: c.flag,
+        })) as never[]}
+        columns={[
+          { key: "name", header: "Country", sortable: true, render: (val: unknown, row: Record<string, unknown>) => (
+            <span className="flex items-center gap-2">
+              {Boolean(row.flag) && <img src={String(row.flag)} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+              <span className="font-medium">{String(val)}</span>
+            </span>
+          ) },
+          { key: "subregion", header: "Subregion", sortable: true },
+          { key: "population", header: "Population", format: "compact" as const, sortable: true, align: "right" as const },
+          { key: "area", header: "Area (km\u00B2)", format: "compact" as const, sortable: true, align: "right" as const },
+          { key: "languages", header: "Languages" },
+        ]}
+        title={`All ${region} Countries`}
+        pageSize={10}
+        dense
+        searchable
+      />
+    </MetricGrid>
+  );
+}
+
 function DashboardContent() {
   const cf = useCrossFilter();
   const filters = useMetricFilters();
+  const openDrill = useDrillDownAction();
   const tableView = filters?.dimensions?.tableView?.[0] ?? "Top 100";
 
   // Filter countries by cross-filter (region from bar chart)
@@ -366,6 +499,42 @@ function DashboardContent() {
               sparkline={{ data: data.populationSparkline, type: "bar" }}
               description={({ formatted }) => `${formatted.value} people across ${filteredCountries.length} countries. Sparkline shows the top 10 most populous nations.`}
               animate={{ countUp: true }}
+              drillDown={{
+                label: "Top countries by population",
+                onClick: () => openDrill(
+                  { title: `World Population: ${formatValue(data.totalPopulation, "compact")}`, field: "population" },
+                  <MetricGrid>
+                    <KpiCard title="Total Population" value={data.totalPopulation} format="compact" />
+                    <KpiCard title="Countries" value={filteredCountries.length} format="number" />
+                    <KpiCard title="Avg Population" value={filteredCountries.length > 0 ? Math.round(data.totalPopulation / filteredCountries.length) : 0} format="compact" />
+                    <DataTable
+                      data={data.top10.map((c) => ({
+                        name: c.name,
+                        population: c.population,
+                        area: c.area,
+                        density: c.area > 0 ? Math.round(c.population / c.area) : 0,
+                        region: c.region,
+                        flag: c.flag,
+                      })) as never[]}
+                      columns={[
+                        { key: "name", header: "Country", sortable: true, render: (val: unknown, row: Record<string, unknown>) => (
+                          <span className="flex items-center gap-2">
+                            {Boolean(row.flag) && <img src={String(row.flag)} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+                            <span className="font-medium">{String(val)}</span>
+                          </span>
+                        ) },
+                        { key: "population", header: "Population", format: "compact" as const, sortable: true, align: "right" as const },
+                        { key: "area", header: "Area (km\u00B2)", format: "compact" as const, sortable: true, align: "right" as const },
+                        { key: "density", header: "Density", format: "number" as const, sortable: true, align: "right" as const },
+                        { key: "region", header: "Region", sortable: true },
+                      ]}
+                      title="Top 10 Countries by Population"
+                      pageSize={10}
+                      dense
+                    />
+                  </MetricGrid>,
+                ),
+              }}
             />
             <KpiCard
               title="Countries"
@@ -382,6 +551,45 @@ function DashboardContent() {
               icon={<Languages className="h-3.5 w-3.5" />}
               description="Distinct official and recognized languages across all countries. Many nations have multiple official languages."
               animate={{ countUp: true, delay: 200 }}
+              drillDown={{
+                label: "Language distribution",
+                onClick: () => {
+                  const langMap = new Map<string, number>();
+                  for (const c of filteredCountries) {
+                    for (const lang of c.languages) langMap.set(lang, (langMap.get(lang) ?? 0) + 1);
+                  }
+                  const langData = [...langMap.entries()].sort((a, b) => b[1] - a[1]);
+                  const topLangs = langData.slice(0, 12).map(([id, value]) => ({ id, label: id, value }));
+                  const langTable = langData.slice(0, 30).map(([language, count]) => ({ language, countries: count }));
+                  openDrill(
+                    { title: `${data.totalLanguages} Languages`, field: "languages" },
+                    <MetricGrid>
+                      <KpiCard title="Total Languages" value={data.totalLanguages} format="number" />
+                      <KpiCard title="Most Common" value={langData[0]?.[0] ?? "\u2014"} format={{ style: "custom" }} />
+                      <KpiCard title="Top Language Countries" value={langData[0]?.[1] ?? 0} format="number" />
+                      <DonutChart
+                        data={topLangs}
+                        title="Top 12 Languages"
+                        subtitle="By number of countries"
+                        showPercentage
+                        innerRadius={0.6}
+                        height={300}
+                      />
+                      <DataTable
+                        data={langTable as never[]}
+                        columns={[
+                          { key: "language", header: "Language", sortable: true },
+                          { key: "countries", header: "Countries", format: "number" as const, sortable: true, align: "right" as const },
+                        ]}
+                        title="Languages by Country Count"
+                        pageSize={15}
+                        dense
+                        searchable
+                      />
+                    </MetricGrid>,
+                  );
+                },
+              }}
             />
             <KpiCard
               title="Currencies"
@@ -390,6 +598,49 @@ function DashboardContent() {
               icon={<Coins className="h-3.5 w-3.5" />}
               description={({ value }) => `${value} unique currencies in circulation. Some currencies like the Euro are shared across many nations.`}
               animate={{ countUp: true, delay: 300 }}
+              drillDown={{
+                label: "Currency distribution",
+                onClick: () => {
+                  const currMap = new Map<string, { name: string; count: number }>();
+                  for (const c of filteredCountries) {
+                    for (const cur of c.currencies) {
+                      const prev = currMap.get(cur.code) ?? { name: cur.name, count: 0 };
+                      currMap.set(cur.code, { name: cur.name, count: prev.count + 1 });
+                    }
+                  }
+                  const currData = [...currMap.entries()].sort((a, b) => b[1].count - a[1].count);
+                  const topCurr = currData.slice(0, 12).map(([code, d]) => ({ id: code, label: `${code} (${d.name})`, value: d.count }));
+                  const currTable = currData.slice(0, 30).map(([code, d]) => ({ code, name: d.name, countries: d.count }));
+                  openDrill(
+                    { title: `${data.totalCurrencies} Currencies`, field: "currencies" },
+                    <MetricGrid>
+                      <KpiCard title="Total Currencies" value={data.totalCurrencies} format="number" />
+                      <KpiCard title="Most Used" value={currData[0]?.[0] ?? "\u2014"} format={{ style: "custom" }} />
+                      <KpiCard title="Top Currency Countries" value={currData[0]?.[1]?.count ?? 0} format="number" />
+                      <DonutChart
+                        data={topCurr}
+                        title="Top 12 Currencies"
+                        subtitle="By number of countries"
+                        showPercentage
+                        innerRadius={0.6}
+                        height={300}
+                      />
+                      <DataTable
+                        data={currTable as never[]}
+                        columns={[
+                          { key: "code", header: "Code", sortable: true },
+                          { key: "name", header: "Currency Name", sortable: true },
+                          { key: "countries", header: "Countries", format: "number" as const, sortable: true, align: "right" as const },
+                        ]}
+                        title="Currencies by Country Count"
+                        pageSize={15}
+                        dense
+                        searchable
+                      />
+                    </MetricGrid>,
+                  );
+                },
+              }}
             />
 
             <StatGroup
@@ -414,11 +665,14 @@ function DashboardContent() {
               index="region"
               categories={["population"]}
               title="Population by Region"
-              subtitle="Total population per continent"
-              description="Click a bar to filter the entire dashboard by that region."
+              subtitle="Total population per continent — click to drill into subregions"
+              description="Click a bar to explore subregions. Nested drill: Region -> Subregion -> Countries."
               format="compact"
               height={320}
-              crossFilter
+              drillDown={(event) => {
+                const region = String(event.indexValue);
+                return <SubregionDrill region={region} allCountries={filteredCountries} />;
+              }}
             />
 
             {/* ── Languages ── */}
@@ -433,13 +687,47 @@ function DashboardContent() {
               index="language"
               categories={["countries"]}
               title="Most Spoken Languages"
-              subtitle="By number of countries"
+              subtitle="By number of countries — click a slice to see which countries speak it"
               description="Top 10 languages ranked by number of countries where they are an official language."
               height={340}
               showPercentage
               innerRadius={0.6}
               centerValue={`${data.totalLanguages}`}
               centerLabel="Total"
+              drillDown={(event) => {
+                const lang = event.id;
+                const langCountries = filteredCountries.filter((c) => c.languages.includes(lang));
+                return (
+                  <MetricGrid>
+                    <KpiCard title={`${lang} Countries`} value={langCountries.length} format="number" />
+                    <KpiCard title="Total Population" value={langCountries.reduce((s, c) => s + c.population, 0)} format="compact" />
+                    <DataTable
+                      data={langCountries.map((c) => ({
+                        name: c.name,
+                        region: c.region,
+                        population: c.population,
+                        capital: c.capital || "\u2014",
+                        flag: c.flag,
+                      })) as never[]}
+                      columns={[
+                        { key: "name", header: "Country", sortable: true, render: (val: unknown, row: Record<string, unknown>) => (
+                          <span className="flex items-center gap-2">
+                            {Boolean(row.flag) && <img src={String(row.flag)} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+                            <span className="font-medium">{String(val)}</span>
+                          </span>
+                        ) },
+                        { key: "capital", header: "Capital" },
+                        { key: "region", header: "Region", sortable: true },
+                        { key: "population", header: "Population", format: "compact" as const, sortable: true, align: "right" as const },
+                      ]}
+                      title={`Countries with ${lang}`}
+                      pageSize={15}
+                      dense
+                      searchable
+                    />
+                  </MetricGrid>
+                );
+              }}
             />
 
             {/* ── Geography ── */}
@@ -545,7 +833,9 @@ export default function WorldDashboard() {
         <MetricProvider theme="cyan" variant="ghost">
           <FilterProvider>
             <CrossFilterProvider>
-              <DashboardContent />
+              <DrillDown.Root>
+                <DashboardContent />
+              </DrillDown.Root>
             </CrossFilterProvider>
           </FilterProvider>
         </MetricProvider>

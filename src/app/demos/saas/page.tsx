@@ -265,6 +265,50 @@ function DashboardContent() {
         icon={<DollarSign className="h-3.5 w-3.5" />}
         description="Sum of all active subscription charges this month, excluding one-time fees and overages."
         animate={{ countUp: true }}
+        drillDown={{
+          label: "MRR breakdown",
+          onClick: () => {
+            const activeAccts = filtered.filter((a) => a.status === "active");
+            const mrrByPlan = (() => {
+              const map = new Map<string, number>();
+              for (const a of activeAccts) map.set(a.plan, (map.get(a.plan) ?? 0) + a.mrr);
+              return [...map.entries()].sort((a, b) => b[1] - a[1]).map(([id, value]) => ({ id, label: id, value }));
+            })();
+            const topByMrr = [...activeAccts].sort((a, b) => b.mrr - a.mrr).slice(0, 15);
+            openDrill(
+              { title: `MRR: ${formatValue(data.kpis.mrr, "currency")}`, field: "mrr", value: data.kpis.mrr },
+              <MetricGrid>
+                <KpiCard title="MRR" value={data.kpis.mrr} format="currency" />
+                <KpiCard title="ARR" value={data.kpis.arr} format={fmt("currency", { compact: true })} />
+                <KpiCard title="Avg MRR / Account" value={data.kpis.avgMrr} format="currency" />
+                <DonutChart
+                  data={mrrByPlan}
+                  title="MRR by Plan"
+                  subtitle="Revenue distribution across pricing tiers"
+                  showPercentage
+                  innerRadius={0.6}
+                  centerValue={formatValue(data.kpis.mrr, { style: "currency", compact: true })}
+                  centerLabel="total"
+                  height={280}
+                />
+                <DataTable
+                  data={topByMrr as never[]}
+                  columns={[
+                    { key: "name", header: "Account", sortable: true },
+                    { key: "plan", header: "Plan", sortable: true },
+                    { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
+                    { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" as const },
+                    { key: "industry", header: "Industry", sortable: true },
+                  ]}
+                  title="Top 15 Accounts by MRR"
+                  pageSize={10}
+                  dense
+                  searchable
+                />
+              </MetricGrid>,
+            );
+          },
+        }}
       />
       <KpiCard
         title="Annual Run Rate"
@@ -283,6 +327,50 @@ function DashboardContent() {
         icon={<Users className="h-3.5 w-3.5" />}
         description="Accounts with at least one active subscription. Excludes free-tier and trial accounts."
         animate={{ countUp: true, delay: 200 }}
+        drillDown={{
+          label: "View active accounts",
+          onClick: () => {
+            const activeAccts = filtered.filter((a) => a.status === "active");
+            const byIndustry = (() => {
+              const map = new Map<string, number>();
+              for (const a of activeAccts) map.set(a.industry, (map.get(a.industry) ?? 0) + 1);
+              return [...map.entries()].sort((a, b) => b[1] - a[1]).map(([industry, count]) => ({ industry, accounts: count }));
+            })();
+            openDrill(
+              { title: `${data.kpis.activeAccounts} Active Accounts`, field: "status", value: "active" },
+              <MetricGrid>
+                <KpiCard title="Active" value={activeAccts.length} format="number" />
+                <KpiCard title="Total MRR" value={activeAccts.reduce((s, a) => s + a.mrr, 0)} format="currency" />
+                <KpiCard title="Avg Seats" value={activeAccts.length > 0 ? Math.round(activeAccts.reduce((s, a) => s + a.seats, 0) / activeAccts.length) : 0} format="number" />
+                <BarChart
+                  data={byIndustry}
+                  keys={["accounts"]}
+                  indexBy="industry"
+                  title="Accounts by Industry"
+                  format="number"
+                  height={260}
+                  sort="desc"
+                  layout="horizontal"
+                />
+                <DataTable
+                  data={activeAccts as never[]}
+                  columns={[
+                    { key: "name", header: "Account", sortable: true },
+                    { key: "industry", header: "Industry", sortable: true },
+                    { key: "plan", header: "Plan", sortable: true },
+                    { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
+                    { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" as const },
+                    { key: "country", header: "Country", sortable: true },
+                  ]}
+                  title="All Active Accounts"
+                  pageSize={10}
+                  dense
+                  searchable
+                />
+              </MetricGrid>,
+            );
+          },
+        }}
       />
       <KpiCard
         title="Churn Rate"
@@ -425,6 +513,28 @@ function DashboardContent() {
         showPercentage
         innerRadius={0.6}
         height={260}
+        drillDown={(event) => (
+          <MetricGrid>
+            <KpiCard title={`${event.label} Accounts`} value={filtered.filter((a) => a.plan === event.id).length} format="number" />
+            <KpiCard title="MRR" value={filtered.filter((a) => a.plan === event.id && a.status === "active").reduce((s, a) => s + a.mrr, 0)} format="currency" />
+            <KpiCard title="Churn Rate" value={(() => { const planAccts = filtered.filter((a) => a.plan === event.id); const churned = planAccts.filter((a) => a.status === "churned").length; return planAccts.length > 0 ? Math.round((churned / planAccts.length) * 1000) / 10 : 0; })()} format="percent" />
+            <DataTable
+              data={filtered.filter((a) => a.plan === event.id) as never[]}
+              columns={[
+                { key: "name", header: "Account", sortable: true },
+                { key: "industry", header: "Industry", sortable: true },
+                { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
+                { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" as const },
+                { key: "status", header: "Status", sortable: true },
+                { key: "country", header: "Country", sortable: true },
+              ]}
+              title={`${event.label} Plan Accounts`}
+              pageSize={10}
+              dense
+              searchable
+            />
+          </MetricGrid>
+        )}
       />
       <DonutChart
         data={data.industryDistribution}
@@ -432,6 +542,28 @@ function DashboardContent() {
         showPercentage
         innerRadius={0.6}
         height={260}
+        drillDown={(event) => (
+          <MetricGrid>
+            <KpiCard title={`${event.label} Accounts`} value={filtered.filter((a) => a.industry === event.id).length} format="number" />
+            <KpiCard title="MRR" value={filtered.filter((a) => a.industry === event.id && a.status === "active").reduce((s, a) => s + a.mrr, 0)} format="currency" />
+            <KpiCard title="Avg Seats" value={(() => { const indAccts = filtered.filter((a) => a.industry === event.id && a.status === "active"); return indAccts.length > 0 ? Math.round(indAccts.reduce((s, a) => s + a.seats, 0) / indAccts.length) : 0; })()} format="number" />
+            <DataTable
+              data={filtered.filter((a) => a.industry === event.id) as never[]}
+              columns={[
+                { key: "name", header: "Account", sortable: true },
+                { key: "plan", header: "Plan", sortable: true },
+                { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
+                { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" as const },
+                { key: "status", header: "Status", sortable: true },
+                { key: "country", header: "Country", sortable: true },
+              ]}
+              title={`${event.label} Accounts`}
+              pageSize={10}
+              dense
+              searchable
+            />
+          </MetricGrid>
+        )}
       />
 
       {/* ── Growth ── */}
@@ -457,7 +589,7 @@ function DashboardContent() {
       />
       <DataTable
         data={data.topAccounts as never[]}
-        description="Top 20 active accounts ranked by MRR. All filters apply."
+        description="Top 20 active accounts ranked by MRR. Click a row to drill into account details."
         columns={[
           { key: "name", header: "Account", sortable: true },
           { key: "industry", header: "Industry", sortable: true },
@@ -477,6 +609,22 @@ function DashboardContent() {
         title="Top Accounts"
         pageSize={10}
         dense
+        drillDown={(row) => (
+          <MetricGrid>
+            <KpiCard title="MRR" value={row.mrr as number} format="currency" />
+            <KpiCard title="Seats" value={row.seats as number} format="number" />
+            <KpiCard title="Join Month" value={String(row.joinMonth)} format={{ style: "custom" }} />
+            <StatGroup
+              stats={[
+                { label: "Plan", value: String(row.plan) },
+                { label: "Industry", value: String(row.industry) },
+                { label: "Country", value: String(row.country) },
+                { label: "Status", value: String(row.status) },
+              ]}
+              dense
+            />
+          </MetricGrid>
+        )}
       />
     </MetricGrid>
     </>

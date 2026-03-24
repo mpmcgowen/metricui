@@ -23,6 +23,8 @@ import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
 import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
 import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
+import { DrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
+import { formatValue } from "@/lib/format";
 import {
   repoStats,
   commitActivity,
@@ -155,7 +157,9 @@ export default function GitHubDashboard() {
 
         <FilterProvider defaultPreset="90d">
         <CrossFilterProvider>
+        <DrillDown.Root>
         <DashboardContent />
+        </DrillDown.Root>
         </CrossFilterProvider>
         </FilterProvider>
       </div>
@@ -170,6 +174,7 @@ export default function GitHubDashboard() {
 function DashboardContent() {
   const filters = useMetricFilters();
   const crossFilter = useCrossFilter();
+  const openDrill = useDrillDownAction();
   const view = filters?.dimensions?.view?.[0] ?? "Issues";
   const labelFilter = filters?.dimensions?.label ?? [];
 
@@ -527,6 +532,36 @@ function DashboardContent() {
             icon={<Star className="h-3.5 w-3.5" />}
             description="Total GitHub stars. A measure of community interest and project visibility."
             animate={{ countUp: true }}
+            drillDown={{
+              label: "Repo stats detail",
+              onClick: () => openDrill(
+                { title: `Stars: ${formatValue(repoStats.stars, "compact")}`, field: "stars", value: repoStats.stars },
+                <MetricGrid>
+                  <KpiCard title="Stars" value={repoStats.stars} format="compact" icon={<Star className="h-3.5 w-3.5" />} />
+                  <KpiCard title="Forks" value={repoStats.forks} format="compact" icon={<GitFork className="h-3.5 w-3.5" />} />
+                  <KpiCard title="Watchers" value={repoStats.watchers} format="compact" icon={<Eye className="h-3.5 w-3.5" />} />
+                  <KpiCard title="Open Issues" value={repoStats.openIssues} format="number" icon={<CircleDot className="h-3.5 w-3.5" />} />
+                  <StatGroup
+                    stats={[
+                      { label: "License", value: repoStats.license },
+                      { label: "Size", value: `${Math.round(repoStats.size / 1024)} MB` },
+                      { label: "Created", value: formatDate(repoStats.createdAt) },
+                      { label: "Last Push", value: daysAgo(repoStats.pushedAt) },
+                    ]}
+                    dense
+                  />
+                  <DonutChart
+                    data={languageData}
+                    index="language"
+                    categories={["share"]}
+                    title="Language Breakdown"
+                    height={280}
+                    showPercentage
+                    innerRadius={0.65}
+                  />
+                </MetricGrid>,
+              ),
+            }}
           />
           <KpiCard
             title="Forks"
@@ -535,6 +570,25 @@ function DashboardContent() {
             icon={<GitFork className="h-3.5 w-3.5" />}
             description="Active forks of the repository. Indicates downstream development and contribution potential."
             animate={{ countUp: true, delay: 100 }}
+            drillDown={{
+              label: "Repo stats detail",
+              onClick: () => openDrill(
+                { title: `Forks: ${formatValue(repoStats.forks, "compact")}`, field: "forks", value: repoStats.forks },
+                <MetricGrid>
+                  <KpiCard title="Forks" value={repoStats.forks} format="compact" icon={<GitFork className="h-3.5 w-3.5" />} />
+                  <KpiCard title="Stars" value={repoStats.stars} format="compact" icon={<Star className="h-3.5 w-3.5" />} />
+                  <KpiCard title="Fork-to-Star Ratio" value={Math.round((repoStats.forks / repoStats.stars) * 1000) / 10} format="percent" />
+                  <StatGroup
+                    stats={[
+                      { label: "Open Issues", value: repoStats.openIssues, format: "number" as const },
+                      { label: "Watchers", value: repoStats.watchers, format: "compact" as const },
+                      { label: "Created", value: formatDate(repoStats.createdAt) },
+                    ]}
+                    dense
+                  />
+                </MetricGrid>,
+              ),
+            }}
           />
           <KpiCard
             title="Open Issues"
@@ -553,6 +607,37 @@ function DashboardContent() {
             comparison={comparisonTotalCommits != null ? { value: comparisonTotalCommits, label: "prev period" } : undefined}
             description={({ value }) => `${value.toLocaleString()} commits${activeDayFilter ? ` on ${activeDayFilter}s` : ""} in the selected period. Sparkline shows weekly volume.`}
             animate={{ countUp: true, delay: 300 }}
+            drillDown={{
+              label: "Commit activity detail",
+              onClick: () => openDrill(
+                { title: `${totalCommits} Commits`, field: "commits", value: totalCommits },
+                <MetricGrid>
+                  <KpiCard title="Total Commits" value={totalCommits} format="number" />
+                  <KpiCard title="Avg / Week" value={periodCommits.length > 0 ? Math.round(totalCommits / periodCommits.length) : 0} format="number" />
+                  <KpiCard title="Peak Week" value={Math.max(...commitSparkline, 0)} format="number" />
+                  <BarChart
+                    data={commitsByDay}
+                    index="day"
+                    categories={["commits"]}
+                    title="Commits by Day of Week"
+                    format="number"
+                    height={260}
+                    sort="desc"
+                  />
+                  <AreaChart
+                    data={commitAreaData}
+                    index="week"
+                    categories={["commits"]}
+                    title="Weekly Commit Trend"
+                    format="number"
+                    height={260}
+                    enableArea
+                    gradient
+                    curve="monotoneX"
+                  />
+                </MetricGrid>,
+              ),
+            }}
           />
           <StatGroup
             stats={[
@@ -591,9 +676,33 @@ function DashboardContent() {
             categories={weekLabels}
             title="Contribution Activity"
             subtitle={`Last ${recentWeeks.length} weeks — commits by day of week`}
-            description="GitHub-style contribution heatmap. Darker cells indicate more commits on that day."
+            description="GitHub-style contribution heatmap. Click a cell to see that day's breakdown."
             height={220}
-            crossFilter
+            drillDown={(event) => {
+              const dayName = event.seriesId;
+              const weekLabel = event.x;
+              const weekIdx = weekLabels.indexOf(weekLabel);
+              const weekData = weekIdx >= 0 ? recentWeeks[weekIdx] : null;
+              const dayCommits = event.value ?? 0;
+              return (
+                <MetricGrid>
+                  <KpiCard title="Commits" value={dayCommits} format="number" />
+                  <KpiCard title="Day" value={dayName} format={{ style: "custom" }} />
+                  <KpiCard title="Week of" value={weekLabel} format={{ style: "custom" }} />
+                  {weekData && (
+                    <BarChart
+                      data={DAY_NAMES.map((d, i) => ({ day: d, commits: weekData.days[i] }))}
+                      index="day"
+                      categories={["commits"]}
+                      title={`Week of ${weekLabel}`}
+                      subtitle="Commit distribution across the week"
+                      format="number"
+                      height={240}
+                    />
+                  )}
+                </MetricGrid>
+              );
+            }}
           />
           <AreaChart
             data={commitAreaData}
@@ -615,7 +724,34 @@ function DashboardContent() {
             title="Commits by Day"
             format="number"
             height={280}
-            crossFilter
+            drillDown={(event) => {
+              const dayName = String(event.indexValue);
+              const dayIdx = DAY_NAMES.indexOf(dayName);
+              const weeklyForDay = periodCommits.map((w) => ({
+                week: weekTimestampToLabel(w.week),
+                commits: w.days[dayIdx] ?? 0,
+              }));
+              const totalForDay = weeklyForDay.reduce((s, w) => s + w.commits, 0);
+              return (
+                <MetricGrid>
+                  <KpiCard title={`${dayName} Commits`} value={totalForDay} format="number" />
+                  <KpiCard title="Avg / Week" value={periodCommits.length > 0 ? Math.round(totalForDay / periodCommits.length * 10) / 10 : 0} format="number" />
+                  <KpiCard title="Peak" value={Math.max(...weeklyForDay.map((w) => w.commits), 0)} format="number" />
+                  <AreaChart
+                    data={weeklyForDay}
+                    index="week"
+                    categories={["commits"]}
+                    title={`${dayName} Commits Over Time`}
+                    subtitle="Weekly commit count on this day"
+                    format="number"
+                    height={260}
+                    enableArea
+                    gradient
+                    curve="monotoneX"
+                  />
+                </MetricGrid>
+              );
+            }}
           />
           <DonutChart
             data={languageData}
@@ -626,7 +762,25 @@ function DashboardContent() {
             height={280}
             showPercentage
             innerRadius={0.65}
-            crossFilter
+            drillDown={(event) => {
+              const lang = event.id;
+              const bytes = languages[lang as keyof typeof languages] ?? 0;
+              const totalBytes = Object.values(languages).reduce((a, b) => a + b, 0);
+              return (
+                <MetricGrid>
+                  <KpiCard title={lang} value={event.percentage} format="percent" />
+                  <KpiCard title="Bytes" value={bytes} format="compact" />
+                  <KpiCard title="Share of Codebase" value={totalBytes > 0 ? Math.round((bytes / totalBytes) * 1000) / 10 : 0} format="percent" />
+                  <StatGroup
+                    stats={[
+                      { label: "Total Languages", value: Object.keys(languages).length, format: "number" as const },
+                      { label: "Total Bytes", value: totalBytes, format: "compact" as const },
+                    ]}
+                    dense
+                  />
+                </MetricGrid>
+              );
+            }}
           />
 
           {/* ── Pull Requests & Issues ── */}
@@ -645,11 +799,46 @@ function DashboardContent() {
               data={filteredIssues as never[]}
               columns={issueColumns as never[]}
               title="Recent Issues"
-              subtitle={labelFilter.length > 0 ? `Filtered by: ${labelFilter.join(", ")}` : "Click a row to expand — Shift+click headers to multi-sort"}
+              subtitle={labelFilter.length > 0 ? `Filtered by: ${labelFilter.join(", ")}` : "Click a row to drill into issue details"}
               pageSize={8}
               dense
               multiSort
               searchable
+              drillDown={(row) => {
+                const labels = ((row.labels as string[]) ?? []).filter(l => !["CLA Signed", "Resolution: Stale"].includes(l));
+                const ageDays = daysBetween(row.createdAt as string);
+                const comments = (row.comments as number) ?? 0;
+                const reactions = (row.reactions as number) ?? 0;
+                const score = engagementScore(comments, reactions, ageDays);
+                return (
+                  <MetricGrid>
+                    <KpiCard title="Comments" value={comments} format="number" icon={<MessageSquare className="h-3.5 w-3.5" />} />
+                    <KpiCard title="Reactions" value={reactions} format="number" icon={<ThumbsUp className="h-3.5 w-3.5" />} />
+                    <KpiCard title="Engagement" value={score} format="number" conditions={[
+                      { when: "above" as const, value: 60, color: "emerald" },
+                      { when: "between" as const, min: 30, max: 60, color: "amber" },
+                      { when: "below" as const, value: 30, color: "red" },
+                    ]} />
+                    <StatGroup
+                      stats={[
+                        { label: "State", value: String(row.state) },
+                        { label: "Author", value: String(row.user) },
+                        { label: "Age", value: ageDays < 30 ? `${ageDays}d` : ageDays < 365 ? `${Math.floor(ageDays / 30)}mo` : `${(ageDays / 365).toFixed(1)}y` },
+                        { label: "Created", value: formatDate(row.createdAt as string) },
+                        ...(row.closedAt ? [{ label: "Time to Close", value: (() => { const ttc = daysBetween(row.createdAt as string, row.closedAt as string); return ttc < 30 ? `${ttc}d` : `${Math.floor(ttc / 30)}mo`; })() }] : []),
+                      ]}
+                      dense
+                    />
+                    {labels.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 col-span-full">
+                        {labels.map((l: string) => (
+                          <Badge key={l} size="sm" variant="outline">{l}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </MetricGrid>
+                );
+              }}
               renderExpanded={(row: Record<string, unknown>) => {
                 const created = row.createdAt as string;
                 const closed = row.closedAt as string | null;
@@ -756,6 +945,36 @@ function DashboardContent() {
               dense
               multiSort
               searchable
+              drillDown={(row) => {
+                const created = row.createdAt as string;
+                const merged = row.mergedAt as string | null;
+                const ageDays = daysBetween(created);
+                const ttm = merged ? daysBetween(created, merged) : null;
+                const labels = ((row.labels as string[]) ?? []).filter(l => !["CLA Signed", "Resolution: Stale"].includes(l));
+                return (
+                  <MetricGrid>
+                    <KpiCard title="State" value={merged ? "Merged" : String(row.state)} format={{ style: "custom" }} />
+                    <KpiCard title="Age" value={ageDays} format={{ style: "custom", suffix: " days" }} />
+                    {ttm !== null && <KpiCard title="Time to Merge" value={ttm} format={{ style: "custom", suffix: " days" }} />}
+                    <StatGroup
+                      stats={[
+                        { label: "Author", value: String(row.user) },
+                        { label: "Created", value: formatDate(created) },
+                        ...(merged ? [{ label: "Merged", value: formatDate(merged) }] : []),
+                        ...(row.draft ? [{ label: "Draft", value: "Yes" }] : []),
+                      ]}
+                      dense
+                    />
+                    {labels.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 col-span-full">
+                        {labels.map((l: string) => (
+                          <Badge key={l} size="sm" variant="outline">{l}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </MetricGrid>
+                );
+              }}
               renderExpanded={(row: Record<string, unknown>) => {
                 const created = row.createdAt as string;
                 const closed = row.closedAt as string | null;
