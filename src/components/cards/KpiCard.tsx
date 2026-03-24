@@ -17,6 +17,7 @@ import type {
   ComparisonConfig,
   TooltipConfig,
   DrillDownConfig,
+  ExportableConfig,
   AnimationConfig,
   CardVariant,
   EmptyState,
@@ -112,8 +113,8 @@ export interface KpiCardProps {
   titlePosition?: TitlePosition;
   /** Horizontal alignment for card content. Default: "left" */
   titleAlign?: TitleAlign;
-  /** Enable export. `true` enables image/clipboard. Pass `{ data }` to also enable CSV with custom data. */
-  exportable?: boolean | { data: Record<string, unknown>[] };
+  /** Enable export. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. Inherits from MetricProvider. */
+  exportable?: ExportableConfig;
   loading?: boolean;
   empty?: EmptyState;
   error?: ErrorState;

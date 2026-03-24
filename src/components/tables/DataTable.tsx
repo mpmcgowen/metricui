@@ -14,7 +14,7 @@ import type { StatusRule, StatusSize } from "@/components/ui/StatusIndicator";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useScrollIndicators } from "@/lib/useScrollIndicators";
 import { devWarn } from "@/lib/devWarnings";
-import type { CardVariant, EmptyState, ErrorState, StaleState, NullDisplay } from "@/lib/types";
+import type { CardVariant, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig } from "@/lib/types";
 import { useLinkedHover } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
@@ -120,8 +120,8 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   footer?: FooterRow;
   variant?: CardVariant;
   className?: string;
-  /** Enable export. Inherits from MetricProvider when unset. */
-  exportable?: boolean;
+  /** Enable export. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. Inherits from MetricProvider. */
+  exportable?: ExportableConfig;
   loading?: boolean;
   empty?: EmptyState;
   error?: ErrorState;
@@ -302,7 +302,8 @@ function DataTableInner<T extends Record<string, unknown>>(
   const resolvedNullDisplay = nullDisplay ?? config.nullDisplay;
   const resolvedLoading = loading ?? config.loading;
   const resolvedScrollIndicators = scrollIndicatorsProp ?? true;
-  const resolvedExportable = exportableProp ?? config.exportable;
+  const resolvedExportable = exportableProp !== undefined ? !!exportableProp : config.exportable;
+  const overrideExportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
   const tableRef = useRef<HTMLDivElement>(null);
   const combinedAction = (
     <div className="flex items-center gap-1">
@@ -311,7 +312,7 @@ function DataTableInner<T extends Record<string, unknown>>(
         <ExportButton
           title={title ?? "Table"}
           targetRef={tableRef}
-          data={data as Record<string, unknown>[]}
+          data={overrideExportData ?? (data as Record<string, unknown>[])}
           dense={resolvedDense}
         />
       )}

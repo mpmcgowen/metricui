@@ -145,6 +145,13 @@ export interface Annotation {
 }
 
 // ---------------------------------------------------------------------------
+// Export
+// ---------------------------------------------------------------------------
+
+/** Export configuration. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. */
+export type ExportableConfig = boolean | { data: Record<string, unknown>[] };
+
+// ---------------------------------------------------------------------------
 // Click / drill-down
 // ---------------------------------------------------------------------------
 

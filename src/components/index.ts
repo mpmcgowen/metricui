@@ -111,7 +111,7 @@ export type {
   ChartNullMode, CardVariant, NullDisplay,
   ComparisonConfig, TrendIconConfig,
   EmptyState, ErrorState, StaleState,
-  DrillDownConfig, AnimationConfig,
+  DrillDownConfig, ExportableConfig, AnimationConfig,
 } from "@/lib/types";
 
 // Chart colors

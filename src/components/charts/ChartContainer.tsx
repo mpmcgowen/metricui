@@ -8,7 +8,7 @@ import { ExportButton } from "@/components/ui/ExportButton";
 import { ChartSkeletonContent, DataStateWrapper } from "@/components/ui/DataStateWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useMetricConfig } from "@/lib/MetricProvider";
-import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, EmptyState, ErrorState, StaleState, ExportableConfig } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -41,9 +41,9 @@ interface ChartContainerProps {
   empty?: EmptyState;
   error?: ErrorState;
   stale?: StaleState;
-  /** Enable export. Inherits from MetricProvider when unset. */
-  exportable?: boolean;
-  /** Raw data for CSV export. Passed through from chart component. */
+  /** Enable export. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. Inherits from MetricProvider. */
+  exportable?: ExportableConfig;
+  /** Raw data for CSV export. Auto-passed from chart component's source data. */
   exportData?: Record<string, unknown>[];
 }
 
@@ -79,7 +79,8 @@ export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(fu
   const resolvedVariant = variant ?? config.variant;
   const resolvedDense = dense ?? config.dense;
   const resolvedLoading = loading ?? config.loading;
-  const resolvedExportable = exportable ?? config.exportable;
+  const resolvedExportable = exportable !== undefined ? !!exportable : config.exportable;
+  const overrideExportData = typeof exportable === "object" && exportable.data ? exportable.data : undefined;
   const cardRef = useRef<HTMLDivElement>(null);
 
   if (resolvedLoading) return (
@@ -155,7 +156,7 @@ export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(fu
               <ExportButton
                 title={title ?? componentName ?? "Chart"}
                 targetRef={cardRef}
-                data={exportData}
+                data={overrideExportData ?? exportData}
                 dense={resolvedDense}
               />
             )}
