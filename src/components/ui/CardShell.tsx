@@ -176,6 +176,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     );
   }
 
+  // Explicit empty state
   if (empty) {
     return (
       <div
@@ -188,6 +189,31 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
         )}
       >
         <DataStateWrapper empty={empty}><div /></DataStateWrapper>
+      </div>
+    );
+  }
+
+  // Auto-detect empty data — show smart default when exportData is an empty array
+  if (exportData && Array.isArray(exportData) && exportData.length === 0) {
+    const autoEmpty = config.emptyState?.message
+      ? config.emptyState
+      : { message: "Nothing to show — try adjusting your filters" };
+    return (
+      <div
+        data-variant={bare ? undefined : resolvedVariant}
+        data-dense={resolvedDense ? "true" : undefined}
+        className={cn(
+          bare ? "mu-container" : cn("noise-texture border p-[var(--mu-padding)]", CARD_CLASSES),
+          classNames?.root,
+          className,
+        )}
+      >
+        {title && (
+          <div className="mb-4">
+            <span className="text-[length:var(--mu-title-size)] font-medium tracking-wide uppercase text-[var(--muted)]">{title}</span>
+          </div>
+        )}
+        <DataStateWrapper empty={autoEmpty}><div /></DataStateWrapper>
       </div>
     );
   }
