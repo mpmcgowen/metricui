@@ -21,61 +21,23 @@ export function exportFilename(
 }
 
 /**
- * Capture a DOM element as a PNG blob using html2canvas-style approach.
- * Uses the native Canvas API via a foreignObject SVG trick.
+ * Capture a DOM element as a PNG blob using html2canvas.
  */
 export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
-  // Use the browser's built-in serialization
-  const rect = element.getBoundingClientRect();
-  const canvas = document.createElement("canvas");
+  const html2canvas = (await import("html2canvas")).default;
   const scale = window.devicePixelRatio || 2;
-  canvas.width = rect.width * scale;
-  canvas.height = rect.height * scale;
-  const ctx = canvas.getContext("2d")!;
-  ctx.scale(scale, scale);
-
-  // Serialize the element to SVG foreignObject
-  const serializer = new XMLSerializer();
-  const clone = element.cloneNode(true) as HTMLElement;
-
-  // Inline all computed styles
-  const sourceElements = element.querySelectorAll("*");
-  const cloneElements = clone.querySelectorAll("*");
-  const computedRoot = getComputedStyle(element);
-  clone.style.cssText = computedRoot.cssText;
-
-  for (let i = 0; i < sourceElements.length; i++) {
-    const computed = getComputedStyle(sourceElements[i]);
-    (cloneElements[i] as HTMLElement).style.cssText = computed.cssText;
-  }
-
-  const svgNs = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNs, "svg");
-  svg.setAttribute("width", String(rect.width));
-  svg.setAttribute("height", String(rect.height));
-
-  const fo = document.createElementNS(svgNs, "foreignObject");
-  fo.setAttribute("width", "100%");
-  fo.setAttribute("height", "100%");
-  fo.appendChild(clone);
-  svg.appendChild(fo);
-
-  const svgStr = serializer.serializeToString(svg);
-  const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(svgBlob);
+  const canvas = await html2canvas(element, {
+    scale,
+    backgroundColor: null,
+    useCORS: true,
+    logging: false,
+  });
 
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, rect.width, rect.height);
-      URL.revokeObjectURL(url);
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("Canvas toBlob failed"));
-      }, "image/png");
-    };
-    img.onerror = reject;
-    img.src = url;
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("Canvas toBlob failed"));
+    }, "image/png");
   });
 }
 

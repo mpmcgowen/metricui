@@ -72,6 +72,7 @@
     "@nivo/line": "^0.99.0",
     "@nivo/pie": "^0.99.0",
     "clsx": "^2.1.1",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.577.0",
     "tailwind-merge": "^3.5.0"
   },
