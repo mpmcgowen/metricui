@@ -23,6 +23,7 @@ import { devWarn } from "@/lib/devWarnings";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } from "@/lib/types";
@@ -163,8 +164,9 @@ export interface AreaChartProps {
   colors?: string[];
   /** Click handler for data points */
   onPointClick?: (point: PointClickEvent) => void;
-  /** Drill-down content renderer. When set, clicking a point opens the drill-down panel. Takes priority over crossFilter for the click action. */
-  drillDown?: (event: PointClickEvent) => React.ReactNode;
+  /** Drill-down content renderer. When set, clicking a point opens the drill-down panel. Takes priority over crossFilter for the click action.
+   *  Pass `true` for an auto-generated detail table, or a function for custom content. */
+  drillDown?: true | ((event: PointClickEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
@@ -1166,9 +1168,12 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
                   };
                   onPointClick?.(event);
                   if (drillDown) {
+                    const content = drillDown === true
+                      ? <AutoDrillTable data={dataProp as Record<string, unknown>[]} field={indexProp ?? "x"} value={String(point.data.x)} />
+                      : drillDown(event);
                     openDrill(
                       { title: String(point.data.x), field: crossFilterField ?? "x", value: point.data.x as string | number, mode: drillDownMode },
-                      drillDown(event),
+                      content,
                     );
                   } else if (crossFilterProp && crossFilter && crossFilterField) {
                     crossFilter.select({ field: crossFilterField, value: point.data.x as string | number });

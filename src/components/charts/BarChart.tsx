@@ -16,6 +16,7 @@ import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -122,8 +123,9 @@ export interface BarChartProps {
   yAxisLabel?: string;
   /** Click handler for bars */
   onBarClick?: (bar: BarClickEvent) => void;
-  /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action. */
-  drillDown?: (event: BarClickEvent) => React.ReactNode;
+  /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action.
+   *  Pass `true` for an auto-generated detail table, or a function for custom content. */
+  drillDown?: true | ((event: BarClickEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filtering. `true` uses indexBy as the field, or pass `{ field }` to override. */
@@ -1092,9 +1094,12 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
                   };
                   onBarClick?.(event);
                   if (drillDown) {
+                    const content = drillDown === true
+                      ? <AutoDrillTable data={rawData as Record<string, unknown>[]} field={indexBy} value={String(datum.indexValue)} />
+                      : drillDown(event);
                     openDrill(
                       { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue, mode: drillDownMode },
-                      drillDown(event),
+                      content,
                     );
                   } else if (crossFilterProp && crossFilter && crossFilterField) {
                     crossFilter.select({ field: crossFilterField, value: datum.indexValue });

@@ -16,6 +16,7 @@ import { toHeatMapSeries, inferSchema, categoryKeys, type Category } from "@/lib
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -72,8 +73,9 @@ export interface HeatMapProps {
   hoverOtherOpacity?: number;
   /** Click handler for cells */
   onCellClick?: (cell: CellClickEvent) => void;
-  /** Drill-down content renderer. When set, clicking a cell opens the drill-down panel. Takes priority over crossFilter for the click action. */
-  drillDown?: (event: CellClickEvent) => React.ReactNode;
+  /** Drill-down content renderer. When set, clicking a cell opens the drill-down panel. Takes priority over crossFilter for the click action.
+   *  Pass `true` for an auto-generated detail table, or a function for custom content. */
+  drillDown?: true | ((event: CellClickEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
@@ -364,9 +366,12 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
                     };
                     onCellClick?.(event);
                     if (drillDown) {
+                      const content = drillDown === true
+                        ? <AutoDrillTable data={dataProp as Record<string, unknown>[]} field={indexProp ?? "x"} value={String(cell.data.x)} />
+                        : drillDown(event);
                       openDrill(
                         { title: String(cell.data.x), field: crossFilterField ?? "x", value: String(cell.data.x), mode: drillDownMode },
-                        drillDown(event),
+                        content,
                       );
                     } else if (crossFilterProp && crossFilter && crossFilterField) {
                       crossFilter.select({ field: crossFilterField, value: String(cell.data.x) });

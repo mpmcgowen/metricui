@@ -15,6 +15,7 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import { SERIES_COLORS } from "@/lib/chartColors";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
@@ -89,8 +90,9 @@ export interface FunnelChartProps {
     /** Percentage of first stage's value */
     percentage: number;
   }) => void;
-  /** Drill-down content renderer. When set, clicking a part opens the drill-down panel. Takes priority over crossFilter for the click action. */
-  drillDown?: (event: { id: string; value: number; label: string }) => React.ReactNode;
+  /** Drill-down content renderer. When set, clicking a part opens the drill-down panel. Takes priority over crossFilter for the click action.
+   *  Pass `true` for an auto-generated detail table, or a function for custom content. */
+  drillDown?: true | ((event: { id: string; value: number; label: string }) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable/disable chart animation. Default: true */
@@ -420,9 +422,12 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
                       });
                     }
                     if (drillDown) {
+                      const content = drillDown === true
+                        ? <AutoDrillTable data={data as unknown as Record<string, unknown>[]} field="id" value={String(part.data.id)} />
+                        : drillDown({ id: String(part.data.id), value: part.data.value, label: partLabel });
                       openDrill(
                         { title: partLabel, field: crossFilterField ?? "id", value: String(part.data.id), mode: drillDownMode },
-                        drillDown({ id: String(part.data.id), value: part.data.value, label: partLabel }),
+                        content,
                       );
                     } else if (crossFilterProp && crossFilter && crossFilterField) {
                       crossFilter.select({ field: crossFilterField, value: String(part.data.id) });

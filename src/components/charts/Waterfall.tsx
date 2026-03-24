@@ -15,6 +15,7 @@ import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/type
 import type { BarClickEvent } from "@/lib/chartTypes";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -68,8 +69,9 @@ export interface WaterfallProps {
   yAxisLabel?: string;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
-  /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action. */
-  drillDown?: (event: BarClickEvent) => React.ReactNode;
+  /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action.
+   *  Pass `true` for an auto-generated detail table, or a function for custom content. */
+  drillDown?: true | ((event: BarClickEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Emit cross-filter selection on bar click. Defaults field to "label". */
@@ -510,9 +512,12 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
                         key: String(datum.id),
                         indexValue: datum.indexValue,
                       };
+                      const content = drillDown === true
+                        ? <AutoDrillTable data={rawData as unknown as Record<string, unknown>[]} field="label" value={String(datum.indexValue)} />
+                        : drillDown(event);
                       openDrill(
                         { title: String(datum.indexValue), field: crossFilterField ?? "label", value: datum.indexValue, mode: drillDownMode },
-                        drillDown(event),
+                        content,
                       );
                     } else if (crossFilterProp && crossFilter && crossFilterField) {
                       crossFilter.select({ field: crossFilterField, value: datum.indexValue as string | number });

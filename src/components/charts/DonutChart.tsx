@@ -23,6 +23,7 @@ import { toDonutData, type Category } from "@/lib/dataTransform";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -110,8 +111,9 @@ export interface DonutChartProps {
   hideZeroSlices?: boolean;
   /** Click handler for slices */
   onSliceClick?: (slice: SliceClickEvent) => void;
-  /** Drill-down content renderer. When set, clicking a slice opens the drill-down panel. Takes priority over crossFilter for the click action. */
-  drillDown?: (event: SliceClickEvent) => React.ReactNode;
+  /** Drill-down content renderer. When set, clicking a slice opens the drill-down panel. Takes priority over crossFilter for the click action.
+   *  Pass `true` for an auto-generated detail table, or a function for custom content. */
+  drillDown?: true | ((event: SliceClickEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "id" as the field, or `{ field }` to override. */
@@ -582,9 +584,12 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
                   };
                   onSliceClick?.(event);
                   if (drillDown) {
+                    const content = drillDown === true
+                      ? <AutoDrillTable data={dataProp as Record<string, unknown>[]} field={indexProp ?? "id"} value={String(datum.id)} />
+                      : drillDown(event);
                     openDrill(
                       { title: String(datum.label), field: crossFilterField ?? "id", value: datum.id, mode: drillDownMode },
-                      drillDown(event),
+                      content,
                     );
                   } else if (crossFilterProp && crossFilter && crossFilterField) {
                     crossFilter.select({ field: crossFilterField, value: datum.id });
