@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { Download, Image, FileSpreadsheet, Clipboard, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  captureElementAsImage,
   captureElementAsPng,
   generateCsv,
   downloadFile,
@@ -89,12 +88,11 @@ export function ExportButton({
 
   const handleImage = useCallback(async () => {
     if (!targetRef.current) return;
-    // Close dropdown and wait for render before capturing
     setOpen(false);
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     try {
-      const { blob, ext } = await captureElementAsImage(targetRef.current);
-      downloadFile(blob, exportFilename(title, ext, filterLabel));
+      const blob = await captureElementAsPng(targetRef.current);
+      downloadFile(blob, exportFilename(title, "png", filterLabel));
     } catch (err) {
       console.error("Image export failed:", err);
     }

@@ -1,7 +1,7 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-// Export utilities — PNG capture, CSV generation, clipboard, file naming
+// Export utilities — image capture, CSV generation, clipboard, file naming
 // ---------------------------------------------------------------------------
 
 /**
@@ -15,274 +15,32 @@ export function exportFilename(
 ): string {
   const date = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const parts = [title, filters, date].filter(Boolean).join(" — ");
-  // Sanitize for filesystem
   const clean = parts.replace(/[<>:"/\\|?*]/g, "").replace(/\s+/g, " ").trim();
   return `${clean}.${ext}`;
 }
 
 /**
- * Capture a DOM element as an image blob.
- *
- * Strategy: if the element contains an SVG (chart), serialize the SVG
- * with inlined styles and offer as SVG blob. Clean, vector, perfect quality.
- * No html2canvas dependency for charts.
- *
- * For non-SVG elements, falls back to html2canvas.
+ * Capture a DOM element as a PNG blob using modern-screenshot.
+ * Handles modern CSS (color-mix, oklch, lab, var()) correctly.
  */
-export async function captureElementAsImage(element: HTMLElement): Promise<{ blob: Blob; ext: string }> {
+export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
+  const { domToBlob } = await import("modern-screenshot");
+
   element.classList.add("mu-exporting");
 
   try {
-    // Check for SVG (Nivo charts)
-    const svg = element.querySelector("svg");
-    if (svg) {
-      const blob = captureSvg(svg, element);
-      return { blob, ext: "svg" };
-    }
-
-    // Fallback: html2canvas for non-SVG (KPIs, tables)
-    const html2canvas = (await import("html2canvas")).default;
-    const scale = window.devicePixelRatio || 2;
-
-    // Suppress unsupported color function warnings
-    const origError = console.error;
-    const origWarn = console.warn;
-    const suppress = (...args: unknown[]) => {
-      const msg = args.map(String).join(" ");
-      if (msg.includes("color")) return;
-      origError.apply(console, args);
-    };
-    console.error = suppress;
-    console.warn = suppress;
-
-    const canvas = await html2canvas(element, { scale, backgroundColor: null, useCORS: true, logging: false });
-
-    console.error = origError;
-    console.warn = origWarn;
-
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((b) => b ? resolve(b) : reject(new Error("toBlob failed")), "image/png");
+    const blob = await domToBlob(element, {
+      scale: window.devicePixelRatio || 2,
     });
-    return { blob, ext: "png" };
+    if (!blob) throw new Error("Screenshot failed");
+    return blob;
   } finally {
     element.classList.remove("mu-exporting");
   }
 }
 
-/** Legacy alias */
-export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
-  const { blob } = await captureElementAsImage(element);
-  return blob;
-}
-
-/**
- * Serialize an SVG with all computed styles inlined.
- */
-function captureSvg(svg: SVGElement, container: HTMLElement): Blob {
-  const clone = svg.cloneNode(true) as SVGElement;
-
-  // Inline all computed styles on every element
-  inlineComputedStyles(svg, clone);
-
-  // Set explicit dimensions
-  const rect = svg.getBoundingClientRect();
-  clone.setAttribute("width", String(rect.width));
-  clone.setAttribute("height", String(rect.height));
-  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-
-  // Add background from container
-  const bg = getComputedStyle(container).backgroundColor;
-  if (bg && bg !== "rgba(0, 0, 0, 0)") {
-    const bgRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    bgRect.setAttribute("width", "100%");
-    bgRect.setAttribute("height", "100%");
-    bgRect.setAttribute("fill", bg);
-    clone.insertBefore(bgRect, clone.firstChild);
-  }
-
-  // Add title text above the chart
-  const titleEl = container.querySelector("[class*='uppercase']") as HTMLElement | null;
-  if (titleEl?.textContent) {
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    const titleStyle = getComputedStyle(titleEl);
-    text.setAttribute("x", "16");
-    text.setAttribute("y", "20");
-    text.setAttribute("fill", titleStyle.color);
-    text.setAttribute("font-family", titleStyle.fontFamily);
-    text.setAttribute("font-size", "11px");
-    text.setAttribute("font-weight", "500");
-    text.setAttribute("letter-spacing", "0.05em");
-    text.textContent = titleEl.textContent;
-    clone.insertBefore(text, clone.firstChild);
-  }
-
-  const serializer = new XMLSerializer();
-  const svgString = serializer.serializeToString(clone);
-  return new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-}
-
-function inlineComputedStyles(source: Element, clone: Element) {
-  const computed = getComputedStyle(source);
-  const el = clone as SVGElement;
-
-  // Inline key visual properties
-  for (const prop of [
-    "fill", "stroke", "stroke-width", "stroke-dasharray", "stroke-linecap",
-    "stroke-linejoin", "opacity", "font-family", "font-size", "font-weight",
-    "text-anchor", "dominant-baseline", "letter-spacing", "visibility", "display",
-  ]) {
-    const val = computed.getPropertyValue(prop);
-    if (val && val !== "none" && val !== "normal" && val !== "visible" && val !== "") {
-      el.style.setProperty(prop, val);
-    }
-  }
-
-  for (let i = 0; i < source.children.length && i < clone.children.length; i++) {
-    inlineComputedStyles(source.children[i], clone.children[i]);
-  }
-}
-
-/**
- * Embed all page fonts as base64 @font-face rules.
- * Uses document.fonts API + stylesheet scanning to find font URLs,
- * fetches them, and injects inline rules so html2canvas can use them.
- */
-async function embedFonts(element: HTMLElement): Promise<HTMLStyleElement | null> {
-  // Collect unique font families used in the element
-  const fontFamilies = new Set<string>();
-  const allElements = [element, ...element.querySelectorAll("*")];
-  for (const el of allElements) {
-    const computed = getComputedStyle(el as Element);
-    const family = computed.fontFamily;
-    if (family) {
-      for (const f of family.split(",")) {
-        const name = f.trim().replace(/["']/g, "");
-        if (name && !isGenericFont(name)) fontFamilies.add(name);
-      }
-    }
-  }
-
-  if (fontFamilies.size === 0) return null;
-
-  // Strategy 1: Use document.fonts API to find loaded FontFace objects
-  const fontFaceCss: string[] = [];
-  const processedUrls = new Set<string>();
-
-  if ("fonts" in document) {
-    for (const face of document.fonts) {
-      const family = face.family.replace(/["']/g, "").trim();
-      if (!fontFamilies.has(family)) continue;
-
-      // FontFace doesn't expose the URL directly, but we can try
-      // to find it from the CSS source
-      const cssSource = (face as unknown as { src?: string }).src;
-      if (!cssSource) continue;
-
-      const urlMatch = String(cssSource).match(/url\(["']?([^"')]+)["']?\)/);
-      if (!urlMatch || processedUrls.has(urlMatch[1])) continue;
-      processedUrls.add(urlMatch[1]);
-
-      try {
-        const response = await fetch(urlMatch[1]);
-        const blob = await response.blob();
-        const base64 = await blobToBase64(blob);
-        const format = urlMatch[1].includes(".woff2") ? "woff2" : urlMatch[1].includes(".woff") ? "woff" : "truetype";
-        fontFaceCss.push(`@font-face { font-family: "${family}"; src: url(${base64}) format("${format}"); font-weight: ${face.weight || "400"}; font-style: ${face.style || "normal"}; }`);
-      } catch { /* skip */ }
-    }
-  }
-
-  // Strategy 2: Scan stylesheets for @font-face rules
-  for (const sheet of document.styleSheets) {
-    try {
-      for (const rule of sheet.cssRules) {
-        if (!(rule instanceof CSSFontFaceRule)) continue;
-        const family = rule.style.getPropertyValue("font-family").replace(/["']/g, "").trim();
-        if (!fontFamilies.has(family)) continue;
-        const src = rule.style.getPropertyValue("src");
-        if (!src) continue;
-        const urlMatch = src.match(/url\(["']?([^"')]+)["']?\)/);
-        if (!urlMatch || processedUrls.has(urlMatch[1])) continue;
-        processedUrls.add(urlMatch[1]);
-
-        try {
-          const response = await fetch(urlMatch[1]);
-          const blob = await response.blob();
-          const base64 = await blobToBase64(blob);
-          const format = urlMatch[1].includes(".woff2") ? "woff2" : urlMatch[1].includes(".woff") ? "woff" : "truetype";
-          const weight = rule.style.getPropertyValue("font-weight") || "400";
-          const style = rule.style.getPropertyValue("font-style") || "normal";
-          fontFaceCss.push(`@font-face { font-family: "${family}"; src: url(${base64}) format("${format}"); font-weight: ${weight}; font-style: ${style}; }`);
-        } catch { /* skip */ }
-      }
-    } catch { /* cross-origin — skip */ }
-  }
-
-  // Strategy 3: Scan all <style> and <link> tags in <head> for @font-face with matching families
-  if (fontFaceCss.length === 0) {
-    const styleEls = document.querySelectorAll("style");
-    for (const styleEl of styleEls) {
-      const text = styleEl.textContent ?? "";
-      // Match @font-face blocks
-      const faceRegex = /@font-face\s*\{[^}]*\}/g;
-      let match;
-      while ((match = faceRegex.exec(text)) !== null) {
-        const block = match[0];
-        // Check if this font-face is for a family we need
-        const familyMatch = block.match(/font-family:\s*["']?([^;"']+)["']?/);
-        if (!familyMatch) continue;
-        const family = familyMatch[1].trim();
-
-        // Check against our needed families (Next.js uses generated class names as family)
-        // Also check if any needed family is a substring (Next.js might use __DM_Sans_xxxxx)
-        let needed = fontFamilies.has(family);
-        if (!needed) {
-          for (const f of fontFamilies) {
-            if (family.includes(f) || f.includes(family)) { needed = true; break; }
-          }
-        }
-        if (!needed) continue;
-
-        const urlMatch = block.match(/url\(["']?([^"')]+)["']?\)/);
-        if (!urlMatch || processedUrls.has(urlMatch[1])) continue;
-        processedUrls.add(urlMatch[1]);
-
-        try {
-          const response = await fetch(urlMatch[1]);
-          const blob = await response.blob();
-          const base64 = await blobToBase64(blob);
-          const format = urlMatch[1].includes(".woff2") ? "woff2" : "truetype";
-          // Reconstruct the @font-face with embedded data
-          const newBlock = block.replace(/url\(["']?[^"')]+["']?\)/, `url(${base64})`);
-          fontFaceCss.push(newBlock);
-        } catch { /* skip */ }
-      }
-    }
-  }
-
-  if (fontFaceCss.length === 0) return null;
-
-  const style = document.createElement("style");
-  style.textContent = fontFaceCss.join("\n");
-  return style;
-}
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-function isGenericFont(name: string): boolean {
-  return ["serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui", "ui-sans-serif", "ui-serif", "ui-monospace", "ui-rounded"].includes(name.toLowerCase());
-}
-
 /**
  * Generate CSV content from tabular data.
- * Values are formatted through the provided formatter if given.
  */
 export function generateCsv(
   data: Record<string, unknown>[],
@@ -291,22 +49,18 @@ export function generateCsv(
 ): string {
   if (data.length === 0) return "";
 
-  // Auto-detect columns if not provided
   const cols: { key: string; header?: string; format?: (v: unknown) => string }[] =
     columns ?? Object.keys(data[0]).map((key) => ({ key, header: key }));
 
   const lines: string[] = [];
 
-  // Metadata line (filter context)
   if (metadata) {
     lines.push(`# ${metadata}`);
     lines.push("");
   }
 
-  // Header row
   lines.push(cols.map((c) => csvEscape(c.header ?? c.key)).join(","));
 
-  // Data rows
   for (const row of data) {
     lines.push(
       cols.map((c) => {
