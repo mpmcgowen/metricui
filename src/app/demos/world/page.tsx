@@ -300,34 +300,11 @@ function CountryTable({ data, tableView }: {
       searchable
       multiSort
       striped
-      drillDownMode="modal"
       drillDown={(row) => {
         const countryName = String(row.name);
         const country = countries.find((c) => c.name === countryName);
         if (!country) return <div>Country not found</div>;
-        const density = country.area > 0 ? Math.round(country.population / country.area) : 0;
-        return (
-          <MetricGrid>
-            <KpiCard title="Population" value={country.population} format="compact" icon={<Users className="h-3.5 w-3.5" />} />
-            <KpiCard title="Area" value={country.area} format={{ style: "custom", suffix: " km\u00B2" }} />
-            <KpiCard title="Density" value={density} format={{ style: "custom", suffix: " /km\u00B2" }} />
-            <StatGroup
-              stats={[
-                { label: "Capital", value: country.capital || "\u2014" },
-                { label: "Region", value: country.region },
-                { label: "Subregion", value: country.subregion || "\u2014" },
-              ]}
-              dense
-            />
-            <StatGroup
-              stats={[
-                { label: "Languages", value: country.languages.join(", ") || "\u2014" },
-                { label: "Currencies", value: country.currencies.map((c) => `${c.code} (${c.symbol})`).join(", ") || "\u2014" },
-              ]}
-              dense
-            />
-          </MetricGrid>
-        );
+        return <CountryDetail country={country} />;
       }}
     />
   );
@@ -336,6 +313,88 @@ function CountryTable({ data, tableView }: {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Country detail — level 3/4 drill with drillable languages
+// ---------------------------------------------------------------------------
+
+function CountryDetail({ country }: { country: Country }) {
+  const openDrill = useDrillDownAction();
+  const density = country.area > 0 ? Math.round(country.population / country.area) : 0;
+
+  return (
+    <MetricGrid>
+      <KpiCard title="Population" value={country.population} format="compact" icon={<Users className="h-3.5 w-3.5" />} />
+      <KpiCard title="Area" value={country.area} format={{ style: "custom", suffix: " km\u00B2" }} />
+      <KpiCard title="Density" value={density} format={{ style: "custom", suffix: " /km\u00B2" }} />
+      <StatGroup
+        stats={[
+          { label: "Capital", value: country.capital || "\u2014" },
+          { label: "Region", value: country.region },
+          { label: "Subregion", value: country.subregion || "\u2014" },
+        ]}
+        dense
+      />
+      {/* Drillable languages — click a language to see all countries that speak it (level 4) */}
+      <DataTable
+        data={country.languages.map((lang) => {
+          const speakingCountries = countries.filter((c) => c.languages.includes(lang));
+          return { language: lang, countries: speakingCountries.length };
+        }) as never[]}
+        columns={[
+          { key: "language", header: "Language", sortable: true },
+          { key: "countries", header: "Countries Speaking", format: "number" as const, sortable: true, align: "right" as const },
+        ] as never[]}
+        title={`Languages (${country.languages.length})`}
+        dense
+        drillDown={(row) => {
+          const lang = String(row.language);
+          const langCountries = countries.filter((c) => c.languages.includes(lang));
+          return (
+            <MetricGrid>
+              <KpiCard title="Countries" value={langCountries.length} format="number" />
+              <KpiCard title="Total Population" value={langCountries.reduce((s, c) => s + c.population, 0)} format="compact" />
+              <DataTable
+                data={langCountries.map((c) => ({
+                  name: c.name,
+                  region: c.region,
+                  population: c.population,
+                  capital: c.capital || "\u2014",
+                  flag: c.flag,
+                })) as never[]}
+                columns={[
+                  { key: "name", header: "Country", sortable: true, render: (val: unknown, r: Record<string, unknown>) => (
+                    <span className="flex items-center gap-2">
+                      {Boolean(r.flag) && <img src={String(r.flag)} alt="" className="h-4 w-6 rounded-sm object-cover" />}
+                      <span className="font-medium">{String(val)}</span>
+                    </span>
+                  ) },
+                  { key: "capital", header: "Capital" },
+                  { key: "region", header: "Region", sortable: true },
+                  { key: "population", header: "Population", format: "compact" as const, sortable: true, align: "right" as const },
+                ] as never[]}
+                title={`Countries with ${lang}`}
+                pageSize={15}
+                dense
+                searchable
+              />
+            </MetricGrid>
+          );
+        }}
+      />
+      <DataTable
+        data={country.currencies.map((c) => ({ code: c.code, name: c.name, symbol: c.symbol })) as never[]}
+        columns={[
+          { key: "code", header: "Code" },
+          { key: "name", header: "Currency" },
+          { key: "symbol", header: "Symbol" },
+        ] as never[]}
+        title={`Currencies (${country.currencies.length})`}
+        dense
+      />
+    </MetricGrid>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Nested drill components — must be separate to call useDrillDownAction()
