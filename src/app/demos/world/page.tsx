@@ -293,7 +293,7 @@ function CountryTable({ data, tableView }: {
           },
         ] as never[]
       }
-      title={`${tableView === "Top 100" ? "Top 100 Countries" : tableView} (${data.length})`}
+      title={`${tableView === "All" ? "All Countries" : tableView} (${data.length})`}
       subtitle="Sorted by population — click a row for country details"
       pageSize={15}
       dense
@@ -502,12 +502,12 @@ function DashboardContent() {
   const cf = useCrossFilter();
   const filters = useMetricFilters();
   const openDrill = useDrillDownAction();
-  const tableView = filters?.dimensions?.tableView?.[0] ?? "Top 100";
+  const tableView = filters?.dimensions?.tableView?.[0] ?? "All";
 
   // Filter countries by segment toggle + cross-filter
   const filteredCountries = useMemo(() => {
     let result = countries;
-    if (tableView !== "Top 100") {
+    if (tableView !== "All") {
       result = result.filter((c) => c.region === tableView);
     }
     if (cf?.isActive && cf.selection?.field === "region") {
@@ -524,7 +524,7 @@ function DashboardContent() {
   const populationByRegion = allData.populationByRegion;
 
   const filteredTable = useMemo(() => {
-    if (tableView === "Top 100") return data.tableData;
+    if (tableView === "All") return data.tableData;
     return data.tableData.filter((c) => c.region === tableView);
   }, [tableView, data.tableData]);
 
@@ -537,14 +537,14 @@ function DashboardContent() {
           >
             <SegmentToggle
               options={[
-                { value: "Top 100", label: "Top 100" },
+                { value: "All", label: "All" },
                 { value: "Africa", label: "Africa" },
                 { value: "Americas", label: "Americas" },
                 { value: "Asia", label: "Asia" },
                 { value: "Europe", label: "Europe" },
                 { value: "Oceania", label: "Oceania" },
               ]}
-              defaultValue="Top 100"
+              defaultValue="All"
               field="tableView"
               size="sm"
             />

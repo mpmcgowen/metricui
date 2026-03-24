@@ -120,6 +120,11 @@ export const SegmentToggle = forwardRef<HTMLDivElement, SegmentToggleProps>(
       return options.length > 0 ? [options[0].value] : [];
     });
 
+    const resolvedDefault = useMemo(() => {
+      if (defaultValue) return Array.isArray(defaultValue) ? defaultValue : [defaultValue];
+      return options.length > 0 ? [options[0].value] : [];
+    }, [defaultValue, options]);
+
     const activeValues = useMemo((): string[] => {
       if (valueProp !== undefined) {
         return Array.isArray(valueProp) ? valueProp : [valueProp];
@@ -127,9 +132,11 @@ export const SegmentToggle = forwardRef<HTMLDivElement, SegmentToggleProps>(
       if (field && filters) {
         const dimValues = filters.dimensions[field];
         if (dimValues && dimValues.length > 0) return dimValues;
+        // Dimension cleared — return default, not stale internal state
+        return resolvedDefault;
       }
       return internalValue;
-    }, [valueProp, field, filters, internalValue]);
+    }, [valueProp, field, filters, internalValue, resolvedDefault]);
 
     // --- Click handler ---
     const handleClick = useCallback(
