@@ -248,7 +248,8 @@
 
 .mu-exporting .mu-hover-action,
 .mu-exporting [aria-label="Export"],
-.mu-exporting [aria-label="Collapse filters"] {
+.mu-exporting [aria-label="Collapse filters"],
+.mu-exporting [aria-label="More info"] {
   display: none !important;
 }
 

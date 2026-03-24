@@ -22,55 +22,51 @@ export function exportFilename(
 
 /**
  * Capture a DOM element as a PNG blob using html2canvas.
- * Adds .mu-exporting class to hide UI elements and fix truncation.
+ * Embeds fonts inline and resolves CSS variables before capture.
  */
 export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
   const html2canvas = (await import("html2canvas")).default;
   const scale = window.devicePixelRatio || 2;
 
-  // Resolve all CSS variables on SVG elements before capture
-  // (html2canvas can't resolve var() in SVG attributes)
-  const resolvedVars: { el: SVGElement | HTMLElement; attr: string; original: string }[] = [];
+  // Track all temporary changes to restore after capture
+  const cleanup: (() => void)[] = [];
+
+  // 1. Embed fonts inline so html2canvas can render them
+  const fontStyle = await embedFonts(element);
+  if (fontStyle) {
+    element.prepend(fontStyle);
+    cleanup.push(() => fontStyle.remove());
+  }
+
+  // 2. Resolve CSS variables on SVG elements
   element.querySelectorAll("svg *").forEach((el) => {
     const svgEl = el as SVGElement;
     const computed = getComputedStyle(svgEl);
-
-    // Inline fill/stroke/font that use CSS variables or need resolving
-    for (const attr of ["fill", "stroke", "color", "font-family", "font-size"] as const) {
-      const inline = svgEl.style.getPropertyValue(attr);
+    for (const attr of ["fill", "stroke", "color"] as const) {
       const attrVal = svgEl.getAttribute(attr);
+      const inline = svgEl.style.getPropertyValue(attr);
       if ((attrVal && attrVal.includes("var(")) || (inline && inline.includes("var("))) {
-        const resolved = computed.getPropertyValue(attr);
-        if (resolved) {
-          resolvedVars.push({ el: svgEl, attr, original: svgEl.style.getPropertyValue(attr) });
-          svgEl.style.setProperty(attr, resolved);
-        }
+        const original = svgEl.style.getPropertyValue(attr);
+        svgEl.style.setProperty(attr, computed.getPropertyValue(attr));
+        cleanup.push(() => original ? svgEl.style.setProperty(attr, original) : svgEl.style.removeProperty(attr));
       }
     }
   });
 
-  // Resolve fonts on SVG text elements (html2canvas needs explicit font-family)
+  // 3. Resolve fonts on SVG text elements
   element.querySelectorAll("svg text").forEach((el) => {
     const textEl = el as SVGTextElement;
     const computed = getComputedStyle(textEl);
-    resolvedVars.push({ el: textEl, attr: "font-family", original: textEl.style.fontFamily });
-    resolvedVars.push({ el: textEl, attr: "font-size", original: textEl.style.fontSize });
+    const origFamily = textEl.style.fontFamily;
+    const origSize = textEl.style.fontSize;
     textEl.style.fontFamily = computed.fontFamily;
     textEl.style.fontSize = computed.fontSize;
+    cleanup.push(() => { textEl.style.fontFamily = origFamily; textEl.style.fontSize = origSize; });
   });
 
-  // Also resolve CSS var colors on non-SVG text elements
-  element.querySelectorAll("[class*='text-[var(']").forEach((el) => {
-    const htmlEl = el as HTMLElement;
-    const computed = getComputedStyle(htmlEl);
-    const color = computed.color;
-    if (color) {
-      resolvedVars.push({ el: htmlEl, attr: "color", original: htmlEl.style.color });
-      htmlEl.style.color = color;
-    }
-  });
-
+  // 4. Hide UI elements
   element.classList.add("mu-exporting");
+  cleanup.push(() => element.classList.remove("mu-exporting"));
 
   try {
     const canvas = await html2canvas(element, {
@@ -87,16 +83,103 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
       }, "image/png");
     });
   } finally {
-    element.classList.remove("mu-exporting");
-    // Restore original styles
-    for (const { el, attr, original } of resolvedVars) {
-      if (original) {
-        el.style.setProperty(attr, original);
-      } else {
-        el.style.removeProperty(attr);
+    // Restore everything
+    for (const fn of cleanup) fn();
+  }
+}
+
+/**
+ * Find all fonts used in the element, fetch them, base64-encode,
+ * and return a <style> element with @font-face rules.
+ */
+async function embedFonts(element: HTMLElement): Promise<HTMLStyleElement | null> {
+  // Collect unique font families used in the element
+  const fontFamilies = new Set<string>();
+  const allElements = [element, ...element.querySelectorAll("*")];
+  for (const el of allElements) {
+    const computed = getComputedStyle(el as Element);
+    const family = computed.fontFamily;
+    if (family) {
+      // Parse individual font names from the family string
+      for (const f of family.split(",")) {
+        const name = f.trim().replace(/["']/g, "");
+        if (name && !isGenericFont(name)) {
+          fontFamilies.add(name);
+        }
       }
     }
   }
+
+  if (fontFamilies.size === 0) return null;
+
+  // Find @font-face rules from document stylesheets
+  const fontFaceRules: { family: string; src: string; weight: string; style: string }[] = [];
+
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const rule of sheet.cssRules) {
+        if (rule instanceof CSSFontFaceRule) {
+          const family = rule.style.getPropertyValue("font-family").replace(/["']/g, "").trim();
+          if (fontFamilies.has(family)) {
+            const src = rule.style.getPropertyValue("src");
+            const weight = rule.style.getPropertyValue("font-weight") || "400";
+            const style = rule.style.getPropertyValue("font-style") || "normal";
+            if (src) {
+              fontFaceRules.push({ family, src, weight, style });
+            }
+          }
+        }
+      }
+    } catch {
+      // Cross-origin stylesheet — skip
+    }
+  }
+
+  if (fontFaceRules.length === 0) return null;
+
+  // Fetch and base64-encode each font URL
+  const fontFaceCss: string[] = [];
+
+  for (const rule of fontFaceRules) {
+    // Extract URL from src
+    const urlMatch = rule.src.match(/url\(["']?([^"')]+)["']?\)/);
+    if (!urlMatch) continue;
+
+    try {
+      const response = await fetch(urlMatch[1]);
+      const blob = await response.blob();
+      const base64 = await blobToBase64(blob);
+      const format = urlMatch[1].endsWith(".woff2") ? "woff2" : urlMatch[1].endsWith(".woff") ? "woff" : "truetype";
+
+      fontFaceCss.push(`@font-face {
+  font-family: "${rule.family}";
+  src: url(${base64}) format("${format}");
+  font-weight: ${rule.weight};
+  font-style: ${rule.style};
+}`);
+    } catch {
+      // Font fetch failed — skip
+    }
+  }
+
+  if (fontFaceCss.length === 0) return null;
+
+  const style = document.createElement("style");
+  style.textContent = fontFaceCss.join("\n");
+  return style;
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function isGenericFont(name: string): boolean {
+  return ["serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui", "ui-sans-serif", "ui-serif", "ui-monospace", "ui-rounded"].includes(name.toLowerCase());
 }
 
 /**
