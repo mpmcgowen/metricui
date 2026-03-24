@@ -133,9 +133,12 @@ export function ExportButton({
       </button>
 
       {open && (
-        <div className={cn(
-          "absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-1 shadow-xl",
-        )}>
+        <div
+          className={cn(
+            "absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-1 shadow-xl",
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
             onClick={handlePng}
             className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-xs text-[var(--muted)] transition-colors hover:bg-[var(--card-glow)] hover:text-[var(--foreground)]"
