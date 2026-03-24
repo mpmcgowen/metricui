@@ -206,6 +206,23 @@ export function MetricProvider({ children, theme, colorScheme = "auto", ...overr
     return merged;
   }, [parent, overrides, resolvedTheme]);
 
+  // Set print-friendly document title during print
+  useEffect(() => {
+    if (!value.printMode) return;
+    const printTitle = typeof value.printMode === "object" && value.printMode.title
+      ? value.printMode.title
+      : "Dashboard Report";
+    const originalTitle = document.title;
+    const onBeforePrint = () => { document.title = printTitle; };
+    const onAfterPrint = () => { document.title = originalTitle; };
+    window.addEventListener("beforeprint", onBeforePrint);
+    window.addEventListener("afterprint", onAfterPrint);
+    return () => {
+      window.removeEventListener("beforeprint", onBeforePrint);
+      window.removeEventListener("afterprint", onAfterPrint);
+    };
+  }, [value.printMode]);
+
   // Apply accent color as CSS variable override via inline style
   const style = useMemo((): React.CSSProperties | undefined => {
     if (!resolvedTheme) return undefined;
