@@ -432,6 +432,17 @@
     display: none !important;
   }
 
+  /* --- SVGs must fit their containers --- */
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* --- Cards don't split across pages --- */
+  [data-metric-card] {
+    break-inside: avoid !important;
+  }
+
   /* --- Show report header/footer --- */
   .mu-print-header {
     display: flex !important;
