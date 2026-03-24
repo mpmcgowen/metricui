@@ -21,103 +21,124 @@ export function exportFilename(
 }
 
 /**
- * Capture a DOM element as a PNG blob using html2canvas.
- * Embeds fonts inline and resolves CSS variables before capture.
+ * Capture a DOM element as an image blob.
+ *
+ * Strategy: if the element contains an SVG (chart), serialize the SVG
+ * with inlined styles and offer as SVG blob. Clean, vector, perfect quality.
+ * No html2canvas dependency for charts.
+ *
+ * For non-SVG elements, falls back to html2canvas.
  */
-export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
-  const html2canvas = (await import("html2canvas")).default;
-  const scale = window.devicePixelRatio || 2;
-
-  // Track all temporary changes to restore after capture
-  const cleanup: (() => void)[] = [];
-
-  // 1. Embed fonts inline so html2canvas can render them
-  const fontStyle = await embedFonts(element);
-  if (fontStyle) {
-    element.prepend(fontStyle);
-    cleanup.push(() => fontStyle.remove());
-  }
-
-  // 2. Resolve CSS variables on SVG elements
-  element.querySelectorAll("svg *").forEach((el) => {
-    const svgEl = el as SVGElement;
-    const computed = getComputedStyle(svgEl);
-    for (const attr of ["fill", "stroke", "color"] as const) {
-      const attrVal = svgEl.getAttribute(attr);
-      const inline = svgEl.style.getPropertyValue(attr);
-      if ((attrVal && attrVal.includes("var(")) || (inline && inline.includes("var("))) {
-        const original = svgEl.style.getPropertyValue(attr);
-        svgEl.style.setProperty(attr, computed.getPropertyValue(attr));
-        cleanup.push(() => original ? svgEl.style.setProperty(attr, original) : svgEl.style.removeProperty(attr));
-      }
-    }
-  });
-
-  // 3. Resolve fonts on SVG text elements
-  element.querySelectorAll("svg text").forEach((el) => {
-    const textEl = el as SVGTextElement;
-    const computed = getComputedStyle(textEl);
-    const origFamily = textEl.style.fontFamily;
-    const origSize = textEl.style.fontSize;
-    textEl.style.fontFamily = computed.fontFamily;
-    textEl.style.fontSize = computed.fontSize;
-    cleanup.push(() => { textEl.style.fontFamily = origFamily; textEl.style.fontSize = origSize; });
-  });
-
-  // 4. Resolve ALL inline styles with color-mix/var/color() (html2canvas can't parse them)
-  const allEls = [element, ...element.querySelectorAll("*")] as HTMLElement[];
-  const colorProps = ["color", "background-color", "border-color", "outline-color", "box-shadow", "outline", "background", "border"] as const;
-  for (const el of allEls) {
-    const computed = getComputedStyle(el);
-    for (const prop of colorProps) {
-      const raw = el.style.getPropertyValue(prop);
-      if (raw && (raw.includes("color-mix") || raw.includes("var(") || raw.includes("color("))) {
-        const resolved = computed.getPropertyValue(prop);
-        el.style.setProperty(prop, resolved);
-        cleanup.push(() => el.style.setProperty(prop, raw));
-      }
-    }
-  }
-
-  // 5. Hide UI elements
+export async function captureElementAsImage(element: HTMLElement): Promise<{ blob: Blob; ext: string }> {
   element.classList.add("mu-exporting");
-  cleanup.push(() => element.classList.remove("mu-exporting"));
 
   try {
-    // Temporarily suppress console errors from html2canvas parsing unsupported CSS color functions
+    // Check for SVG (Nivo charts)
+    const svg = element.querySelector("svg");
+    if (svg) {
+      const blob = captureSvg(svg, element);
+      return { blob, ext: "svg" };
+    }
+
+    // Fallback: html2canvas for non-SVG (KPIs, tables)
+    const html2canvas = (await import("html2canvas")).default;
+    const scale = window.devicePixelRatio || 2;
+
+    // Suppress unsupported color function warnings
     const origError = console.error;
     const origWarn = console.warn;
     const suppress = (...args: unknown[]) => {
       const msg = args.map(String).join(" ");
-      if (msg.includes("unsupported color") || msg.includes("color function")) return;
+      if (msg.includes("color")) return;
       origError.apply(console, args);
     };
     console.error = suppress;
-    console.warn = (...args: unknown[]) => {
-      const msg = args.map(String).join(" ");
-      if (msg.includes("unsupported color") || msg.includes("color function")) return;
-      origWarn.apply(console, args);
-    };
+    console.warn = suppress;
 
-    const canvas = await html2canvas(element, {
-      scale,
-      backgroundColor: null,
-      useCORS: true,
-      logging: false,
-    });
+    const canvas = await html2canvas(element, { scale, backgroundColor: null, useCORS: true, logging: false });
 
     console.error = origError;
     console.warn = origWarn;
 
-    return new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("Canvas toBlob failed"));
-      }, "image/png");
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => b ? resolve(b) : reject(new Error("toBlob failed")), "image/png");
     });
+    return { blob, ext: "png" };
   } finally {
-    // Restore everything
-    for (const fn of cleanup) fn();
+    element.classList.remove("mu-exporting");
+  }
+}
+
+/** Legacy alias */
+export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
+  const { blob } = await captureElementAsImage(element);
+  return blob;
+}
+
+/**
+ * Serialize an SVG with all computed styles inlined.
+ */
+function captureSvg(svg: SVGElement, container: HTMLElement): Blob {
+  const clone = svg.cloneNode(true) as SVGElement;
+
+  // Inline all computed styles on every element
+  inlineComputedStyles(svg, clone);
+
+  // Set explicit dimensions
+  const rect = svg.getBoundingClientRect();
+  clone.setAttribute("width", String(rect.width));
+  clone.setAttribute("height", String(rect.height));
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+
+  // Add background from container
+  const bg = getComputedStyle(container).backgroundColor;
+  if (bg && bg !== "rgba(0, 0, 0, 0)") {
+    const bgRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    bgRect.setAttribute("width", "100%");
+    bgRect.setAttribute("height", "100%");
+    bgRect.setAttribute("fill", bg);
+    clone.insertBefore(bgRect, clone.firstChild);
+  }
+
+  // Add title text above the chart
+  const titleEl = container.querySelector("[class*='uppercase']") as HTMLElement | null;
+  if (titleEl?.textContent) {
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const titleStyle = getComputedStyle(titleEl);
+    text.setAttribute("x", "16");
+    text.setAttribute("y", "20");
+    text.setAttribute("fill", titleStyle.color);
+    text.setAttribute("font-family", titleStyle.fontFamily);
+    text.setAttribute("font-size", "11px");
+    text.setAttribute("font-weight", "500");
+    text.setAttribute("letter-spacing", "0.05em");
+    text.textContent = titleEl.textContent;
+    clone.insertBefore(text, clone.firstChild);
+  }
+
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(clone);
+  return new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+}
+
+function inlineComputedStyles(source: Element, clone: Element) {
+  const computed = getComputedStyle(source);
+  const el = clone as SVGElement;
+
+  // Inline key visual properties
+  for (const prop of [
+    "fill", "stroke", "stroke-width", "stroke-dasharray", "stroke-linecap",
+    "stroke-linejoin", "opacity", "font-family", "font-size", "font-weight",
+    "text-anchor", "dominant-baseline", "letter-spacing", "visibility", "display",
+  ]) {
+    const val = computed.getPropertyValue(prop);
+    if (val && val !== "none" && val !== "normal" && val !== "visible" && val !== "") {
+      el.style.setProperty(prop, val);
+    }
+  }
+
+  for (let i = 0; i < source.children.length && i < clone.children.length; i++) {
+    inlineComputedStyles(source.children[i], clone.children[i]);
   }
 }
 

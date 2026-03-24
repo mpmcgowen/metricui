@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Download, Image, FileSpreadsheet, Clipboard, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  captureElementAsImage,
   captureElementAsPng,
   generateCsv,
   downloadFile,
@@ -86,16 +87,16 @@ export function ExportButton({
     return parts.length > 0 ? parts.join(", ") : undefined;
   })();
 
-  const handlePng = useCallback(async () => {
+  const handleImage = useCallback(async () => {
     if (!targetRef.current) return;
     // Close dropdown and wait for render before capturing
     setOpen(false);
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     try {
-      const blob = await captureElementAsPng(targetRef.current);
-      downloadFile(blob, exportFilename(title, "png", filterLabel));
+      const { blob, ext } = await captureElementAsImage(targetRef.current);
+      downloadFile(blob, exportFilename(title, ext, filterLabel));
     } catch (err) {
-      console.error("PNG export failed:", err);
+      console.error("Image export failed:", err);
     }
   }, [targetRef, title, filterLabel]);
 
@@ -152,7 +153,7 @@ export function ExportButton({
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            onClick={handlePng}
+            onClick={handleImage}
             className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-xs text-[var(--muted)] transition-colors hover:bg-[var(--card-glow)] hover:text-[var(--foreground)]"
           >
             <Image className="h-3 w-3" />
