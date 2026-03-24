@@ -435,7 +435,6 @@
   /* --- SVGs must fit their containers --- */
   svg {
     max-width: 100% !important;
-    height: auto !important;
   }
 
   /* --- Cards don't split across pages --- */
