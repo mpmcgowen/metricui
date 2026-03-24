@@ -9,7 +9,7 @@ import type {
   PieLayer,
 } from "@nivo/pie";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip } from "./ChartTooltip";
+import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
@@ -118,6 +118,8 @@ export interface DonutChartProps {
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "id" as the field, or `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
+  /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
+  tooltipHint?: boolean | string;
   /** Compact layout — reduces margins and default height. Default: false */
   dense?: boolean;
   /** How null / missing data points are handled. No behavioral change for donut; included for API consistency. */
@@ -150,10 +152,12 @@ function DonutTooltipWrapper({
   format,
   showPercentage,
   total,
+  actionHint,
 }: PieTooltipProps<DonutDatum> & {
   format?: FormatOption;
   showPercentage?: boolean;
   total: number;
+  actionHint?: string;
 }) {
   const localeDefaults = useLocale();
   const pct = total > 0 ? ((datum.value / total) * 100).toFixed(1) : "0";
@@ -172,6 +176,7 @@ function DonutTooltipWrapper({
             : `${pct}%`,
         },
       ]}
+      actionHint={actionHint}
     />
   );
 }
@@ -299,6 +304,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   drillDown,
   drillDownMode,
   crossFilter: crossFilterProp,
+  tooltipHint,
   dense,
   chartNullMode,
   animate: animateProp,
@@ -571,6 +577,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
               format={format}
               showPercentage={showPercentage}
               total={total}
+              actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
             />
           )}
           onClick={

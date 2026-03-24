@@ -11,6 +11,7 @@ import { useRef, useLayoutEffect, useState } from "react";
  */
 export function TooltipWrapper({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
+  const nudgeRef = useRef({ x: 0, y: 0 });
   const [nudge, setNudge] = useState({ x: 0, y: 0 });
 
   useLayoutEffect(() => {
@@ -20,29 +21,24 @@ export function TooltipWrapper({ children }: { children: React.ReactNode }) {
     const rect = el.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const pad = 8; // minimum gap from viewport edge
+    const pad = 8;
+
+    // Compute the natural (untransformed) rect by subtracting current nudge
+    const naturalRight = rect.right - nudgeRef.current.x;
+    const naturalLeft = rect.left - nudgeRef.current.x;
+    const naturalBottom = rect.bottom - nudgeRef.current.y;
+    const naturalTop = rect.top - nudgeRef.current.y;
 
     let dx = 0;
     let dy = 0;
 
-    // Right edge overflow
-    if (rect.right > vw - pad) {
-      dx = vw - pad - rect.right;
-    }
-    // Left edge overflow
-    if (rect.left + dx < pad) {
-      dx = pad - rect.left;
-    }
-    // Bottom edge overflow
-    if (rect.bottom > vh - pad) {
-      dy = vh - pad - rect.bottom;
-    }
-    // Top edge overflow
-    if (rect.top + dy < pad) {
-      dy = pad - rect.top;
-    }
+    if (naturalRight > vw - pad) dx = vw - pad - naturalRight;
+    if (naturalLeft + dx < pad) dx = pad - naturalLeft;
+    if (naturalBottom > vh - pad) dy = vh - pad - naturalBottom;
+    if (naturalTop + dy < pad) dy = pad - naturalTop;
 
-    if (dx !== nudge.x || dy !== nudge.y) {
+    if (dx !== nudgeRef.current.x || dy !== nudgeRef.current.y) {
+      nudgeRef.current = { x: dx, y: dy };
       setNudge({ x: dx, y: dy });
     }
   });

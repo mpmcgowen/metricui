@@ -2,6 +2,38 @@
 
 import { TooltipWrapper } from "./TooltipWrapper";
 
+// ---------------------------------------------------------------------------
+// Action hint resolver — shared across all chart components
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolves the tooltip action hint string based on the chart's interactive props.
+ * Priority: drillDown > crossFilter. Returns undefined if no action or hints disabled.
+ *
+ * @param tooltipHint - Per-component override: `true` = auto, `string` = custom, `false`/`undefined` = respect global
+ * @param globalHint - Global setting from MetricConfig.tooltipHint
+ * @param hasDrillDown - Whether drillDown prop is set
+ * @param hasCrossFilter - Whether crossFilter prop is active
+ */
+export function resolveActionHint(
+  tooltipHint: boolean | string | undefined,
+  globalHint: boolean,
+  hasDrillDown: boolean,
+  hasCrossFilter: boolean,
+): string | undefined {
+  // Explicit false = off
+  if (tooltipHint === false) return undefined;
+  // Custom string = use it directly
+  if (typeof tooltipHint === "string") return tooltipHint;
+  // No action = nothing to hint
+  if (!hasDrillDown && !hasCrossFilter) return undefined;
+  // Check global toggle (tooltipHint prop === true or undefined both respect global)
+  if (tooltipHint !== true && !globalHint) return undefined;
+  // Auto-resolve
+  if (hasDrillDown) return "Click to drill down";
+  return "Click to filter";
+}
+
 /**
  * Shared tooltip component for AreaChart, BarChart, and DonutChart.
  *
@@ -25,11 +57,13 @@ export interface ChartTooltipProps {
   comparisonItems?: ChartTooltipItem[];
   /** Optional label for the comparison section. Default: "Previous period" */
   comparisonLabel?: string;
+  /** Subtle hint shown at the bottom, e.g. "Click to drill down" */
+  actionHint?: string;
   /** Additional class name for the tooltip container */
   className?: string;
 }
 
-export function ChartTooltip({ header, items, comparisonItems, comparisonLabel = "Previous period", className }: ChartTooltipProps) {
+export function ChartTooltip({ header, items, comparisonItems, comparisonLabel = "Previous period", actionHint, className }: ChartTooltipProps) {
   return (
     <TooltipWrapper>
     <div style={{ padding: "8px", margin: "-8px" }}>
@@ -179,6 +213,22 @@ export function ChartTooltip({ header, items, comparisonItems, comparisonLabel =
             </div>
           ))}
         </>
+      )}
+      {actionHint && (
+        <div
+          style={{
+            fontSize: "9px",
+            color: "var(--muted)",
+            marginTop: "6px",
+            paddingTop: "5px",
+            borderTop: "1px solid var(--card-border)",
+            opacity: 0.6,
+            textAlign: "center",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {actionHint}
+        </div>
       )}
     </div>
     </div>

@@ -10,7 +10,7 @@ import type {
   BarTooltipProps,
 } from "@nivo/bar";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip } from "./ChartTooltip";
+import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
@@ -130,6 +130,8 @@ export interface BarChartProps {
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filtering. `true` uses indexBy as the field, or pass `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
+  /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
+  tooltipHint?: boolean | string;
   /** Compact layout — reduces margins and default height. Default: false */
   dense?: boolean;
   /** How null / missing data points are handled. Default: "gap" */
@@ -617,6 +619,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   drillDown,
   drillDownMode,
   crossFilter: crossFilterProp,
+  tooltipHint,
   dense,
   chartNullMode,
   animate: animateProp,
@@ -1077,6 +1080,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
                     ? formatValue(Number(row[key]), tooltipFormat, localeDefaults)
                     : "\u2014",
                 }))}
+                actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
               />
             );
           }}

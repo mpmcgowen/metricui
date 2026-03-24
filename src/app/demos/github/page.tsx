@@ -154,7 +154,8 @@ export default function GitHubDashboard() {
           />
         </div>
 
-        <FilterProvider defaultPreset="90d">
+        <FilterProvider defaultPreset="90d" referenceDate={new Date("2026-03-21")}>
+
         <CrossFilterProvider>
         <DrillDown.Root>
         <DashboardContent />
@@ -481,6 +482,7 @@ function DashboardContent() {
     <>
         {/* ── Filters ── */}
         <FilterBar
+          sticky
           tags={{ showCrossFilter: true, crossFilterLabels: { day: "Day" } }}
           className="mt-4"
         >
@@ -498,7 +500,7 @@ function DashboardContent() {
               field="view"
               size="sm"
             />
-            {view === "Issues" && allLabels.length > 0 && (
+            {view === "Issues" && (
               <DropdownFilter
                 label="Label"
                 options={allLabels}

@@ -22,6 +22,8 @@ import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { FilterBar } from "@/components/filters/FilterBar";
 import { DrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
+import { DrillDownProvider } from "@/lib/DrillDownContext";
+import { DrillDownOverlay } from "@/components/ui/DrillDownPanel";
 import { useWikipediaStream } from "@/lib/useWikipediaStream";
 import type { WikiEdit } from "@/lib/useWikipediaStream";
 import {
@@ -76,9 +78,9 @@ export default function WikipediaDashboard() {
   return (
     <FilterProvider>
       <CrossFilterProvider>
-        <DrillDown.Root>
+        <DrillDownProvider>
           <WikipediaDashboardInner />
-        </DrillDown.Root>
+        </DrillDownProvider>
       </CrossFilterProvider>
     </FilterProvider>
   );
@@ -334,7 +336,79 @@ function WikipediaDashboardInner() {
     </DetailGrid>
   ), []);
 
+  // Render content for live drills — runs in this component's render cycle, always fresh
+  const renderDrillContent = (trigger: { field?: string }) => {
+    if (trigger.field === "edits") {
+      const wikiData = Object.entries(filteredStats.editsByWiki)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 15)
+        .map(([wiki, edits]) => ({ wiki: wikiLabel(wiki), edits }));
+      const recentForTable = filteredEdits.slice(0, 30).map((e) => ({
+        title: e.title,
+        user: e.user,
+        wiki: wikiLabel(e.wiki),
+        type: e.type,
+        bot: e.bot ? "bot" : "human",
+        timestamp: timeAgo(e.timestamp),
+      }));
+      return (
+        <MetricGrid>
+          <KpiCard title="Total Edits" value={filteredStats.totalEdits} format="number" />
+          <KpiCard title="Active Wikis" value={Object.keys(filteredStats.editsByWiki).length} format="number" />
+          <KpiCard title="Unique Editors" value={filteredStats.uniqueEditors} format="number" />
+          <BarChart
+            data={wikiData}
+            index="wiki"
+            categories={["edits"]}
+            title="Edits by Wiki"
+            format="number"
+            height={300}
+            sort="desc"
+            layout="horizontal"
+          />
+          <DataTable
+            data={recentForTable as never[]}
+            columns={[
+              { key: "title", header: "Page", sortable: true },
+              { key: "user", header: "Editor" },
+              { key: "wiki", header: "Wiki" },
+              { key: "type", header: "Type" },
+              { key: "bot", header: "Bot?" },
+              { key: "timestamp", header: "When" },
+            ]}
+            title="Recent Edits"
+            pageSize={10}
+            dense
+            searchable
+          />
+        </MetricGrid>
+      );
+    }
+    if (trigger.field === "editRate") {
+      return (
+        <MetricGrid>
+          <KpiCard title="Edit Rate" value={filteredStats.editRate} format={{ style: "custom", suffix: "/sec" }} />
+          <KpiCard title="Edits / Min" value={filteredStats.editsPerMinute} format="number" />
+          <KpiCard title="Bot Ratio" value={botRatio} format="percent" />
+          {editVelocityData.length > 0 && (
+            <LineChart
+              data={editVelocityData}
+              title="Edit Velocity (Expanded)"
+              subtitle="Human vs bot edits per 5s window"
+              format="number"
+              height={320}
+              stacked
+            />
+          )}
+        </MetricGrid>
+      );
+    }
+    return null;
+  };
+
   return (
+    <>
+    <DrillDown.Overlay renderContent={renderDrillContent} />
     <div className="min-h-screen bg-[var(--background)]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
         {/* \u2500\u2500 Code Hero \u2500\u2500 */}
@@ -378,6 +452,7 @@ function WikipediaDashboardInner() {
         </div>
 
         <FilterBar
+          sticky
           tags={{ showCrossFilter: true, crossFilterLabels: { wiki: "Wiki", type: "Type" } }}
           badge={<>{formatValue(stats.totalEdits, "number")} edits</>}
           className="mt-3"
@@ -420,53 +495,10 @@ function WikipediaDashboardInner() {
               animate={{ countUp: true }}
               drillDown={{
                 label: "Edits breakdown by wiki",
-                onClick: () => {
-                  const wikiData = Object.entries(filteredStats.editsByWiki)
-                    .sort(([, a], [, b]) => b - a)
-                    .slice(0, 15)
-                    .map(([wiki, edits]) => ({ wiki: wikiLabel(wiki), edits }));
-                  const recentForTable = filteredEdits.slice(0, 30).map((e) => ({
-                    title: e.title,
-                    user: e.user,
-                    wiki: wikiLabel(e.wiki),
-                    type: e.type,
-                    bot: e.bot ? "bot" : "human",
-                    timestamp: timeAgo(e.timestamp),
-                  }));
-                  openDrill(
-                    { title: `${filteredStats.totalEdits} Total Edits`, field: "edits" },
-                    <MetricGrid>
-                      <KpiCard title="Total Edits" value={filteredStats.totalEdits} format="number" />
-                      <KpiCard title="Active Wikis" value={Object.keys(filteredStats.editsByWiki).length} format="number" />
-                      <KpiCard title="Unique Editors" value={filteredStats.uniqueEditors} format="number" />
-                      <BarChart
-                        data={wikiData}
-                        index="wiki"
-                        categories={["edits"]}
-                        title="Edits by Wiki"
-                        format="number"
-                        height={300}
-                        sort="desc"
-                        layout="horizontal"
-                      />
-                      <DataTable
-                        data={recentForTable as never[]}
-                        columns={[
-                          { key: "title", header: "Page", sortable: true },
-                          { key: "user", header: "Editor" },
-                          { key: "wiki", header: "Wiki" },
-                          { key: "type", header: "Type" },
-                          { key: "bot", header: "Bot?" },
-                          { key: "timestamp", header: "When" },
-                        ]}
-                        title="Recent Edits"
-                        pageSize={10}
-                        dense
-                        searchable
-                      />
-                    </MetricGrid>,
-                  );
-                },
+                onClick: () => openDrill(
+                  { title: `${filteredStats.totalEdits} Total Edits`, field: "edits" },
+                  null,
+                ),
               }}
             />
             <KpiCard
@@ -481,21 +513,7 @@ function WikipediaDashboardInner() {
                 label: "Edit velocity detail",
                 onClick: () => openDrill(
                   { title: `Edit Rate: ${filteredStats.editRate}/sec`, field: "editRate" },
-                  <MetricGrid>
-                    <KpiCard title="Edit Rate" value={filteredStats.editRate} format={{ style: "custom", suffix: "/sec" }} />
-                    <KpiCard title="Edits / Min" value={filteredStats.editsPerMinute} format="number" />
-                    <KpiCard title="Bot Ratio" value={botRatio} format="percent" />
-                    {editVelocityData.length > 0 && (
-                      <LineChart
-                        data={editVelocityData}
-                        title="Edit Velocity (Expanded)"
-                        subtitle="Human vs bot edits per 5s window"
-                        format="number"
-                        height={320}
-                        stacked
-                      />
-                    )}
-                  </MetricGrid>,
+                  null,
                 ),
               }}
             />
@@ -735,6 +753,7 @@ function WikipediaDashboardInner() {
         </MetricProvider>
       </div>
     </div>
+    </>
   );
 }
 

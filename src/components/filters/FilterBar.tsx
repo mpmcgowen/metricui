@@ -17,6 +17,8 @@ import type { CardVariant } from "@/lib/types";
 export interface FilterBarProps {
   children: ReactNode;
   position?: "inline";
+  /** Stick to the top of the viewport when scrolling. Default: false */
+  sticky?: boolean;
   badge?: ReactNode;
   tags?: boolean | Omit<FilterTagsProps, "className">;
   collapsible?: boolean;
@@ -103,7 +105,7 @@ function Accordion({ open, children, className }: { open: boolean; children: Rea
 
 const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function FilterBar(
   {
-    children, position = "inline", badge, tags = true, collapsible = true,
+    children, position = "inline", sticky = false, badge, tags = true, collapsible = true,
     defaultCollapsed = false, variant, dense, className, classNames, id,
     "data-testid": dataTestId,
   },
@@ -135,9 +137,11 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
         "noise-texture border transition-shadow duration-300",
         CARD_CLASSES,
         HOVER_CLASSES,
+        sticky && "sticky top-3 z-30 backdrop-blur-xl",
         classNames?.root,
         className,
       )}
+      style={sticky ? { background: "color-mix(in srgb, var(--card-bg) 80%, transparent)" } : undefined}
     >
       {/* ── Header — always visible ── */}
       <button

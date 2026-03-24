@@ -47,6 +47,7 @@ import {
   Bot,
   Map,
   Milestone,
+  Download,
 } from "lucide-react";
 
 interface NavItem {
@@ -54,7 +55,6 @@ interface NavItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   soon?: boolean;
-  pro?: boolean;
 }
 
 const nav: { label: string; items: NavItem[] }[] = [
@@ -89,11 +89,11 @@ const nav: { label: string; items: NavItem[] }[] = [
       { title: "Line Chart", href: "/docs/line-chart", icon: LineChart },
       { title: "Donut Chart", href: "/docs/donut-chart", icon: PieChart },
       { title: "Gauge", href: "/docs/gauge", icon: Activity },
-      { title: "Bullet Chart", href: "/docs/bullet-chart", icon: Crosshair, pro: true },
+      { title: "Bullet Chart", href: "/docs/bullet-chart", icon: Crosshair },
       { title: "HeatMap", href: "/docs/heatmap", icon: Grid3X3 },
-      { title: "Funnel", href: "/docs/funnel", icon: ArrowDownNarrowWide, pro: true },
+      { title: "Funnel", href: "/docs/funnel", icon: ArrowDownNarrowWide },
       { title: "Bar + Line Chart", href: "/docs/bar-line-chart", icon: Combine },
-      { title: "Waterfall", href: "/docs/waterfall", icon: BarChart3, pro: true },
+      { title: "Waterfall", href: "/docs/waterfall", icon: BarChart3 },
       { title: "Sparkline", href: "/docs/sparkline", icon: Activity },
     ],
   },
@@ -109,20 +109,21 @@ const nav: { label: string; items: NavItem[] }[] = [
   {
     label: "UI",
     items: [
+      { title: "Drill Down", href: "/docs/drill-down", icon: PanelRightOpen },
+      { title: "Export", href: "/docs/export", icon: Download },
       { title: "StatusIndicator", href: "/docs/status-indicator", icon: CircleDot },
       { title: "Callout", href: "/docs/callout", icon: MessageSquare },
       { title: "Badge", href: "/docs/badge", icon: Tag },
-      { title: "Drill Down", href: "/docs/drill-down", icon: PanelRightOpen },
     ],
   },
   {
     label: "Filters",
     items: [
+      { title: "Filter Bar", href: "/docs/filter-bar", icon: ListFilter },
       { title: "Period Selector", href: "/docs/period-selector", icon: Calendar },
       { title: "Segment Toggle", href: "/docs/segment-toggle", icon: ToggleLeft },
       { title: "Dropdown Filter", href: "/docs/dropdown-filter", icon: ListFilter },
       { title: "Filter Tags", href: "/docs/filter-tags", icon: Tags },
-      { title: "Filter Bar", href: "/docs/filter-bar", icon: ListFilter },
     ],
   },
   {
@@ -357,11 +358,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   >
                     <Icon className="h-3.5 w-3.5" />
                     {item.title}
-                    {item.pro && (
-                      <span className="ml-auto rounded bg-[var(--accent)]/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[var(--accent)]">
-                        Pro
-                      </span>
-                    )}
+
                     {item.soon && (
                       <span className="ml-auto text-[9px] uppercase tracking-wider opacity-60">
                         Soon

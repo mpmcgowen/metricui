@@ -9,7 +9,7 @@ import type {
   Point,
 } from "@nivo/line";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip } from "./ChartTooltip";
+import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
@@ -171,6 +171,8 @@ export interface AreaChartProps {
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
+  /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
+  tooltipHint?: boolean | string;
   /** Compact layout — reduces margins and default height. Default: false */
   dense?: boolean;
   /** How null / missing data points are handled. Default: "gap" */
@@ -532,6 +534,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   drillDown,
   drillDownMode,
   crossFilter: crossFilterProp,
+  tooltipHint,
   dense,
   chartNullMode,
   animate: animateProp,
@@ -1144,6 +1147,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
                 label: String(p.seriesId).slice(COMPARISON_PREFIX.length),
                 value: p.data.y !== null ? formatValue(p.data.y as number, format, localeDefaults) : "\u2014",
               })) : undefined}
+              actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
             />
           );
         }}

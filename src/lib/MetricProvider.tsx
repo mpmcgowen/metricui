@@ -68,6 +68,8 @@ export interface MetricConfig {
   exportable: boolean;
   /** Print mode — auto-generates report header/footer/captions when printing. Default: false */
   printMode: boolean | { title?: string; subtitle?: string; logo?: string; footer?: string };
+  /** Show action hints in chart tooltips ("Click to drill down", etc.). Default: true */
+  tooltipHint: boolean;
 }
 
 /** Fully-resolved defaults — used when no provider is present. */
@@ -87,6 +89,7 @@ const DEFAULT_CONFIG: MetricConfig = {
   texture: true,
   exportable: false,
   printMode: false,
+  tooltipHint: true,
 };
 
 export { DEFAULT_CONFIG as DEFAULT_METRIC_CONFIG };

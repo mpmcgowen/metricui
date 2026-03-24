@@ -531,6 +531,7 @@ function DashboardContent() {
   return (
     <>
           <FilterBar
+            sticky
             tags={{ showCrossFilter: true, crossFilterLabels: { region: "Region" } }}
             collapsible={false}
             className="mt-4"

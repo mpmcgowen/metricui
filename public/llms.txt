@@ -3851,6 +3851,58 @@ openDrill({ label: "Order #123", source: "custom" }, <OrderDetail id="123" />);
 
 All 12 data components: BarChart, DonutChart, AreaChart, LineChart (via AreaChart), HeatMap, BarLineChart, Funnel, Waterfall, DataTable, KpiCard, StatGroup, Gauge, Callout.
 
+### Reactive / Live Drill Content (`renderContent`)
+
+For dashboards with streaming or frequently-updating data, drill content can stay in sync with the parent. Pass `renderContent` to `DrillDown.Root` — it runs in the parent component's render cycle with fresh data.
+
+```tsx
+function Dashboard() {
+  const { data } = useStreamingData();
+
+  const renderDrillContent = (trigger) => {
+    if (trigger.field === "edits") {
+      return (
+        <MetricGrid>
+          <KpiCard title="Total" value={data.total} format="number" />
+          <DataTable data={data.recentEdits} />
+        </MetricGrid>
+      );
+    }
+    return null; // falls through to stored content
+  };
+
+  return (
+    <DrillDown.Root renderContent={renderDrillContent}>
+      <KpiCard
+        title="Edits"
+        value={data.total}
+        drillDown={{ label: "Detail", onClick: () => openDrill({ title: "Edits", field: "edits" }, null) }}
+      />
+    </DrillDown.Root>
+  );
+}
+```
+
+For static data dashboards, don't use `renderContent` — the default stored-content approach works perfectly.
+
+### Tooltip Action Hints
+
+Charts with `drillDown` or `crossFilter` auto-show a subtle hint at the bottom of tooltips: "Click to drill down" or "Click to filter".
+
+```tsx
+// Auto (default) — shows hint when drillDown or crossFilter is set
+<BarChart data={data} drillDown tooltipHint />
+
+// Custom text
+<BarChart data={data} drillDown tooltipHint="Click for details" />
+
+// Disable per-chart
+<BarChart data={data} drillDown tooltipHint={false} />
+
+// Disable globally
+<MetricProvider tooltipHint={false}>
+```
+
 ### Priority
 
 When both `drillDown` and `crossFilter` are set on the same component, `drillDown` wins
@@ -3887,6 +3939,7 @@ import { FilterBar, FilterProvider, PeriodSelector, SegmentToggle, DropdownFilte
 - `children`: React.ReactNode (required) — Use FilterBar.Primary and FilterBar.Secondary slots.
 - `tags`: boolean | FilterTagsProps — default: true — Controls FilterTags. true: auto-renders. false: hides. Object: passes through to FilterTags (e.g., `{ exclude: ['_period'], maxVisible: 3 }`).
 - `badge`: React.ReactNode — Inline right-aligned badge content (result counts, status, etc.).
+- `sticky`: boolean — default: false — Stick to viewport top when scrolling. Adds frosted-glass backdrop blur with 12px top offset.
 - `collapsible`: boolean — default: false — Enable accordion for secondary filters.
 - `defaultCollapsed`: boolean — default: false — Initial collapsed state when collapsible is true.
 - `dense`: boolean — default: false — Compact mode. Falls back to MetricProvider config.
@@ -3938,7 +3991,7 @@ import { MetricProvider } from "metricui";
 type ExportableConfig = boolean | { data: Record<string, unknown>[] };
 ```
 
-- `true` — auto-export. Charts export source data, KPI cards export single value row.
+- `true` — auto-export. Charts export source data, KPI cards export the raw numeric value (not the display-formatted string).
 - `{ data: rows[] }` — override with custom data for CSV export.
 - `false` — disable export on a specific component (overrides global).
 

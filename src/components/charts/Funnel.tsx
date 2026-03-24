@@ -4,7 +4,7 @@ import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveFunnel } from "@nivo/funnel";
 import type { FunnelDatum, FunnelPart, FunnelSvgProps } from "@nivo/funnel";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip } from "./ChartTooltip";
+import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
@@ -82,6 +82,8 @@ export interface FunnelChartProps {
   legend?: boolean | LegendConfig;
   /** Emit cross-filter selection on part click. Defaults field to "id". */
   crossFilter?: boolean | { field?: string };
+  /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
+  tooltipHint?: boolean | string;
   /** Click handler for funnel parts */
   onPartClick?: (part: {
     id: string;
@@ -143,6 +145,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   colors: chartColors,
   legend: legendProp,
   crossFilter: crossFilterProp,
+  tooltipHint,
   onPartClick,
   drillDown,
   drillDownMode,
@@ -404,6 +407,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
                       secondary: `${pct}% of total`,
                     },
                   ]}
+                  actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
                 />
               );
             }}

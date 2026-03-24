@@ -4,7 +4,7 @@ import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveHeatMap } from "@nivo/heatmap";
 import type { HeatMapDatum, ComputedCell, CustomLayerProps as HeatMapCustomLayerProps } from "@nivo/heatmap";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip } from "./ChartTooltip";
+import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -80,6 +80,8 @@ export interface HeatMapProps {
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
+  /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
+  tooltipHint?: boolean | string;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
   /** Variant */
@@ -136,9 +138,11 @@ const DIVERGING_COLORS = {
 function HeatMapTooltipWrapper({
   cell,
   format,
+  actionHint,
 }: {
   cell: ComputedCell<HeatMapDatum>;
   format?: FormatOption;
+  actionHint?: string;
 }) {
   const localeDefaults = useLocale();
   const formatted = cell.value !== null
@@ -155,6 +159,7 @@ function HeatMapTooltipWrapper({
           value: formatted,
         },
       ]}
+      actionHint={actionHint}
     />
   );
 }
@@ -190,6 +195,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   drillDown,
   drillDownMode,
   crossFilter: crossFilterProp,
+  tooltipHint,
   animate: animateProp,
   variant,
   className,
@@ -333,7 +339,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
             }}
             hoverTarget={hoverTarget}
             tooltip={({ cell }) => (
-              <HeatMapTooltipWrapper cell={cell} format={format} />
+              <HeatMapTooltipWrapper cell={cell} format={format} actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)} />
             )}
             axisTop={{
               tickSize: 0,

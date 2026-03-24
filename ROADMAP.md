@@ -80,33 +80,39 @@ Everything listed here is built, tested, and published.
 
 ---
 
-## 0.4.0 — "Zero-Config Charts"
+## 0.4.0 — "The Dashboard That Ships" (Shipped)
 
-**Headline: Pass data, get a chart.** No `index`, no `categories`, no `columns`. MetricUI looks at your data and figures it out.
+**Headline: Everything that turns a prototype into a product.** FilterBar, DrillDown, Export, CardShell unification, auto empty states, tooltip action hints, and sticky filters. Every demo fully wired with interactive filters and drill-downs.
 
 ### The Wow
 
-- **TypeScript data inference** — pass a flat array of objects to any chart. MetricUI auto-detects the index field (first string/date column), category fields (all numeric columns), and generates appropriate axis labels. `<AreaChart data={data} />` — that's it. Two props. Same for DataTable: pass data, columns auto-generate with smart formatting. Explicit config always wins, but the zero-config path is real.
-- **Chart type suggestions** — new MCP tool: `suggest_chart_type`. Describe your data shape or paste a sample → MetricUI recommends the best chart type with reasoning. "You have 3 categories over 12 months with large variance — try an Area Chart with threshold bands to highlight the outliers." AI agents use this automatically.
-- **Instant chart switching** — `<ChartMorph>` wrapper component. Swap between chart types on the same data with smooth animated transitions. Bar → Line morphs individual bars into points with connecting lines. Donut → Bar unrolls slices into bars. Driven by a SegmentToggle or programmatic. Every chart shares the same data format, so switching is just a prop change — the animation is what makes it magic.
+- **DrillDown system** — `<DrillDown.Root>` provider + slide-over/modal panel. Click any chart element or KPI → drill into a detail view with auto-breadcrumbs. Nested drills up to 4 levels. Two modes: slide-over (right panel) and modal (centered). `drillDown={true}` for zero-config auto-table, or pass a function for custom content. `renderContent` prop on Root for reactive/live drill content.
+- **FilterBar** — collapsible filter container with auto FilterTags, active filter badge count, clear-all button. CSS `grid-template-rows` accordion animation. `sticky` prop for frosted-glass top-sticky behavior. Primary/Secondary filter slots.
+- **Export system** — PNG image capture (4x DPI via `modern-screenshot`), CSV with filter metadata, clipboard copy. Clean human-readable filenames. `ExportButton` dropdown on any component via `exportable` prop on MetricProvider.
+- **Tooltip action hints** — "Click to drill down" / "Click to filter" shown at the bottom of chart tooltips when interactive. Auto-detected from `drillDown`/`crossFilter` props. Controllable per-chart (`tooltipHint`) and globally (`MetricConfig.tooltipHint`).
 
 ### Supporting Work
 
-- **FilterBar** — container component that holds filters in a consistent horizontal row. Responsive collapse on mobile, overflow menu for excess filters. Integrates with FilterProvider.
-- **SearchFilter** — text input for dimension filtering. Debounced, clearable, with result count. Customer name, product search.
-- **ComparisonToggle** — switch between "vs previous period", "vs same period last year", "vs target". Drives comparison data across all components via FilterProvider.
-- **GranularitySelector** — switch time bucketing (hourly → daily → weekly → monthly). Components re-aggregate automatically if using client-side data, or expose the setting for server-side queries.
-- **Relative time formatting** — `<TimeAgo>` component and `timeAgo` format option. "Updated 5 minutes ago" that auto-ticks. Built into DashboardHeader's stale indicator.
+- **CardShell unification** — single card wrapper replacing duplicated shell code across KpiCard, ChartContainer, DataTable, StatusIndicator. Handles card chrome, data states, export button, drill-down icon, title/subtitle/description, onClick/href, bare mode, accent, highlight, footnote.
+- **Auto empty states** — when `exportData` is an empty array, components auto-show "Nothing to show — try adjusting your filters" without explicit `empty` prop.
+- **SegmentToggle default clearing** — selecting the default value calls `clearDimension()` instead of writing it. Clear-all resets to default, not stale internal state.
+- **FilterProvider referenceDate** — anchors preset calculations to historical dates for demos with static data.
+- **Comparison period improvements** — calendar day math instead of millisecond subtraction for accurate period boundaries.
+- **modern-screenshot** — replaced html2canvas (which couldn't handle oklch/color-mix/lab CSS functions).
+- **String KPI values** — StatGroup now passes strings directly to KpiCard instead of rendering them separately.
+- **TooltipWrapper stability** — fixed infinite re-render loop by computing nudge from untransformed position.
 
-### New Components
+### New Components / Exports
 | Component | Description |
 |---|---|
-| ChartMorph | Animated transitions between chart types on shared data. Bar ↔ Line ↔ Area ↔ Donut. |
-| FilterBar | Horizontal filter container with responsive collapse and overflow. |
-| SearchFilter | Debounced text input for dimension filtering with result count. |
-| ComparisonToggle | Switch comparison mode (vs previous period / YoY / target). |
-| GranularitySelector | Time bucketing control (hourly → daily → weekly → monthly). |
-| TimeAgo | Auto-ticking relative timestamp. "Updated 5m ago." |
+| FilterBar | Collapsible filter container with auto-tags, badge count, sticky mode, glass blur. |
+| DrillDown.Root | Drill-down provider + overlay. Wrap dashboard, add `drillDown` to any component. |
+| DrillDownOverlay | Portal-rendered slide-over/modal panel with breadcrumbs. |
+| ExportButton | Dropdown with Save as image, Download CSV, Copy to clipboard. |
+| CardShell | Unified card wrapper used internally by all data components. |
+| AutoDrillTable | Zero-config drill content — auto-generates KPI summary + filtered DataTable. |
+| useDrillDownAction | Hook returning `openDrill(trigger, content)` for custom drill handlers. |
+| resolveActionHint | Shared helper for auto-resolving tooltip action hints. |
 
 ---
 

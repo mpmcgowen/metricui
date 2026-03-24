@@ -4,13 +4,20 @@ import { useEffect, useState, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDrillDown, type DrillDownTrigger } from "@/lib/DrillDownContext";
+import { useDrillDown, type DrillDownTrigger, type DrillDownContent } from "@/lib/DrillDownContext";
 
 // ---------------------------------------------------------------------------
 // DrillDownOverlay — portal-rendered slide-over panel
 // ---------------------------------------------------------------------------
 
-export function DrillDownOverlay() {
+export interface DrillDownOverlayProps {
+  /** Optional render function — called with the active trigger on every render.
+   *  Return ReactNode to override drill content with live data. Return null/undefined to fall through to stored content. */
+  renderContent?: (trigger: DrillDownTrigger) => ReactNode | null | undefined;
+}
+
+export function DrillDownOverlay(props?: DrillDownOverlayProps) {
+  const renderContent = props?.renderContent;
   const drill = useDrillDown();
   const mode = drill?.activeTrigger?.mode ?? "slide-over";
   const [mounted, setMounted] = useState(false);
@@ -141,12 +148,24 @@ export function DrillDownOverlay() {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {drill.activeContent}
+          {renderContent && drill.activeTrigger
+            ? (renderContent(drill.activeTrigger) ?? <DrillContentRenderer content={drill.activeContent} />)
+            : <DrillContentRenderer content={drill.activeContent} />}
         </div>
       </div>
     </div>,
     document.body,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Drill content renderer — calls render functions for reactive content
+// ---------------------------------------------------------------------------
+
+function DrillContentRenderer({ content }: { content: DrillDownContent | null }) {
+  if (content === null) return null;
+  if (typeof content === "function") return <>{content()}</>;
+  return <>{content}</>;
 }
 
 // ---------------------------------------------------------------------------
@@ -174,7 +193,7 @@ export interface DrillDownRenderProps {
  */
 export function useDrillDownAction() {
   const drill = useDrillDown();
-  return (trigger: DrillDownTrigger, content: ReactNode) => {
+  return (trigger: DrillDownTrigger, content: DrillDownContent) => {
     drill?.open(trigger, content);
   };
 }

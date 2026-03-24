@@ -1,46 +1,117 @@
 "use client";
 
+import { Waterfall } from "@/components/charts/Waterfall";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
+import { ComponentExample } from "@/components/docs/ComponentExample";
+import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
+import { OnThisPage } from "@/components/docs/OnThisPage";
+import type { TocItem } from "@/components/docs/OnThisPage";
 
-export default function WaterfallPage() {
+const component = getComponent("waterfall")!;
+
+const tocItems: TocItem[] = [
+  { id: "basic-example", title: "Basic Example", level: 2 },
+  { id: "subtotals", title: "With Subtotals", level: 2 },
+  { id: "custom-colors", title: "Custom Colors", level: 2 },
+  { id: "no-connectors", title: "Without Connectors", level: 2 },
+  { id: "quarterly-changes", title: "Quarterly Changes", level: 2 },
+  { id: "data-states", title: "Data States", level: 2 },
+  { id: "props", title: "Props", level: 2 },
+  { id: "data-shape", title: "Data Shape", level: 2 },
+  { id: "notes", title: "Notes", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
+];
+
+// --- Sample data ---
+
+const mrrBridgeData = [
+  { label: "Starting MRR", value: 85000, type: "value" as const },
+  { label: "New Sales", value: 28400, type: "value" as const },
+  { label: "Expansion", value: 12600, type: "value" as const },
+  { label: "Churn", value: -8200, type: "value" as const },
+  { label: "Contraction", value: -3100, type: "value" as const },
+  { label: "Ending MRR", value: 0, type: "total" as const },
+];
+
+const subtotalData = [
+  { label: "Revenue", value: 120000, type: "value" as const },
+  { label: "Services", value: 34000, type: "value" as const },
+  { label: "Gross Income", value: 0, type: "subtotal" as const },
+  { label: "Salaries", value: -62000, type: "value" as const },
+  { label: "Marketing", value: -18000, type: "value" as const },
+  { label: "Rent", value: -9500, type: "value" as const },
+  { label: "Operating Income", value: 0, type: "subtotal" as const },
+  { label: "Tax", value: -13000, type: "value" as const },
+  { label: "Net Income", value: 0, type: "total" as const },
+];
+
+const customColorData = [
+  { label: "Q1 Target", value: 50000, type: "value" as const },
+  { label: "Outperformance", value: 8200, type: "value" as const, color: "#6366f1" },
+  { label: "Seasonality", value: -3400, type: "value" as const },
+  { label: "New Market", value: 12800, type: "value" as const, color: "#6366f1" },
+  { label: "Refunds", value: -2100, type: "value" as const },
+  { label: "Q1 Actual", value: 0, type: "total" as const },
+];
+
+const budgetData = [
+  { label: "Budget", value: 200000, type: "value" as const },
+  { label: "Personnel", value: -82000, type: "value" as const },
+  { label: "Equipment", value: -34000, type: "value" as const },
+  { label: "Software", value: -21000, type: "value" as const },
+  { label: "Travel", value: -8500, type: "value" as const },
+  { label: "Remaining", value: 0, type: "total" as const },
+];
+
+const quarterlyData = [
+  { label: "Q1", value: 120000, type: "value" as const },
+  { label: "Q2", value: 45000, type: "value" as const },
+  { label: "Q3", value: -30000, type: "value" as const },
+  { label: "Q4", value: 65000, type: "value" as const },
+  { label: "FY Total", value: 0, type: "total" as const },
+];
+
+export default function WaterfallDocs() {
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12 space-y-10">
-      <div className="space-y-4">
-        <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-[var(--accent)]">Chart</span>
-        <h1 className="text-3xl font-bold text-[var(--foreground)]">Waterfall</h1>
-        <p className="max-w-2xl text-[15px] leading-relaxed text-[var(--muted)]">
-          Sequential positive and negative changes from a starting value.
+    <div className="flex">
+      {/* Main content */}
+      <div className="min-w-0 flex-1 px-8 py-8">
+        <ComponentHero component={component} />
+
+        {/* When to use */}
+        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+          Use Waterfall for sequential change analysis — showing how an initial
+          value is affected by a series of positive and negative changes.
+          Perfect for P&L breakdowns, MRR bridges, and budget analysis. Supports
+          subtotals, totals, connector lines, per-bar color overrides, and
+          custom positive/negative/total colors. For categorical comparison, use{" "}
+          <a href="/docs/bar-chart" className="font-medium text-[var(--accent)] hover:underline">
+            BarChart
+          </a>{" "}
+          instead.
         </p>
-      </div>
 
-      <DocSection id="what-it-does" title="What it does">
-        <p className="text-[var(--muted)] leading-relaxed">
-          Visualize how an initial value is affected by a series of positive and negative changes.
-          Perfect for P&amp;L breakdowns, revenue bridges, and budget analysis.
-        </p>
-      </DocSection>
-
-      <DocSection id="features" title="Features">
-        <ul className="list-disc list-inside text-[var(--muted)] space-y-1.5">
-          <li>Automatic running total calculation</li>
-          <li>Subtotal and total markers</li>
-          <li>Connector lines between bars</li>
-          <li>Positive/negative/total color coding</li>
-          <li>Value labels with format engine</li>
-          <li>Full theming and data state support</li>
-        </ul>
-      </DocSection>
-
-      <DocSection id="usage" title="Usage">
-        <pre className="mt-4 p-4 rounded-lg bg-[var(--card-bg)] border border-[var(--card-border)] font-mono text-sm">
-{`import { Waterfall } from "metricui";
-
-<Waterfall
+        {/* Basic Example */}
+        <DocSection id="basic-example" title="Basic Example">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Pass an array of items with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">label</code>,{" "}
+            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">value</code>, and{" "}
+            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">type</code>.
+            Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">type: &quot;total&quot;</code> for
+            the final computed sum.
+          </p>
+          <ComponentExample
+            code={`<Waterfall
   data={[
     { label: "Starting MRR", value: 85000, type: "value" },
     { label: "New Sales", value: 28400, type: "value" },
     { label: "Expansion", value: 12600, type: "value" },
     { label: "Churn", value: -8200, type: "value" },
+    { label: "Contraction", value: -3100, type: "value" },
     { label: "Ending MRR", value: 0, type: "total" },
   ]}
   title="MRR Bridge"
@@ -48,8 +119,239 @@ export default function WaterfallPage() {
   connectors
   height={320}
 />`}
-        </pre>
-      </DocSection>
+          >
+            <div className="w-full max-w-2xl">
+              <Waterfall
+                data={mrrBridgeData}
+                title="MRR Bridge"
+                format="currency"
+                connectors
+                height={320}
+              />
+            </div>
+          </ComponentExample>
+        </DocSection>
+
+        {/* With Subtotals */}
+        <DocSection id="subtotals" title="With Subtotals">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">type: &quot;subtotal&quot;</code> to
+            insert intermediate running-total markers. Great for P&L statements where you need
+            gross income before expenses.
+          </p>
+          <ComponentExample
+            code={`<Waterfall
+  data={[
+    { label: "Revenue", value: 120000, type: "value" },
+    { label: "Services", value: 34000, type: "value" },
+    { label: "Gross Income", value: 0, type: "subtotal" },
+    { label: "Salaries", value: -62000, type: "value" },
+    { label: "Marketing", value: -18000, type: "value" },
+    { label: "Rent", value: -9500, type: "value" },
+    { label: "Operating Income", value: 0, type: "subtotal" },
+    { label: "Tax", value: -13000, type: "value" },
+    { label: "Net Income", value: 0, type: "total" },
+  ]}
+  title="P&L Breakdown"
+  format="currency"
+  connectors
+  height={360}
+/>`}
+          >
+            <div className="w-full max-w-2xl">
+              <Waterfall
+                data={subtotalData}
+                title="P&L Breakdown"
+                format="currency"
+                connectors
+                height={360}
+              />
+            </div>
+          </ComponentExample>
+        </DocSection>
+
+        {/* Custom Colors */}
+        <DocSection id="custom-colors" title="Custom Colors">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Override colors per-bar with the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">color</code> property
+            on individual data items, or set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">positiveColor</code>,{" "}
+            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">negativeColor</code>, and{" "}
+            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">totalColor</code> globally.
+          </p>
+          <ComponentExample
+            code={`<Waterfall
+  data={[
+    { label: "Q1 Target", value: 50000 },
+    { label: "Outperformance", value: 8200, color: "#6366f1" },
+    { label: "Seasonality", value: -3400 },
+    { label: "New Market", value: 12800, color: "#6366f1" },
+    { label: "Refunds", value: -2100 },
+    { label: "Q1 Actual", value: 0, type: "total" },
+  ]}
+  title="Q1 Revenue Bridge"
+  format="currency"
+  positiveColor="#10b981"
+  negativeColor="#f43f5e"
+  totalColor="#8b5cf6"
+  height={320}
+/>`}
+          >
+            <div className="w-full max-w-2xl">
+              <Waterfall
+                data={customColorData}
+                title="Q1 Revenue Bridge"
+                format="currency"
+                positiveColor="#10b981"
+                negativeColor="#f43f5e"
+                totalColor="#8b5cf6"
+                height={320}
+              />
+            </div>
+          </ComponentExample>
+        </DocSection>
+
+        {/* Without Connectors */}
+        <DocSection id="no-connectors" title="Without Connectors">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">connectors=&#123;false&#125;</code> to
+            hide the dashed connector lines between bars for a cleaner look.
+          </p>
+          <ComponentExample
+            code={`<Waterfall
+  data={[
+    { label: "Budget", value: 200000 },
+    { label: "Personnel", value: -82000 },
+    { label: "Equipment", value: -34000 },
+    { label: "Software", value: -21000 },
+    { label: "Travel", value: -8500 },
+    { label: "Remaining", value: 0, type: "total" },
+  ]}
+  title="Budget Allocation"
+  format="currency"
+  connectors={false}
+  height={320}
+/>`}
+          >
+            <div className="w-full max-w-2xl">
+              <Waterfall
+                data={budgetData}
+                title="Budget Allocation"
+                format="currency"
+                connectors={false}
+                height={320}
+              />
+            </div>
+          </ComponentExample>
+        </DocSection>
+
+        {/* Quarterly Changes */}
+        <DocSection id="quarterly-changes" title="Quarterly Changes">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Show how periodic changes contribute to a final total. Each bar represents
+            the delta for that period, and the total bar shows the cumulative result.
+          </p>
+          <ComponentExample
+            code={`<Waterfall
+  data={[
+    { label: "Q1", value: 120000 },
+    { label: "Q2", value: 45000 },
+    { label: "Q3", value: -30000 },
+    { label: "Q4", value: 65000 },
+    { label: "FY Total", type: "total" },
+  ]}
+  title="Quarterly Revenue"
+  format="currency"
+  connectors
+  height={320}
+/>`}
+          >
+            <div className="w-full max-w-2xl">
+              <Waterfall
+                data={quarterlyData}
+                title="Quarterly Revenue"
+                format="currency"
+                connectors
+                height={320}
+              />
+            </div>
+          </ComponentExample>
+        </DocSection>
+
+        {/* Data States */}
+        <DocSection id="data-states" title="Data States">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Every component handles loading, empty, and error states.
+            Pass individual props or use the grouped <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">state</code> prop.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
+              <Waterfall
+                data={[]}
+                title="Revenue Bridge"
+                loading
+                height={280}
+              />
+            </div>
+            <div>
+              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
+              <Waterfall
+                data={[]}
+                title="Revenue Bridge"
+                error={{ message: "Failed to load data" }}
+                height={280}
+              />
+            </div>
+          </div>
+          <CodeBlock
+            code={`// Loading state
+<Waterfall data={[]} title="Revenue Bridge" loading />
+
+// Error state
+<Waterfall data={[]} title="Revenue Bridge" error={{ message: "Failed to load" }} />`}
+            className="mt-4"
+          />
+        </DocSection>
+
+        {/* Props Table */}
+        <DocSection id="props" title="Props">
+          <PropsTable props={component.props} />
+        </DocSection>
+
+        {/* Data Shape */}
+        {component.dataShape && (
+          <DocSection id="data-shape" title="Data Shape">
+            <CodeBlock code={component.dataShape} language="typescript" />
+          </DocSection>
+        )}
+
+        {/* Notes */}
+        <DocSection id="notes" title="Notes">
+          <ul className="space-y-2">
+            {component.notes.map((note, i) => (
+              <li
+                key={i}
+                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
+              >
+                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+                {note}
+              </li>
+            ))}
+          </ul>
+        </DocSection>
+
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
+        </DocSection>
+      </div>
+
+      {/* Right: On This Page */}
+      <div className="hidden w-48 flex-shrink-0 xl:block">
+        <div className="sticky top-8 pt-8">
+          <OnThisPage items={tocItems} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,9 @@ import { createContext, useContext, useState, useCallback, useMemo, useEffect, t
 /** The context passed to a drill-down render function — what was clicked. */
 export type DrillDownMode = "slide-over" | "modal";
 
+/** Content can be a static ReactNode or a render function for live/reactive drills. */
+export type DrillDownContent = ReactNode | (() => ReactNode);
+
 export interface DrillDownTrigger {
   /** Field name (e.g., "country", "plan") */
   field?: string;
@@ -23,15 +26,15 @@ export interface DrillDownTrigger {
 /** A single level in the drill stack. */
 interface DrillLevel {
   trigger: DrillDownTrigger;
-  content: ReactNode;
+  content: DrillDownContent;
 }
 
 /** The drill-down context value. */
 export interface DrillDownState {
   /** Current drill stack depth */
   depth: number;
-  /** Open a new drill level */
-  open: (trigger: DrillDownTrigger, content: ReactNode) => void;
+  /** Open a new drill level. Pass a function for reactive content, or a ReactNode for static. */
+  open: (trigger: DrillDownTrigger, content: DrillDownContent) => void;
   /** Go back one level */
   back: () => void;
   /** Close all drill levels */
@@ -42,8 +45,8 @@ export interface DrillDownState {
   goTo: (depth: number) => void;
   /** Whether any drill is open */
   isOpen: boolean;
-  /** Current level's content */
-  activeContent: ReactNode | null;
+  /** Current level's content (raw — may be a function) */
+  activeContent: DrillDownContent | null;
   /** Current level's trigger */
   activeTrigger: DrillDownTrigger | null;
 }
@@ -72,10 +75,9 @@ export interface DrillDownProviderProps {
 export function DrillDownProvider({ children, maxDepth = 4 }: DrillDownProviderProps) {
   const [stack, setStack] = useState<DrillLevel[]>([]);
 
-  const open = useCallback((trigger: DrillDownTrigger, content: ReactNode) => {
+  const open = useCallback((trigger: DrillDownTrigger, content: DrillDownContent) => {
     setStack((prev) => {
       if (prev.length >= maxDepth) {
-        // Replace the top level instead of going deeper
         return [...prev.slice(0, -1), { trigger, content }];
       }
       return [...prev, { trigger, content }];

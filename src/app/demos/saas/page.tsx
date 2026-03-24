@@ -230,6 +230,7 @@ function DashboardContent() {
   return (
     <>
       <FilterBar
+        sticky
         badge={<>{formatValue(data.kpis.activeAccounts, "number")} active accounts</>}
         tags={{ showCrossFilter: true, crossFilterLabels: { country: "Country" } }}
         className="mt-4"

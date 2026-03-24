@@ -484,7 +484,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       error={error}
       stale={stale}
       exportable={exportableProp}
-      exportData={exportData ?? [{ [typeof title === "string" ? title : "Metric"]: formattedValue }]}
+      exportData={exportData ?? [{ [typeof title === "string" ? title : "Metric"]: rawInputValue ?? formattedValue }]}
       copyValue={formattedValue}
       className={cn(
         conditionStyles?.glow && `shadow-lg ${conditionStyles.glow}`,

@@ -234,8 +234,8 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
                 bare
                 dense={resolvedDense}
                 title={stat.label}
-                value={typeof stat.value === "number" ? stat.value : null}
-                format={statFormat}
+                value={stat.value}
+                format={typeof stat.value === "number" ? statFormat : undefined}
                 icon={stat.icon}
                 comparison={comparison}
                 comparisonLabel={legacyLabel}
@@ -243,15 +243,6 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
                 animate={animate}
                 drillDown={stat.drillDown}
               />
-              {/* Handle pre-formatted string values (legacy) */}
-              {typeof stat.value === "string" && (
-                <div className={cn(
-                  "font-bold tracking-tight text-[var(--foreground)]",
-                  "px-[var(--mu-padding-x-bare)] -mt-2 pb-2 sm:px-[var(--mu-padding-x-bare-sm)] text-[length:var(--mu-value-size-bare)]",
-                )}>
-                  {stat.value}
-                </div>
-              )}
             </div>
           );
         })}

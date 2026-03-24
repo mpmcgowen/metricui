@@ -9,7 +9,7 @@ import type {
   BarTooltipProps,
 } from "@nivo/bar";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip } from "./ChartTooltip";
+import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import type { ChartLegendItem } from "./ChartLegend";
 import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
@@ -132,6 +132,8 @@ export interface BarLineChartProps {
   drillDownMode?: "slide-over" | "modal";
   /** Emit cross-filter selection on bar click. Defaults field to the `indexBy` value. */
   crossFilter?: boolean | { field?: string };
+  /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
+  tooltipHint?: boolean | string;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string; legend?: string };
   /** HTML id attribute */
@@ -398,6 +400,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
   drillDown,
   drillDownMode,
   crossFilter: crossFilterProp,
+  tooltipHint,
   classNames,
   id,
   "data-testid": dataTestId,
@@ -685,6 +688,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
                     };
                   }),
                 ]}
+                actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
               />
             );
           }}

@@ -4,7 +4,7 @@ import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import type { BarDatum, BarCustomLayerProps, BarTooltipProps } from "@nivo/bar";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip } from "./ChartTooltip";
+import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -76,6 +76,8 @@ export interface WaterfallProps {
   drillDownMode?: "slide-over" | "modal";
   /** Emit cross-filter selection on bar click. Defaults field to "label". */
   crossFilter?: boolean | { field?: string };
+  /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
+  tooltipHint?: boolean | string;
   /** Dense mode */
   dense?: boolean;
   /** Variant */
@@ -268,6 +270,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   drillDown,
   drillDownMode,
   crossFilter: crossFilterProp,
+  tooltipHint,
   variant,
   className,
   classNames,
@@ -499,6 +502,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
                       ? undefined
                       : `Running total: ${formatValue(computed._runningTotal, format, localeDefaults)}`,
                   }]}
+                  actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
                 />
               );
             }}
