@@ -401,44 +401,30 @@
   body {
     background: white !important;
     color: #1a1a1a !important;
-    font-size: 11pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* --- Hide interactive / non-printable elements --- */
+  /* --- Hide interactive elements --- */
   [aria-label="Export"],
   [aria-label="More info"],
   [aria-label="Collapse filters"],
   .mu-hover-action,
-  [data-position] /* FilterBar */,
-  button[aria-expanded] /* dropdowns */,
-  [role="dialog"] /* drill-down panel */,
-  [data-component="Callout"] /* alerts/warnings — contextual, not for print */,
-  [data-component="DashboardHeader"] [href] /* back link */,
-  [data-component="DashboardHeader"] [data-status] /* live/stale badge */,
-  [class*="pagination"] /* table pagination */ {
+  [data-component="Callout"],
+  [role="dialog"] {
     display: none !important;
   }
 
-
-  /* --- Strip hover effects and animations --- */
+  /* --- Disable transitions/animations --- */
   * {
     transition: none !important;
     animation: none !important;
-    box-shadow: none !important;
   }
 
-  /* --- Force all scroll-reveal elements visible --- */
+  /* --- Force scroll-reveal elements visible --- */
   .mu-reveal {
     opacity: 1 !important;
     transform: none !important;
-  }
-
-  /* Keep card borders visible */
-  [data-metric-card] {
-    border: 1px solid #e5e5e5 !important;
-    box-shadow: none !important;
   }
 
   /* --- Noise texture off --- */
@@ -446,41 +432,7 @@
     display: none !important;
   }
 
-  /* --- Cursor resets --- */
-  [class*="cursor-pointer"] {
-    cursor: default !important;
-  }
-
-  /* --- Make truncated titles fully visible --- */
-  .truncate {
-    overflow: visible !important;
-    text-overflow: unset !important;
-    white-space: normal !important;
-  }
-
-  /* --- Show chart descriptions as visible captions --- */
-  .mu-print-caption {
-    display: block !important;
-    margin-top: 0.5rem;
-    font-size: 9pt;
-    color: #6b7280;
-    font-style: italic;
-    line-height: 1.4;
-  }
-
-  /* --- Table headers repeat on each page --- */
-  thead {
-    display: table-header-group !important;
-  }
-
-  /* --- Page breaks between MetricGrid sections --- */
-  [data-component="SectionHeader"],
-  [data-component="MetricGrid.Section"] {
-    page-break-before: auto;
-    margin-top: 1rem;
-  }
-
-  /* --- Print report header (auto-generated) --- */
+  /* --- Show report header/footer --- */
   .mu-print-header {
     display: flex !important;
     align-items: center;
@@ -502,7 +454,6 @@
     text-align: right;
   }
 
-  /* --- Print footer — end of document --- */
   .mu-print-footer {
     display: block !important;
     margin-top: 2rem;
@@ -513,38 +464,8 @@
     text-align: center;
   }
 
-  /* --- Page margins --- */
   @page {
     margin: 1.5cm;
-    size: A4;
-  }
-
-  /* --- KPI summary table (compact for print) --- */
-  .mu-print-summary {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    border: 1px solid #e5e5e5;
-    border-radius: 0.5rem;
-  }
-
-  .mu-print-summary-item {
-    text-align: center;
-  }
-
-  .mu-print-summary-label {
-    font-size: 8pt;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .mu-print-summary-value {
-    font-size: 14pt;
-    font-weight: 700;
-    color: #1a1a1a;
   }
 }
 
