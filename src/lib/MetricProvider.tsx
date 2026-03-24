@@ -66,6 +66,8 @@ export interface MetricConfig {
   texture: boolean;
   /** Global export toggle — when true, all components show export buttons. Default: false */
   exportable: boolean;
+  /** Print mode — auto-generates report header/footer/captions when printing. Default: false */
+  printMode: boolean | { title?: string; subtitle?: string; logo?: string; footer?: string };
 }
 
 /** Fully-resolved defaults — used when no provider is present. */
@@ -84,6 +86,7 @@ const DEFAULT_CONFIG: MetricConfig = {
   loading: false,
   texture: true,
   exportable: false,
+  printMode: false,
 };
 
 export { DEFAULT_CONFIG as DEFAULT_METRIC_CONFIG };
@@ -223,9 +226,37 @@ export function MetricProvider({ children, theme, colorScheme = "auto", ...overr
         data-dense={value.dense ? "true" : undefined}
         data-texture={value.texture === false ? "false" : undefined}
       >
+        {value.printMode && <PrintHeaderLazy config={typeof value.printMode === "object" ? value.printMode : {}} />}
         {children}
+        {value.printMode && <PrintFooterLazy config={typeof value.printMode === "object" ? value.printMode : {}} />}
       </div>
     </MetricConfigContext.Provider>
     </ThemeContext.Provider>
+  );
+}
+
+// Lazy print components — avoids circular dependency with src/components/
+function PrintHeaderLazy({ config }: { config: { title?: string; subtitle?: string; logo?: string; footer?: string } }) {
+  return (
+    <div className="mu-print-header">
+      <div>
+        {config.logo && <img src={config.logo} alt="" style={{ height: 32, marginBottom: 8 }} />}
+        <div className="mu-print-header-title">{config.title ?? "Dashboard Report"}</div>
+        {config.subtitle && <div style={{ fontSize: "10pt", color: "#6b7280", marginTop: 2 }}>{config.subtitle}</div>}
+      </div>
+      <div className="mu-print-header-meta">
+        <div>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</div>
+      </div>
+    </div>
+  );
+}
+
+function PrintFooterLazy({ config }: { config: { title?: string; subtitle?: string; logo?: string; footer?: string } }) {
+  const title = config.title ?? "Dashboard Report";
+  const date = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return (
+    <div className="mu-print-footer">
+      {config.footer ? config.footer.replace("{title}", title).replace("{date}", date) : `${title} · Printed ${date}`}
+    </div>
   );
 }
