@@ -3,9 +3,7 @@
 import { forwardRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useMetricConfig } from "@/lib/MetricProvider";
-import { CARD_CLASSES, HOVER_CLASSES } from "@/lib/styles";
-
-import { KpiSkeletonContent } from "@/components/ui/DataStateWrapper";
+import { CardShell } from "@/components/ui/CardShell";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
 import { Check, AlertTriangle, X, Minus } from "lucide-react";
 
@@ -433,57 +431,21 @@ export const StatusIndicator = forwardRef<HTMLDivElement, StatusIndicatorProps>(
     }
 
     // ----- Card mode (full card shell matching KpiCard) -----
-    if (resolvedLoading) {
-      return (
-        <div
-          ref={ref}
-          id={id}
-          data-testid={dataTestId}
-          data-variant={config.variant}
-          data-dense={config.dense ? "true" : undefined}
-          className={cn(
-            "noise-texture group relative border transition-all duration-300",
-            CARD_CLASSES,
-            "p-[var(--mu-padding)]",
-            className,
-            classNames?.root,
-          )}
-        >
-          <KpiSkeletonContent />
-        </div>
-      );
-    }
-
     return (
-      <div
+      <CardShell
         ref={ref}
         id={id}
         data-testid={dataTestId}
-        data-variant={config.variant}
-        data-dense={config.dense ? "true" : undefined}
-        className={cn(
-          "noise-texture group relative border transition-all duration-300",
-          CARD_CLASSES,
-          "p-[var(--mu-padding)]",
-          onClick && "cursor-pointer",
-          HOVER_CLASSES,
-          className,
-          classNames?.root,
-        )}
+        title={title}
+        description={description}
+        subtitle={subtitle}
+        componentName="StatusIndicator"
         onClick={onClick}
+        loading={resolvedLoading}
+        skeletonType="kpi"
+        className={className}
+        classNames={{ root: classNames?.root }}
       >
-        {/* Title row */}
-        {title && (
-          <div className="flex items-center gap-1.5">
-            <span className="text-[length:var(--mu-title-size)] font-medium tracking-wide uppercase text-[var(--muted)]">
-              {title}
-            </span>
-            {description && (
-              <DescriptionPopover content={description} />
-            )}
-          </div>
-        )}
-
         {/* Main status display */}
         <div className={cn("flex items-center gap-3", title ? "mt-3" : "")}>
           <span
@@ -534,11 +496,7 @@ export const StatusIndicator = forwardRef<HTMLDivElement, StatusIndicatorProps>(
             </div>
           </div>
         </div>
-
-        {subtitle && (
-          <p className="mt-2 text-[11px] text-[var(--muted)] opacity-70">{subtitle}</p>
-        )}
-      </div>
+      </CardShell>
     );
   },
 );

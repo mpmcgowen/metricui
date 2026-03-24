@@ -2,11 +2,10 @@
 
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { CARD_CLASSES, HOVER_CLASSES } from "@/lib/styles";
+import { CardShell } from "@/components/ui/CardShell";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { formatValue, evaluateConditions, isCustomColor, type FormatOption, type Condition } from "@/lib/format";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
-import { DataStateWrapper } from "@/components/ui/DataStateWrapper";
 import { Badge } from "@/components/ui/Badge";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { StatusIndicator } from "@/components/ui/StatusIndicator";
@@ -18,9 +17,8 @@ import type { CardVariant, EmptyState, ErrorState, StaleState, NullDisplay, Expo
 import { useLinkedHover } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { ExportButton } from "@/components/ui/ExportButton";
 
-import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Inbox, ExternalLink } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, ExternalLink } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Column type system & color maps
@@ -302,22 +300,8 @@ function DataTableInner<T extends Record<string, unknown>>(
   const resolvedNullDisplay = nullDisplay ?? config.nullDisplay;
   const resolvedLoading = loading ?? config.loading;
   const resolvedScrollIndicators = scrollIndicatorsProp ?? true;
-  const resolvedExportable = exportableProp !== undefined ? !!exportableProp : config.exportable;
+  const resolvedExportable = exportableProp !== undefined ? exportableProp : config.exportable;
   const overrideExportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
-  const tableRef = useRef<HTMLDivElement>(null);
-  const combinedAction = (
-    <div className="flex items-center gap-1">
-      {action}
-      {resolvedExportable && (
-        <ExportButton
-          title={title ?? "Table"}
-          targetRef={tableRef}
-          data={overrideExportData ?? (data as Record<string, unknown>[])}
-          dense={resolvedDense}
-        />
-      )}
-    </div>
-  );
 
   // --- Cross-filter ---
   const crossFilter = useCrossFilter();
@@ -553,41 +537,33 @@ function DataTableInner<T extends Record<string, unknown>>(
     [localeDefaults, resolvedNullText, columnMaxValues]
   );
 
-  // --- Data states ---
-  const cardShell = cn("noise-texture border transition-all duration-300", CARD_CLASSES, "p-[var(--mu-padding)]", className, classNames?.root);
-
-  if (error) {
-    return (<div ref={ref} id={id} data-testid={dataTestId} className={cardShell}>
-      {renderHeader(title, subtitle, description, combinedAction)}
-      <DataStateWrapper error={error}><div /></DataStateWrapper>
-    </div>);
-  }
-
-  if (resolvedLoading) {
-    return (<div ref={ref} id={id} data-testid={dataTestId} className={cardShell}>
-      {renderHeader(title, subtitle, description, combinedAction)}
-      <TableSkeleton columns={columns} rows={effectivePageSize > 5 ? 5 : effectivePageSize} dense={resolvedDense} />
-    </div>);
-  }
-
-  if (empty || data.length === 0) {
-    const ec = empty ?? { message: "No data available" };
-    return (<div ref={ref} id={id} data-testid={dataTestId} className={cardShell}>
-      {renderHeader(title, subtitle, description, combinedAction)}
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="mb-3 text-[var(--muted)] opacity-40">{ec.icon ?? <Inbox className="h-10 w-10" />}</div>
-        <p className="text-sm text-[var(--muted)]">{ec.message ?? "No data available"}</p>
-        {ec.action && <div className="mt-3">{ec.action}</div>}
-      </div>
-    </div>);
-  }
+  // --- Data states handled by CardShell (except loading, which uses custom TableSkeleton) ---
+  const resolvedEmpty = !resolvedLoading && (empty || data.length === 0) ? (empty ?? { message: "No data available" }) : undefined;
 
   return (
-    <div ref={ref} id={id} data-testid={dataTestId} data-variant={resolvedVariant}
-      data-dense={resolvedDense ? "true" : undefined}
-      className={cn("noise-texture group relative border transition-all duration-300", CARD_CLASSES, HOVER_CLASSES, className, classNames?.root)}>
-      {stale && <div className="absolute right-3 top-3 z-10"><DataStateWrapper stale={stale}><div /></DataStateWrapper></div>}
-      {renderHeader(title, subtitle, description, combinedAction)}
+    <CardShell
+      ref={ref}
+      id={id}
+      data-testid={dataTestId}
+      variant={resolvedVariant}
+      dense={resolvedDense}
+      componentName="DataTable"
+      error={error}
+      empty={resolvedEmpty}
+      stale={stale}
+      exportable={resolvedExportable}
+      exportData={overrideExportData ?? (data as Record<string, unknown>[])}
+      className={cn("p-0", className)}
+      classNames={{ root: classNames?.root }}
+    >
+      {resolvedLoading ? (
+        <>
+          {renderHeader(title, subtitle, description, action)}
+          <TableSkeleton columns={columns} rows={effectivePageSize > 5 ? 5 : effectivePageSize} dense={resolvedDense} />
+        </>
+      ) : (
+      <>
+      {renderHeader(title, subtitle, description, action)}
 
       {searchable && (
         <div className="px-5">
@@ -808,7 +784,9 @@ function DataTableInner<T extends Record<string, unknown>>(
           {footnote}
         </div>
       )}
-    </div>
+      </>
+      )}
+    </CardShell>
   );
 }
 
