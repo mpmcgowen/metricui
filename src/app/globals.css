@@ -243,6 +243,22 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Export capture mode — applied during PNG/image export
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.mu-exporting .mu-hover-action,
+.mu-exporting [aria-label="Export"],
+.mu-exporting [aria-label="Collapse filters"] {
+  display: none !important;
+}
+
+.mu-exporting .truncate {
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Cross-filter dim transition
    ═══════════════════════════════════════════════════════════════════════════ */
 
