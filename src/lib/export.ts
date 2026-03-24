@@ -64,7 +64,21 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
     cleanup.push(() => { textEl.style.fontFamily = origFamily; textEl.style.fontSize = origSize; });
   });
 
-  // 4. Hide UI elements
+  // 4. Resolve color-mix() and var() on all elements (html2canvas can't parse them)
+  const allEls = [element, ...element.querySelectorAll("*")] as HTMLElement[];
+  for (const el of allEls) {
+    const computed = getComputedStyle(el);
+    for (const prop of ["color", "background-color", "border-color", "outline-color", "box-shadow"] as const) {
+      const raw = el.style.getPropertyValue(prop);
+      if (raw && (raw.includes("color-mix") || raw.includes("var("))) {
+        const resolved = computed.getPropertyValue(prop);
+        el.style.setProperty(prop, resolved);
+        cleanup.push(() => el.style.setProperty(prop, raw));
+      }
+    }
+  }
+
+  // 5. Hide UI elements
   element.classList.add("mu-exporting");
   cleanup.push(() => element.classList.remove("mu-exporting"));
 

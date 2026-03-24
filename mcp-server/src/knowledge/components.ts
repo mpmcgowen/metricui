@@ -401,6 +401,7 @@ type ComparisonMode = "previous" | "year-over-year" | "none";`,
       { name: "id", type: "string", required: false, description: "HTML id attribute." },
       { name: "data-testid", type: "string", required: false, description: "Test id for testing frameworks." },
       { name: "onCopy", type: "(value: string) => void", required: false, description: "Callback when value is copied (requires copyable)." },
+      { name: "exportable", type: "ExportableConfig", required: false, description: "Enable PNG/CSV/clipboard export via the ExportButton dropdown. true: exports single value as CSV. { data: rows[] }: exports provided rows as CSV. Set globally on MetricProvider or per-component. Charts auto-export their source data." },
     ],
     dataShape: `// KpiCard accepts a numeric or string value
 interface KpiCardData {
@@ -472,6 +473,9 @@ interface KpiCardData {
       "The `state` object prop takes precedence over individual loading/empty/error/stale props.",
       "Dynamic strings (DynamicString) can be a plain string or a function receiving MetricContext.",
       "Condition colors can be named tokens ('emerald', 'red', 'amber', etc.) or raw CSS colors ('#ff6b6b', 'rgb(...)').",
+      "KpiCard uses CardShell internally. All CardShell features (export, auto empty state, variant, dense, data states) work automatically.",
+      "exportable: true exports the single KPI value as CSV. Override with exportable={{ data: detailRows }} to export a detail table (e.g., breakdown by region).",
+      "Auto empty state: when exportData is empty, CardShell shows 'Nothing to show — try adjusting your filters' automatically. Override globally via MetricProvider.emptyState or per-component via the empty prop.",
     ],
   },
 
@@ -624,6 +628,7 @@ interface KpiCardData {
       { name: "crossFilter", type: "boolean | { field: string }", required: false, description: "Enable cross-filter signal on click. true uses the index field, { field } overrides. Emits selection via CrossFilterProvider — does NOT change chart appearance. Dev reads selection with useCrossFilter() and filters their own data." },
       { name: "drillDown", type: "boolean | ((event: { indexValue: string; data: Record<string, unknown> }) => React.ReactNode)", required: false, description: "Enable drill-down on click. `true` auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for full control over the panel content. Requires DrillDown.Root wrapper. When both drillDown and crossFilter are set, drillDown wins." },
       { name: "drillDownMode", type: 'DrillDownMode', required: false, default: '"slide-over"', description: 'Presentation mode for the drill-down panel. "slide-over" (default) slides from the right, full height. "modal" renders centered and compact.' },
+      { name: "exportable", type: "ExportableConfig", required: false, description: "Enable PNG/CSV/clipboard export. true: auto-exports source data as CSV. { data: rows[] }: exports custom rows. Charts auto-detect source data. Set globally via MetricProvider or per-component." },
     ],
     dataShape: `// Full series format
 type Datum = { x: string | number; y: number | null };
@@ -742,6 +747,9 @@ type SimpleData = { label: string; value: number | null }[];`,
       "crossFilter prop emits a selection signal on click — it does NOT change the chart's appearance. The dev reads the selection via useCrossFilter() and filters their own data.",
       "drillDown={true} auto-generates a summary KPI row + filtered DataTable from the chart's source data. Pass a render function for custom panel content. Requires DrillDown.Root wrapper.",
       "When both drillDown and crossFilter are set on the same component, drillDown wins.",
+      "All charts use CardShell internally. CardShell features (export, auto empty state, variant, dense, data states) work everywhere automatically.",
+      "exportable: true auto-exports the chart's source data as CSV. Charts auto-detect their data — no manual { data } override needed.",
+      "Auto empty state: when the chart has no data (exportData.length === 0), CardShell shows 'Nothing to show — try adjusting your filters' automatically. Override globally via MetricProvider.emptyState or per-component via the empty prop.",
     ],
   },
 
@@ -3019,6 +3027,87 @@ interface LinkedHoverState {
       "When both drillDown and crossFilter are set on the same component, drillDown wins.",
       "useDrillDown() returns { isOpen, breadcrumbs, depth, back, close } for reading state in custom components.",
       "useDrillDownAction() returns openDrill(trigger, content) for imperative use outside of chart click handlers.",
+    ],
+  },
+  // =========================================================================
+  // FilterBar
+  // =========================================================================
+  {
+    name: "FilterBar",
+    importName: "FilterBar",
+    category: "ui" as const,
+    tier: "free",
+    description: "A container component for dashboard filters with auto-generated FilterTags, badge slot, collapsible accordion, active filter count, and clear-all.",
+    longDescription:
+      "FilterBar is the recommended way to lay out filter controls in a dashboard. It provides a structured container with primary and secondary filter slots, automatic FilterTag rendering, an inline badge slot, and optional collapsible (accordion) behavior. Place FilterBar inside a FilterProvider. Use FilterBar.Primary for main filters (PeriodSelector, SegmentToggle) and FilterBar.Secondary for supplemental filters (DropdownFilter). FilterBar automatically shows active filter count and clear-all when filters are active. The `tags` prop controls FilterTags: true (default) auto-renders them, false hides them, or pass an object to configure FilterTags props. Uses forwardRef.",
+    props: [
+      { name: "children", type: "React.ReactNode", required: true, description: "Filter controls — use FilterBar.Primary and FilterBar.Secondary slots for structured layout." },
+      { name: "tags", type: "boolean | FilterTagsProps", required: false, default: "true", description: "Controls FilterTags rendering. true (default): auto-renders FilterTags below filters. false: hides FilterTags. Object: passes through as props to FilterTags (e.g., { exclude: ['_period'], maxVisible: 3 })." },
+      { name: "badge", type: "React.ReactNode", required: false, description: "Inline right-aligned badge content. Useful for showing result counts, status indicators, etc." },
+      { name: "collapsible", type: "boolean", required: false, default: "false", description: "Enable accordion behavior — secondary filters collapse/expand with a toggle." },
+      { name: "defaultCollapsed", type: "boolean", required: false, default: "false", description: "Initial collapsed state when collapsible is true." },
+      { name: "dense", type: "boolean", required: false, default: "false", description: "Compact mode with reduced padding. Falls back to MetricProvider config." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names for the root element." },
+      { name: "classNames", type: "{ root?, primary?, secondary?, tags?, badge? }", required: false, description: "Sub-element class overrides." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id for testing frameworks." },
+    ],
+    minimalExample: `<FilterProvider defaultPreset="30d">
+  <FilterBar>
+    <FilterBar.Primary>
+      <PeriodSelector comparison />
+    </FilterBar.Primary>
+  </FilterBar>
+</FilterProvider>`,
+    examples: [
+      {
+        title: "FilterBar with primary and secondary filters",
+        description: "Full filter bar with PeriodSelector in primary slot, DropdownFilters in secondary, auto FilterTags, and a badge.",
+        code: `<FilterProvider defaultPreset="30d">
+  <FilterBar
+    badge={<span className="text-sm text-muted">{filteredCount} results</span>}
+    collapsible
+  >
+    <FilterBar.Primary>
+      <PeriodSelector comparison />
+      <SegmentToggle options={["All", "Enterprise", "SMB"]} field="segment" />
+    </FilterBar.Primary>
+    <FilterBar.Secondary>
+      <DropdownFilter label="Region" options={regions} field="region" multiple />
+      <DropdownFilter label="Plan" options={plans} field="plan" multiple />
+    </FilterBar.Secondary>
+  </FilterBar>
+</FilterProvider>`,
+      },
+      {
+        title: "FilterBar with custom FilterTags config",
+        description: "Pass an object to the tags prop to configure FilterTags behavior.",
+        code: `<FilterBar tags={{ exclude: ["_period"], maxVisible: 3, labels: { region: "Market" } }}>
+  <FilterBar.Primary>
+    <PeriodSelector />
+  </FilterBar.Primary>
+</FilterBar>`,
+      },
+      {
+        title: "FilterBar with no tags",
+        description: "Hide auto-generated FilterTags.",
+        code: `<FilterBar tags={false}>
+  <FilterBar.Primary>
+    <PeriodSelector />
+  </FilterBar.Primary>
+</FilterBar>`,
+      },
+    ],
+    relatedComponents: ["FilterProvider", "FilterTags", "PeriodSelector", "DropdownFilter", "SegmentToggle", "DashboardHeader"],
+    configFields: ["dense"],
+    notes: [
+      "FilterBar must be inside a FilterProvider.",
+      "FilterBar.Primary and FilterBar.Secondary are named slot components — they render in the primary and secondary rows respectively.",
+      "When collapsible is true, FilterBar.Secondary content hides behind a toggle. FilterBar.Primary always stays visible.",
+      "tags={true} (default) auto-renders FilterTags with sensible defaults. Pass an object like { exclude: ['_period'] } to customize.",
+      "The badge prop renders inline in the top-right of the filter bar. Great for showing filtered result counts.",
+      "Active filter count and clear-all are automatically shown when filters are active.",
+      "Uses forwardRef. Passes through id, data-testid, className, and classNames.",
     ],
   },
 ];

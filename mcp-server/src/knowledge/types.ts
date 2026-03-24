@@ -965,4 +965,35 @@ export const TYPES: TypeDef[] = [
     description: "A single option in a SegmentToggle. The value is the unique identifier, label defaults to value, and badge counts are formatted through the format engine.",
     relatedTypes: ["SegmentToggleProps", "FormatOption"],
   },
+
+  // === Export Types ===
+
+  {
+    name: "ExportableConfig",
+    kind: "type",
+    definition: `type ExportableConfig = boolean | { data: Record<string, unknown>[] };`,
+    description: 'Controls the export system on any data component. true: auto-exports the component\'s data (charts auto-detect source data, KPI cards export a single value row). { data: rows[] }: overrides with custom data for CSV export. When enabled, an ExportButton dropdown appears in the card header with PNG, CSV, and clipboard options. Set globally on MetricProvider via the `exportable` prop or per-component. Clean filenames: "Title — Filters — Date.ext". Filter context metadata is included in CSV exports.',
+    relatedTypes: ["MetricConfig"],
+  },
+
+  // === FilterBar Types ===
+
+  {
+    name: "FilterBarProps",
+    kind: "interface",
+    definition: `interface FilterBarProps {
+  children: React.ReactNode;
+  tags?: boolean | FilterTagsProps;       // true: auto FilterTags, false: hide, object: passthrough to FilterTags
+  badge?: React.ReactNode;                // Inline right-aligned badge content
+  collapsible?: boolean;                  // Enable accordion for secondary filters
+  defaultCollapsed?: boolean;             // Initial collapsed state
+  dense?: boolean;                        // Compact mode
+  className?: string;
+  classNames?: { root?: string; primary?: string; secondary?: string; tags?: string; badge?: string };
+  id?: string;
+  "data-testid"?: string;
+}`,
+    description: "Props for the FilterBar container component. FilterBar.Primary and FilterBar.Secondary are sub-components for structuring filter layout.",
+    relatedTypes: ["FilterTagsProps"],
+  },
 ];
