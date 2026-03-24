@@ -413,7 +413,8 @@
   .mu-hover-action,
   [data-position] /* FilterBar */,
   button[aria-expanded] /* dropdowns */,
-  [role="dialog"] /* drill-down panel */  {
+  [role="dialog"] /* drill-down panel */,
+  [data-component="Callout"] /* alerts/warnings — contextual, not for print */ {
     display: none !important;
   }
 
@@ -493,14 +494,11 @@
     text-align: right;
   }
 
-  /* --- Print footer on every page --- */
+  /* --- Print footer — end of document --- */
   .mu-print-footer {
     display: block !important;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0.5rem 1rem;
+    margin-top: 2rem;
+    padding: 0.75rem 0;
     font-size: 8pt;
     color: #9ca3af;
     border-top: 1px solid #e5e5e5;

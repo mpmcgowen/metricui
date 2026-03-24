@@ -295,6 +295,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
         ref={ref}
         id={id}
         data-testid={dataTestId}
+        data-component="Callout"
         data-variant={resolvedVariant}
         data-dense={resolvedDense ? "true" : undefined}
         role="alert"
