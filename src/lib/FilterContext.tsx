@@ -116,9 +116,14 @@ function computeComparisonPeriod(
   const durationMs = period.end.getTime() - period.start.getTime();
 
   if (mode === "previous") {
-    // Previous period of same length, ending right before current starts
-    const end = new Date(period.start.getTime() - 1);
-    const start = new Date(end.getTime() - durationMs);
+    // Previous period of same length, ending the day before current starts
+    const end = new Date(period.start);
+    end.setDate(end.getDate() - 1);
+    end.setHours(23, 59, 59, 999);
+    const durationDays = Math.round(durationMs / (1000 * 60 * 60 * 24));
+    const start = new Date(end);
+    start.setDate(start.getDate() - durationDays + 1);
+    start.setHours(0, 0, 0, 0);
     return { start, end };
   }
 
