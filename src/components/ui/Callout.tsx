@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useMetricConfig, useLocale } from "@/lib/MetricProvider";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { CARD_CLASSES } from "@/lib/styles";
+import type { DrillDownConfig } from "@/lib/types";
 import {
   Info,
   AlertTriangle,
@@ -12,6 +13,7 @@ import {
   XCircle,
   X,
   ChevronDown,
+  ArrowUpRight as DrillIcon,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -86,6 +88,10 @@ export interface CalloutProps {
   detail?: React.ReactNode;
   /** Whether detail starts expanded. Default: false */
   detailOpen?: boolean;
+
+  // --- Drill-down ---
+  /** Drill-down config. When set, the callout becomes clickable and opens the drill-down panel. */
+  drillDown?: DrillDownConfig;
 
   // --- Standard MetricUI props ---
   /** Dense mode */
@@ -218,6 +224,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
       action,
       detail,
       detailOpen: detailOpenProp = false,
+      drillDown,
       dense: denseProp,
       className,
       classNames,
@@ -291,6 +298,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
         data-variant={resolvedVariant}
         data-dense={resolvedDense ? "true" : undefined}
         role="alert"
+        onClick={drillDown ? drillDown.onClick : undefined}
         className={cn(
           "relative border transition-all duration-200",
           CARD_CLASSES,
@@ -298,6 +306,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
           styles.border,
           resolvedDense ? "px-3 py-2.5" : "px-4 py-3.5",
           fading && "opacity-0 scale-[0.98]",
+          drillDown && "group cursor-pointer",
           className,
           classNames?.root
         )}
@@ -441,6 +450,11 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
             </button>
           )}
         </div>
+        {drillDown && (
+          <span className="absolute bottom-2 right-2 text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-60" aria-hidden>
+            <DrillIcon className="h-3 w-3" />
+          </span>
+        )}
       </div>
     );
   }

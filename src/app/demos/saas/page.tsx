@@ -23,6 +23,7 @@ import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
 import { MetricProvider } from "@/lib/MetricProvider";
 import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
 import { fmt, formatValue } from "@/lib/format";
+import { DrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
 import { accounts, type Account } from "@/data/saas-accounts";
 import {
   DollarSign,
@@ -161,6 +162,7 @@ function monthInRange(month: string, start: Date, end: Date): boolean {
 function DashboardContent() {
   const cf = useCrossFilter();
   const filters = useMetricFilters();
+  const openDrill = useDrillDownAction();
   const industryFilter = filters?.dimensions?.industry ?? [];
 
   // Step 1: Period filter
@@ -296,6 +298,28 @@ function DashboardContent() {
           { when: "between", min: 15, max: 25, color: "amber" },
           { when: "above", value: 25, color: "red" },
         ]}
+        drillDown={{
+          label: "View churned accounts",
+          onClick: () => openDrill(
+            { title: `Churn Rate: ${data.kpis.churnRate}%`, field: "status", value: "churned" },
+            <MetricGrid>
+              <DonutChart data={data.churnReasons} title="Churn Reasons" showPercentage innerRadius={0.6} height={260} />
+              <DataTable
+                data={filtered.filter((a) => a.status === "churned") as never[]}
+                columns={[
+                  { key: "name", header: "Account", sortable: true },
+                  { key: "industry", header: "Industry", sortable: true },
+                  { key: "churnReason", header: "Reason", sortable: true },
+                  { key: "country", header: "Country", sortable: true },
+                ]}
+                title={`${data.kpis.churned} Churned Accounts`}
+                pageSize={10}
+                dense
+                searchable
+              />
+            </MetricGrid>,
+          ),
+        }}
       />
 
       <StatGroup
@@ -368,12 +392,32 @@ function DashboardContent() {
         keys={["accounts"]}
         indexBy="country"
         title="Accounts by Country"
-        description="Click a bar to filter the entire dashboard by country."
+        description="Click a bar to drill into that country's accounts."
         format="number"
         height={260}
         sort="desc"
         layout="horizontal"
-        crossFilter
+        onBarClick={(e) => openDrill(
+          { title: `Country: ${e.label}`, field: "country", value: e.indexValue },
+          <MetricGrid>
+            <KpiCard title="Accounts" value={filtered.filter((a) => a.country === e.indexValue).length} format="number" />
+            <KpiCard title="MRR" value={filtered.filter((a) => a.country === e.indexValue && a.status === "active").reduce((s, a) => s + a.mrr, 0)} format="currency" />
+            <DataTable
+              data={filtered.filter((a) => a.country === e.indexValue) as never[]}
+              columns={[
+                { key: "name", header: "Account", sortable: true },
+                { key: "industry", header: "Industry", sortable: true },
+                { key: "plan", header: "Plan", sortable: true },
+                { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
+                { key: "status", header: "Status", sortable: true },
+              ]}
+              title="Accounts"
+              pageSize={10}
+              dense
+              searchable
+            />
+          </MetricGrid>,
+        )}
       />
       <DonutChart
         data={data.planDistribution}
@@ -450,16 +494,18 @@ export default function SaaSDashboard() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
           <FilterProvider defaultPreset="ytd" referenceDate={new Date(2024, 11, 31)}>
             <CrossFilterProvider>
+              <DrillDown.Root>
 
-              <DashboardHeader
-                title="RavenStack Analytics"
-                subtitle="SaaS metrics dashboard — powered by 500 generated accounts"
-                status="live"
-                back={{ href: "/docs/kpi-card" }}
-              />
+                <DashboardHeader
+                  title="RavenStack Analytics"
+                  subtitle="SaaS metrics dashboard — powered by 500 generated accounts"
+                  status="live"
+                  back={{ href: "/docs/kpi-card" }}
+                />
 
-              <DashboardContent />
+                <DashboardContent />
 
+              </DrillDown.Root>
             </CrossFilterProvider>
           </FilterProvider>
         </div>

@@ -12,7 +12,10 @@ import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { BarClickEvent } from "@/lib/chartTypes";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -65,6 +68,8 @@ export interface WaterfallProps {
   yAxisLabel?: string;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
+  /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action. */
+  drillDown?: (event: BarClickEvent) => React.ReactNode;
   /** Emit cross-filter selection on bar click. Defaults field to "label". */
   crossFilter?: boolean | { field?: string };
   /** Dense mode */
@@ -256,6 +261,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   yAxisLabel,
   dense: denseProp,
   animate: animateProp,
+  drillDown,
   crossFilter: crossFilterProp,
   variant,
   className,
@@ -268,6 +274,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   stale,
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "Waterfall");
+  const openDrill = useDrillDownAction();
   const crossFilter = useCrossFilter();
   const crossFilterField = crossFilterProp
     ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "label"
@@ -489,11 +496,27 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
                 />
               );
             }}
-            onClick={(datum) => {
-              if (crossFilterProp && crossFilter && crossFilterField) {
-                crossFilter.select({ field: crossFilterField, value: datum.indexValue as string | number });
-              }
-            }}
+            onClick={
+              (drillDown || (crossFilterProp && crossFilter))
+                ? (datum) => {
+                    if (drillDown) {
+                      const event: BarClickEvent = {
+                        id: datum.id,
+                        value: datum.value,
+                        label: String(datum.indexValue),
+                        key: String(datum.id),
+                        indexValue: datum.indexValue,
+                      };
+                      openDrill(
+                        { title: String(datum.indexValue), field: crossFilterField ?? "label", value: datum.indexValue },
+                        drillDown(event),
+                      );
+                    } else if (crossFilterProp && crossFilter && crossFilterField) {
+                      crossFilter.select({ field: crossFilterField, value: datum.indexValue as string | number });
+                    }
+                  }
+                : undefined
+            }
             animate={resolvedAnimate}
             motionConfig={resolvedAnimate ? config.motionConfig : undefined}
             layers={layers}

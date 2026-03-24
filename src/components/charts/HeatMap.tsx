@@ -15,6 +15,8 @@ import type { CellClickEvent } from "@/lib/chartTypes";
 import { toHeatMapSeries, inferSchema, categoryKeys, type Category } from "@/lib/dataTransform";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -70,6 +72,8 @@ export interface HeatMapProps {
   hoverOtherOpacity?: number;
   /** Click handler for cells */
   onCellClick?: (cell: CellClickEvent) => void;
+  /** Drill-down content renderer. When set, clicking a cell opens the drill-down panel. Takes priority over crossFilter for the click action. */
+  drillDown?: (event: CellClickEvent) => React.ReactNode;
   /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Enable/disable chart animation. Default: true */
@@ -179,6 +183,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   hoverTarget = "cell",
   hoverOtherOpacity = 0.35,
   onCellClick,
+  drillDown,
   crossFilter: crossFilterProp,
   animate: animateProp,
   variant,
@@ -193,6 +198,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   stale,
 }, ref) {
   assertPeer(ResponsiveHeatMap, "@nivo/heatmap", "HeatMap");
+  const openDrill = useDrillDownAction();
   const linkedHover = useLinkedHover();
   const linkedHoverId = useLinkedHoverId();
   const { theme } = useTheme();
@@ -344,16 +350,22 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
               "annotations",
             ] as any}
             onClick={
-              (onCellClick || (crossFilterProp && crossFilter))
+              (onCellClick || drillDown || (crossFilterProp && crossFilter))
                 ? (cell) => {
-                    onCellClick?.({
+                    const event: CellClickEvent = {
                       id: `${cell.serieId}-${String(cell.data.x)}`,
                       value: cell.value,
                       label: String(cell.data.x),
                       seriesId: cell.serieId,
                       x: String(cell.data.x),
-                    });
-                    if (crossFilterProp && crossFilter && crossFilterField) {
+                    };
+                    onCellClick?.(event);
+                    if (drillDown) {
+                      openDrill(
+                        { title: String(cell.data.x), field: crossFilterField ?? "x", value: String(cell.data.x) },
+                        drillDown(event),
+                      );
+                    } else if (crossFilterProp && crossFilter && crossFilterField) {
                       crossFilter.select({ field: crossFilterField, value: String(cell.data.x) });
                     }
                   }

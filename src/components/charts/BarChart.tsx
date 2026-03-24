@@ -15,6 +15,8 @@ import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
@@ -120,6 +122,8 @@ export interface BarChartProps {
   yAxisLabel?: string;
   /** Click handler for bars */
   onBarClick?: (bar: BarClickEvent) => void;
+  /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action. */
+  drillDown?: (event: BarClickEvent) => React.ReactNode;
   /** Enable cross-filtering. `true` uses indexBy as the field, or pass `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Compact layout — reduces margins and default height. Default: false */
@@ -606,6 +610,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   xAxisLabel,
   yAxisLabel,
   onBarClick,
+  drillDown,
   crossFilter: crossFilterProp,
   dense,
   chartNullMode,
@@ -624,6 +629,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   } = props;
 
   assertPeer(ResponsiveBar, "@nivo/bar", "BarChart");
+  const openDrill = useDrillDownAction();
 
   // --- Resolve unified data props (index/categories → keys/indexBy) ---
   const inferred = useMemo(
@@ -1072,9 +1078,9 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
           motionConfig={resolvedAnimate ? config.motionConfig : undefined}
           layers={customLayers}
           onClick={
-            (onBarClick || (crossFilterProp && crossFilter))
+            (onBarClick || drillDown || (crossFilterProp && crossFilter))
               ? (datum: ComputedDatum<BarDatum> & { color: string }) => {
-                  const event = {
+                  const event: BarClickEvent = {
                     id: datum.id,
                     value: datum.value,
                     label: String(datum.indexValue),
@@ -1082,7 +1088,12 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
                     indexValue: datum.indexValue,
                   };
                   onBarClick?.(event);
-                  if (crossFilterProp && crossFilter && crossFilterField) {
+                  if (drillDown) {
+                    openDrill(
+                      { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue },
+                      drillDown(event),
+                    );
+                  } else if (crossFilterProp && crossFilter && crossFilterField) {
                     crossFilter.select({ field: crossFilterField, value: datum.indexValue });
                   }
                 }

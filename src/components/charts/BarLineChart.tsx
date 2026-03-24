@@ -19,11 +19,13 @@ import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
-import type { LegendConfig } from "@/lib/chartTypes";
+import type { LegendConfig, BarClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toBarLineData, categoryKeys, resolveCategory, type Category } from "@/lib/dataTransform";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -122,6 +124,8 @@ export interface BarLineChartProps {
   chartNullMode?: ChartNullMode;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
+  /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action. */
+  drillDown?: (event: BarClickEvent) => React.ReactNode;
   /** Emit cross-filter selection on bar click. Defaults field to the `indexBy` value. */
   crossFilter?: boolean | { field?: string };
   /** Sub-element class name overrides */
@@ -387,12 +391,14 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
   dense,
   chartNullMode,
   animate: animateProp,
+  drillDown,
   crossFilter: crossFilterProp,
   classNames,
   id,
   "data-testid": dataTestId,
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "BarLineChart");
+  const openDrill = useDrillDownAction();
   const linkedHover = useLinkedHover();
   const linkedHoverId = useLinkedHoverId();
   const crossFilter = useCrossFilter();
@@ -676,11 +682,27 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
               />
             );
           }}
-          onClick={(datum) => {
-            if (crossFilterProp && crossFilter && crossFilterField) {
-              crossFilter.select({ field: crossFilterField, value: datum.indexValue as string | number });
-            }
-          }}
+          onClick={
+            (drillDown || (crossFilterProp && crossFilter))
+              ? (datum) => {
+                  if (drillDown) {
+                    const event: BarClickEvent = {
+                      id: datum.id,
+                      value: datum.value,
+                      label: String(datum.indexValue),
+                      key: String(datum.id),
+                      indexValue: datum.indexValue,
+                    };
+                    openDrill(
+                      { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue },
+                      drillDown(event),
+                    );
+                  } else if (crossFilterProp && crossFilter && crossFilterField) {
+                    crossFilter.select({ field: crossFilterField, value: datum.indexValue as string | number });
+                  }
+                }
+              : undefined
+          }
           animate={resolvedAnimate}
           motionConfig={resolvedAnimate ? config.motionConfig : undefined}
           layers={customLayers}

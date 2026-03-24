@@ -22,6 +22,8 @@ import { withOpacity } from "@/lib/utils";
 import { devWarn } from "@/lib/devWarnings";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+
 import type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toLineSeries, inferSchema, categoryKeys, categoryColors, rightAxisCategories, type Category } from "@/lib/dataTransform";
@@ -161,6 +163,8 @@ export interface AreaChartProps {
   colors?: string[];
   /** Click handler for data points */
   onPointClick?: (point: PointClickEvent) => void;
+  /** Drill-down content renderer. When set, clicking a point opens the drill-down panel. Takes priority over crossFilter for the click action. */
+  drillDown?: (event: PointClickEvent) => React.ReactNode;
   /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Compact layout — reduces margins and default height. Default: false */
@@ -521,6 +525,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   rightAxisLabel,
   colors: chartColors,
   onPointClick,
+  drillDown,
   crossFilter: crossFilterProp,
   dense,
   chartNullMode,
@@ -536,6 +541,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   stale,
 }, ref) {
   assertPeer(ResponsiveLine, "@nivo/line", "AreaChart");
+  const openDrill = useDrillDownAction();
   const localeDefaults = useLocale();
   const config = useMetricConfig();
 
@@ -1142,20 +1148,26 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
         defs={gradientDefs}
         fill={gradientFills}
         onClick={
-          (onPointClick || (crossFilterProp && crossFilter))
+          (onPointClick || drillDown || (crossFilterProp && crossFilter))
             ? (rawPoint) => {
                 const point = rawPoint as unknown as Point<SeriesData>;
                 if (point.seriesId !== undefined) {
                   const sid = String(point.seriesId);
-                  onPointClick?.({
+                  const event: PointClickEvent = {
                     id: sid,
                     value: point.data.y as number,
                     label: String(point.data.x),
                     seriesId: sid,
                     x: point.data.x as string | number,
                     y: point.data.y as number,
-                  });
-                  if (crossFilterProp && crossFilter && crossFilterField) {
+                  };
+                  onPointClick?.(event);
+                  if (drillDown) {
+                    openDrill(
+                      { title: String(point.data.x), field: crossFilterField ?? "x", value: point.data.x as string | number },
+                      drillDown(event),
+                    );
+                  } else if (crossFilterProp && crossFilter && crossFilterField) {
                     crossFilter.select({ field: crossFilterField, value: point.data.x as string | number });
                   }
                 }

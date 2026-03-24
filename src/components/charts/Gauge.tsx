@@ -12,6 +12,7 @@ import {
 import type {
   ComparisonConfig,
   AnimationConfig,
+  DrillDownConfig,
   CardVariant,
   EmptyState,
   ErrorState,
@@ -25,7 +26,7 @@ import { assertPeer } from "@/lib/peerCheck";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { ChartContainer } from "./ChartContainer";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, ArrowUpRight as DrillIcon } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,6 +58,8 @@ export interface GaugeProps {
   icon?: React.ReactNode;
   /** Height in px. Default: 300 */
   height?: number;
+  /** Drill-down config. When set, the gauge card becomes clickable and opens the drill-down panel. */
+  drillDown?: DrillDownConfig;
 
   // Standard MetricUI props
   variant?: CardVariant;
@@ -256,6 +259,7 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   showValue = true,
   icon,
   height,
+  drillDown,
   variant,
   dense,
   animate,
@@ -391,7 +395,14 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   };
 
   return (
-    <div ref={ref} id={id} data-testid={dataTestId} style={{ minWidth: 120, height: "100%" }}>
+    <div
+      ref={ref}
+      id={id}
+      data-testid={dataTestId}
+      style={{ minWidth: 120, height: "100%" }}
+      className={cn(drillDown && "group relative cursor-pointer", className)}
+      onClick={drillDown ? drillDown.onClick : undefined}
+    >
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="Gauge"
         title={title}
@@ -456,6 +467,11 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
           />
         </div>
       </ChartContainer>
+      {drillDown && (
+        <span className="absolute bottom-2 right-2 text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-60" aria-hidden>
+          <DrillIcon className="h-3 w-3" />
+        </span>
+      )}
     </div>
     </div>
   );

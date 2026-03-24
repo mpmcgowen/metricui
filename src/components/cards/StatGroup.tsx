@@ -3,7 +3,7 @@
 import { forwardRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { FormatOption, ComparisonMode } from "@/lib/format";
-import type { CardVariant } from "@/lib/types";
+import type { CardVariant, DrillDownConfig } from "@/lib/types";
 import { useMetricConfig } from "@/lib/MetricProvider";
 import { KpiCard } from "./KpiCard";
 
@@ -28,6 +28,8 @@ export interface StatItem {
   format?: FormatOption;
   /** Optional icon (any ReactNode) */
   icon?: React.ReactNode;
+  /** Drill-down config. When set, the stat item becomes clickable and opens the drill-down panel. */
+  drillDown?: DrillDownConfig;
 }
 
 export interface StatGroupProps {
@@ -216,12 +218,14 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
             ? `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(1)}%`
             : undefined;
 
+          const isClickable = !!(onStatClick || stat.drillDown);
+
           return (
             <div
               key={`${stat.label}-${idx}`}
               className={cn(
                 "mu-stat-cell bg-[var(--mu-cell-bg)]",
-                onStatClick && "cursor-pointer transition-colors hover:bg-[var(--card-glow)]",
+                isClickable && "cursor-pointer transition-colors hover:bg-[var(--card-glow)]",
                 classNames?.cell,
               )}
               onClick={onStatClick ? () => onStatClick(stat, idx) : undefined}
@@ -237,8 +241,7 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
                 comparisonLabel={legacyLabel}
                 nullDisplay={resolvedNullDisplay}
                 animate={animate}
-                // For pre-formatted string values, we skip KpiCard's formatting
-                // and use a subtitle approach — but this is a rare case
+                drillDown={stat.drillDown}
               />
               {/* Handle pre-formatted string values (legacy) */}
               {typeof stat.value === "string" && (

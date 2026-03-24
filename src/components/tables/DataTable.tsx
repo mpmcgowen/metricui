@@ -17,6 +17,8 @@ import { devWarn } from "@/lib/devWarnings";
 import type { CardVariant, EmptyState, ErrorState, StaleState, NullDisplay } from "@/lib/types";
 import { useLinkedHover } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Inbox, ExternalLink } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -109,6 +111,8 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   striped?: boolean;
   dense?: boolean;
   onRowClick?: (row: T, index: number) => void;
+  /** Drill-down content renderer. When set, clicking a row opens the drill-down panel. Takes priority over crossFilter for the click action. */
+  drillDown?: (row: Record<string, unknown>, index: number) => React.ReactNode;
   nullDisplay?: NullDisplay;
   footer?: FooterRow;
   variant?: CardVariant;
@@ -273,7 +277,7 @@ function DataTableInner<T extends Record<string, unknown>>(
   {
     data, columns: columnsProp, title, subtitle, description, footnote, action,
     pageSize, pagination: paginationProp, maxRows, onViewAll, striped = false, dense,
-    onRowClick, nullDisplay, footer, variant, className, loading, empty, error, stale,
+    onRowClick, drillDown, nullDisplay, footer, variant, className, loading, empty, error, stale,
     id, "data-testid": dataTestId, stickyHeader, classNames, searchable,
     scrollIndicators: scrollIndicatorsProp, rowConditions,
     multiSort: multiSortProp, renderExpanded,
@@ -284,6 +288,7 @@ function DataTableInner<T extends Record<string, unknown>>(
   ref: React.ForwardedRef<HTMLDivElement>,
 ) {
   useTheme();
+  const openDrill = useDrillDownAction();
   const linkedHover = useLinkedHover();
   const localeDefaults = useLocale();
   const config = useMetricConfig();
@@ -629,7 +634,7 @@ function DataTableInner<T extends Record<string, unknown>>(
                   <tr className={cn(
                     "group/row border-b border-[var(--card-border)]/50 transition-all hover:bg-[var(--card-glow)]",
                     striped && ri % 2 === 1 && "bg-[var(--card-glow)]/50",
-                    (onRowClick || (crossFilterProp && crossFilter)) && "cursor-pointer",
+                    (onRowClick || drillDown || (crossFilterProp && crossFilter)) && "cursor-pointer",
                     expanded.has(gi) && "bg-[var(--card-glow)]/30",
                     isParent && "font-medium",
                     isChild && "text-[var(--muted)]",
@@ -639,7 +644,15 @@ function DataTableInner<T extends Record<string, unknown>>(
                     transition: "all 200ms ease",
                   }} onClick={() => {
                     onRowClick?.(row, gi);
-                    if (crossFilterProp && crossFilter && crossFilterField) {
+                    if (drillDown) {
+                      const rowRecord = row as Record<string, unknown>;
+                      const firstCol = columns[0]?.key;
+                      const titleVal = firstCol ? String(rowRecord[firstCol] ?? "") : `Row ${gi + 1}`;
+                      openDrill(
+                        { title: titleVal, field: crossFilterField, value: crossFilterField ? rowRecord[crossFilterField] as string | number : undefined },
+                        drillDown(rowRecord, gi),
+                      );
+                    } else if (crossFilterProp && crossFilter && crossFilterField) {
                       crossFilter.select({ field: crossFilterField, value: (row as Record<string, unknown>)[crossFilterField] as string | number });
                     }
                   }}>

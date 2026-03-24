@@ -492,7 +492,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       id={id}
       data-testid={dataTestId}
       data-metric-card=""
-      onClick={onClick}
+      onClick={onClick ?? (drillDown ? drillDown.onClick : undefined)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       data-variant={bare ? undefined : resolvedVariant}
@@ -738,18 +738,11 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
         </p>
       )}
 
-      {/* Drill-down — always in DOM for keyboard access */}
+      {/* Drill-down indicator — subtle corner icon on hover */}
       {drillDown && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            drillDown.onClick();
-          }}
-          className="mu-hover-action absolute bottom-1 right-2 inline-flex items-center gap-0.5 rounded-md px-2 py-1.5 text-[11px] font-medium text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-        >
-          {drillDown.label ?? "Details"}
-          <DrillIcon className="h-2.5 w-2.5" />
-        </button>
+        <span className="absolute bottom-2 right-2 text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-60" aria-hidden>
+          <DrillIcon className="h-3 w-3" />
+        </span>
       )}
     </Wrapper>
   );

@@ -22,6 +22,8 @@ import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } f
 import { toDonutData, type Category } from "@/lib/dataTransform";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -108,6 +110,8 @@ export interface DonutChartProps {
   hideZeroSlices?: boolean;
   /** Click handler for slices */
   onSliceClick?: (slice: SliceClickEvent) => void;
+  /** Drill-down content renderer. When set, clicking a slice opens the drill-down panel. Takes priority over crossFilter for the click action. */
+  drillDown?: (event: SliceClickEvent) => React.ReactNode;
   /** Enable cross-filter selection. Pass `true` to use "id" as the field, or `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Compact layout — reduces margins and default height. Default: false */
@@ -288,6 +292,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   legend: legendProp,
   hideZeroSlices = true,
   onSliceClick,
+  drillDown,
   crossFilter: crossFilterProp,
   dense,
   chartNullMode,
@@ -303,6 +308,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   stale,
 }, ref) {
   assertPeer(ResponsivePie, "@nivo/pie", "DonutChart");
+  const openDrill = useDrillDownAction();
   const linkedHover = useLinkedHover();
   const linkedHoverId = useLinkedHoverId();
   const { theme } = useTheme();
@@ -562,16 +568,22 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
             />
           )}
           onClick={
-            (onSliceClick || (crossFilterProp && crossFilter))
+            (onSliceClick || drillDown || (crossFilterProp && crossFilter))
               ? (datum) => {
                   const pct = total > 0 ? (datum.value / total) * 100 : 0;
-                  onSliceClick?.({
+                  const event: SliceClickEvent = {
                     id: String(datum.id),
                     value: datum.value,
                     label: String(datum.label),
                     percentage: pct,
-                  });
-                  if (crossFilterProp && crossFilter && crossFilterField) {
+                  };
+                  onSliceClick?.(event);
+                  if (drillDown) {
+                    openDrill(
+                      { title: String(datum.label), field: crossFilterField ?? "id", value: datum.id },
+                      drillDown(event),
+                    );
+                  } else if (crossFilterProp && crossFilter && crossFilterField) {
                     crossFilter.select({ field: crossFilterField, value: datum.id });
                   }
                 }

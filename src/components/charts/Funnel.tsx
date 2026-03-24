@@ -14,6 +14,8 @@ import { useContainerSize } from "@/lib/useContainerSize";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { SERIES_COLORS } from "@/lib/chartColors";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
 import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
@@ -87,6 +89,8 @@ export interface FunnelChartProps {
     /** Percentage of first stage's value */
     percentage: number;
   }) => void;
+  /** Drill-down content renderer. When set, clicking a part opens the drill-down panel. Takes priority over crossFilter for the click action. */
+  drillDown?: (event: { id: string; value: number; label: string }) => React.ReactNode;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
   /** Dense mode */
@@ -136,6 +140,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   legend: legendProp,
   crossFilter: crossFilterProp,
   onPartClick,
+  drillDown,
   dense,
   animate: animateProp,
   variant,
@@ -149,6 +154,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   stale,
 }, ref) {
   assertPeer(ResponsiveFunnel, "@nivo/funnel", "Funnel");
+  const openDrill = useDrillDownAction();
   const crossFilter = useCrossFilter();
   const crossFilterField = crossFilterProp
     ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "id"
@@ -396,8 +402,9 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
               );
             }}
             onClick={
-              (onPartClick || (crossFilterProp && crossFilter))
+              (onPartClick || drillDown || (crossFilterProp && crossFilter))
                 ? (part) => {
+                    const partLabel = String(part.data.label ?? part.data.id);
                     if (onPartClick) {
                       const pct = firstValue > 0
                         ? (part.data.value / firstValue) * 100
@@ -405,11 +412,16 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
                       onPartClick({
                         id: String(part.data.id),
                         value: part.data.value,
-                        label: String(part.data.label ?? part.data.id),
+                        label: partLabel,
                         percentage: pct,
                       });
                     }
-                    if (crossFilterProp && crossFilter && crossFilterField) {
+                    if (drillDown) {
+                      openDrill(
+                        { title: partLabel, field: crossFilterField ?? "id", value: String(part.data.id) },
+                        drillDown({ id: String(part.data.id), value: part.data.value, label: partLabel }),
+                      );
+                    } else if (crossFilterProp && crossFilter && crossFilterField) {
                       crossFilter.select({ field: crossFilterField, value: String(part.data.id) });
                     }
                   }
