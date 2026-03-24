@@ -44,6 +44,7 @@ import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useCopyToClipboard } from "@/lib/useCopyToClipboard";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
+import { ExportButton } from "@/components/ui/ExportButton";
 import { DataStateWrapper, KpiSkeletonContent } from "@/components/ui/DataStateWrapper";
 import {
   TrendingUp,
@@ -53,7 +54,7 @@ import {
   Check,
   ArrowUpRight as DrillIcon,
 } from "lucide-react";
-import { forwardRef, useState } from "react";
+import { forwardRef, useState, useRef } from "react";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -111,6 +112,8 @@ export interface KpiCardProps {
   titlePosition?: TitlePosition;
   /** Horizontal alignment for card content. Default: "left" */
   titleAlign?: TitleAlign;
+  /** Enable export. `true` enables image/clipboard. Pass `{ data }` to also enable CSV with custom data. */
+  exportable?: boolean | { data: Record<string, unknown>[] };
   loading?: boolean;
   empty?: EmptyState;
   error?: ErrorState;
@@ -239,6 +242,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   onClick,
   href,
   drillDown,
+  exportable: exportableProp,
   copyable,
   animate,
   highlight,
@@ -271,6 +275,9 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   const resolvedVariant = variant ?? config.variant;
   const resolvedAnimate = animate ?? config.animate;
   const resolvedDense = dense ?? config.dense;
+  const resolvedExportable = exportableProp !== undefined ? !!exportableProp : config.exportable;
+  const exportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // --- Merge config groupings with flat props (configs take precedence) ---
   const sparklineData = sparklineConfig?.data ?? sparklineDataProp;
@@ -488,7 +495,11 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   return (
     <Wrapper
       {...wrapperProps}
-      ref={!href ? (ref as React.Ref<never>) : undefined}
+      ref={!href ? ((el: unknown) => {
+        (cardRef as React.MutableRefObject<HTMLElement | null>).current = el as HTMLElement | null;
+        if (typeof ref === "function") ref(el as never);
+        else if (ref) (ref as React.MutableRefObject<never>).current = el as never;
+      }) as never : undefined}
       id={id}
       data-testid={dataTestId}
       data-metric-card=""
@@ -534,6 +545,18 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
         } : {}),
       } as React.CSSProperties}
     >
+      {/* Export button */}
+      {resolvedExportable && (
+        <div className="absolute right-2 top-2 z-10">
+          <ExportButton
+            title={typeof title === "string" ? title : "KPI"}
+            targetRef={cardRef}
+            data={exportData}
+            copyValue={formattedValue}
+            dense={resolvedDense}
+          />
+        </div>
+      )}
       {/* Stale indicator */}
       {stale && (
         <div className="absolute right-3 top-3">

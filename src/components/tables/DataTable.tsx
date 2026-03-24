@@ -18,6 +18,7 @@ import type { CardVariant, EmptyState, ErrorState, StaleState, NullDisplay } fro
 import { useLinkedHover } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+import { ExportButton } from "@/components/ui/ExportButton";
 
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Inbox, ExternalLink } from "lucide-react";
 
@@ -119,6 +120,8 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   footer?: FooterRow;
   variant?: CardVariant;
   className?: string;
+  /** Enable export. Inherits from MetricProvider when unset. */
+  exportable?: boolean;
   loading?: boolean;
   empty?: EmptyState;
   error?: ErrorState;
@@ -279,7 +282,7 @@ function DataTableInner<T extends Record<string, unknown>>(
   {
     data, columns: columnsProp, title, subtitle, description, footnote, action,
     pageSize, pagination: paginationProp, maxRows, onViewAll, striped = false, dense,
-    onRowClick, drillDown, drillDownMode, nullDisplay, footer, variant, className, loading, empty, error, stale,
+    onRowClick, drillDown, drillDownMode, nullDisplay, footer, variant, className, exportable: exportableProp, loading, empty, error, stale,
     id, "data-testid": dataTestId, stickyHeader, classNames, searchable,
     scrollIndicators: scrollIndicatorsProp, rowConditions,
     multiSort: multiSortProp, renderExpanded,
@@ -299,6 +302,21 @@ function DataTableInner<T extends Record<string, unknown>>(
   const resolvedNullDisplay = nullDisplay ?? config.nullDisplay;
   const resolvedLoading = loading ?? config.loading;
   const resolvedScrollIndicators = scrollIndicatorsProp ?? true;
+  const resolvedExportable = exportableProp ?? config.exportable;
+  const tableRef = useRef<HTMLDivElement>(null);
+  const combinedAction = (
+    <div className="flex items-center gap-1">
+      {action}
+      {resolvedExportable && (
+        <ExportButton
+          title={title ?? "Table"}
+          targetRef={tableRef}
+          data={data as Record<string, unknown>[]}
+          dense={resolvedDense}
+        />
+      )}
+    </div>
+  );
 
   // --- Cross-filter ---
   const crossFilter = useCrossFilter();
@@ -539,14 +557,14 @@ function DataTableInner<T extends Record<string, unknown>>(
 
   if (error) {
     return (<div ref={ref} id={id} data-testid={dataTestId} className={cardShell}>
-      {renderHeader(title, subtitle, description, action)}
+      {renderHeader(title, subtitle, description, combinedAction)}
       <DataStateWrapper error={error}><div /></DataStateWrapper>
     </div>);
   }
 
   if (resolvedLoading) {
     return (<div ref={ref} id={id} data-testid={dataTestId} className={cardShell}>
-      {renderHeader(title, subtitle, description, action)}
+      {renderHeader(title, subtitle, description, combinedAction)}
       <TableSkeleton columns={columns} rows={effectivePageSize > 5 ? 5 : effectivePageSize} dense={resolvedDense} />
     </div>);
   }
@@ -554,7 +572,7 @@ function DataTableInner<T extends Record<string, unknown>>(
   if (empty || data.length === 0) {
     const ec = empty ?? { message: "No data available" };
     return (<div ref={ref} id={id} data-testid={dataTestId} className={cardShell}>
-      {renderHeader(title, subtitle, description, action)}
+      {renderHeader(title, subtitle, description, combinedAction)}
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="mb-3 text-[var(--muted)] opacity-40">{ec.icon ?? <Inbox className="h-10 w-10" />}</div>
         <p className="text-sm text-[var(--muted)]">{ec.message ?? "No data available"}</p>
@@ -568,7 +586,7 @@ function DataTableInner<T extends Record<string, unknown>>(
       data-dense={resolvedDense ? "true" : undefined}
       className={cn("noise-texture group relative border transition-all duration-300", CARD_CLASSES, HOVER_CLASSES, className, classNames?.root)}>
       {stale && <div className="absolute right-3 top-3 z-10"><DataStateWrapper stale={stale}><div /></DataStateWrapper></div>}
-      {renderHeader(title, subtitle, description, action)}
+      {renderHeader(title, subtitle, description, combinedAction)}
 
       {searchable && (
         <div className="px-5">
