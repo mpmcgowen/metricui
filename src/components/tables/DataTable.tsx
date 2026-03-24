@@ -113,6 +113,8 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   onRowClick?: (row: T, index: number) => void;
   /** Drill-down content renderer. When set, clicking a row opens the drill-down panel. Takes priority over crossFilter for the click action. */
   drillDown?: (row: Record<string, unknown>, index: number) => React.ReactNode;
+  /** Drill-down presentation mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
   nullDisplay?: NullDisplay;
   footer?: FooterRow;
   variant?: CardVariant;
@@ -277,7 +279,7 @@ function DataTableInner<T extends Record<string, unknown>>(
   {
     data, columns: columnsProp, title, subtitle, description, footnote, action,
     pageSize, pagination: paginationProp, maxRows, onViewAll, striped = false, dense,
-    onRowClick, drillDown, nullDisplay, footer, variant, className, loading, empty, error, stale,
+    onRowClick, drillDown, drillDownMode, nullDisplay, footer, variant, className, loading, empty, error, stale,
     id, "data-testid": dataTestId, stickyHeader, classNames, searchable,
     scrollIndicators: scrollIndicatorsProp, rowConditions,
     multiSort: multiSortProp, renderExpanded,
@@ -649,7 +651,7 @@ function DataTableInner<T extends Record<string, unknown>>(
                       const firstCol = columns[0]?.key;
                       const titleVal = firstCol ? String(rowRecord[firstCol] ?? "") : `Row ${gi + 1}`;
                       openDrill(
-                        { title: titleVal, field: crossFilterField, value: crossFilterField ? rowRecord[crossFilterField] as string | number : undefined },
+                        { title: titleVal, field: crossFilterField, value: crossFilterField ? rowRecord[crossFilterField] as string | number : undefined, mode: drillDownMode },
                         drillDown(rowRecord, gi),
                       );
                     } else if (crossFilterProp && crossFilter && crossFilterField) {

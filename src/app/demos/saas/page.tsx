@@ -486,7 +486,7 @@ function DashboardContent() {
         sort="desc"
         layout="horizontal"
         onBarClick={(e) => openDrill(
-          { title: `Country: ${e.label}`, field: "country", value: e.indexValue },
+          { title: `Country: ${e.label}`, field: "country", value: e.indexValue, mode: "modal" },
           <MetricGrid>
             <KpiCard title="Accounts" value={filtered.filter((a) => a.country === e.indexValue).length} format="number" />
             <KpiCard title="MRR" value={filtered.filter((a) => a.country === e.indexValue && a.status === "active").reduce((s, a) => s + a.mrr, 0)} format="currency" />
@@ -609,6 +609,7 @@ function DashboardContent() {
         title="Top Accounts"
         pageSize={10}
         dense
+        drillDownMode="modal"
         drillDown={(row) => (
           <MetricGrid>
             <KpiCard title="MRR" value={row.mrr as number} format="currency" />

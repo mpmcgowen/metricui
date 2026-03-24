@@ -112,6 +112,8 @@ export interface DonutChartProps {
   onSliceClick?: (slice: SliceClickEvent) => void;
   /** Drill-down content renderer. When set, clicking a slice opens the drill-down panel. Takes priority over crossFilter for the click action. */
   drillDown?: (event: SliceClickEvent) => React.ReactNode;
+  /** Drill-down presentation mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "id" as the field, or `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Compact layout — reduces margins and default height. Default: false */
@@ -293,6 +295,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   hideZeroSlices = true,
   onSliceClick,
   drillDown,
+  drillDownMode,
   crossFilter: crossFilterProp,
   dense,
   chartNullMode,
@@ -580,7 +583,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
                   onSliceClick?.(event);
                   if (drillDown) {
                     openDrill(
-                      { title: String(datum.label), field: crossFilterField ?? "id", value: datum.id },
+                      { title: String(datum.label), field: crossFilterField ?? "id", value: datum.id, mode: drillDownMode },
                       drillDown(event),
                     );
                   } else if (crossFilterProp && crossFilter && crossFilterField) {

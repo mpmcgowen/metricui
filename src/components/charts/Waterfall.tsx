@@ -70,6 +70,8 @@ export interface WaterfallProps {
   animate?: boolean;
   /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action. */
   drillDown?: (event: BarClickEvent) => React.ReactNode;
+  /** Drill-down presentation mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
   /** Emit cross-filter selection on bar click. Defaults field to "label". */
   crossFilter?: boolean | { field?: string };
   /** Dense mode */
@@ -262,6 +264,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   dense: denseProp,
   animate: animateProp,
   drillDown,
+  drillDownMode,
   crossFilter: crossFilterProp,
   variant,
   className,
@@ -508,7 +511,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
                         indexValue: datum.indexValue,
                       };
                       openDrill(
-                        { title: String(datum.indexValue), field: crossFilterField ?? "label", value: datum.indexValue },
+                        { title: String(datum.indexValue), field: crossFilterField ?? "label", value: datum.indexValue, mode: drillDownMode },
                         drillDown(event),
                       );
                     } else if (crossFilterProp && crossFilter && crossFilterField) {

@@ -804,6 +804,7 @@ function DashboardContent() {
               dense
               multiSort
               searchable
+              drillDownMode="modal"
               drillDown={(row) => {
                 const labels = ((row.labels as string[]) ?? []).filter(l => !["CLA Signed", "Resolution: Stale"].includes(l));
                 const ageDays = daysBetween(row.createdAt as string);
@@ -945,6 +946,7 @@ function DashboardContent() {
               dense
               multiSort
               searchable
+              drillDownMode="modal"
               drillDown={(row) => {
                 const created = row.createdAt as string;
                 const merged = row.mergedAt as string | null;

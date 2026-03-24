@@ -4,7 +4,7 @@ import { type ReactNode } from "react";
 import { DrillDownProvider, type DrillDownProviderProps } from "@/lib/DrillDownContext";
 import { DrillDownOverlay } from "./DrillDownPanel";
 
-export { useDrillDown, type DrillDownTrigger, type DrillDownState } from "@/lib/DrillDownContext";
+export { useDrillDown, type DrillDownTrigger, type DrillDownState, type DrillDownMode } from "@/lib/DrillDownContext";
 export { useDrillDownAction } from "./DrillDownPanel";
 
 /**

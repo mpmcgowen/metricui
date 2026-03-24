@@ -165,6 +165,8 @@ export interface AreaChartProps {
   onPointClick?: (point: PointClickEvent) => void;
   /** Drill-down content renderer. When set, clicking a point opens the drill-down panel. Takes priority over crossFilter for the click action. */
   drillDown?: (event: PointClickEvent) => React.ReactNode;
+  /** Drill-down presentation mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Compact layout — reduces margins and default height. Default: false */
@@ -526,6 +528,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   colors: chartColors,
   onPointClick,
   drillDown,
+  drillDownMode,
   crossFilter: crossFilterProp,
   dense,
   chartNullMode,
@@ -1164,7 +1167,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
                   onPointClick?.(event);
                   if (drillDown) {
                     openDrill(
-                      { title: String(point.data.x), field: crossFilterField ?? "x", value: point.data.x as string | number },
+                      { title: String(point.data.x), field: crossFilterField ?? "x", value: point.data.x as string | number, mode: drillDownMode },
                       drillDown(event),
                     );
                   } else if (crossFilterProp && crossFilter && crossFilterField) {

@@ -91,6 +91,8 @@ export interface FunnelChartProps {
   }) => void;
   /** Drill-down content renderer. When set, clicking a part opens the drill-down panel. Takes priority over crossFilter for the click action. */
   drillDown?: (event: { id: string; value: number; label: string }) => React.ReactNode;
+  /** Drill-down presentation mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
   /** Dense mode */
@@ -141,6 +143,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   crossFilter: crossFilterProp,
   onPartClick,
   drillDown,
+  drillDownMode,
   dense,
   animate: animateProp,
   variant,
@@ -418,7 +421,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
                     }
                     if (drillDown) {
                       openDrill(
-                        { title: partLabel, field: crossFilterField ?? "id", value: String(part.data.id) },
+                        { title: partLabel, field: crossFilterField ?? "id", value: String(part.data.id), mode: drillDownMode },
                         drillDown({ id: String(part.data.id), value: part.data.value, label: partLabel }),
                       );
                     } else if (crossFilterProp && crossFilter && crossFilterField) {

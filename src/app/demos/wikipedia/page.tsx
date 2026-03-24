@@ -683,6 +683,7 @@ function WikipediaDashboardInner() {
               dense
               multiSort
               searchable
+              drillDownMode="modal"
               drillDown={(row) => {
                 const edit = row as unknown as WikiEdit;
                 const delta = edit.lengthOld != null && edit.lengthNew != null ? edit.lengthNew - edit.lengthOld : null;

@@ -7,6 +7,8 @@ import { createContext, useContext, useState, useCallback, useMemo, useEffect, t
 // ---------------------------------------------------------------------------
 
 /** The context passed to a drill-down render function — what was clicked. */
+export type DrillDownMode = "slide-over" | "modal";
+
 export interface DrillDownTrigger {
   /** Field name (e.g., "country", "plan") */
   field?: string;
@@ -14,6 +16,8 @@ export interface DrillDownTrigger {
   value?: string | number;
   /** Display label for the panel header */
   title: string;
+  /** Presentation mode. Default: "slide-over". */
+  mode?: DrillDownMode;
 }
 
 /** A single level in the drill stack. */

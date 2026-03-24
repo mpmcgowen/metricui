@@ -12,6 +12,7 @@ import { useDrillDown, type DrillDownTrigger } from "@/lib/DrillDownContext";
 
 export function DrillDownOverlay() {
   const drill = useDrillDown();
+  const mode = drill?.activeTrigger?.mode ?? "slide-over";
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -57,7 +58,7 @@ export function DrillDownOverlay() {
         aria-hidden
       />
 
-      {/* Panel — slides from right */}
+      {/* Panel */}
       <div
         ref={panelRef}
         role="dialog"
@@ -65,11 +66,17 @@ export function DrillDownOverlay() {
         aria-label={drill.activeTrigger?.title ?? "Detail view"}
         tabIndex={-1}
         className={cn(
-          "absolute right-0 top-0 bottom-0 flex w-full max-w-2xl flex-col",
-          "bg-[var(--background)] shadow-2xl shadow-black/20",
-          "transition-transform duration-300 ease-out",
-          "outline-none",
-          visible ? "translate-x-0" : "translate-x-full",
+          "flex flex-col bg-[var(--background)] shadow-2xl shadow-black/20 outline-none",
+          "transition-all duration-300 ease-out",
+          mode === "modal"
+            ? cn(
+                "absolute left-1/2 top-1/2 max-h-[85vh] w-full max-w-3xl rounded-xl border border-[var(--card-border)]",
+                visible ? "-translate-x-1/2 -translate-y-1/2 scale-100 opacity-100" : "-translate-x-1/2 -translate-y-1/2 scale-95 opacity-0",
+              )
+            : cn(
+                "absolute right-0 top-0 bottom-0 w-full max-w-2xl",
+                visible ? "translate-x-0" : "translate-x-full",
+              ),
         )}
       >
         {/* Header */}

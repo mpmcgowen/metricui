@@ -124,6 +124,8 @@ export interface BarChartProps {
   onBarClick?: (bar: BarClickEvent) => void;
   /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action. */
   drillDown?: (event: BarClickEvent) => React.ReactNode;
+  /** Drill-down presentation mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filtering. `true` uses indexBy as the field, or pass `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Compact layout — reduces margins and default height. Default: false */
@@ -611,6 +613,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   yAxisLabel,
   onBarClick,
   drillDown,
+  drillDownMode,
   crossFilter: crossFilterProp,
   dense,
   chartNullMode,
@@ -1090,7 +1093,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
                   onBarClick?.(event);
                   if (drillDown) {
                     openDrill(
-                      { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue },
+                      { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue, mode: drillDownMode },
                       drillDown(event),
                     );
                   } else if (crossFilterProp && crossFilter && crossFilterField) {

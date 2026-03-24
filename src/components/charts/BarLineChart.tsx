@@ -126,6 +126,8 @@ export interface BarLineChartProps {
   animate?: boolean;
   /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action. */
   drillDown?: (event: BarClickEvent) => React.ReactNode;
+  /** Drill-down presentation mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
   /** Emit cross-filter selection on bar click. Defaults field to the `indexBy` value. */
   crossFilter?: boolean | { field?: string };
   /** Sub-element class name overrides */
@@ -392,6 +394,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
   chartNullMode,
   animate: animateProp,
   drillDown,
+  drillDownMode,
   crossFilter: crossFilterProp,
   classNames,
   id,
@@ -694,7 +697,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
                       indexValue: datum.indexValue,
                     };
                     openDrill(
-                      { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue },
+                      { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue, mode: drillDownMode },
                       drillDown(event),
                     );
                   } else if (crossFilterProp && crossFilter && crossFilterField) {

@@ -74,6 +74,8 @@ export interface HeatMapProps {
   onCellClick?: (cell: CellClickEvent) => void;
   /** Drill-down content renderer. When set, clicking a cell opens the drill-down panel. Takes priority over crossFilter for the click action. */
   drillDown?: (event: CellClickEvent) => React.ReactNode;
+  /** Drill-down presentation mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Enable/disable chart animation. Default: true */
@@ -184,6 +186,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   hoverOtherOpacity = 0.35,
   onCellClick,
   drillDown,
+  drillDownMode,
   crossFilter: crossFilterProp,
   animate: animateProp,
   variant,
@@ -362,7 +365,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
                     onCellClick?.(event);
                     if (drillDown) {
                       openDrill(
-                        { title: String(cell.data.x), field: crossFilterField ?? "x", value: String(cell.data.x) },
+                        { title: String(cell.data.x), field: crossFilterField ?? "x", value: String(cell.data.x), mode: drillDownMode },
                         drillDown(event),
                       );
                     } else if (crossFilterProp && crossFilter && crossFilterField) {

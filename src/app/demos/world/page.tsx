@@ -300,6 +300,7 @@ function CountryTable({ data, tableView }: {
       searchable
       multiSort
       striped
+      drillDownMode="modal"
       drillDown={(row) => {
         const countryName = String(row.name);
         const country = countries.find((c) => c.name === countryName);
@@ -694,6 +695,7 @@ function DashboardContent() {
               innerRadius={0.6}
               centerValue={`${data.totalLanguages}`}
               centerLabel="Total"
+              drillDownMode="modal"
               drillDown={(event) => {
                 const lang = event.id;
                 const langCountries = filteredCountries.filter((c) => c.languages.includes(lang));
