@@ -86,9 +86,17 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
   try {
     // Temporarily suppress console errors from html2canvas parsing unsupported CSS color functions
     const origError = console.error;
-    console.error = (...args: unknown[]) => {
-      if (typeof args[0] === "string" && args[0].includes("unsupported color function")) return;
+    const origWarn = console.warn;
+    const suppress = (...args: unknown[]) => {
+      const msg = args.map(String).join(" ");
+      if (msg.includes("unsupported color") || msg.includes("color function")) return;
       origError.apply(console, args);
+    };
+    console.error = suppress;
+    console.warn = (...args: unknown[]) => {
+      const msg = args.map(String).join(" ");
+      if (msg.includes("unsupported color") || msg.includes("color function")) return;
+      origWarn.apply(console, args);
     };
 
     const canvas = await html2canvas(element, {
@@ -99,6 +107,7 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
     });
 
     console.error = origError;
+    console.warn = origWarn;
 
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
