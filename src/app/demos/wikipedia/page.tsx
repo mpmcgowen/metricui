@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { formatValue } from "@/lib/format";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { StatGroup } from "@/components/cards/StatGroup";
 import { LineChart } from "@/components/charts/LineChart";
@@ -19,7 +20,7 @@ import { MetricProvider } from "@/lib/MetricProvider";
 import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
-import { FilterTags } from "@/components/filters/FilterTags";
+import { FilterBar } from "@/components/filters/FilterBar";
 import { useWikipediaStream } from "@/lib/useWikipediaStream";
 import type { WikiEdit } from "@/lib/useWikipediaStream";
 import {
@@ -30,6 +31,7 @@ import {
   Zap,
 } from "lucide-react";
 import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
+import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -71,17 +73,20 @@ function timeAgo(unixTimestamp: number): string {
 
 export default function WikipediaDashboard() {
   return (
-    <CrossFilterProvider>
-      <WikipediaDashboardInner />
-    </CrossFilterProvider>
+    <FilterProvider>
+      <CrossFilterProvider>
+        <WikipediaDashboardInner />
+      </CrossFilterProvider>
+    </FilterProvider>
   );
 }
 
 function WikipediaDashboardInner() {
   const { connected, loading, recentEdits, stats } = useWikipediaStream();
   const crossFilter = useCrossFilter();
-  const [editFilter, setEditFilter] = useState<string>("All Edits");
-  const [wikiFilter, setWikiFilter] = useState<string[]>([]);
+  const filters = useMetricFilters();
+  const editFilter = filters?.dimensions?.editType?.[0] ?? "All Edits";
+  const wikiFilter = filters?.dimensions?.wiki ?? [];
 
   // Top wiki options for dropdown
   const wikiOptions = useMemo(() => {
@@ -367,15 +372,22 @@ function WikipediaDashboardInner() {
               ]}
             />
           </div>
-          <div className="flex items-center gap-3">
+        </div>
+
+        <FilterBar
+          tags={{ showCrossFilter: true, crossFilterLabels: { wiki: "Wiki", type: "Type" } }}
+          badge={<>{formatValue(stats.totalEdits, "number")} edits</>}
+          className="mt-3"
+        >
+          <FilterBar.Primary>
             <SegmentToggle
               options={[
                 { value: "All Edits", label: "All Edits", icon: <Pencil className="h-3.5 w-3.5" />, badge: stats.totalEdits },
                 { value: "Human Only", label: "Human Only", icon: <Users className="h-3.5 w-3.5" />, badge: stats.totalEdits - stats.botEditCount },
                 { value: "Bot Only", label: "Bot Only", icon: <Bot className="h-3.5 w-3.5" />, badge: stats.botEditCount },
               ]}
-              value={editFilter}
-              onChange={(v) => setEditFilter(v as string)}
+              defaultValue="All Edits"
+              field="editType"
               size="sm"
             />
             <DropdownFilter
@@ -383,14 +395,11 @@ function WikipediaDashboardInner() {
               options={wikiOptions}
               multiple
               showAll
-              value={wikiFilter}
-              onChange={(v) => setWikiFilter(v as string[])}
+              field="wiki"
               dense
             />
-          </div>
-        </div>
-
-        <FilterTags className="mt-3" />
+          </FilterBar.Primary>
+        </FilterBar>
 
         <MetricProvider loading={loading} variant="elevated" theme="violet">
           <LinkedHoverProvider>
@@ -552,16 +561,28 @@ function WikipediaDashboardInner() {
 
 const DASHBOARD_SOURCE = `import { KpiCard, StatGroup, AreaChart, BarChart, DonutChart,
   Gauge, DataTable, Callout, DashboardHeader, StatusIndicator,
-  MetricProvider, MetricGrid, SegmentToggle, DropdownFilter,
-  FilterTags, FilterProvider } from "metricui";
+  MetricProvider, MetricGrid, FilterBar, SegmentToggle, DropdownFilter,
+  FilterProvider, CrossFilterProvider, useMetricFilters, useCrossFilter,
+} from "metricui";
 import { useWikipediaStream } from "./useWikipediaStream";
 
 export default function WikipediaDashboard() {
-  const { connected, loading, recentEdits, stats } = useWikipediaStream();
-  const [editFilter, setEditFilter] = useState("All Edits");
-  const [wikiFilter, setWikiFilter] = useState([]);
+  return (
+    <FilterProvider>
+      <CrossFilterProvider>
+        <Dashboard />
+      </CrossFilterProvider>
+    </FilterProvider>
+  );
+}
 
-  // Filter edits based on active filters
+function Dashboard() {
+  const { connected, loading, recentEdits, stats } = useWikipediaStream();
+  const filters = useMetricFilters();
+  const editFilter = filters?.dimensions?.editType?.[0] ?? "All Edits";
+  const wikiFilter = filters?.dimensions?.wiki ?? [];
+
+  // Filter edits — all filters read from context
   const filteredEdits = useMemo(() => {
     let edits = recentEdits;
     if (editFilter === "Human Only") edits = edits.filter(e => !e.bot);
@@ -570,62 +591,37 @@ export default function WikipediaDashboard() {
     return edits;
   }, [recentEdits, editFilter, wikiFilter]);
 
-  // Derive all stats from filtered data
-  const botRatio = /* computed from filteredEdits */;
-  const topWikis = /* computed from filteredEdits */;
-  const editTypes = /* computed from filteredEdits */;
-
   return (
-    <FilterProvider>
-    <MetricProvider loading={loading}>
+    <MetricProvider loading={loading} theme="violet">
       <DashboardHeader title="Wikipedia Live Edits"
-        subtitle="Real-time edits from Wikimedia EventStreams"
         status={connected ? "live" : "loading"} />
 
-      {/* Filters — toggle bot/human, filter by wiki language */}
-      <SegmentToggle
-        options={["All Edits", "Human Only", "Bot Only"]}
-        value={editFilter} onChange={setEditFilter} />
-      <DropdownFilter label="Wiki" options={wikiOptions}
-        multiple value={wikiFilter} onChange={setWikiFilter} />
-      <FilterTags />
+      {/* FilterBar — all filters write to context via field prop */}
+      <FilterBar badge={<>{formatValue(stats.totalEdits, "number")} edits</>}>
+        <SegmentToggle
+          options={["All Edits", "Human Only", "Bot Only"]}
+          defaultValue="All Edits" field="editType" />
+        <DropdownFilter label="Wiki" options={wikiOptions}
+          multiple field="wiki" />
+      </FilterBar>
 
       <MetricGrid>
-        <MetricGrid.Section title="Live Metrics" />
         <KpiCard title="Total Edits" value={filteredStats.totalEdits}
-          format="number" sparkline={{ data: filteredStats.editRateHistory }}
-          animate={{ countUp: true }} />
+          format="number" animate={{ countUp: true }} />
         <KpiCard title="Edit Rate" value={filteredStats.editRate}
           format={{ style: "custom", suffix: "/sec" }} />
-        <KpiCard title="Unique Editors" value={filteredStats.uniqueEditors} />
-        <KpiCard title="Bot Edits" value={filteredStats.botEditCount} />
 
-        <Callout value={botRatio} rules={[
-          { max: 20, variant: "success", title: "Low bot activity" },
-          { min: 50, variant: "warning", title: "High bot activity" },
-        ]} dismissible />
-
-        <MetricGrid.Section title="Edit Velocity" />
-        <AreaChart data={velocity} title="Edits Over Time"
-          stacked enableArea gradient height={260} />
-
-        <MetricGrid.Section title="Breakdown" />
-        <BarChart data={topWikis} keys={["edits"]} indexBy="wiki"
-          title="Edits by Language" layout="horizontal" sort="desc" />
-        <DonutChart data={editTypes} title="Edit Types" showPercentage />
+        <BarChart data={topWikis} index="wiki" categories={["edits"]}
+          title="Edits by Language" sort="desc" crossFilter />
+        <DonutChart data={editTypes} title="Edit Types"
+          showPercentage crossFilter />
         <Gauge value={botRatio} max={100} title="Bot Activity"
-          format="percent" thresholds={[
-            { value: 30, color: "emerald" },
-            { value: 60, color: "amber" },
-            { value: 100, color: "red" },
-          ]} />
+          format="percent" />
 
-        <MetricGrid.Section title="Live Feed" />
         <DataTable data={filteredEdits} title="Recent Edits"
           pageSize={15} dense />
       </MetricGrid>
     </MetricProvider>
-    </FilterProvider>
   );
 }`;
 
@@ -637,13 +633,13 @@ function SourceReveal() {
     <div className="mt-6">
       <div className="text-center mb-5">
         <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
-          One file. {lineCount} lines. Live streaming data.
+          Live streaming data. Real-time filters. One library.
         </p>
         <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-          This is the entire dashboard.
+          Built with MetricUI.
         </h2>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Every KPI, chart, and table below &mdash; powered by MetricUI.
+          Every KPI, chart, filter, and table below &mdash; powered by MetricUI.
         </p>
       </div>
 
@@ -683,7 +679,7 @@ function SourceReveal() {
           onClick={() => setExpanded(!expanded)}
           className="rounded-full border border-[var(--card-border)] bg-[var(--card-bg)] px-5 py-2 text-sm font-medium text-[var(--foreground)] shadow-lg transition-all hover:border-[var(--accent)] hover:text-[var(--accent)]"
         >
-          {expanded ? "Collapse" : `See the full source (${lineCount} lines)`}
+          {expanded ? "Collapse" : "View the code"}
         </button>
       </div>
     </div>

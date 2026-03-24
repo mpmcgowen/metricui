@@ -17,12 +17,12 @@ import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { DetailGrid } from "@/components/ui/DetailGrid";
 import { MetricProvider } from "@/lib/MetricProvider";
 import { PeriodSelector } from "@/components/filters/PeriodSelector";
+import { FilterBar } from "@/components/filters/FilterBar";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
 import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
 import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
-import { FilterTags } from "@/components/filters/FilterTags";
 import {
   repoStats,
   commitActivity,
@@ -170,8 +170,8 @@ export default function GitHubDashboard() {
 function DashboardContent() {
   const filters = useMetricFilters();
   const crossFilter = useCrossFilter();
-  const [view, setView] = useState<string>("Issues");
-  const [labelFilter, setLabelFilter] = useState<string[]>([]);
+  const view = filters?.dimensions?.view?.[0] ?? "Issues";
+  const labelFilter = filters?.dimensions?.label ?? [];
 
   // --- Period-filtered commit activity ---
   const periodCommits = useMemo(() => {
@@ -475,9 +475,12 @@ function DashboardContent() {
 
   return (
     <>
-        {/* ── Period Selector ── */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        {/* ── Filters ── */}
+        <FilterBar
+          tags={{ showCrossFilter: true, crossFilterLabels: { day: "Day" } }}
+          className="mt-4"
+        >
+          <FilterBar.Primary>
             <PeriodSelector
               presets={["30d", "90d", "quarter", "ytd", "year"]}
               comparison
@@ -487,8 +490,8 @@ function DashboardContent() {
                 { value: "Issues", label: "Issues", icon: <CircleDot className="h-3.5 w-3.5" />, badge: labelFilter.length > 0 ? filteredIssues.length : periodIssues.length },
                 { value: "Pull Requests", label: "Pull Requests", icon: <GitPullRequest className="h-3.5 w-3.5" />, badge: periodPulls.length },
               ]}
-              value={view}
-              onChange={(v) => setView(v as string)}
+              defaultValue="Issues"
+              field="view"
               size="sm"
             />
             {view === "Issues" && allLabels.length > 0 && (
@@ -497,37 +500,19 @@ function DashboardContent() {
                 options={allLabels}
                 multiple
                 showAll
-                value={labelFilter}
-                onChange={(v) => setLabelFilter(v as string[])}
+                field="label"
                 dense
               />
             )}
-          </div>
-          <div className="flex items-center gap-3">
-            <StatusIndicator
-              value={1}
-              size="sm"
-              rules={[{ min: 1, color: "emerald", label: "CI Passing", pulse: true }]}
-            />
-            <StatusIndicator
-              value={1}
-              size="sm"
-              rules={[{ min: 1, color: "emerald", label: "Security" }]}
-            />
-            <StatusIndicator
-              value={1}
-              size="sm"
-              rules={[{ min: 1, color: "amber", label: "Deps Outdated" }]}
-            />
-            <StatusIndicator
-              value={1}
-              size="sm"
-              rules={[{ min: 1, color: "blue", label: "Docs" }]}
-            />
-          </div>
-        </div>
+          </FilterBar.Primary>
+        </FilterBar>
 
-        <FilterTags className="mt-3" />
+        <div className="mt-3 flex items-center gap-3">
+          <StatusIndicator value={1} size="sm" rules={[{ min: 1, color: "emerald", label: "CI Passing", pulse: true }]} />
+          <StatusIndicator value={1} size="sm" rules={[{ min: 1, color: "emerald", label: "Security" }]} />
+          <StatusIndicator value={1} size="sm" rules={[{ min: 1, color: "amber", label: "Deps Outdated" }]} />
+          <StatusIndicator value={1} size="sm" rules={[{ min: 1, color: "blue", label: "Docs" }]} />
+        </div>
 
         <MetricProvider theme="slate" variant="outlined">
         <LinkedHoverProvider>
@@ -907,44 +892,58 @@ function DashboardContent() {
 
 const DASHBOARD_SOURCE = `import { KpiCard, StatGroup, AreaChart, BarChart,
   DonutChart, HeatMap, DataTable, DashboardHeader,
-  MetricGrid, Callout } from "metricui";
-import { repoStats, commitActivity, languages } from "./data";
+  MetricGrid, Callout, FilterBar, PeriodSelector,
+  SegmentToggle, DropdownFilter, FilterProvider,
+  CrossFilterProvider, useMetricFilters, useCrossFilter,
+} from "metricui";
 
 export default function GitHubDashboard() {
-  const commits = commitActivity.map(w => ({
-    week: formatWeek(w.week), commits: w.total,
-  }));
+  return (
+    <FilterProvider defaultPreset="90d">
+      <CrossFilterProvider>
+        <Dashboard />
+      </CrossFilterProvider>
+    </FilterProvider>
+  );
+}
+
+function Dashboard() {
+  const filters = useMetricFilters();
+  const view = filters?.dimensions?.view?.[0] ?? "Issues";
+
+  // Period filter — all data filtered by selected date range
+  const periodCommits = useMemo(() => {
+    if (!filters?.period) return commitActivity;
+    return commitActivity.filter(w => inRange(weekToDate(w.week), filters.period));
+  }, [filters?.period]);
 
   return (
     <>
       <DashboardHeader title="facebook/react" />
 
+      <FilterBar>
+        <PeriodSelector presets={["30d", "90d", "quarter", "ytd"]} comparison />
+        <SegmentToggle
+          options={["Issues", "Pull Requests"]}
+          defaultValue="Issues" field="view" />
+        <DropdownFilter label="Label" options={labels}
+          multiple field="label" />
+      </FilterBar>
+
       <MetricGrid>
-        <MetricGrid.Section title="Overview" />
-        <KpiCard title="Stars" value={repoStats.stars} format="compact" />
-        <KpiCard title="Forks" value={repoStats.forks} format="compact" />
-        <KpiCard title="Open Issues" value={repoStats.openIssues} />
         <KpiCard title="Commits" value={totalCommits}
-          sparkline={{ data: commits.map(c => c.commits) }} />
-        <StatGroup stats={stats} dense />
+          comparison={compData ? { value: compData.total } : undefined}
+          sparkline={{ data: commitSparkline }} />
 
-        <MetricGrid.Section title="Development Activity" />
-        <HeatMap data={heatmapData} index="day" categories={weekLabels}
-          title="Contribution Activity" />
-        <AreaChart data={commits} index="week" categories={["commits"]}
-          title="Weekly Commits" enableArea gradient />
-        <BarChart data={commitsByDay} index="day" categories={["commits"]}
-          title="Commits by Day" />
-        <DonutChart data={langs} index="language" categories={["share"]}
-          title="Languages" showPercentage />
+        <HeatMap data={heatmapData} title="Contribution Activity"
+          crossFilter />
+        <AreaChart data={commitArea} index="week"
+          categories={["commits"]} enableArea gradient />
+        <BarChart data={commitsByDay} index="day"
+          categories={["commits"]} crossFilter />
 
-        <MetricGrid.Section title="Pull Requests & Issues" />
-        <DataTable data={recentIssues} title="Issues" dense />
-        <DataTable data={recentPulls} title="Pull Requests" dense />
-
-        <MetricGrid.Section title="Releases" />
-        <Callout variant="info" title="Latest Release: v19.1.0" />
-        <DataTable data={releases} title="Recent Releases" dense />
+        <DataTable data={view === "Issues" ? issues : pulls}
+          title={view} dense />
       </MetricGrid>
     </>
   );
@@ -958,7 +957,7 @@ function SourceReveal() {
     <div className="mt-6">
       <div className="text-center mb-5">
         <p className="text-xs font-medium uppercase tracking-widest text-[var(--muted)]">
-          Static data. {lineCount} lines. Zero boilerplate.
+          Real data. Interactive filters. Zero boilerplate.
         </p>
         <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
           One data shape. Every chart.
@@ -1007,7 +1006,7 @@ function SourceReveal() {
           onClick={() => setExpanded(!expanded)}
           className="rounded-full border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-1.5 text-xs font-medium text-[var(--foreground)] transition-all hover:border-[var(--accent)] hover:text-[var(--accent)]"
         >
-          {expanded ? "Collapse" : `View full source (${lineCount} lines)`}
+          {expanded ? "Collapse" : "View the code"}
         </button>
       </div>
     </div>

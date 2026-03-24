@@ -51,8 +51,8 @@ export type FilterContextValue = FilterState & FilterActions;
 // Preset calculations
 // ---------------------------------------------------------------------------
 
-function presetToRange(preset: PeriodPreset): DateRange {
-  const now = new Date();
+function presetToRange(preset: PeriodPreset, referenceDate?: Date): DateRange {
+  const now = referenceDate ?? new Date();
   const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
   switch (preset) {
@@ -185,16 +185,22 @@ interface FilterProviderProps {
   defaultPreset?: PeriodPreset;
   /** Initial comparison mode. Default: "none" */
   defaultComparison?: ComparisonMode;
+  /**
+   * Reference date for computing preset ranges. Default: now.
+   * Useful for demos or tests with historical data.
+   */
+  referenceDate?: Date;
   children: React.ReactNode;
 }
 
 export function FilterProvider({
   defaultPreset,
   defaultComparison = "none",
+  referenceDate,
   children,
 }: FilterProviderProps) {
   const [period, setPeriodState] = useState<DateRange | null>(
-    defaultPreset ? presetToRange(defaultPreset) : null
+    defaultPreset ? presetToRange(defaultPreset, referenceDate) : null
   );
   const [preset, setPresetState] = useState<PeriodPreset | null>(defaultPreset ?? null);
   const [comparisonMode, setComparisonModeState] = useState<ComparisonMode>(defaultComparison);
@@ -213,10 +219,10 @@ export function FilterProvider({
   }, []);
 
   const setPreset = useCallback((p: PeriodPreset) => {
-    const range = presetToRange(p);
+    const range = presetToRange(p, referenceDate);
     setPeriodState(range);
     setPresetState(p);
-  }, []);
+  }, [referenceDate]);
 
   const setCustomRange = useCallback((start: Date, end: Date) => {
     setPeriodState({ start, end });
@@ -240,11 +246,11 @@ export function FilterProvider({
   }, []);
 
   const clearAll = useCallback(() => {
-    setPeriodState(defaultPreset ? presetToRange(defaultPreset) : null);
+    setPeriodState(defaultPreset ? presetToRange(defaultPreset, referenceDate) : null);
     setPresetState(defaultPreset ?? null);
     setComparisonModeState(defaultComparison);
     setDimensions({});
-  }, [defaultPreset, defaultComparison]);
+  }, [defaultPreset, defaultComparison, referenceDate]);
 
   const value = useMemo<FilterContextValue>(() => ({
     period,

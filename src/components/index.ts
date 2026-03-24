@@ -76,6 +76,8 @@ export { DropdownFilter } from "./filters/DropdownFilter";
 export type { DropdownFilterProps, DropdownOption } from "./filters/DropdownFilter";
 export { FilterTags } from "./filters/FilterTags";
 export type { FilterTagsProps } from "./filters/FilterTags";
+export { FilterBar } from "./filters/FilterBar";
+export type { FilterBarProps } from "./filters/FilterBar";
 export { FilterProvider, useMetricFilters, PRESET_LABELS } from "@/lib/FilterContext";
 export type { FilterState, FilterActions, FilterContextValue, DateRange, PeriodPreset, ComparisonMode } from "@/lib/FilterContext";
 

@@ -150,7 +150,16 @@ export const SegmentToggle = forwardRef<HTMLDivElement, SegmentToggleProps>(
         setInternalValue(next);
 
         if (field && filters) {
-          filters.setDimension(field, next);
+          // If selection equals the default, clear the dimension (default = no filter)
+          const resolvedDefault = defaultValue
+            ? (Array.isArray(defaultValue) ? defaultValue : [defaultValue])
+            : options.length > 0 ? [options[0].value] : [];
+          const isDefault = next.length === resolvedDefault.length && next.every((v, i) => v === resolvedDefault[i]);
+          if (isDefault) {
+            filters.clearDimension(field);
+          } else {
+            filters.setDimension(field, next);
+          }
         }
 
         if (onChange) {
@@ -163,7 +172,7 @@ export const SegmentToggle = forwardRef<HTMLDivElement, SegmentToggleProps>(
     // --- Sliding indicator ---
     const containerRef = useRef<HTMLDivElement>(null);
     const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
-    const animDuration = useMemo(() => springDuration(config.motionConfig), [config.motionConfig]);
+    const animDuration = 200; // snappy — toggle indicators should feel instant
 
     useEffect(() => {
       if (multiple || !containerRef.current) {

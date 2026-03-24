@@ -14,8 +14,9 @@ import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { MetricProvider } from "@/lib/MetricProvider";
 import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
+import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
-import { FilterTags } from "@/components/filters/FilterTags";
+import { FilterBar } from "@/components/filters/FilterBar";
 import { countries } from "@/data/world";
 import type { Country } from "@/data/world";
 import {
@@ -307,7 +308,8 @@ function CountryTable({ data, tableView }: {
 
 function DashboardContent() {
   const cf = useCrossFilter();
-  const [tableView, setTableView] = useState<string>("Top 100");
+  const filters = useMetricFilters();
+  const tableView = filters?.dimensions?.tableView?.[0] ?? "Top 100";
 
   // Filter countries by cross-filter (region from bar chart)
   const filteredCountries = useMemo(() => {
@@ -329,9 +331,25 @@ function DashboardContent() {
 
   return (
     <>
-          <div className="mt-4">
-            <FilterTags showCrossFilter crossFilterLabels={{ region: "Region" }} />
-          </div>
+          <FilterBar
+            tags={{ showCrossFilter: true, crossFilterLabels: { region: "Region" } }}
+            collapsible={false}
+            className="mt-4"
+          >
+            <SegmentToggle
+              options={[
+                { value: "Top 100", label: "Top 100" },
+                { value: "Africa", label: "Africa" },
+                { value: "Americas", label: "Americas" },
+                { value: "Asia", label: "Asia" },
+                { value: "Europe", label: "Europe" },
+                { value: "Oceania", label: "Oceania" },
+              ]}
+              defaultValue="Top 100"
+              field="tableView"
+              size="sm"
+            />
+          </FilterBar>
           <MetricGrid className="mt-6">
             {/* ── Global Overview ── */}
             <SectionHeader
@@ -496,23 +514,8 @@ function DashboardContent() {
             {/* ── Country Details Table ── */}
             <SectionHeader
               title="Country Directory"
-              description="Sortable, searchable table of countries — filter by region with the toggle or cross-filter from charts above"
+              description="Sortable, searchable table — use the region toggle in the filter bar above"
               border
-              action={
-                <SegmentToggle
-                  options={[
-                    { value: "Top 100", label: "Top 100" },
-                    { value: "Africa", label: "Africa" },
-                    { value: "Americas", label: "Americas" },
-                    { value: "Asia", label: "Asia" },
-                    { value: "Europe", label: "Europe" },
-                    { value: "Oceania", label: "Oceania" },
-                  ]}
-                  value={tableView}
-                  onChange={(v) => setTableView(v as string)}
-                  size="sm"
-                />
-              }
             />
 
             <CountryTable
@@ -540,9 +543,11 @@ export default function WorldDashboard() {
           />
         </div>
         <MetricProvider theme="cyan" variant="ghost">
-          <CrossFilterProvider>
-            <DashboardContent />
-          </CrossFilterProvider>
+          <FilterProvider>
+            <CrossFilterProvider>
+              <DashboardContent />
+            </CrossFilterProvider>
+          </FilterProvider>
         </MetricProvider>
       </div>
     </div>

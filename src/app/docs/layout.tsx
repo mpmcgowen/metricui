@@ -120,6 +120,7 @@ const nav: { label: string; items: NavItem[] }[] = [
       { title: "Segment Toggle", href: "/docs/segment-toggle", icon: ToggleLeft },
       { title: "Dropdown Filter", href: "/docs/dropdown-filter", icon: ListFilter },
       { title: "Filter Tags", href: "/docs/filter-tags", icon: Tags },
+      { title: "Filter Bar", href: "/docs/filter-bar", icon: ListFilter },
     ],
   },
   {

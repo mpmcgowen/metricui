@@ -298,15 +298,18 @@ export const PeriodSelector = forwardRef<HTMLDivElement, PeriodSelectorProps>(
                 <span>{activeComparison === "previous" ? "vs prev" : "vs YoY"}</span>
               )}
               {activeComparison !== "none" && (
-                <button
+                <span
+                  role="button"
+                  tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleComparisonChange("none");
                   }}
-                  className="ml-0.5 rounded-full p-0.5 opacity-60 hover:opacity-100"
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); handleComparisonChange("none"); } }}
+                  className="ml-0.5 rounded-full p-0.5 opacity-60 hover:opacity-100 cursor-pointer"
                 >
                   <X className="h-2.5 w-2.5" />
-                </button>
+                </span>
               )}
             </button>
           </div>

@@ -18,11 +18,11 @@ import { MetricGrid } from "@/components/layout/MetricGrid";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { PeriodSelector } from "@/components/filters/PeriodSelector";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
-import { FilterTags } from "@/components/filters/FilterTags";
-import { FilterProvider } from "@/lib/FilterContext";
+import { FilterBar } from "@/components/filters/FilterBar";
+import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
 import { MetricProvider } from "@/lib/MetricProvider";
 import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
-import { fmt } from "@/lib/format";
+import { fmt, formatValue } from "@/lib/format";
 import { accounts, type Account } from "@/data/saas-accounts";
 import {
   DollarSign,
@@ -149,33 +149,76 @@ function deriveData(accts: Account[]) {
 // Dashboard content — reads filters, derives everything from filtered data
 // ---------------------------------------------------------------------------
 
-function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
+/** Check if a "YYYY-MM" month string falls within a date range */
+function monthInRange(month: string, start: Date, end: Date): boolean {
+  // Parse "YYYY-MM" to first day of that month
+  const [y, m] = month.split("-").map(Number);
+  const monthStart = new Date(y, m - 1, 1);
+  const monthEnd = new Date(y, m, 0, 23, 59, 59); // last day of month
+  return monthEnd >= start && monthStart <= end;
+}
+
+function DashboardContent() {
   const cf = useCrossFilter();
+  const filters = useMetricFilters();
+  const industryFilter = filters?.dimensions?.industry ?? [];
 
-  // Step 1: Industry dropdown filter
+  // Step 1: Period filter
+  const byPeriod = useMemo(() => {
+    if (!filters?.period) return accounts;
+    return accounts.filter((a) => monthInRange(a.joinMonth, filters.period!.start, filters.period!.end));
+  }, [filters?.period]);
+
+  // Step 2: Industry dropdown filter
   const byIndustry = useMemo(() => {
-    if (industryFilter.length === 0) return accounts;
-    return accounts.filter((a) => industryFilter.includes(a.industry));
-  }, [industryFilter]);
+    if (industryFilter.length === 0) return byPeriod;
+    return byPeriod.filter((a) => industryFilter.includes(a.industry));
+  }, [byPeriod, industryFilter]);
 
-  // Step 2: Cross-filter (country bar) on top
+  // Step 3: Cross-filter (country bar) on top
   const filtered = useMemo(() => {
     if (!cf?.isActive || cf.selection?.field !== "country") return byIndustry;
     return byIndustry.filter((a) => a.country === cf.selection!.value);
   }, [byIndustry, cf?.isActive, cf?.selection]);
 
-  // Derive all dashboard data from filtered accounts
+  // Derive current period data
   const data = useMemo(() => deriveData(filtered), [filtered]);
+
+  // Derive comparison period data (for KPI comparisons)
+  const compData = useMemo(() => {
+    if (!filters?.comparisonPeriod) return null;
+    let comp = accounts.filter((a) => monthInRange(a.joinMonth, filters.comparisonPeriod!.start, filters.comparisonPeriod!.end));
+    if (industryFilter.length > 0) comp = comp.filter((a) => industryFilter.includes(a.industry));
+    if (cf?.isActive && cf.selection?.field === "country") comp = comp.filter((a) => a.country === cf.selection!.value);
+    return deriveData(comp);
+  }, [filters?.comparisonPeriod, industryFilter, cf?.isActive, cf?.selection]);
 
   // Country bar always shows industry-filtered data (it's the cross-filter source)
   const countryBarData = useMemo(() => deriveData(byIndustry), [byIndustry]);
 
-  // Prev period approximation (80% of current for comparisons)
-  const prevMrr = Math.round(data.kpis.mrr * 0.88);
-  const prevActive = Math.round(data.kpis.activeAccounts * 0.93);
-  const prevChurnRate = Math.round(data.kpis.churnRate * 1.15 * 10) / 10;
-
   const churnSparkline = data.growthData.slice(-12).map((m) => m.churned);
+
+  // Memoize comparison series for AreaCharts.
+  // Key: map comparison data onto the current period's x-axis labels so both lines align.
+  const mrrCompSeries = useMemo(() => {
+    if (!compData) return undefined;
+    const currentMonths = data.cumulativeMrr.map((m) => m.month);
+    const compValues = compData.cumulativeMrr;
+    return [{ id: "mrr", data: currentMonths.map((month, i) => ({
+      x: month,
+      y: compValues[i]?.mrr ?? null,
+    })) }];
+  }, [compData, data.cumulativeMrr]);
+
+  const growthCompSeries = useMemo(() => {
+    if (!compData) return undefined;
+    const currentMonths = data.growthData.map((m) => m.month);
+    const compValues = compData.growthData;
+    return [
+      { id: "signups", data: currentMonths.map((month, i) => ({ x: month, y: compValues[i]?.signups ?? null })) },
+      { id: "churned", data: currentMonths.map((month, i) => ({ x: month, y: compValues[i]?.churned ?? null })) },
+    ];
+  }, [compData, data.growthData]);
 
   const filterLabel = [
     industryFilter.length > 0 ? industryFilter.join(", ") : "",
@@ -183,7 +226,31 @@ function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
   ].filter(Boolean).join(" · ");
 
   return (
-    <MetricGrid className="mt-6">
+    <>
+      <FilterBar
+        badge={<>{formatValue(data.kpis.activeAccounts, "number")} active accounts</>}
+        tags={{ showCrossFilter: true, crossFilterLabels: { country: "Country" } }}
+        className="mt-4"
+      >
+        <FilterBar.Primary>
+          <PeriodSelector
+            presets={["30d", "90d", "quarter", "ytd", "year"]}
+            comparison
+          />
+          <DropdownFilter
+            label="Industry"
+            options={allIndustries.map((ind) => ({
+              value: ind,
+              label: ind,
+              count: accounts.filter((a) => a.industry === ind).length,
+            }))}
+            multiple
+            field="industry"
+          />
+        </FilterBar.Primary>
+      </FilterBar>
+
+      <MetricGrid className="mt-6">
 
       {/* ── Overview ── */}
       <SectionHeader title="Overview" subtitle={filterLabel || "Key metrics this period"} />
@@ -191,8 +258,7 @@ function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
         title="Monthly Recurring Revenue"
         value={data.kpis.mrr}
         format="currency"
-        comparison={{ value: prevMrr }}
-        comparisonLabel="vs previous period"
+        comparison={compData ? { value: compData.kpis.mrr, label: "vs comparison period" } : undefined}
         sparkline={{ data: data.mrrSparkline, type: "line" }}
         icon={<DollarSign className="h-3.5 w-3.5" />}
         description="Sum of all active subscription charges this month, excluding one-time fees and overages."
@@ -202,7 +268,7 @@ function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
         title="Annual Run Rate"
         value={data.kpis.arr}
         format={fmt("currency", { compact: true })}
-        comparison={{ value: prevMrr * 12 }}
+        comparison={compData ? { value: compData.kpis.arr } : undefined}
         icon={<BarChart3 className="h-3.5 w-3.5" />}
         description={({ value }) => `Projected annual revenue (MRR × 12). Current monthly run rate: $${Math.round(value / 12).toLocaleString()}.`}
         animate={{ countUp: true, delay: 100 }}
@@ -211,7 +277,7 @@ function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
         title="Active Accounts"
         value={data.kpis.activeAccounts}
         format="number"
-        comparison={{ value: prevActive }}
+        comparison={compData ? { value: compData.kpis.activeAccounts } : undefined}
         icon={<Users className="h-3.5 w-3.5" />}
         description="Accounts with at least one active subscription. Excludes free-tier and trial accounts."
         animate={{ countUp: true, delay: 200 }}
@@ -220,7 +286,7 @@ function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
         title="Churn Rate"
         value={data.kpis.churnRate}
         format="percent"
-        comparison={{ value: prevChurnRate, invertTrend: true }}
+        comparison={compData ? { value: compData.kpis.churnRate, invertTrend: true } : undefined}
         sparkline={{ data: churnSparkline, type: "bar" }}
         icon={<TrendingDown className="h-3.5 w-3.5" />}
         description={({ value }) => `${value}% of accounts cancelled this period. Target is below 15%. ${value > 15 ? "Review retention strategies." : "On track."}`}
@@ -261,12 +327,13 @@ function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
         index="month"
         categories={["mrr"]}
         title="Cumulative MRR"
-        subtitle="Monthly recurring revenue growth"
+        subtitle={compData ? "Current vs comparison period" : "Monthly recurring revenue growth"}
         description="Running total of MRR from account join dates. Filters apply — select an industry or country to see its MRR contribution."
         format="currency"
         height={300}
         enableArea
         gradient
+        comparisonData={mrrCompSeries}
       />
 
       <Divider spacing="lg" />
@@ -330,12 +397,13 @@ function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
         index="month"
         categories={["signups", "churned"]}
         title="Signups vs Churn"
-        subtitle="Monthly new signups and churned accounts"
+        subtitle={compData ? "Current vs comparison period" : "Monthly new signups and churned accounts"}
         format="number"
         height={300}
         enableArea
         gradient
         legend
+        comparisonData={growthCompSeries}
       />
 
       {/* ── Top Accounts ── */}
@@ -367,6 +435,7 @@ function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
         dense
       />
     </MetricGrid>
+    </>
   );
 }
 
@@ -375,13 +444,11 @@ function DashboardContent({ industryFilter }: { industryFilter: string[] }) {
 // ---------------------------------------------------------------------------
 
 export default function SaaSDashboard() {
-  const [industryFilter, setIndustryFilter] = useState<string[]>([]);
-
   return (
     <MetricProvider theme="emerald">
       <div className="min-h-screen bg-[var(--background)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
-          <FilterProvider defaultPreset="ytd">
+          <FilterProvider defaultPreset="ytd" referenceDate={new Date(2024, 11, 31)}>
             <CrossFilterProvider>
 
               <DashboardHeader
@@ -391,27 +458,7 @@ export default function SaaSDashboard() {
                 back={{ href: "/docs/kpi-card" }}
               />
 
-              {/* ── Filters ── */}
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <PeriodSelector
-                  presets={["30d", "90d", "quarter", "ytd", "year"]}
-                  comparison
-                />
-                <DropdownFilter
-                  label="Industry"
-                  options={allIndustries.map((ind) => ({
-                    value: ind,
-                    label: ind,
-                    count: accounts.filter((a) => a.industry === ind).length,
-                  }))}
-                  multiple
-                  value={industryFilter}
-                  onChange={(v) => setIndustryFilter(v as string[])}
-                />
-                <FilterTags showCrossFilter crossFilterLabels={{ country: "Country" }} />
-              </div>
-
-              <DashboardContent industryFilter={industryFilter} />
+              <DashboardContent />
 
             </CrossFilterProvider>
           </FilterProvider>
