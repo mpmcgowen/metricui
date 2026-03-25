@@ -148,12 +148,16 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
         </div>
       )}
 
-      {/* ── Header — always visible ── */}
-      <button
+      {/* ── Header — always visible (div not button to allow nested buttons in FilterTags) ── */}
+      <div
+        role="button"
+        tabIndex={collapsible ? 0 : undefined}
         onClick={() => collapsible && setCollapsed((c) => !c)}
+        onKeyDown={(e) => { if (collapsible && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setCollapsed((c) => !c); } }}
         className={cn(
           "flex w-full items-center gap-2 px-[var(--mu-padding)]",
           "text-left text-[var(--muted)] hover:text-[var(--foreground)] transition-colors",
+          collapsible && "cursor-pointer",
           resolvedDense ? "py-2 text-[10px]" : "py-2.5 text-xs",
           classNames?.summary,
         )}
@@ -193,7 +197,7 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
             ? <ChevronDown className="h-3.5 w-3.5 shrink-0" />
             : <ChevronUp className="h-3.5 w-3.5 shrink-0" />
         )}
-      </button>
+      </div>
 
       {/* ── Body — accordion expand/collapse ── */}
       <Accordion open={!collapsed}>
