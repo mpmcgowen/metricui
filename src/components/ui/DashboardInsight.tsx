@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useAi, type AiMessage } from "@/lib/AiContext";
-import { Sparkles, Send, X, RotateCcw, Loader2, MessageSquare, ChevronDown } from "lucide-react";
+import { Sparkles, Send, X, RotateCcw, Loader2, ChevronDown } from "lucide-react";
 
 // ---------------------------------------------------------------------------
-// Quick prompts — pre-built analysis buttons
+// Quick prompts
 // ---------------------------------------------------------------------------
 
 export interface QuickPrompt {
   label: string;
   prompt: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 }
 
 const DEFAULT_QUICK_PROMPTS: QuickPrompt[] = [
@@ -22,23 +22,99 @@ const DEFAULT_QUICK_PROMPTS: QuickPrompt[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Simple markdown renderer — handles **bold**, *italic*, \n\n paragraphs,
+// - bullet lists, and `inline code`. No library needed.
+// ---------------------------------------------------------------------------
+
+function renderMarkdown(text: string): ReactNode[] {
+  const blocks = text.split(/\n\n+/);
+
+  return blocks.map((block, bi) => {
+    const trimmed = block.trim();
+    if (!trimmed) return null;
+
+    // Bullet list
+    const lines = trimmed.split("\n");
+    if (lines.every((l) => /^[-•*]\s/.test(l.trim()))) {
+      return (
+        <ul key={bi} className={cn("space-y-1", bi > 0 && "mt-3")}>
+          {lines.map((line, li) => (
+            <li key={li} className="flex gap-2">
+              <span className="mt-[7px] h-1 w-1 flex-shrink-0 rounded-full bg-[var(--accent)]/60" />
+              <span>{renderInline(line.replace(/^[-•*]\s/, ""))}</span>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    // Paragraph
+    return (
+      <p key={bi} className={bi > 0 ? "mt-3" : ""}>
+        {renderInline(trimmed)}
+      </p>
+    );
+  });
+}
+
+/** Render inline formatting: **bold**, *italic*, `code` */
+function renderInline(text: string): ReactNode[] {
+  const parts: ReactNode[] = [];
+  // Match **bold**, *italic*, `code`
+  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Text before match
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    if (match[2]) {
+      // **bold**
+      parts.push(
+        <strong key={match.index} className="font-semibold text-[var(--foreground)]">
+          {match[2]}
+        </strong>
+      );
+    } else if (match[3]) {
+      // *italic*
+      parts.push(<em key={match.index}>{match[3]}</em>);
+    } else if (match[4]) {
+      // `code`
+      parts.push(
+        <code
+          key={match.index}
+          className="rounded bg-[var(--card-border)]/50 px-1 py-0.5 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]"
+        >
+          {match[4]}
+        </code>
+      );
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : [text];
+}
+
+// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
 export interface DashboardInsightProps {
-  /** Custom quick prompts. Pass false to hide. Default: 3 built-in prompts. */
   quickPrompts?: QuickPrompt[] | false;
-  /** Placeholder text for the input */
   placeholder?: string;
-  /** Title shown above the chat */
   title?: string;
-  /** Start collapsed. Default: false */
   defaultCollapsed?: boolean;
-  /** Controlled collapsed state */
   collapsed?: boolean;
-  /** Collapse change handler */
   onCollapseChange?: (collapsed: boolean) => void;
-  /** Additional class */
   className?: string;
 }
 
@@ -46,50 +122,51 @@ export interface DashboardInsightProps {
 // Message bubble
 // ---------------------------------------------------------------------------
 
-function MessageBubble({ message }: { message: AiMessage }) {
-  const isUser = message.role === "user";
-
+function AssistantMessage({ message }: { message: AiMessage }) {
   return (
-    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "max-w-[85%] rounded-xl px-4 py-2.5 text-[13px] leading-relaxed",
-          isUser
-            ? "bg-[var(--accent)] text-white"
-            : "bg-[var(--card-glow)] text-[var(--foreground)]",
-        )}
-      >
-        {message.content.split("\n\n").map((para, i) => (
-          <p key={i} className={i > 0 ? "mt-2" : ""}>
-            {para}
-          </p>
-        ))}
+    <div className="group">
+      <div className="flex items-start gap-2.5">
+        <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-[var(--accent)]/10">
+          <Sparkles className="h-3 w-3 text-[var(--accent)]" />
+        </div>
+        <div className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--foreground)]/85">
+          {renderMarkdown(message.content)}
+        </div>
       </div>
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Streaming indicator
-// ---------------------------------------------------------------------------
-
-function StreamingBubble({ text }: { text: string }) {
+function UserMessage({ message }: { message: AiMessage }) {
   return (
-    <div className="flex justify-start">
-      <div className="max-w-[85%] rounded-xl bg-[var(--card-glow)] px-4 py-2.5 text-[13px] leading-relaxed text-[var(--foreground)]">
-        {text ? (
-          text.split("\n\n").map((para, i) => (
-            <p key={i} className={i > 0 ? "mt-2" : ""}>
-              {para}
-            </p>
-          ))
-        ) : (
-          <span className="flex items-center gap-2 text-[var(--muted)]">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Analyzing...
-          </span>
-        )}
-        <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-[var(--accent)]" />
+    <div className="flex justify-end">
+      <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--accent)] px-3.5 py-2 text-[13px] leading-relaxed text-white">
+        {message.content}
+      </div>
+    </div>
+  );
+}
+
+function StreamingMessage({ text }: { text: string }) {
+  return (
+    <div className="group">
+      <div className="flex items-start gap-2.5">
+        <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-[var(--accent)]/10">
+          <Sparkles className="h-3 w-3 animate-pulse text-[var(--accent)]" />
+        </div>
+        <div className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--foreground)]/85">
+          {text ? (
+            <>
+              {renderMarkdown(text)}
+              <span className="ml-0.5 inline-block h-[14px] w-[2px] animate-pulse bg-[var(--accent)] align-text-bottom" />
+            </>
+          ) : (
+            <span className="flex items-center gap-2 text-[var(--muted)]">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span className="text-[12px]">Analyzing your data...</span>
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -111,8 +188,8 @@ export function DashboardInsight({
   const ai = useAi();
   const [input, setInput] = useState("");
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const collapsed = collapsedProp ?? internalCollapsed;
   const setCollapsed = useCallback((v: boolean) => {
@@ -120,16 +197,15 @@ export function DashboardInsight({
     onCollapseChange?.(v);
   }, [onCollapseChange]);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll chat container
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = chatContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [ai?.messages, ai?.streamingText]);
 
-  // Focus input when expanded
+  // Focus input on expand
   useEffect(() => {
-    if (!collapsed) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
+    if (!collapsed) setTimeout(() => inputRef.current?.focus(), 100);
   }, [collapsed]);
 
   if (!ai?.enabled) return null;
@@ -152,47 +228,51 @@ export function DashboardInsight({
   return (
     <div
       className={cn(
-        "noise-texture overflow-hidden rounded-[var(--mu-card-radius)] border border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm transition-all",
+        "noise-texture overflow-hidden rounded-[var(--mu-card-radius)] border border-[var(--card-border)] bg-[var(--card-bg)] transition-all",
         className,
       )}
     >
-      {/* Header */}
-      <button
+      {/* ── Header ── */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-[var(--card-glow)]"
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCollapsed(!collapsed); } }}
+        className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-left transition-colors hover:bg-[var(--card-glow)]"
       >
-        <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
-        <span className="flex-1 text-xs font-semibold text-[var(--foreground)]">
+        <div className="flex h-5 w-5 items-center justify-center rounded-md bg-[var(--accent)]/10">
+          <Sparkles className="h-3 w-3 text-[var(--accent)]" />
+        </div>
+        <span className="flex-1 text-xs font-semibold tracking-wide text-[var(--foreground)]">
           {title}
         </span>
         {hasMessages && (
-          <span className="rounded-full bg-[var(--accent)]/10 px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[9px] font-semibold text-[var(--accent)]">
+          <span className="rounded-full bg-[var(--accent)]/10 px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[9px] font-bold text-[var(--accent)]">
             {ai.messages.filter((m) => m.role === "assistant").length}
           </span>
         )}
         <ChevronDown
           className={cn(
-            "h-3 w-3 text-[var(--muted)] transition-transform",
+            "h-3.5 w-3.5 text-[var(--muted)] transition-transform duration-200",
             !collapsed && "rotate-180",
           )}
         />
-      </button>
+      </div>
 
-      {/* Body */}
+      {/* ── Body ── */}
       {!collapsed && (
         <div className="border-t border-[var(--card-border)]">
-          {/* Quick prompts — show when no messages */}
-          {!hasMessages && quickPrompts && quickPrompts.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 px-4 py-3">
+          {/* Quick prompts */}
+          {!hasMessages && !ai.isLoading && quickPrompts && (quickPrompts as QuickPrompt[]).length > 0 && (
+            <div className="flex flex-wrap gap-2 px-4 py-3">
               {(quickPrompts as QuickPrompt[]).map((qp) => (
                 <button
                   key={qp.label}
                   onClick={() => handleQuickPrompt(qp.prompt)}
-                  disabled={ai.isLoading}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full border border-[var(--card-border)] px-3 py-1.5 text-[11px] font-medium text-[var(--muted)] transition-all",
-                    "hover:border-[var(--accent)]/30 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5",
-                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                    "inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] px-3 py-1.5",
+                    "text-[11px] font-medium text-[var(--muted)] transition-all duration-200",
+                    "hover:border-[var(--accent)]/40 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 hover:shadow-sm",
                   )}
                 >
                   {qp.icon ?? <Sparkles className="h-2.5 w-2.5" />}
@@ -204,14 +284,16 @@ export function DashboardInsight({
 
           {/* Messages */}
           {(hasMessages || ai.isLoading) && (
-            <div className="max-h-[400px] space-y-3 overflow-y-auto px-4 py-3">
-              {ai.messages.map((msg, i) => (
-                <MessageBubble key={i} message={msg} />
-              ))}
-              {ai.isLoading && (
-                <StreamingBubble text={ai.streamingText} />
+            <div
+              ref={chatContainerRef}
+              className="max-h-[500px] space-y-4 overflow-y-auto px-4 py-4"
+            >
+              {ai.messages.map((msg, i) =>
+                msg.role === "user"
+                  ? <UserMessage key={i} message={msg} />
+                  : <AssistantMessage key={i} message={msg} />
               )}
-              <div ref={messagesEndRef} />
+              {ai.isLoading && <StreamingMessage text={ai.streamingText} />}
             </div>
           )}
 
@@ -226,15 +308,15 @@ export function DashboardInsight({
               placeholder={placeholder}
               disabled={ai.isLoading}
               className={cn(
-                "flex-1 bg-transparent text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted)]/50 outline-none",
+                "flex-1 bg-transparent text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted)]/40 outline-none",
                 "disabled:opacity-50",
               )}
             />
             {ai.isLoading ? (
               <button
                 onClick={ai.abort}
-                className="rounded-md p-1.5 text-[var(--muted)] transition-colors hover:text-red-500"
-                aria-label="Stop"
+                className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-red-500/10 hover:text-red-500"
+                aria-label="Stop generating"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -243,8 +325,9 @@ export function DashboardInsight({
                 {hasMessages && (
                   <button
                     onClick={ai.clear}
-                    className="rounded-md p-1.5 text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+                    className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--card-glow)] hover:text-[var(--foreground)]"
                     aria-label="Clear chat"
+                    title="Clear chat"
                   >
                     <RotateCcw className="h-3 w-3" />
                   </button>
@@ -253,12 +336,12 @@ export function DashboardInsight({
                   onClick={handleSend}
                   disabled={!input.trim()}
                   className={cn(
-                    "rounded-md p-1.5 transition-colors",
+                    "rounded-lg p-1.5 transition-all duration-200",
                     input.trim()
                       ? "text-[var(--accent)] hover:bg-[var(--accent)]/10"
-                      : "text-[var(--muted)]/30 cursor-not-allowed",
+                      : "text-[var(--muted)]/20 cursor-not-allowed",
                   )}
-                  aria-label="Send"
+                  aria-label="Send message"
                 >
                   <Send className="h-3.5 w-3.5" />
                 </button>

@@ -54,31 +54,30 @@ import {
 import { DashboardInsight } from "@/components/ui/DashboardInsight";
 
 // ---------------------------------------------------------------------------
-// Mock LLM for demo (simulates streaming with realistic delay)
+// Real LLM via API route — streams from Claude
 // ---------------------------------------------------------------------------
 
-const MOCK_RESPONSES: Record<string, string> = {
-  default: "Email is your most underinvested channel. It drives only 8% of sessions but 21% of revenue — a 7.1% conversion rate, nearly 3x your average. Each Email session generates $5.65 in revenue vs $0.60 for Social. The 9x revenue-per-session gap suggests Email is dramatically under-scaled relative to its performance.\n\nYour mobile conversion problem is worse than the headline suggests. Mobile is 36% of traffic but only 1.8% conversion vs Desktop's 4.2%. That's a 57% drop — and your /pricing page, which drives the most conversions, has a low bounce rate (18.4%) suggesting the content works. The gap is almost certainly a mobile checkout UX issue, not a content relevance problem.\n\nThe funnel's biggest leak is Engaged → Pricing: 67% of engaged visitors never see the pricing page. Your homepage gets 89K views but a 38% bounce rate — meaning 34K visitors leave from the front door. Meanwhile /demo converts at 8.7% but gets less than a quarter of homepage traffic.",
-  risk: "Three metrics deserve attention. First, bounce rate has been climbing week-over-week and is now at 47% — above the 40% healthy threshold. The trend, not just the number, is the concern. Second, Display advertising has a 61% bounce rate with only 2.5% conversion — it's burning budget with minimal return. Third, the Engaged-to-Pricing drop-off (67%) is unusually high for a site with strong content engagement metrics. Visitors are reading but not shopping.",
-  summary: "acme.dev had a solid Q4 with 190.7K sessions and $428.8K in revenue at a 3.4% conversion rate. The standout story is channel efficiency — Email and Direct dramatically outperform Social and Display on a per-session revenue basis, suggesting a reallocation opportunity.",
-};
-
-async function* mockAnalyze(
+async function* analyzeWithClaude(
   messages: { role: string; content: string }[],
 ): AsyncGenerator<string> {
-  const lastMsg = messages[messages.length - 1]?.content?.toLowerCase() ?? "";
-  let response = MOCK_RESPONSES.default;
-  if (lastMsg.includes("risk") || lastMsg.includes("warning") || lastMsg.includes("worried")) {
-    response = MOCK_RESPONSES.risk;
-  } else if (lastMsg.includes("summar") || lastMsg.includes("executive")) {
-    response = MOCK_RESPONSES.summary;
+  const response = await fetch("/api/ai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`AI request failed: ${err}`);
   }
 
-  // Simulate streaming — emit word by word
-  const words = response.split(" ");
-  for (let i = 0; i < words.length; i++) {
-    await new Promise((r) => setTimeout(r, 30 + Math.random() * 40));
-    yield words[i] + (i < words.length - 1 ? " " : "");
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    yield decoder.decode(value, { stream: true });
   }
 }
 
@@ -94,9 +93,37 @@ export default function AnalyticsDashboard() {
       exportable
       filters={{ defaultPreset: "90d", defaultComparison: "previous", referenceDate: new Date("2025-12-31") }}
       ai={{
-        analyze: mockAnalyze as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        analyze: analyzeWithClaude as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         stream: true,
-        context: "B2B SaaS marketing site. Q4 revenue target: $500K. Series A stage.",
+        context: `B2B SaaS marketing site (acme.dev). Q4 2025. Revenue target: $500K. Series A stage.
+
+DASHBOARD DATA:
+Sessions: 191.5K | Users: 144.9K (58% new) | Bounce Rate: 47% | Revenue: $440K
+
+Traffic Sources:
+- Organic Search: 82.4K sessions, 3.5% conv, $198.6K revenue, 35% bounce
+- Direct: 41.2K sessions, 4.0% conv, $112.4K revenue, 43% bounce
+- Social: 28.6K sessions, 2.4% conv, $41.2K revenue, 52% bounce
+- Referral: 19.4K sessions, 4.6% conv, $62.1K revenue, 39% bounce
+- Email: 15.8K sessions, 7.1% conv, $89.2K revenue, 28% bounce
+- Paid Search: 12.2K sessions, 4.3% conv, $35.8K revenue, 45% bounce
+- Display: 4.8K sessions, 2.5% conv, $7.4K revenue, 61% bounce
+
+Devices:
+- Desktop: 118.4K sessions, 32% bounce, 4.2% conversion
+- Mobile: 72.8K sessions, 49% bounce, 1.8% conversion
+- Tablet: 13.2K sessions, 41% bounce, 2.9% conversion
+
+Top Pages (by conversions):
+- /pricing: 42.1K views, 18% bounce, 2,180 conversions
+- /demo: 18.9K views, 12% bounce, 1,640 conversions
+- / (homepage): 89.2K views, 38% bounce, 1,240 conversions
+- /features: 38.4K views, 24% bounce, 890 conversions
+- /contact: 5.4K views, 32% bounce, 380 conversions
+
+Funnel: 204K visitors → 129K engaged (63%) → 42K pricing (33%) → 12.4K signup (30%) → 7.9K converted (64%) → 3.4K paid (43%)
+
+Top Countries: US (82.4K), UK (24.6K), Germany (18.2K), Canada (14.8K), France (12.4K)`,
         tone: "executive",
       }}
     >
@@ -207,9 +234,9 @@ function AnalyticsContent() {
     return { sessions, pageViews, users, newUsers, conversions, revenue, avgBounce, avgConvRate, avgDuration, pagesPerSession };
   }, [filteredDaily, activeSource]);
 
-  // --- Comparison KPIs ---
+  // --- Comparison KPIs (only valid if comparison period has data) ---
   const compKpis = useMemo(() => {
-    if (!compDaily) return null;
+    if (!compDaily || compDaily.length === 0) return null;
     const d = compDaily;
     return {
       sessions: d.reduce((s, r) => s + r.sessions, 0),
