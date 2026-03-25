@@ -179,7 +179,7 @@ function CitationOverlayPanel() {
     return undefined;
   })();
 
-  // Rendered component content — live and interactive
+  // Rendered component content — view-only (no drill-down or cross-filter)
   const content = renderFn?.();
   const renderedComponent = content ? (
     <div className="p-4">
@@ -187,7 +187,18 @@ function CitationOverlayPanel() {
         <div className="px-4 py-2.5 border-b border-[var(--card-border)]">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">{title}</p>
         </div>
-        <div style={metricHeight ? { height: metricHeight } : undefined}>
+        <div
+          style={metricHeight ? { height: metricHeight } : undefined}
+          onClickCapture={(e) => {
+            // Prevent drill-down and cross-filter clicks from propagating
+            // but allow tooltip hover interactions
+            const target = e.target as HTMLElement;
+            if (target.closest("[data-metric-card]") || target.tagName === "rect" || target.tagName === "path" || target.tagName === "circle") {
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          }}
+        >
           {content}
         </div>
       </div>
