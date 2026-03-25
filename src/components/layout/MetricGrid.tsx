@@ -126,20 +126,34 @@ function isFullHint(h: GridHint | "unknown"): boolean {
   return h === "table" || h === "stat" || h === "header" || h === "full";
 }
 
+/** Recursively flatten React fragments so auto-layout sees through <>{...}</> wrappers */
+function flattenFragments(children: React.ReactNode): React.ReactElement[] {
+  const result: React.ReactElement[] = [];
+  Children.forEach(children, (child) => {
+    if (!isValidElement(child)) return;
+    // Fragments have a symbol as their type (React.Fragment === Symbol(react.fragment))
+    if (typeof child.type === "symbol") {
+      result.push(...flattenFragments((child.props as { children?: React.ReactNode }).children));
+    } else {
+      result.push(child);
+    }
+  });
+  return result;
+}
+
 /** Group children into logical row groups */
 function groupIntoRows(children: React.ReactNode, maxSmallPerRow: number): RowGroup[] {
   const rows: RowGroup[] = [];
   const elements: { el: React.ReactElement; hint: GridHint | "unknown"; span?: MetricGridItemProps["span"]; className?: string }[] = [];
 
-  Children.forEach(children, (child) => {
-    if (!isValidElement(child)) return;
+  for (const child of flattenFragments(children)) {
     elements.push({
       el: child,
       hint: getHint(child),
       span: getExplicitSpan(child),
       className: child.type === MetricGridItem ? (child.props as any).className : undefined, // eslint-disable-line @typescript-eslint/no-explicit-any
     });
-  });
+  }
 
   let i = 0;
   while (i < elements.length) {
