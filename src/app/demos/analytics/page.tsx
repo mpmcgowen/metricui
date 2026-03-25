@@ -51,6 +51,36 @@ import {
   ArrowUpRight,
   Search,
 } from "lucide-react";
+import { DashboardInsight } from "@/components/ui/DashboardInsight";
+
+// ---------------------------------------------------------------------------
+// Mock LLM for demo (simulates streaming with realistic delay)
+// ---------------------------------------------------------------------------
+
+const MOCK_RESPONSES: Record<string, string> = {
+  default: "Email is your most underinvested channel. It drives only 8% of sessions but 21% of revenue — a 7.1% conversion rate, nearly 3x your average. Each Email session generates $5.65 in revenue vs $0.60 for Social. The 9x revenue-per-session gap suggests Email is dramatically under-scaled relative to its performance.\n\nYour mobile conversion problem is worse than the headline suggests. Mobile is 36% of traffic but only 1.8% conversion vs Desktop's 4.2%. That's a 57% drop — and your /pricing page, which drives the most conversions, has a low bounce rate (18.4%) suggesting the content works. The gap is almost certainly a mobile checkout UX issue, not a content relevance problem.\n\nThe funnel's biggest leak is Engaged → Pricing: 67% of engaged visitors never see the pricing page. Your homepage gets 89K views but a 38% bounce rate — meaning 34K visitors leave from the front door. Meanwhile /demo converts at 8.7% but gets less than a quarter of homepage traffic.",
+  risk: "Three metrics deserve attention. First, bounce rate has been climbing week-over-week and is now at 47% — above the 40% healthy threshold. The trend, not just the number, is the concern. Second, Display advertising has a 61% bounce rate with only 2.5% conversion — it's burning budget with minimal return. Third, the Engaged-to-Pricing drop-off (67%) is unusually high for a site with strong content engagement metrics. Visitors are reading but not shopping.",
+  summary: "acme.dev had a solid Q4 with 190.7K sessions and $428.8K in revenue at a 3.4% conversion rate. The standout story is channel efficiency — Email and Direct dramatically outperform Social and Display on a per-session revenue basis, suggesting a reallocation opportunity.",
+};
+
+async function* mockAnalyze(
+  messages: { role: string; content: string }[],
+): AsyncGenerator<string> {
+  const lastMsg = messages[messages.length - 1]?.content?.toLowerCase() ?? "";
+  let response = MOCK_RESPONSES.default;
+  if (lastMsg.includes("risk") || lastMsg.includes("warning") || lastMsg.includes("worried")) {
+    response = MOCK_RESPONSES.risk;
+  } else if (lastMsg.includes("summar") || lastMsg.includes("executive")) {
+    response = MOCK_RESPONSES.summary;
+  }
+
+  // Simulate streaming — emit word by word
+  const words = response.split(" ");
+  for (let i = 0; i < words.length; i++) {
+    await new Promise((r) => setTimeout(r, 30 + Math.random() * 40));
+    yield words[i] + (i < words.length - 1 ? " " : "");
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Page
@@ -63,6 +93,12 @@ export default function AnalyticsDashboard() {
       variant="outlined"
       exportable
       filters={{ defaultPreset: "90d", defaultComparison: "previous", referenceDate: new Date("2025-12-31") }}
+      ai={{
+        analyze: mockAnalyze as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        stream: true,
+        context: "B2B SaaS marketing site. Q4 revenue target: $500K. Series A stage.",
+        tone: "executive",
+      }}
     >
       <div className="min-h-screen bg-[var(--background)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
@@ -293,6 +329,9 @@ function AnalyticsContent() {
           { max: 2.5, color: "red", label: "Conv. Below Target" },
         ]} />
       </div>
+
+      {/* ── AI Insights ── */}
+      <DashboardInsight className="mt-4" />
 
       {/* ══════════════════════════════════════════════════════════════ */}
       {/*  OVERVIEW                                                     */}

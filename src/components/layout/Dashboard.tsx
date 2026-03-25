@@ -7,6 +7,7 @@ import { CrossFilterProvider } from "@/lib/CrossFilterContext";
 import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
 import { DrillDownProvider } from "@/lib/DrillDownContext";
 import { DrillDownOverlay, type DrillDownOverlayProps } from "@/components/ui/DrillDownPanel";
+import { AiProvider, type AiConfig } from "@/lib/AiContext";
 import type { CardVariant, NullDisplay, ChartNullMode } from "@/lib/types";
 import type { ThemePreset } from "@/lib/themes";
 import type { ColorScheme } from "@/lib/MetricProvider";
@@ -66,6 +67,10 @@ export interface DashboardProps {
     referenceDate?: Date;
   };
 
+  // --- AI ---
+  /** AI configuration. Omit to disable AI features entirely. */
+  ai?: AiConfig;
+
   // --- DrillDown ---
   /** Max drill-down nesting depth. Default: 4. */
   maxDrillDepth?: number;
@@ -117,6 +122,8 @@ export function Dashboard({
   tooltipHint,
   // FilterProvider props
   filters,
+  // AI props
+  ai,
   // DrillDown props
   maxDrillDepth,
   renderContent,
@@ -130,6 +137,7 @@ export function Dashboard({
 
   content = <LinkedHoverProvider>{content}</LinkedHoverProvider>;
   content = <CrossFilterProvider>{content}</CrossFilterProvider>;
+  content = <AiProvider config={ai ?? null}>{content}</AiProvider>;
 
   if (filters) {
     content = (
