@@ -134,19 +134,20 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
   const overrideExportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
   const cardRef = useRef<HTMLElement>(null);
 
-  // --- AI context: register this component's data for prompt building ---
+  // --- AI context: register this component for prompt building + re-rendering ---
   const ai = useAi();
   const aiId = useId();
+  const childrenRef = useRef<ReactNode>(null);
+  childrenRef.current = children; // always holds latest children
+
   useEffect(() => {
     if (!ai || !title || bare) return;
     const titleStr = typeof title === "string" ? title : "";
     if (!titleStr) return;
 
-    // Build a data summary from exportData (first few rows) or copyValue
     const dataSummary: Record<string, unknown> = {};
     if (copyValue) dataSummary.value = copyValue;
     if (exportData && exportData.length > 0) {
-      // Include summary stats, not raw rows
       dataSummary.rows = exportData.length;
       if (exportData.length <= 5) {
         dataSummary.data = exportData;
@@ -160,6 +161,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
       component: componentName ?? "Unknown",
       title: titleStr,
       data: dataSummary,
+      render: () => childrenRef.current, // always returns current children via ref
     });
 
     return () => ai.unregisterMetric(aiId);

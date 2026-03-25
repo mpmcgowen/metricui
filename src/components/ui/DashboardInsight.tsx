@@ -58,27 +58,12 @@ function renderMarkdown(text: string): ReactNode[] {
   });
 }
 
-/** Capture a component as PNG and return as data URL */
-async function captureComponent(title: string): Promise<string | null> {
-  const el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
-  if (!el) return null;
-  try {
-    const { domToBlob } = await import("modern-screenshot");
-    const blob = await domToBlob(el, { scale: 2 });
-    if (!blob) return null;
-    return URL.createObjectURL(blob);
-  } catch {
-    return null;
-  }
-}
-
-/** Citation overlay state — shared between chips and the overlay */
+/** Citation overlay state */
 interface CitationOverlay {
   title: string;
   mode: "modal" | "sidebar";
-  imageUrl: string | null;
-  metricData: Record<string, unknown> | null;
   componentType: string | null;
+  renderFn: (() => ReactNode) | null;
 }
 
 const CitationContext = createContext<{
@@ -91,48 +76,27 @@ function CitationProvider({ children }: { children: ReactNode }) {
   const ai = useAi();
   const [overlay, setOverlay] = useState<CitationOverlay | null>(null);
 
-  const open = useCallback(async (title: string, mode: "modal" | "sidebar") => {
-    // Get metric data from AI context
-    let metricData: Record<string, unknown> | null = null;
+  const open = useCallback((title: string, mode: "modal" | "sidebar") => {
+    if (!ai) return;
+
+    // Find the registered metric with its render function
     let componentType: string | null = null;
-    if (ai) {
-      const metrics = ai.getMetrics();
-      for (const [, m] of metrics) {
-        if (m.title === title) {
-          metricData = m.data;
-          componentType = m.component;
-          break;
-        }
+    let renderFn: (() => ReactNode) | null = null;
+    const metrics = ai.getMetrics();
+    for (const [, m] of metrics) {
+      if (m.title === title) {
+        componentType = m.component;
+        renderFn = m.render ?? null;
+        break;
       }
     }
 
-    // Show overlay immediately with data
-    setOverlay({ title, mode, imageUrl: null, metricData, componentType });
-
-    // Try to capture image (may need tab switch)
-    let imageUrl = await captureComponent(title);
-
-    if (!imageUrl && ai) {
-      // Switch tabs to find and capture
-      const navEl = document.querySelector("[data-dashboard-tabs]");
-      const allTabs = navEl?.getAttribute("data-dashboard-tabs")?.split(",") ?? [];
-      for (const t of allTabs) {
-        ai.navigateToTab(t);
-        await new Promise((r) => setTimeout(r, 200));
-        imageUrl = await captureComponent(title);
-        if (imageUrl) break;
-      }
-    }
-
-    if (imageUrl) {
-      setOverlay((prev) => prev ? { ...prev, imageUrl } : null);
-    }
+    setOverlay({ title, mode, componentType, renderFn });
   }, [ai]);
 
   const close = useCallback(() => {
-    if (overlay?.imageUrl) URL.revokeObjectURL(overlay.imageUrl);
     setOverlay(null);
-  }, [overlay]);
+  }, []);
 
   return (
     <CitationContext.Provider value={{ open, close, overlay }}>
@@ -164,6 +128,7 @@ function CitationOverlayPanel() {
   const ai = useAi();
   const [followUp, setFollowUp] = useState("");
   const [visible, setVisible] = useState(false);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (ctx?.overlay) {
@@ -173,17 +138,30 @@ function CitationOverlayPanel() {
     }
   }, [ctx?.overlay]);
 
+  // Auto-scroll chat
+  useEffect(() => {
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }, [ai?.messages, ai?.streamingText]);
+
   if (!ctx?.overlay) return null;
 
-  const { title, mode, imageUrl, metricData, componentType } = ctx.overlay;
+  const { title, mode, componentType, renderFn } = ctx.overlay;
 
   const handleFollowUp = async () => {
     const text = followUp.trim();
     if (!text || !ai) return;
     setFollowUp("");
     await ai.send(text, `Regarding [[${title}]] (${componentType})`);
-    ctx.close();
   };
+
+  // Rendered component content — live and interactive
+  const renderedComponent = renderFn ? (
+    <div className="p-4">{renderFn()}</div>
+  ) : (
+    <div className="flex items-center justify-center py-12 text-sm text-[var(--muted)]">
+      Component not available on this tab
+    </div>
+  );
 
   if (mode === "modal") {
     return createPortal(
@@ -193,10 +171,9 @@ function CitationOverlayPanel() {
           onClick={ctx.close}
         />
         <div className={cn(
-          "absolute left-1/2 top-1/2 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] shadow-2xl transition-all duration-200",
+          "absolute left-1/2 top-1/2 max-h-[85vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] shadow-2xl transition-all duration-200",
           visible ? "scale-100 opacity-100" : "scale-95 opacity-0",
         )}>
-          {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 py-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
@@ -209,25 +186,7 @@ function CitationOverlayPanel() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          {/* Image */}
-          {imageUrl ? (
-            <div className="p-4">
-              <img src={imageUrl} alt={title} className="w-full rounded-lg border border-[var(--card-border)]" />
-            </div>
-          ) : metricData ? (
-            <div className="p-4 text-sm text-[var(--muted)]">
-              {Object.entries(metricData).map(([k, v]) => (
-                <div key={k} className="flex justify-between py-1 border-b border-[var(--card-border)] last:border-0">
-                  <span className="font-medium text-[var(--foreground)]">{k}</span>
-                  <span className="font-[family-name:var(--font-mono)]">{typeof v === "object" ? JSON.stringify(v) : String(v)}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center p-8 text-sm text-[var(--muted)]">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Capturing...
-            </div>
-          )}
+          <div className="overflow-y-auto">{renderedComponent}</div>
         </div>
       </div>,
       document.body,
@@ -242,61 +201,46 @@ function CitationOverlayPanel() {
         onClick={ctx.close}
       />
       <div className={cn(
-        "absolute right-0 top-0 bottom-0 flex w-full max-w-lg flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-out",
+        "absolute right-0 top-0 bottom-0 flex w-full max-w-xl flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-out",
         visible ? "translate-x-0" : "translate-x-full",
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 py-4">
-          <div>
+        <div className="flex-shrink-0 border-b border-[var(--card-border)] px-5 py-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
               <span className="text-sm font-semibold text-[var(--foreground)]">{title}</span>
+              {componentType && (
+                <span className="rounded bg-[var(--card-glow)] px-1.5 py-0.5 text-[10px] text-[var(--muted)]">{componentType}</span>
+              )}
             </div>
-            {componentType && (
-              <span className="mt-0.5 text-[11px] text-[var(--muted)]">{componentType}</span>
-            )}
+            <button onClick={ctx.close} className="rounded-md p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <button onClick={ctx.close} className="rounded-md p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
-            <X className="h-4 w-4" />
-          </button>
         </div>
 
-        {/* Component capture */}
-        <div className="border-b border-[var(--card-border)] p-4">
-          {imageUrl ? (
-            <img src={imageUrl} alt={title} className="w-full rounded-lg border border-[var(--card-border)]" />
-          ) : metricData ? (
-            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-3 text-sm">
-              {Object.entries(metricData).map(([k, v]) => (
-                <div key={k} className="flex justify-between py-1.5 border-b border-[var(--card-border)]/50 last:border-0">
-                  <span className="font-medium text-[var(--foreground)]">{k}</span>
-                  <span className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{typeof v === "object" ? JSON.stringify(v) : String(v)}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center py-8 text-sm text-[var(--muted)]">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Capturing component...
-            </div>
-          )}
+        {/* Live interactive component */}
+        <div className="flex-shrink-0 overflow-y-auto border-b border-[var(--card-border)]" style={{ maxHeight: "50%" }}>
+          {renderedComponent}
         </div>
 
-        {/* AI chat — scoped to this component */}
+        {/* Scoped AI chat */}
         <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4">
+          <div ref={chatRef} className="flex-1 overflow-y-auto px-4 py-3">
             <p className="text-[12px] text-[var(--muted)]">
-              Ask a follow-up question about <strong className="text-[var(--foreground)]">{title}</strong>
+              Ask about <strong className="text-[var(--foreground)]">{title}</strong>
             </p>
             {ai?.messages.filter((m) => m.triggerContext?.includes(title)).map((msg, i) =>
               msg.role === "user"
                 ? <div key={i} className="mt-3"><UserMessage message={msg} /></div>
                 : <div key={i} className="mt-3"><AssistantMessage message={msg} /></div>
             )}
-            {ai?.isLoading && ai.streamingText && (
+            {ai?.isLoading && (
               <div className="mt-3"><StreamingMessage text={ai.streamingText} /></div>
             )}
           </div>
-          <div className="flex items-center gap-2 border-t border-[var(--card-border)] px-4 py-3">
+          <div className="flex-shrink-0 flex items-center gap-2 border-t border-[var(--card-border)] px-4 py-3">
             <input
               type="text"
               value={followUp}

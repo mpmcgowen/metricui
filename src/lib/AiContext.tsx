@@ -16,6 +16,8 @@ export interface AiMetric {
   data: Record<string, unknown>;
   /** Which tab this component lives on (if using DashboardNav) */
   tab?: string;
+  /** Render function that returns the interactive component */
+  render?: () => ReactNode;
 }
 
 /** A chat message */
