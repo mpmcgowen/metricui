@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useRef, useEffect, useCallback, createContext, useContext, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { useAi, type AiMessage } from "@/lib/AiContext";
 import { Sparkles, Send, X, RotateCcw, Loader2, ChevronDown } from "lucide-react";
@@ -57,73 +58,268 @@ function renderMarkdown(text: string): ReactNode[] {
   });
 }
 
-/** Scroll to a component by its data-ai-title and briefly highlight it */
-function scrollToElement(el: HTMLElement) {
-  const stickyEls = document.querySelectorAll<HTMLElement>(".sticky");
-  let offset = 0;
-  for (const s of stickyEls) offset += s.getBoundingClientRect().height;
-  const y = el.getBoundingClientRect().top + window.scrollY - offset - 24;
-  window.scrollTo({ top: y, behavior: "smooth" });
-
-  // Highlight pulse
-  el.style.transition = "box-shadow 0.3s ease";
-  el.style.boxShadow = "0 0 0 3px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 25%, transparent)";
-  setTimeout(() => {
-    el.style.boxShadow = "";
-    setTimeout(() => { el.style.transition = ""; }, 300);
-  }, 1500);
+/** Capture a component as PNG and return as data URL */
+async function captureComponent(title: string): Promise<string | null> {
+  const el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
+  if (!el) return null;
+  try {
+    const { domToBlob } = await import("modern-screenshot");
+    const blob = await domToBlob(el, { scale: 2 });
+    if (!blob) return null;
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
 }
 
-/** Citation chip — clickable, navigates to component (switching tabs if needed) */
-function CitationChip({ title }: { title: string }) {
+/** Citation overlay state — shared between chips and the overlay */
+interface CitationOverlay {
+  title: string;
+  mode: "modal" | "sidebar";
+  imageUrl: string | null;
+  metricData: Record<string, unknown> | null;
+  componentType: string | null;
+}
+
+const CitationContext = createContext<{
+  open: (title: string, mode: "modal" | "sidebar") => void;
+  close: () => void;
+  overlay: CitationOverlay | null;
+} | null>(null);
+
+function CitationProvider({ children }: { children: ReactNode }) {
   const ai = useAi();
+  const [overlay, setOverlay] = useState<CitationOverlay | null>(null);
 
-  const handleClick = useCallback(async () => {
-    // Try to find the element in the current DOM
-    let el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
-
-    if (el) {
-      scrollToElement(el);
-      return;
-    }
-
-    // Element not in DOM — try switching tabs
+  const open = useCallback(async (title: string, mode: "modal" | "sidebar") => {
+    // Get metric data from AI context
+    let metricData: Record<string, unknown> | null = null;
+    let componentType: string | null = null;
     if (ai) {
-      const tab = ai.findTab(title);
-      if (tab) {
-        ai.navigateToTab(tab);
-        // Wait for React to render the new tab content
-        await new Promise((r) => setTimeout(r, 150));
-        el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
-        if (el) {
-          scrollToElement(el);
-          return;
+      const metrics = ai.getMetrics();
+      for (const [, m] of metrics) {
+        if (m.title === title) {
+          metricData = m.data;
+          componentType = m.component;
+          break;
         }
       }
+    }
 
-      // Still not found — try all tabs from DashboardNav
+    // Show overlay immediately with data
+    setOverlay({ title, mode, imageUrl: null, metricData, componentType });
+
+    // Try to capture image (may need tab switch)
+    let imageUrl = await captureComponent(title);
+
+    if (!imageUrl && ai) {
+      // Switch tabs to find and capture
       const navEl = document.querySelector("[data-dashboard-tabs]");
       const allTabs = navEl?.getAttribute("data-dashboard-tabs")?.split(",") ?? [];
       for (const t of allTabs) {
         ai.navigateToTab(t);
-        await new Promise((r) => setTimeout(r, 150));
-        el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
-        if (el) {
-          scrollToElement(el);
-          return;
-        }
+        await new Promise((r) => setTimeout(r, 200));
+        imageUrl = await captureComponent(title);
+        if (imageUrl) break;
       }
     }
-  }, [title, ai]);
+
+    if (imageUrl) {
+      setOverlay((prev) => prev ? { ...prev, imageUrl } : null);
+    }
+  }, [ai]);
+
+  const close = useCallback(() => {
+    if (overlay?.imageUrl) URL.revokeObjectURL(overlay.imageUrl);
+    setOverlay(null);
+  }, [overlay]);
 
   return (
-    <button
-      onClick={handleClick}
-      className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)]/10 px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/20 cursor-pointer"
-    >
-      <Sparkles className="h-2 w-2" />
-      {title}
-    </button>
+    <CitationContext.Provider value={{ open, close, overlay }}>
+      {children}
+    </CitationContext.Provider>
+  );
+}
+
+/** Citation chip — opens modal or sidebar */
+function CitationChip({ title }: { title: string }) {
+  const ctx = useContext(CitationContext);
+
+  return (
+    <span className="inline-flex items-center gap-0.5">
+      <button
+        onClick={() => ctx?.open(title, "sidebar")}
+        className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)]/10 px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/20 cursor-pointer"
+      >
+        <Sparkles className="h-2 w-2" />
+        {title}
+      </button>
+    </span>
+  );
+}
+
+/** Citation overlay — modal or sidebar showing the referenced component */
+function CitationOverlayPanel() {
+  const ctx = useContext(CitationContext);
+  const ai = useAi();
+  const [followUp, setFollowUp] = useState("");
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (ctx?.overlay) {
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+    } else {
+      setVisible(false);
+    }
+  }, [ctx?.overlay]);
+
+  if (!ctx?.overlay) return null;
+
+  const { title, mode, imageUrl, metricData, componentType } = ctx.overlay;
+
+  const handleFollowUp = async () => {
+    const text = followUp.trim();
+    if (!text || !ai) return;
+    setFollowUp("");
+    await ai.send(text, `Regarding [[${title}]] (${componentType})`);
+    ctx.close();
+  };
+
+  if (mode === "modal") {
+    return createPortal(
+      <div className="fixed inset-0 z-[9999]">
+        <div
+          className={cn("absolute inset-0 bg-black/50 transition-opacity duration-200", visible ? "opacity-100" : "opacity-0")}
+          onClick={ctx.close}
+        />
+        <div className={cn(
+          "absolute left-1/2 top-1/2 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] shadow-2xl transition-all duration-200",
+          visible ? "scale-100 opacity-100" : "scale-95 opacity-0",
+        )}>
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 py-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+              <span className="text-sm font-semibold text-[var(--foreground)]">{title}</span>
+              {componentType && (
+                <span className="rounded bg-[var(--card-glow)] px-1.5 py-0.5 text-[10px] text-[var(--muted)]">{componentType}</span>
+              )}
+            </div>
+            <button onClick={ctx.close} className="rounded-md p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          {/* Image */}
+          {imageUrl ? (
+            <div className="p-4">
+              <img src={imageUrl} alt={title} className="w-full rounded-lg border border-[var(--card-border)]" />
+            </div>
+          ) : metricData ? (
+            <div className="p-4 text-sm text-[var(--muted)]">
+              {Object.entries(metricData).map(([k, v]) => (
+                <div key={k} className="flex justify-between py-1 border-b border-[var(--card-border)] last:border-0">
+                  <span className="font-medium text-[var(--foreground)]">{k}</span>
+                  <span className="font-[family-name:var(--font-mono)]">{typeof v === "object" ? JSON.stringify(v) : String(v)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center p-8 text-sm text-[var(--muted)]">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Capturing...
+            </div>
+          )}
+        </div>
+      </div>,
+      document.body,
+    );
+  }
+
+  // Sidebar mode
+  return createPortal(
+    <div className="fixed inset-0 z-[9999]">
+      <div
+        className={cn("absolute inset-0 bg-black/40 transition-opacity duration-300", visible ? "opacity-100" : "opacity-0")}
+        onClick={ctx.close}
+      />
+      <div className={cn(
+        "absolute right-0 top-0 bottom-0 flex w-full max-w-lg flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-out",
+        visible ? "translate-x-0" : "translate-x-full",
+      )}>
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 py-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+              <span className="text-sm font-semibold text-[var(--foreground)]">{title}</span>
+            </div>
+            {componentType && (
+              <span className="mt-0.5 text-[11px] text-[var(--muted)]">{componentType}</span>
+            )}
+          </div>
+          <button onClick={ctx.close} className="rounded-md p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Component capture */}
+        <div className="border-b border-[var(--card-border)] p-4">
+          {imageUrl ? (
+            <img src={imageUrl} alt={title} className="w-full rounded-lg border border-[var(--card-border)]" />
+          ) : metricData ? (
+            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-3 text-sm">
+              {Object.entries(metricData).map(([k, v]) => (
+                <div key={k} className="flex justify-between py-1.5 border-b border-[var(--card-border)]/50 last:border-0">
+                  <span className="font-medium text-[var(--foreground)]">{k}</span>
+                  <span className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{typeof v === "object" ? JSON.stringify(v) : String(v)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-8 text-sm text-[var(--muted)]">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Capturing component...
+            </div>
+          )}
+        </div>
+
+        {/* AI chat — scoped to this component */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4">
+            <p className="text-[12px] text-[var(--muted)]">
+              Ask a follow-up question about <strong className="text-[var(--foreground)]">{title}</strong>
+            </p>
+            {ai?.messages.filter((m) => m.triggerContext?.includes(title)).map((msg, i) =>
+              msg.role === "user"
+                ? <div key={i} className="mt-3"><UserMessage message={msg} /></div>
+                : <div key={i} className="mt-3"><AssistantMessage message={msg} /></div>
+            )}
+            {ai?.isLoading && ai.streamingText && (
+              <div className="mt-3"><StreamingMessage text={ai.streamingText} /></div>
+            )}
+          </div>
+          <div className="flex items-center gap-2 border-t border-[var(--card-border)] px-4 py-3">
+            <input
+              type="text"
+              value={followUp}
+              onChange={(e) => setFollowUp(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleFollowUp(); } }}
+              placeholder={`Ask about ${title}...`}
+              className="flex-1 bg-transparent text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted)]/40 outline-none"
+            />
+            <button
+              onClick={handleFollowUp}
+              disabled={!followUp.trim()}
+              className={cn(
+                "rounded-lg p-1.5 transition-colors",
+                followUp.trim() ? "text-[var(--accent)] hover:bg-[var(--accent)]/10" : "text-[var(--muted)]/20",
+              )}
+            >
+              <Send className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -300,6 +496,7 @@ export function DashboardInsight({
   const hasMessages = ai.messages.length > 0;
 
   return (
+    <CitationProvider>
     <div
       className={cn(
         "noise-texture overflow-hidden rounded-[var(--mu-card-radius)] border border-[var(--card-border)] bg-[var(--card-bg)] transition-all",
@@ -425,5 +622,7 @@ export function DashboardInsight({
         </div>
       )}
     </div>
+    <CitationOverlayPanel />
+    </CitationProvider>
   );
 }
