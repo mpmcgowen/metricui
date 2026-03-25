@@ -132,7 +132,7 @@ export default function McpServerGuide() {
               <span>— full component catalog, config reference, format engine, theming, TypeScript types, usage patterns</span>
             </li>
             <li className="flex gap-2">
-              <span className="font-semibold text-[var(--foreground)]">3 prompts</span>
+              <span className="font-semibold text-[var(--foreground)]">4 prompts</span>
               <span>— guided workflows for building, reviewing, and migrating dashboards</span>
             </li>
           </ul>
@@ -355,6 +355,19 @@ export default function McpServerGuide() {
               </p>
               <div className="mt-2 text-[13px] font-mono text-[var(--accent)]">
                 Parameter: <code>code</code> — the MetricUI code to review
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[var(--card-border)] p-4">
+              <h3 className="text-base font-semibold text-[var(--foreground)]">convert_dashboard</h3>
+              <p className="mt-1 text-[14px] text-[var(--muted)]">
+                Converts a screenshot, mockup, wireframe, or hand-drawn sketch into MetricUI code.
+                Paste an image in chat, then invoke this prompt. The AI identifies visual elements (KPI cards,
+                charts, tables, filters), maps them to MetricUI components, infers theme/format/layout,
+                and generates a complete working dashboard.
+              </p>
+              <div className="mt-2 text-[13px] font-mono text-[var(--accent)]">
+                Parameter: <code>description</code> (optional) — additional context about the image
               </div>
             </div>
 

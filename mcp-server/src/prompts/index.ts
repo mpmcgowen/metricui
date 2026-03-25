@@ -168,6 +168,116 @@ Use \`validate_props\` tool to verify specific components.`,
     })
   );
 
+  // --- convert_dashboard ---
+  server.prompt(
+    "convert_dashboard",
+    "Convert a screenshot, mockup, or hand-drawn sketch of a dashboard into MetricUI code",
+    {
+      description: z.string().optional().describe("Optional description of what the image shows or any specific requirements"),
+    },
+    ({ description }) => ({
+      messages: [{
+        role: "user",
+        content: {
+          type: "text",
+          text: `You are converting a visual dashboard — a screenshot, mockup, wireframe, or hand-drawn sketch — into production-quality MetricUI code.
+
+The user has shared an image in this conversation. Analyze it carefully and generate a complete MetricUI dashboard that faithfully recreates what you see.
+
+${description ? `**User notes:** ${description}\n` : ""}
+## Step 1: Identify Visual Elements
+
+Scan the image top-to-bottom, left-to-right. For each element, classify it:
+
+| Visual Pattern | MetricUI Component |
+|---|---|
+| Big number with label, trend arrow, or percentage change | **KpiCard** |
+| Row of metric boxes | **StatGroup** or multiple **KpiCard** in MetricGrid |
+| Small inline trend line inside a card | KpiCard with **sparkline** prop |
+| Progress bar or target indicator | KpiCard with **goal** prop |
+| Color-coded metric (green/red based on value) | KpiCard with **conditions** prop |
+| Filled area chart / trend over time | **AreaChart** |
+| Line chart | **LineChart** |
+| Vertical or horizontal bars | **BarChart** (use \`preset="horizontal"\` if horizontal) |
+| Grouped or stacked bars | BarChart with \`preset="grouped"\` or \`preset="percent"\` |
+| Bars with an overlaid line | **BarLineChart** |
+| Pie or donut | **DonutChart** |
+| Gauge / dial / score | **Gauge** |
+| Funnel / conversion steps | **Funnel** |
+| Waterfall / bridge chart | **Waterfall** |
+| Bullet / target vs actual bars | **BulletChart** |
+| Color-intensity grid (day/hour matrix) | **HeatMap** |
+| Data table with rows and columns | **DataTable** |
+| Status dot or health indicator | **StatusIndicator** |
+| Alert box or callout message | **Callout** |
+| Badge or tag label | **Badge** |
+| Date range picker or period selector | **PeriodSelector** |
+| Toggle/segment control | **SegmentToggle** |
+| Dropdown filter | **DropdownFilter** |
+| Filter chips/tags | **FilterTags** |
+| Horizontal dashed line on a chart | **referenceLines** prop |
+| Colored band/zone on a chart | **thresholds** prop |
+| Title bar with status or timestamp | **DashboardHeader** |
+| Section heading with optional action | **SectionHeader** or **MetricGrid.Section** |
+
+## Step 2: Detect Layout
+
+- Count columns of KPI cards → MetricGrid handles this automatically (up to 4 per row)
+- Charts side by side → MetricGrid pairs them automatically
+- Full-width table → MetricGrid gives tables full width
+- Do NOT write custom CSS grid — use \`<MetricGrid>\` and let it handle layout
+
+## Step 3: Infer Styling
+
+- **Theme**: Match the dominant accent color to a preset:
+  - Blue/indigo → \`theme="indigo"\`
+  - Green/teal → \`theme="emerald"\`
+  - Red/pink → \`theme="rose"\`
+  - Yellow/orange → \`theme="amber"\`
+  - Cyan/sky blue → \`theme="cyan"\`
+  - Purple → \`theme="violet"\`
+  - Gray/neutral → \`theme="slate"\`
+  - Orange → \`theme="orange"\`
+- **Dark mode**: If the background is dark, the theme handles this automatically via \`<html class="dark">\`
+- **Card style**: If cards have borders → \`variant="outlined"\`, shadows → \`variant="elevated"\`, flat → \`variant="ghost"\`
+- **Density**: If the layout looks compact/tight → \`dense\`
+
+## Step 4: Infer Data Formats
+
+Look at the values in the image and apply the right format:
+- Dollar signs, currency symbols → \`format="currency"\`
+- Percentage signs → \`format="percent"\`
+- Large numbers with K/M/B suffixes → \`format="compact"\`
+- Time durations (2h 30m, 45s) → \`format="duration"\`
+- Regular numbers → \`format="number"\`
+- Custom units (°F, mph, ms) → \`format={{ style: "number", suffix: "°F" }}\`
+
+## Step 5: Generate Code
+
+Build a complete, working page:
+
+1. Wrap everything in \`<Dashboard theme="..." exportable filters={{ defaultPreset: "30d" }}>\`
+2. Add \`<DashboardHeader>\` matching the title/subtitle you see
+3. Use \`<MetricGrid>\` for layout
+4. Generate realistic sample data that matches the visual — correct magnitudes, trends, labels
+5. Use advanced features where the image suggests them (sparklines, conditions, goals, reference lines)
+6. Handle data states: add \`loading\`, \`empty\`, \`error\` props
+7. All imports from \`"metricui"\`
+
+## Important
+
+- **Be faithful to the image.** Don't add components that aren't visible. Don't remove things you can see.
+- **Infer reasonable data.** If the image shows "Revenue: $1.2M" with an upward trend, generate sample data that reflects ~$1.2M with growth.
+- **Use the MCP tools** to verify your work:
+  - \`get_component_api("KpiCard")\` for exact props
+  - \`validate_props("AreaChart", { ... })\` to check your config
+  - \`suggest_format("revenue")\` for format config
+  - \`generate_table_columns([...])\` for DataTable columns`,
+        },
+      }],
+    })
+  );
+
   // --- migrate_to_metricui ---
   server.prompt(
     "migrate_to_metricui",

@@ -7,9 +7,11 @@ import { AreaChart } from "@/components/charts/AreaChart";
 import { BarChart } from "@/components/charts/BarChart";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { Funnel } from "@/components/charts/Funnel";
+import { BulletChart } from "@/components/charts/BulletChart";
 import { DataTable } from "@/components/tables/DataTable";
 import { Callout } from "@/components/ui/Callout";
 import { StatusIndicator } from "@/components/ui/StatusIndicator";
+import { Badge } from "@/components/ui/Badge";
 import { MetricGrid } from "@/components/layout/MetricGrid";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { Dashboard } from "@/components/layout/Dashboard";
@@ -17,11 +19,12 @@ import { DashboardNav } from "@/components/layout/DashboardNav";
 import { FilterBar } from "@/components/filters/FilterBar";
 import { PeriodSelector } from "@/components/filters/PeriodSelector";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
+import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { useMetricFilters, useFilterValue } from "@/lib/FilterContext";
+import { useMetricFilters, useFilterValue, useHasComparison } from "@/lib/FilterContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDown";
-import { formatValue } from "@/lib/format";
+import { formatValue, fmt } from "@/lib/format";
 import {
   dailyMetrics,
   trafficSources,
@@ -38,9 +41,15 @@ import {
   MousePointerClick,
   Eye,
   TrendingUp,
+  TrendingDown,
   Globe,
   Monitor,
+  Smartphone,
   Target,
+  DollarSign,
+  Clock,
+  ArrowUpRight,
+  Search,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -53,7 +62,7 @@ export default function AnalyticsDashboard() {
       theme="violet"
       variant="outlined"
       exportable
-      filters={{ defaultPreset: "90d", referenceDate: new Date("2025-12-31") }}
+      filters={{ defaultPreset: "90d", defaultComparison: "previous", referenceDate: new Date("2025-12-31") }}
     >
       <div className="min-h-screen bg-[var(--background)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
@@ -78,7 +87,7 @@ export default function AnalyticsDashboard() {
 }
 
 // ---------------------------------------------------------------------------
-// Content — reads filters, switches tabs
+// Content
 // ---------------------------------------------------------------------------
 
 function AnalyticsContent() {
@@ -86,9 +95,9 @@ function AnalyticsContent() {
   const filters = useMetricFilters();
   const crossFilter = useCrossFilter();
   const openDrill = useDrillDownAction();
-  const deviceFilter = useFilterValue("device");
+  const hasComparison = useHasComparison();
 
-  // Period-filtered daily data
+  // --- Period-filtered daily data ---
   const filteredDaily = useMemo(() => {
     if (!filters?.period) return dailyMetrics;
     return dailyMetrics.filter((d) => {
@@ -97,84 +106,108 @@ function AnalyticsContent() {
     });
   }, [filters?.period]);
 
-  // Cross-filter by source
-  const activeSource = crossFilter?.selection?.field === "source" ? String(crossFilter.selection.value) : null;
+  // --- Comparison period data ---
+  const compDaily = useMemo(() => {
+    if (!filters?.comparisonPeriod) return null;
+    return dailyMetrics.filter((d) => {
+      const date = new Date(d.date);
+      return date >= filters.comparisonPeriod!.start && date <= filters.comparisonPeriod!.end;
+    });
+  }, [filters?.comparisonPeriod]);
 
-  // Computed totals from filtered data
+  // --- Computed KPIs ---
   const kpis = useMemo(() => {
-    const data = filteredDaily;
-    return {
-      sessions: data.reduce((s, d) => s + d.sessions, 0),
-      pageViews: data.reduce((s, d) => s + d.pageViews, 0),
-      users: data.reduce((s, d) => s + d.users, 0),
-      newUsers: data.reduce((s, d) => s + d.newUsers, 0),
-      conversions: data.reduce((s, d) => s + d.conversions, 0),
-      revenue: data.reduce((s, d) => s + d.revenue, 0),
-      avgBounceRate: data.length > 0 ? Math.round(data.reduce((s, d) => s + d.bounceRate, 0) / data.length * 10) / 10 : 0,
-      avgConversionRate: data.length > 0 ? Math.round(data.reduce((s, d) => s + d.conversionRate, 0) / data.length * 10) / 10 : 0,
-    };
+    const d = filteredDaily;
+    const sessions = d.reduce((s, r) => s + r.sessions, 0);
+    const pageViews = d.reduce((s, r) => s + r.pageViews, 0);
+    const users = d.reduce((s, r) => s + r.users, 0);
+    const newUsers = d.reduce((s, r) => s + r.newUsers, 0);
+    const conversions = d.reduce((s, r) => s + r.conversions, 0);
+    const revenue = d.reduce((s, r) => s + r.revenue, 0);
+    const avgBounce = d.length > 0 ? Math.round(d.reduce((s, r) => s + r.bounceRate, 0) / d.length * 10) / 10 : 0;
+    const avgConvRate = d.length > 0 ? Math.round(d.reduce((s, r) => s + r.conversionRate, 0) / d.length * 10) / 10 : 0;
+    const avgDuration = d.length > 0 ? Math.round(d.reduce((s, r) => s + r.avgSessionDuration, 0) / d.length) : 0;
+    const pagesPerSession = sessions > 0 ? Math.round(pageViews / sessions * 10) / 10 : 0;
+    return { sessions, pageViews, users, newUsers, conversions, revenue, avgBounce, avgConvRate, avgDuration, pagesPerSession };
   }, [filteredDaily]);
 
-  // Sparklines
-  const sessionSparkline = useMemo(() => filteredDaily.map((d) => d.sessions), [filteredDaily]);
-  const conversionSparkline = useMemo(() => filteredDaily.map((d) => d.conversions), [filteredDaily]);
-  const revenueSparkline = useMemo(() => filteredDaily.map((d) => d.revenue), [filteredDaily]);
+  // --- Comparison KPIs ---
+  const compKpis = useMemo(() => {
+    if (!compDaily) return null;
+    const d = compDaily;
+    return {
+      sessions: d.reduce((s, r) => s + r.sessions, 0),
+      pageViews: d.reduce((s, r) => s + r.pageViews, 0),
+      users: d.reduce((s, r) => s + r.users, 0),
+      conversions: d.reduce((s, r) => s + r.conversions, 0),
+      revenue: d.reduce((s, r) => s + r.revenue, 0),
+      avgBounce: d.length > 0 ? Math.round(d.reduce((s, r) => s + r.bounceRate, 0) / d.length * 10) / 10 : 0,
+      avgConvRate: d.length > 0 ? Math.round(d.reduce((s, r) => s + r.conversionRate, 0) / d.length * 10) / 10 : 0,
+    };
+  }, [compDaily]);
 
-  // Trend data for area charts
-  const trendData = useMemo(() =>
-    filteredDaily.map((d) => ({
-      date: d.date.slice(5), // "MM-DD"
-      sessions: d.sessions,
-      pageViews: d.pageViews,
-      users: d.users,
-    })),
-    [filteredDaily],
-  );
+  // --- Sparklines ---
+  const sessionSpark = useMemo(() => filteredDaily.map((d) => d.sessions), [filteredDaily]);
+  const userSpark = useMemo(() => filteredDaily.map((d) => d.users), [filteredDaily]);
+  const convSpark = useMemo(() => filteredDaily.map((d) => d.conversions), [filteredDaily]);
+  const revSpark = useMemo(() => filteredDaily.map((d) => d.revenue), [filteredDaily]);
+  const bounceSpark = useMemo(() => filteredDaily.map((d) => d.bounceRate), [filteredDaily]);
 
-  const conversionTrendData = useMemo(() =>
-    filteredDaily.map((d) => ({
-      date: d.date.slice(5),
-      conversions: d.conversions,
-      revenue: d.revenue,
-    })),
-    [filteredDaily],
-  );
+  // --- Chart data ---
+  const trendData = useMemo(() => filteredDaily.map((d) => ({
+    date: d.date.slice(5),
+    sessions: d.sessions,
+    users: d.users,
+    "new users": d.newUsers,
+  })), [filteredDaily]);
 
-  // Source data for cross-filter
-  const sourceChartData = useMemo(() =>
-    trafficSources.map((s) => ({
-      source: s.source,
-      sessions: s.sessions,
-      conversions: s.conversions,
-    })),
-    [],
-  );
+  const convTrendData = useMemo(() => filteredDaily.map((d) => ({
+    date: d.date.slice(5),
+    conversions: d.conversions,
+    revenue: d.revenue,
+  })), [filteredDaily]);
+
+  const sourceData = useMemo(() => trafficSources.map((s) => ({
+    source: s.source,
+    sessions: s.sessions,
+    conversions: s.conversions,
+    revenue: s.revenue,
+  })), []);
+
+  const sourceOptions = useMemo(() => trafficSources.map((s) => ({
+    value: s.source,
+    label: s.source,
+    count: s.sessions,
+  })), []);
 
   return (
     <>
-      <FilterBar sticky className="mt-4">
+      {/* ── Sticky FilterBar with embedded nav ── */}
+      <FilterBar
+        sticky
+        badge={<>{formatValue(kpis.sessions, "compact")} sessions</>}
+        tags={{ showCrossFilter: true, crossFilterLabels: { source: "Source", country: "Country" } }}
+        className="mt-4"
+      >
         <FilterBar.Nav>
           <DashboardNav
             tabs={[
-              { value: "overview", label: "Overview", icon: <Eye className="h-3.5 w-3.5" />, badge: kpis.sessions },
+              { value: "overview", label: "Overview", icon: <Eye className="h-3.5 w-3.5" /> },
               { value: "acquisition", label: "Acquisition", icon: <Globe className="h-3.5 w-3.5" /> },
               { value: "engagement", label: "Engagement", icon: <MousePointerClick className="h-3.5 w-3.5" /> },
-              { value: "conversions", label: "Conversions", icon: <Target className="h-3.5 w-3.5" />, badge: kpis.conversions },
+              { value: "conversions", label: "Conversions", icon: <Target className="h-3.5 w-3.5" />, badge: `${formatValue(kpis.conversions, "compact")} conv.` },
             ]}
             value={tab}
             onChange={setTab}
           />
         </FilterBar.Nav>
         <FilterBar.Primary>
-          <PeriodSelector
-            presets={["30d", "90d", "quarter", "ytd"]}
-            comparison
-          />
+          <PeriodSelector presets={["30d", "90d", "quarter", "ytd"]} comparison />
           <SegmentToggle
             options={[
               { value: "All", label: "All Devices" },
               { value: "Desktop", label: "Desktop", icon: <Monitor className="h-3.5 w-3.5" /> },
-              { value: "Mobile", label: "Mobile" },
+              { value: "Mobile", label: "Mobile", icon: <Smartphone className="h-3.5 w-3.5" /> },
             ]}
             defaultValue="All"
             field="device"
@@ -182,120 +215,131 @@ function AnalyticsContent() {
         </FilterBar.Primary>
       </FilterBar>
 
-      {/* Status row */}
+      {/* ── Status bar ── */}
       <div className="mt-3 flex items-center gap-3">
         <StatusIndicator value={99.8} size="sm" rules={[{ min: 99, color: "emerald", label: "Site Up", pulse: true }]} />
-        <StatusIndicator value={kpis.avgBounceRate} size="sm" rules={[
-          { max: 40, color: "emerald", label: "Bounce Rate Healthy" },
-          { min: 40, max: 55, color: "amber", label: "Bounce Rate Elevated" },
-          { min: 55, color: "red", label: "Bounce Rate High" },
+        <StatusIndicator value={kpis.avgBounce} size="sm" rules={[
+          { max: 40, color: "emerald", label: "Bounce Healthy" },
+          { min: 40, max: 55, color: "amber", label: "Bounce Elevated" },
+          { min: 55, color: "red", label: "Bounce High" },
+        ]} />
+        <StatusIndicator value={kpis.avgConvRate} size="sm" rules={[
+          { min: 3.5, color: "emerald", label: "Conv. On Track" },
+          { min: 2.5, max: 3.5, color: "amber", label: "Conv. At Risk" },
+          { max: 2.5, color: "red", label: "Conv. Below Target" },
         ]} />
       </div>
 
       <MetricGrid className="mt-6">
 
-        {/* ════════════════════════════════════════════════════════════════ */}
-        {/* OVERVIEW TAB */}
-        {/* ════════════════════════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/*  OVERVIEW                                                     */}
+        {/* ══════════════════════════════════════════════════════════════ */}
         {tab === "overview" && (
           <>
+            {/* ── Hero KPIs ── */}
             <KpiCard
               title="Sessions"
               value={kpis.sessions}
               format="compact"
-              sparkline={{ data: sessionSparkline, type: "bar" }}
+              comparison={compKpis ? { value: compKpis.sessions, label: "prev period" } : undefined}
+              sparkline={{ data: sessionSpark, type: "bar" }}
               icon={<BarChart3 className="h-3.5 w-3.5" />}
+              description="Total visits to acme.dev in the selected period. Each session may include multiple page views."
               animate={{ countUp: true }}
+              drillDown={{
+                label: "Session breakdown",
+                onClick: () => openDrill(
+                  { title: `${formatValue(kpis.sessions, "compact")} Sessions`, field: "sessions" },
+                  <MetricGrid>
+                    <KpiCard title="Sessions" value={kpis.sessions} format="compact" />
+                    <KpiCard title="Users" value={kpis.users} format="compact" />
+                    <KpiCard title="New Users" value={kpis.newUsers} format="compact" />
+                    <KpiCard title="Pages / Session" value={kpis.pagesPerSession} format="number" />
+                    <AreaChart data={trendData} index="date" categories={["sessions", "users", "new users"]} title="Daily Breakdown" format="compact" height={280} curve="monotoneX" enableArea gradient />
+                  </MetricGrid>,
+                ),
+              }}
             />
             <KpiCard
               title="Users"
               value={kpis.users}
               format="compact"
+              comparison={compKpis ? { value: compKpis.users, label: "prev period" } : undefined}
+              sparkline={{ data: userSpark, type: "line" }}
               icon={<Users className="h-3.5 w-3.5" />}
+              description={({ value }) => `${formatValue(kpis.newUsers, "compact")} new users (${Math.round(kpis.newUsers / kpis.users * 100)}% new). Returning users drive ${Math.round((1 - kpis.newUsers / kpis.users) * 100)}% of traffic.`}
               animate={{ countUp: true, delay: 100 }}
             />
             <KpiCard
-              title="Page Views"
-              value={kpis.pageViews}
-              format="compact"
-              icon={<Eye className="h-3.5 w-3.5" />}
-              animate={{ countUp: true, delay: 200 }}
-            />
-            <KpiCard
               title="Bounce Rate"
-              value={kpis.avgBounceRate}
+              value={kpis.avgBounce}
               format="percent"
+              sparkline={{ data: bounceSpark, type: "line" }}
+
               conditions={[
                 { when: "below", value: 40, color: "emerald" },
                 { when: "between", min: 40, max: 55, color: "amber" },
                 { when: "above", value: 55, color: "red" },
               ]}
+              description="Percentage of single-page sessions. Lower is better — visitors who bounce didn't engage."
+              animate={{ countUp: true, delay: 200 }}
+            />
+            <KpiCard
+              title="Revenue"
+              value={kpis.revenue}
+              format="currency"
+              comparison={compKpis ? { value: compKpis.revenue, label: "prev period" } : undefined}
+              sparkline={{ data: revSpark, type: "line" }}
+              icon={<DollarSign className="h-3.5 w-3.5" />}
               animate={{ countUp: true, delay: 300 }}
             />
 
+            {/* ── Traffic trend — full width ── */}
             <AreaChart
               data={trendData}
               index="date"
               categories={["sessions", "users"]}
               title="Traffic Trend"
-              subtitle="Daily sessions and unique users"
+              subtitle="Daily sessions and unique users — Q4 2025"
+              description="The weekend dips (Sat/Sun) and holiday valley (Dec 23–26) are clearly visible. The overall trendline shows steady 30% QoQ growth."
               format="compact"
-              height={300}
+              height={320}
               curve="monotoneX"
               enableArea
               gradient
               drillDown
             />
+
+            {/* ── Source breakdown + donut ── */}
             <BarChart
-              data={sourceChartData}
+              data={sourceData}
               index="source"
               categories={["sessions"]}
-              title="Sessions by Source"
-              format="compact"
-              height={300}
-              sort="desc"
-              crossFilter
-            />
-
-            <Callout
-              value={kpis.avgConversionRate}
-              rules={[
-                { min: 3.5, variant: "success", message: "Conversion rate is strong at {value}% — above the 3.5% target." },
-                { min: 2.5, max: 3.5, variant: "info", message: "Conversion rate is {value}% — within normal range." },
-                { max: 2.5, variant: "warning", message: "Conversion rate dropped to {value}% — review landing pages." },
-              ]}
-            />
-
-            <StatGroup
-              stats={[
-                { label: "New Users", value: kpis.newUsers, format: "compact" },
-                { label: "Avg. Session", value: `${Math.floor(totals.avgSessionDuration / 60)}m ${totals.avgSessionDuration % 60}s` },
-                { label: "Pages / Session", value: kpis.pageViews > 0 ? Math.round(kpis.pageViews / kpis.sessions * 10) / 10 : 0, format: "number" },
-                { label: "Conversions", value: kpis.conversions, format: "compact" },
-                { label: "Revenue", value: kpis.revenue, format: "currency" },
-              ]}
-              dense
-            />
-          </>
-        )}
-
-        {/* ════════════════════════════════════════════════════════════════ */}
-        {/* ACQUISITION TAB */}
-        {/* ════════════════════════════════════════════════════════════════ */}
-        {tab === "acquisition" && (
-          <>
-            <MetricGrid.Section title="Traffic Sources" subtitle="Where your visitors come from" />
-            <BarChart
-              data={sourceChartData}
-              index="source"
-              categories={["sessions", "conversions"]}
-              title="Sessions & Conversions by Source"
+              title="Traffic Sources"
+              subtitle="Click a bar to cross-filter the dashboard"
               format="compact"
               height={320}
               sort="desc"
               layout="horizontal"
               crossFilter={{ field: "source" }}
-              drillDown
+              drillDown={(event) => {
+                const src = trafficSources.find((s) => s.source === event.indexValue);
+                if (!src) return null;
+                return (
+                  <MetricGrid>
+                    <KpiCard title="Sessions" value={src.sessions} format="compact" />
+                    <KpiCard title="Users" value={src.users} format="compact" />
+                    <KpiCard title="Bounce Rate" value={src.bounceRate} format="percent" conditions={[
+                      { when: "below", value: 40, color: "emerald" },
+                      { when: "above", value: 50, color: "red" },
+                    ]} />
+                    <KpiCard title="Conversions" value={src.conversions} format="number" />
+                    <KpiCard title="Revenue" value={src.revenue} format="currency" />
+                    <KpiCard title="Conv. Rate" value={src.sessions > 0 ? Math.round(src.conversions / src.sessions * 1000) / 10 : 0} format="percent" />
+                  </MetricGrid>
+                );
+              }}
             />
             <DonutChart
               data={trafficSources.map((s) => ({ source: s.source, sessions: s.sessions }))}
@@ -305,6 +349,70 @@ function AnalyticsContent() {
               height={320}
               showPercentage
               innerRadius={0.65}
+              centerValue={formatValue(kpis.sessions, "compact")}
+              centerLabel="total"
+              crossFilter={{ field: "source" }}
+            />
+
+            {/* ── Insight callout ── */}
+            <Callout
+              value={kpis.avgConvRate}
+              rules={[
+                { min: 3.5, variant: "success", message: "Conversion rate is strong at {value}% — above the 3.5% Q4 target. Organic search drives 37% of conversions." },
+                { min: 2.5, max: 3.5, variant: "info", message: "Conversion rate at {value}% — within normal range but below the 3.5% Q4 target." },
+                { max: 2.5, variant: "warning", message: "Conversion rate dropped to {value}% — significantly below the 3.5% target. Review landing page performance." },
+              ]}
+            />
+
+            {/* ── Quick stats ── */}
+            <StatGroup
+              stats={[
+                { label: "New Users", value: kpis.newUsers, format: "compact", icon: <ArrowUpRight className="h-3 w-3" /> },
+                { label: "Avg. Session", value: kpis.avgDuration, format: "duration", icon: <Clock className="h-3 w-3" /> },
+                { label: "Pages / Session", value: kpis.pagesPerSession, format: "number" },
+                { label: "Conversions", value: kpis.conversions, format: "compact", icon: <Target className="h-3 w-3" /> },
+                { label: "Conv. Rate", value: kpis.avgConvRate, format: "percent" },
+              ]}
+              dense
+            />
+          </>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/*  ACQUISITION                                                  */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {tab === "acquisition" && (
+          <>
+            {/* ── Source KPIs ── */}
+            <KpiCard title="Organic Search" value={82400} format="compact" description="40% of all traffic. Highest conversion rate at 3.5%." icon={<Search className="h-3.5 w-3.5" />} />
+            <KpiCard title="Direct" value={41200} format="compact" description="Brand-aware visitors. 20% of traffic, strong return rate." />
+            <KpiCard title="Email" value={15800} format="compact" description="Lowest bounce rate (28%). Best engagement per session." />
+            <KpiCard title="Paid Search" value={12200} format="compact" description="$35.8K revenue from $12.2K sessions. $2.93 CPA." conditions={[{ when: "above", value: 10000, color: "emerald" }]} />
+
+            <MetricGrid.Section title="Traffic Sources" subtitle="Click a source to cross-filter — all charts respond" />
+            <BarChart
+              data={sourceData}
+              index="source"
+              categories={["sessions", "conversions"]}
+              title="Sessions & Conversions by Source"
+              format="compact"
+              height={340}
+              sort="desc"
+              layout="horizontal"
+              crossFilter={{ field: "source" }}
+              drillDown
+            />
+            <DonutChart
+              data={trafficSources.map((s) => ({ source: s.source, revenue: s.revenue }))}
+              index="source"
+              categories={["revenue"]}
+              title="Revenue by Source"
+              subtitle="Email punches above its weight — 17% of revenue from 8% of traffic"
+              height={340}
+              showPercentage
+              innerRadius={0.65}
+              centerValue={formatValue(kpis.revenue, fmt("currency", { compact: true }))}
+              centerLabel="total"
               crossFilter={{ field: "source" }}
             />
 
@@ -315,7 +423,7 @@ function AnalyticsContent() {
               categories={["sessions", "conversions"]}
               title="Top Countries"
               format="compact"
-              height={320}
+              height={340}
               layout="horizontal"
               crossFilter={{ field: "country" }}
               drillDown
@@ -326,12 +434,14 @@ function AnalyticsContent() {
                 { key: "country", header: "Country", sortable: true },
                 { key: "sessions", header: "Sessions", format: "compact", sortable: true, align: "right" },
                 { key: "users", header: "Users", format: "compact", sortable: true, align: "right" },
-                { key: "conversions", header: "Conversions", format: "number", sortable: true, align: "right" },
+                { key: "conversions", header: "Conv.", format: "number", sortable: true, align: "right" },
                 { key: "revenue", header: "Revenue", format: "currency", sortable: true, align: "right" },
               ]}
               title="All Countries"
+              subtitle="Click a row to drill into country detail"
               dense
               searchable
+              multiSort
               drillDown={(row) => (
                 <MetricGrid>
                   <KpiCard title="Sessions" value={row.sessions as number} format="compact" />
@@ -342,39 +452,73 @@ function AnalyticsContent() {
               )}
               drillDownMode="modal"
             />
+
+            {/* Source performance table */}
+            <DataTable
+              data={trafficSources}
+              columns={[
+                { key: "source", header: "Source", sortable: true },
+                { key: "sessions", header: "Sessions", format: "compact", sortable: true, align: "right" },
+                { key: "users", header: "Users", format: "compact", sortable: true, align: "right" },
+                { key: "newUsers", header: "New Users", format: "compact", sortable: true, align: "right" },
+                { key: "bounceRate", header: "Bounce", format: "percent", sortable: true, align: "right" },
+                { key: "conversions", header: "Conv.", format: "number", sortable: true, align: "right" },
+                { key: "revenue", header: "Revenue", format: "currency", sortable: true, align: "right" },
+              ]}
+              title="Source Performance"
+              dense
+              multiSort
+            />
           </>
         )}
 
-        {/* ════════════════════════════════════════════════════════════════ */}
-        {/* ENGAGEMENT TAB */}
-        {/* ════════════════════════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/*  ENGAGEMENT                                                   */}
+        {/* ══════════════════════════════════════════════════════════════ */}
         {tab === "engagement" && (
           <>
+            {/* ── Engagement KPIs ── */}
             <KpiCard
-              title="Avg. Bounce Rate"
-              value={kpis.avgBounceRate}
+              title="Bounce Rate"
+              value={kpis.avgBounce}
               format="percent"
+              comparison={compKpis ? { value: compKpis.avgBounce } : undefined}
+              sparkline={{ data: bounceSpark, type: "line" }}
+
               conditions={[
                 { when: "below", value: 40, color: "emerald" },
                 { when: "between", min: 40, max: 55, color: "amber" },
                 { when: "above", value: 55, color: "red" },
               ]}
+              description="Single-page session rate. Target: below 40%."
               animate={{ countUp: true }}
             />
             <KpiCard
               title="Pages / Session"
-              value={kpis.pageViews > 0 ? Math.round(kpis.pageViews / kpis.sessions * 10) / 10 : 0}
+              value={kpis.pagesPerSession}
               format="number"
+              description="Average depth of a visit. Higher means more engaged users exploring the site."
               animate={{ countUp: true, delay: 100 }}
             />
             <KpiCard
               title="Avg. Session Duration"
-              value={totals.avgSessionDuration}
+              value={kpis.avgDuration}
               format="duration"
+              icon={<Clock className="h-3.5 w-3.5" />}
+              description="Mean time on site per session. Excludes bounced sessions."
               animate={{ countUp: true, delay: 200 }}
             />
+            <KpiCard
+              title="Page Views"
+              value={kpis.pageViews}
+              format="compact"
+              comparison={compKpis ? { value: compKpis.pageViews, label: "prev period" } : undefined}
+              icon={<Eye className="h-3.5 w-3.5" />}
+              animate={{ countUp: true, delay: 300 }}
+            />
 
-            <MetricGrid.Section title="Top Pages" subtitle="Most viewed pages and their engagement" />
+            {/* ── Top pages table ── */}
+            <MetricGrid.Section title="Top Pages" subtitle="Most viewed pages — sorted by views" />
             <DataTable
               data={topPages}
               columns={[
@@ -382,25 +526,31 @@ function AnalyticsContent() {
                 { key: "pageViews", header: "Views", format: "compact", sortable: true, align: "right" },
                 { key: "uniqueViews", header: "Unique", format: "compact", sortable: true, align: "right" },
                 { key: "avgTimeOnPage", header: "Avg. Time", format: "duration", sortable: true, align: "right" },
-                { key: "bounceRate", header: "Bounce", format: "percent", sortable: true, align: "right" },
-                { key: "conversions", header: "Conversions", format: "number", sortable: true, align: "right" },
+                { key: "bounceRate", header: "Bounce %", format: "percent", sortable: true, align: "right" },
+                { key: "exitRate", header: "Exit %", format: "percent", sortable: true, align: "right" },
+                { key: "conversions", header: "Conv.", format: "number", sortable: true, align: "right" },
               ]}
               title="Page Performance"
+              subtitle="/pricing has the lowest bounce (18%) and highest conversions. /demo converts 8.7% of visitors."
               pageSize={8}
               dense
               multiSort
               searchable
             />
 
-            <MetricGrid.Section title="Technology" subtitle="Devices and browsers" />
+            {/* ── Devices & browsers ── */}
+            <MetricGrid.Section title="Technology" subtitle="Device and browser breakdown" />
             <DonutChart
               data={devices.map((d) => ({ device: d.device, sessions: d.sessions }))}
               index="device"
               categories={["sessions"]}
               title="Device Split"
-              height={280}
+              subtitle="Desktop dominates but mobile is 36% of traffic"
+              height={300}
               showPercentage
               innerRadius={0.65}
+              centerValue={formatValue(kpis.sessions, "compact")}
+              centerLabel="sessions"
               crossFilter={{ field: "device" }}
             />
             <BarChart
@@ -408,81 +558,146 @@ function AnalyticsContent() {
               index="browser"
               categories={["sessions"]}
               title="Browser Usage"
+              subtitle="Chrome at 53%, Safari at 21%"
               format="compact"
-              height={280}
+              height={300}
               sort="desc"
+              drillDown
+            />
+
+            <Callout
+              value={kpis.avgBounce}
+              rules={[
+                { max: 40, variant: "success", message: "Bounce rate at {value}% is healthy. Visitors are engaging with content across multiple pages." },
+                { min: 40, max: 55, variant: "warning", message: "Bounce rate at {value}% is elevated. Consider improving above-the-fold content on high-traffic landing pages." },
+                { min: 55, variant: "warning", message: "Bounce rate at {value}% is critical. Audit top entry pages for load speed, relevance, and mobile experience." },
+              ]}
             />
           </>
         )}
 
-        {/* ════════════════════════════════════════════════════════════════ */}
-        {/* CONVERSIONS TAB */}
-        {/* ════════════════════════════════════════════════════════════════ */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/*  CONVERSIONS                                                  */}
+        {/* ══════════════════════════════════════════════════════════════ */}
         {tab === "conversions" && (
           <>
+            {/* ── Conversion KPIs ── */}
             <KpiCard
               title="Conversions"
               value={kpis.conversions}
               format="number"
-              sparkline={{ data: conversionSparkline, type: "bar" }}
+              comparison={compKpis ? { value: compKpis.conversions, label: "prev period" } : undefined}
+              sparkline={{ data: convSpark, type: "bar" }}
               icon={<Target className="h-3.5 w-3.5" />}
+              description={`${formatValue(kpis.conversions, "number")} completed signups from ${formatValue(kpis.sessions, "compact")} sessions.`}
               animate={{ countUp: true }}
             />
             <KpiCard
               title="Conversion Rate"
-              value={kpis.avgConversionRate}
+              value={kpis.avgConvRate}
               format="percent"
-              goal={{ value: 3.5, label: "Q4 Target", showProgress: true, showTarget: true }}
+              comparison={compKpis ? { value: compKpis.avgConvRate } : undefined}
+              goal={{ value: 3.5, label: "Q4 Target", showProgress: true, showTarget: true, showRemaining: true }}
               conditions={[
                 { when: "above", value: 3.5, color: "emerald" },
                 { when: "between", min: 2.5, max: 3.5, color: "amber" },
                 { when: "below", value: 2.5, color: "red" },
               ]}
+              description="Percentage of sessions that complete signup. Q4 target is 3.5%."
               animate={{ countUp: true, delay: 100 }}
             />
             <KpiCard
               title="Revenue"
               value={kpis.revenue}
               format="currency"
-              sparkline={{ data: revenueSparkline, type: "line" }}
-              icon={<TrendingUp className="h-3.5 w-3.5" />}
+              comparison={compKpis ? { value: compKpis.revenue, label: "prev period" } : undefined}
+              sparkline={{ data: revSpark, type: "line" }}
+              icon={<DollarSign className="h-3.5 w-3.5" />}
+              description={`Avg. revenue per conversion: ${formatValue(kpis.conversions > 0 ? Math.round(kpis.revenue / kpis.conversions) : 0, "currency")}`}
               animate={{ countUp: true, delay: 200 }}
             />
+            <KpiCard
+              title="Revenue / Session"
+              value={kpis.sessions > 0 ? Math.round(kpis.revenue / kpis.sessions * 100) / 100 : 0}
+              format="currency"
+              description="Average revenue generated per session across all traffic sources."
+              animate={{ countUp: true, delay: 300 }}
+            />
 
-            <MetricGrid.Section title="Conversion Funnel" subtitle="From visitor to paying customer" />
+            {/* ── Funnel ── */}
+            <MetricGrid.Section
+              title="Conversion Funnel"
+              subtitle="From first visit to first payment"
+              badge={<Badge size="sm" color="violet">{Math.round(conversionFunnel[5].value / conversionFunnel[0].value * 1000) / 10}% end-to-end</Badge>}
+            />
             <Funnel
               data={conversionFunnel}
               title="Signup Funnel"
+              subtitle="Biggest drop-off: Engaged → Pricing (67% lost). Pricing → Signup converts at 29%."
               format="compact"
-              height={360}
+              height={380}
               showConversionRate
               drillDown
             />
 
+            {/* ── Conversion trend ── */}
             <AreaChart
-              data={conversionTrendData}
+              data={convTrendData}
               index="date"
-              categories={["conversions", "revenue"]}
-              title="Conversion Trend"
-              subtitle="Daily conversions and revenue"
+              categories={[{ key: "conversions", label: "Conversions" }, { key: "revenue", label: "Revenue", axis: "right" }]}
+              title="Conversion & Revenue Trend"
+              subtitle="Daily conversions (left axis) and revenue (right axis)"
               format="number"
-              height={300}
+              height={320}
               curve="monotoneX"
               enableArea
               gradient
+              drillDown
             />
 
-            <MetricGrid.Section title="Revenue by Source" />
+            {/* ── Revenue by source ── */}
+            <MetricGrid.Section title="Revenue by Source" subtitle="Which channels drive the most revenue?" />
             <BarChart
-              data={trafficSources.map((s) => ({ source: s.source, revenue: s.revenue }))}
+              data={sourceData}
               index="source"
               categories={["revenue"]}
               title="Revenue by Traffic Source"
+              subtitle="Organic search drives $199K (37%) — email at $89K has the best ROI"
               format="currency"
-              height={300}
+              height={320}
               sort="desc"
               crossFilter={{ field: "source" }}
               drillDown
+            />
+            <DataTable
+              data={trafficSources.map((s) => ({
+                source: s.source,
+                sessions: s.sessions,
+                conversions: s.conversions,
+                revenue: s.revenue,
+                convRate: s.sessions > 0 ? Math.round(s.conversions / s.sessions * 1000) / 10 : 0,
+                revenuePerSession: s.sessions > 0 ? Math.round(s.revenue / s.sessions * 100) / 100 : 0,
+              }))}
+              columns={[
+                { key: "source", header: "Source", sortable: true },
+                { key: "sessions", header: "Sessions", format: "compact", sortable: true, align: "right" },
+                { key: "conversions", header: "Conv.", format: "number", sortable: true, align: "right" },
+                { key: "convRate", header: "Conv. %", format: "percent", sortable: true, align: "right" },
+                { key: "revenue", header: "Revenue", format: "currency", sortable: true, align: "right" },
+                { key: "revenuePerSession", header: "Rev/Session", format: "currency", sortable: true, align: "right" },
+              ]}
+              title="Source Conversion Detail"
+              dense
+              multiSort
+            />
+
+            <Callout
+              value={kpis.avgConvRate}
+              rules={[
+                { min: 3.5, variant: "success", message: "Q4 conversion target of 3.5% achieved at {value}%. Revenue on track at " + formatValue(kpis.revenue, "currency") + ". Focus on scaling paid channels." },
+                { min: 2.5, max: 3.5, variant: "warning", message: "Conversion rate at {value}% — below the 3.5% Q4 target. The pricing page converts well (29% → signup) but top-of-funnel engagement is weak." },
+                { max: 2.5, variant: "warning", message: "Conversion rate at {value}% is critical. Recommend A/B testing the pricing page layout and adding social proof to high-traffic landing pages." },
+              ]}
             />
           </>
         )}
