@@ -101,9 +101,16 @@ function AnalyticsContent() {
   const activeSource = crossFilter?.selection?.field === "source" ? String(crossFilter.selection.value) : null;
   const activeCountry = crossFilter?.selection?.field === "country" ? String(crossFilter.selection.value) : null;
 
-  // --- Period-filtered daily data ---
+  // --- Device filter ---
+  const deviceFilter = useFilterValue("device");
+  const activeDevice = deviceFilter.length > 0 && deviceFilter[0] !== "All" ? deviceFilter[0] : null;
+
+  // --- Period + device filtered daily data ---
   const filteredDaily = useMemo(() => {
     let data = dailyMetrics;
+    if (activeDevice) {
+      data = data.filter((d) => d.device === activeDevice);
+    }
     if (filters?.period) {
       data = data.filter((d) => {
         const date = new Date(d.date);
@@ -111,16 +118,18 @@ function AnalyticsContent() {
       });
     }
     return data;
-  }, [filters?.period]);
+  }, [filters?.period, activeDevice]);
 
-  // --- Comparison period data ---
+  // --- Comparison period data (same device filter) ---
   const compDaily = useMemo(() => {
     if (!filters?.comparisonPeriod) return null;
-    return dailyMetrics.filter((d) => {
+    let data = dailyMetrics;
+    if (activeDevice) data = data.filter((d) => d.device === activeDevice);
+    return data.filter((d) => {
       const date = new Date(d.date);
       return date >= filters.comparisonPeriod!.start && date <= filters.comparisonPeriod!.end;
     });
-  }, [filters?.comparisonPeriod]);
+  }, [filters?.comparisonPeriod, activeDevice]);
 
   // --- Source data filtered by cross-filter ---
   const filteredSources = useMemo(() => {
@@ -177,26 +186,50 @@ function AnalyticsContent() {
     };
   }, [compDaily]);
 
+  // --- Aggregate by date (sum device rows when "All Devices" selected) ---
+  const dailyAgg = useMemo(() => {
+    const map = new Map<string, { sessions: number; pageViews: number; users: number; newUsers: number; conversions: number; revenue: number; bounceSum: number; count: number }>();
+    for (const d of filteredDaily) {
+      const prev = map.get(d.date);
+      if (prev) {
+        prev.sessions += d.sessions;
+        prev.pageViews += d.pageViews;
+        prev.users += d.users;
+        prev.newUsers += d.newUsers;
+        prev.conversions += d.conversions;
+        prev.revenue += d.revenue;
+        prev.bounceSum += d.bounceRate;
+        prev.count++;
+      } else {
+        map.set(d.date, { sessions: d.sessions, pageViews: d.pageViews, users: d.users, newUsers: d.newUsers, conversions: d.conversions, revenue: d.revenue, bounceSum: d.bounceRate, count: 1 });
+      }
+    }
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, v]) => ({
+      date, sessions: v.sessions, pageViews: v.pageViews, users: v.users, newUsers: v.newUsers,
+      conversions: v.conversions, revenue: v.revenue, bounceRate: Math.round(v.bounceSum / v.count * 10) / 10,
+    }));
+  }, [filteredDaily]);
+
   // --- Sparklines ---
-  const sessionSpark = useMemo(() => filteredDaily.map((d) => d.sessions), [filteredDaily]);
-  const userSpark = useMemo(() => filteredDaily.map((d) => d.users), [filteredDaily]);
-  const convSpark = useMemo(() => filteredDaily.map((d) => d.conversions), [filteredDaily]);
-  const revSpark = useMemo(() => filteredDaily.map((d) => d.revenue), [filteredDaily]);
-  const bounceSpark = useMemo(() => filteredDaily.map((d) => d.bounceRate), [filteredDaily]);
+  const sessionSpark = useMemo(() => dailyAgg.map((d) => d.sessions), [dailyAgg]);
+  const userSpark = useMemo(() => dailyAgg.map((d) => d.users), [dailyAgg]);
+  const convSpark = useMemo(() => dailyAgg.map((d) => d.conversions), [dailyAgg]);
+  const revSpark = useMemo(() => dailyAgg.map((d) => d.revenue), [dailyAgg]);
+  const bounceSpark = useMemo(() => dailyAgg.map((d) => d.bounceRate), [dailyAgg]);
 
   // --- Chart data ---
-  const trendData = useMemo(() => filteredDaily.map((d) => ({
+  const trendData = useMemo(() => dailyAgg.map((d) => ({
     date: d.date.slice(5),
     sessions: d.sessions,
     users: d.users,
     "new users": d.newUsers,
-  })), [filteredDaily]);
+  })), [dailyAgg]);
 
-  const convTrendData = useMemo(() => filteredDaily.map((d) => ({
+  const convTrendData = useMemo(() => dailyAgg.map((d) => ({
     date: d.date.slice(5),
     conversions: d.conversions,
     revenue: d.revenue,
-  })), [filteredDaily]);
+  })), [dailyAgg]);
 
   const sourceData = useMemo(() => trafficSources.map((s) => ({
     source: s.source,

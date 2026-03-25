@@ -39,6 +39,7 @@ function isWeekend(dateStr: string): boolean {
 
 export interface DailyMetric {
   date: string;
+  device: "Desktop" | "Mobile" | "Tablet";
   sessions: number;
   pageViews: number;
   users: number;
@@ -50,23 +51,34 @@ export interface DailyMetric {
   revenue: number;
 }
 
-export const dailyMetrics: DailyMetric[] = DAYS.map((date, i) => {
-  const trend = 1 + i * 0.003; // gradual growth
+// Generate per-device rows: each day has 3 rows (Desktop, Mobile, Tablet)
+const DEVICE_SPLITS: { device: DailyMetric["device"]; sessionShare: number; bounceAdj: number; convAdj: number }[] = [
+  { device: "Desktop", sessionShare: 0.58, bounceAdj: -6, convAdj: 1.4 },
+  { device: "Mobile", sessionShare: 0.36, bounceAdj: 10, convAdj: 0.5 },
+  { device: "Tablet", sessionShare: 0.06, bounceAdj: 2, convAdj: 0.8 },
+];
+
+export const dailyMetrics: DailyMetric[] = DAYS.flatMap((date, i) => {
+  const trend = 1 + i * 0.003;
   const weekendDip = isWeekend(date) ? 0.6 : 1;
   const holidayDip = date >= "2025-12-23" && date <= "2025-12-26" ? 0.4 : 1;
   const base = Math.round(2200 * trend * weekendDip * holidayDip);
+  const totalSessions = base + between(-200, 200);
 
-  const sessions = base + between(-200, 200);
-  const users = Math.round(sessions * (0.72 + rand() * 0.08));
-  const newUsers = Math.round(users * (0.55 + rand() * 0.15));
-  const pageViews = Math.round(sessions * (2.8 + rand() * 1.2));
-  const bounceRate = Math.round((38 + rand() * 18) * 10) / 10;
-  const avgSessionDuration = Math.round(120 + rand() * 180);
-  const conversions = Math.round(sessions * (0.028 + rand() * 0.015));
-  const conversionRate = Math.round((conversions / sessions) * 1000) / 10;
-  const revenue = Math.round(conversions * (45 + rand() * 35));
+  return DEVICE_SPLITS.map(({ device, sessionShare, bounceAdj, convAdj }) => {
+    const sessions = Math.round(totalSessions * sessionShare + between(-20, 20));
+    const users = Math.round(sessions * (0.72 + rand() * 0.08));
+    const newUsers = Math.round(users * (0.55 + rand() * 0.15));
+    const pageViews = Math.round(sessions * (2.8 + rand() * 1.2));
+    const bounceRate = Math.round(Math.max(10, Math.min(80, 38 + rand() * 18 + bounceAdj)) * 10) / 10;
+    const avgSessionDuration = Math.round((120 + rand() * 180) * (device === "Mobile" ? 0.7 : 1));
+    const baseConvRate = 0.028 + rand() * 0.015;
+    const conversions = Math.round(sessions * baseConvRate * convAdj);
+    const conversionRate = sessions > 0 ? Math.round((conversions / sessions) * 1000) / 10 : 0;
+    const revenue = Math.round(conversions * (45 + rand() * 35));
 
-  return { date, sessions, pageViews, users, newUsers, bounceRate, avgSessionDuration, conversions, conversionRate, revenue };
+    return { date, device, sessions, pageViews, users, newUsers, bounceRate, avgSessionDuration, conversions, conversionRate, revenue };
+  });
 });
 
 // ---------------------------------------------------------------------------
