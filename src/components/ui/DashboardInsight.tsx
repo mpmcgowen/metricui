@@ -188,10 +188,9 @@ function CitationOverlayPanel() {
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">{title}</p>
         </div>
         <div
+          className="mu-citation-preview"
           style={metricHeight ? { height: metricHeight } : undefined}
           onClickCapture={(e) => {
-            // Prevent drill-down and cross-filter clicks from propagating
-            // but allow tooltip hover interactions
             const target = e.target as HTMLElement;
             if (target.closest("[data-metric-card]") || target.tagName === "rect" || target.tagName === "path" || target.tagName === "circle") {
               e.stopPropagation();
@@ -267,7 +266,7 @@ function CitationOverlayPanel() {
         </div>
 
         {/* Live interactive component */}
-        <div className="flex-shrink-0 overflow-y-auto border-b border-[var(--card-border)]" style={{ maxHeight: "50%" }}>
+        <div className="flex-shrink-0 overflow-visible border-b border-[var(--card-border)]" style={{ maxHeight: "50%" }}>
           {renderedComponent}
         </div>
 

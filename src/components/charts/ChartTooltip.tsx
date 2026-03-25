@@ -216,6 +216,7 @@ export function ChartTooltip({ header, items, comparisonItems, comparisonLabel =
       )}
       {actionHint && (
         <div
+          className="mu-action-hint"
           style={{
             fontSize: "9px",
             color: "var(--muted)",

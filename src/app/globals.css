@@ -260,6 +260,27 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Citation preview — suppress action hints, fix tooltip overflow
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.mu-citation-preview {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Hide "Click to drill down" / "Click to filter" hints in citation previews */
+.mu-citation-preview .mu-action-hint {
+  display: none !important;
+}
+
+/* Allow tooltips to overflow the citation card boundary */
+.mu-citation-preview,
+.mu-citation-preview > *,
+.mu-citation-preview [data-metric-card] {
+  overflow: visible !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Cross-filter dim transition
    ═══════════════════════════════════════════════════════════════════════════ */
 
