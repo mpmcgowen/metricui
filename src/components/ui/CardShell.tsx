@@ -161,7 +161,8 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
       component: componentName ?? "Unknown",
       title: titleStr,
       data: dataSummary,
-      render: () => childrenRef.current, // always returns current children via ref
+      render: () => childrenRef.current,
+      height,
     });
 
     return () => ai.unregisterMetric(aiId);

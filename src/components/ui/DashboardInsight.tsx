@@ -154,9 +154,28 @@ function CitationOverlayPanel() {
     await ai.send(text, `Regarding [[${title}]] (${componentType})`);
   };
 
+  // Find height from registered metric
+  const metricHeight = (() => {
+    if (!ai) return undefined;
+    for (const [, m] of ai.getMetrics()) {
+      if (m.title === title) return m.height;
+    }
+    return undefined;
+  })();
+
   // Rendered component content — live and interactive
-  const renderedComponent = renderFn ? (
-    <div className="p-4">{renderFn()}</div>
+  const content = renderFn?.();
+  const renderedComponent = content ? (
+    <div className="p-4">
+      <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-[var(--card-border)]">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">{title}</p>
+        </div>
+        <div style={metricHeight ? { height: metricHeight } : undefined}>
+          {content}
+        </div>
+      </div>
+    </div>
   ) : (
     <div className="flex items-center justify-center py-12 text-sm text-[var(--muted)]">
       Component not available on this tab
