@@ -76,22 +76,38 @@ function CitationProvider({ children }: { children: ReactNode }) {
   const ai = useAi();
   const [overlay, setOverlay] = useState<CitationOverlay | null>(null);
 
-  const open = useCallback((title: string, mode: "modal" | "sidebar") => {
+  const open = useCallback(async (title: string, mode: "modal" | "sidebar") => {
     if (!ai) return;
 
-    // Find the registered metric with its render function
-    let componentType: string | null = null;
-    let renderFn: (() => ReactNode) | null = null;
-    const metrics = ai.getMetrics();
-    for (const [, m] of metrics) {
-      if (m.title === title) {
-        componentType = m.component;
-        renderFn = m.render ?? null;
-        break;
+    // Find the registered metric
+    const findMetric = () => {
+      const metrics = ai.getMetrics();
+      for (const [, m] of metrics) {
+        if (m.title === title) return m;
+      }
+      return null;
+    };
+
+    let metric = findMetric();
+
+    // If render returns null, the component might be on another tab — try switching
+    if (!metric?.render || !metric.render()) {
+      const navEl = document.querySelector("[data-dashboard-tabs]");
+      const allTabs = navEl?.getAttribute("data-dashboard-tabs")?.split(",") ?? [];
+      for (const t of allTabs) {
+        ai.navigateToTab(t);
+        await new Promise((r) => setTimeout(r, 200));
+        metric = findMetric();
+        if (metric?.render?.()) break;
       }
     }
 
-    setOverlay({ title, mode, componentType, renderFn });
+    setOverlay({
+      title,
+      mode,
+      componentType: metric?.component ?? null,
+      renderFn: metric?.render ?? null,
+    });
   }, [ai]);
 
   const close = useCallback(() => {
