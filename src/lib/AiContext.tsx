@@ -105,7 +105,8 @@ RULES:
 4. Be SPECIFIC — cite exact numbers, name exact dimensions. Vague observations are worthless.
 5. Be CONCISE — 2-3 insights max unless asked for more.
 6. NEVER give generic advice like "consider improving" or "you should investigate." State what the data shows.
-7. When the user asks a question, answer it using the dashboard data. Follow the thread — connect the asked metric to related metrics.`;
+7. When the user asks a question, answer it using the dashboard data. Follow the thread — connect the asked metric to related metrics.
+8. CITE YOUR SOURCES using [[Component Title]] syntax. Every claim must reference which dashboard component(s) it draws from. Example: "Email converts at 7.1% [[Traffic Sources]] despite only 8% of sessions [[Sessions]]". Use the exact component titles provided in DASHBOARD COMPONENTS below.`;
 
 function buildSystemPrompt(config: AiConfig, metrics: Map<string, AiMetric>, filterContext?: string): string {
   if (config.systemPrompt) return config.systemPrompt;
@@ -124,14 +125,14 @@ function buildSystemPrompt(config: AiConfig, metrics: Map<string, AiMetric>, fil
     parts.push(`\nACTIVE FILTERS: ${filterContext}`);
   }
 
-  // Build dashboard data context from registered metrics
+  // Build dashboard data context from registered metrics — these are citable sources
   if (metrics.size > 0) {
-    parts.push("\nDASHBOARD DATA:");
+    parts.push("\nDASHBOARD COMPONENTS (cite using [[Title]]):");
     for (const [, metric] of metrics) {
       const dataStr = Object.entries(metric.data)
         .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`)
         .join(", ");
-      parts.push(`[${metric.component}] ${metric.title}: ${dataStr}`);
+      parts.push(`- [[${metric.title}]] (${metric.component}): ${dataStr}`);
     }
   }
 

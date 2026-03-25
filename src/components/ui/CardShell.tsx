@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef, useRef, type ReactNode } from "react";
+import { forwardRef, useRef, useEffect, useId, type ReactNode } from "react";
+import { useAi } from "@/lib/AiContext";
 import { cn } from "@/lib/utils";
 import { CARD_CLASSES, HOVER_CLASSES } from "@/lib/styles";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
@@ -133,6 +134,37 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
   const overrideExportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
   const cardRef = useRef<HTMLElement>(null);
 
+  // --- AI context: register this component's data for prompt building ---
+  const ai = useAi();
+  const aiId = useId();
+  useEffect(() => {
+    if (!ai || !title || bare) return;
+    const titleStr = typeof title === "string" ? title : "";
+    if (!titleStr) return;
+
+    // Build a data summary from exportData (first few rows) or copyValue
+    const dataSummary: Record<string, unknown> = {};
+    if (copyValue) dataSummary.value = copyValue;
+    if (exportData && exportData.length > 0) {
+      // Include summary stats, not raw rows
+      dataSummary.rows = exportData.length;
+      if (exportData.length <= 5) {
+        dataSummary.data = exportData;
+      } else {
+        dataSummary.sample = exportData.slice(0, 3);
+        dataSummary.total = exportData.length;
+      }
+    }
+
+    ai.registerMetric(aiId, {
+      component: componentName ?? "Unknown",
+      title: titleStr,
+      data: dataSummary,
+    });
+
+    return () => ai.unregisterMetric(aiId);
+  }, [ai, aiId, title, componentName, exportData, copyValue, bare]);
+
   const isClickable = !!(onClick || href || clickable);
   const Tag: "a" | "div" = href ? "a" : "div";
 
@@ -238,6 +270,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
       id={id}
       data-testid={dataTestId}
       data-component={componentName}
+      data-ai-title={typeof title === "string" ? title : undefined}
       data-metric-card=""
       data-variant={bare ? undefined : resolvedVariant}
       data-dense={resolvedDense ? "true" : undefined}

@@ -57,38 +57,71 @@ function renderMarkdown(text: string): ReactNode[] {
   });
 }
 
-/** Render inline formatting: **bold**, *italic*, `code` */
+/** Scroll to a component by its data-ai-title and briefly highlight it */
+function scrollToCitation(title: string) {
+  const el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
+  if (!el) return;
+
+  // Scroll with offset for sticky elements
+  const stickyEls = document.querySelectorAll<HTMLElement>(".sticky");
+  let offset = 0;
+  for (const s of stickyEls) offset += s.getBoundingClientRect().height;
+  const y = el.getBoundingClientRect().top + window.scrollY - offset - 24;
+  window.scrollTo({ top: y, behavior: "smooth" });
+
+  // Brief highlight pulse
+  el.style.transition = "box-shadow 0.3s ease";
+  el.style.boxShadow = "0 0 0 3px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 25%, transparent)";
+  setTimeout(() => {
+    el.style.boxShadow = "";
+    setTimeout(() => { el.style.transition = ""; }, 300);
+  }, 1500);
+}
+
+/** Render inline formatting: **bold**, *italic*, `code`, [[citation]] */
 function renderInline(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
-  // Match **bold**, *italic*, `code`
-  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`)/g;
+  // Match [[citation]], **bold**, *italic*, `code`
+  const regex = /(\[\[(.+?)\]\]|\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(text)) !== null) {
-    // Text before match
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
 
     if (match[2]) {
+      // [[citation]]
+      const citTitle = match[2];
+      parts.push(
+        <button
+          key={match.index}
+          onClick={() => scrollToCitation(citTitle)}
+          className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)]/10 px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/20 cursor-pointer"
+        >
+          <Sparkles className="h-2 w-2" />
+          {citTitle}
+        </button>
+      );
+    } else if (match[3]) {
       // **bold**
       parts.push(
         <strong key={match.index} className="font-semibold text-[var(--foreground)]">
-          {match[2]}
+          {match[3]}
         </strong>
       );
-    } else if (match[3]) {
-      // *italic*
-      parts.push(<em key={match.index}>{match[3]}</em>);
     } else if (match[4]) {
+      // *italic*
+      parts.push(<em key={match.index}>{match[4]}</em>);
+    } else if (match[5]) {
       // `code`
       parts.push(
         <code
           key={match.index}
           className="rounded bg-[var(--card-border)]/50 px-1 py-0.5 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]"
         >
-          {match[4]}
+          {match[5]}
         </code>
       );
     }
@@ -96,7 +129,6 @@ function renderInline(text: string): ReactNode[] {
     lastIndex = match.index + match[0].length;
   }
 
-  // Remaining text
   if (lastIndex < text.length) {
     parts.push(text.slice(lastIndex));
   }
