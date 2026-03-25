@@ -97,13 +97,20 @@ function AnalyticsContent() {
   const openDrill = useDrillDownAction();
   const hasComparison = useHasComparison();
 
+  // --- Cross-filter state ---
+  const activeSource = crossFilter?.selection?.field === "source" ? String(crossFilter.selection.value) : null;
+  const activeCountry = crossFilter?.selection?.field === "country" ? String(crossFilter.selection.value) : null;
+
   // --- Period-filtered daily data ---
   const filteredDaily = useMemo(() => {
-    if (!filters?.period) return dailyMetrics;
-    return dailyMetrics.filter((d) => {
-      const date = new Date(d.date);
-      return date >= filters.period!.start && date <= filters.period!.end;
-    });
+    let data = dailyMetrics;
+    if (filters?.period) {
+      data = data.filter((d) => {
+        const date = new Date(d.date);
+        return date >= filters.period!.start && date <= filters.period!.end;
+      });
+    }
+    return data;
   }, [filters?.period]);
 
   // --- Comparison period data ---
@@ -115,8 +122,32 @@ function AnalyticsContent() {
     });
   }, [filters?.comparisonPeriod]);
 
-  // --- Computed KPIs ---
+  // --- Source data filtered by cross-filter ---
+  const filteredSources = useMemo(() => {
+    if (!activeSource) return trafficSources;
+    return trafficSources.filter((s) => s.source === activeSource);
+  }, [activeSource]);
+
+  // --- Country data filtered by cross-filter ---
+  const filteredCountries = useMemo(() => {
+    if (!activeCountry) return countries;
+    return countries.filter((c) => c.country === activeCountry);
+  }, [activeCountry]);
+
+  // --- Computed KPIs (react to cross-filter when a source is selected) ---
   const kpis = useMemo(() => {
+    // If a source is cross-filtered, use that source's aggregated stats
+    if (activeSource) {
+      const src = trafficSources.find((s) => s.source === activeSource);
+      if (src) {
+        const convRate = src.sessions > 0 ? Math.round(src.conversions / src.sessions * 1000) / 10 : 0;
+        return {
+          sessions: src.sessions, pageViews: Math.round(src.sessions * 3.2), users: src.users,
+          newUsers: src.newUsers, conversions: src.conversions, revenue: src.revenue,
+          avgBounce: src.bounceRate, avgConvRate: convRate, avgDuration: 185, pagesPerSession: 3.2,
+        };
+      }
+    }
     const d = filteredDaily;
     const sessions = d.reduce((s, r) => s + r.sessions, 0);
     const pageViews = d.reduce((s, r) => s + r.pageViews, 0);
@@ -129,7 +160,7 @@ function AnalyticsContent() {
     const avgDuration = d.length > 0 ? Math.round(d.reduce((s, r) => s + r.avgSessionDuration, 0) / d.length) : 0;
     const pagesPerSession = sessions > 0 ? Math.round(pageViews / sessions * 10) / 10 : 0;
     return { sessions, pageViews, users, newUsers, conversions, revenue, avgBounce, avgConvRate, avgDuration, pagesPerSession };
-  }, [filteredDaily]);
+  }, [filteredDaily, activeSource]);
 
   // --- Comparison KPIs ---
   const compKpis = useMemo(() => {
