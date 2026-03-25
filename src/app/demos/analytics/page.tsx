@@ -230,13 +230,11 @@ function AnalyticsContent() {
         ]} />
       </div>
 
-      <MetricGrid className="mt-6">
-
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {/*  OVERVIEW                                                     */}
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {tab === "overview" && (
-          <>
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/*  OVERVIEW                                                     */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {tab === "overview" && (
+        <MetricGrid className="mt-6">
             {/* ── Hero KPIs ── */}
             <KpiCard
               title="Sessions"
@@ -375,14 +373,14 @@ function AnalyticsContent() {
               ]}
               dense
             />
-          </>
-        )}
+        </MetricGrid>
+      )}
 
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {/*  ACQUISITION                                                  */}
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {tab === "acquisition" && (
-          <>
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/*  ACQUISITION                                                  */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {tab === "acquisition" && (
+        <MetricGrid className="mt-6">
             {/* ── Source KPIs ── */}
             <KpiCard title="Organic Search" value={82400} format="compact" description="40% of all traffic. Highest conversion rate at 3.5%." icon={<Search className="h-3.5 w-3.5" />} />
             <KpiCard title="Direct" value={41200} format="compact" description="Brand-aware visitors. 20% of traffic, strong return rate." />
@@ -469,14 +467,14 @@ function AnalyticsContent() {
               dense
               multiSort
             />
-          </>
-        )}
+        </MetricGrid>
+      )}
 
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {/*  ENGAGEMENT                                                   */}
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {tab === "engagement" && (
-          <>
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/*  ENGAGEMENT                                                   */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {tab === "engagement" && (
+        <MetricGrid className="mt-6">
             {/* ── Engagement KPIs ── */}
             <KpiCard
               title="Bounce Rate"
@@ -573,14 +571,14 @@ function AnalyticsContent() {
                 { min: 55, variant: "warning", message: "Bounce rate at {value}% is critical. Audit top entry pages for load speed, relevance, and mobile experience." },
               ]}
             />
-          </>
-        )}
+        </MetricGrid>
+      )}
 
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {/*  CONVERSIONS                                                  */}
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {tab === "conversions" && (
-          <>
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/*  CONVERSIONS                                                  */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {tab === "conversions" && (
+        <MetricGrid className="mt-6">
             {/* ── Conversion KPIs ── */}
             <KpiCard
               title="Conversions"
@@ -699,10 +697,8 @@ function AnalyticsContent() {
                 { max: 2.5, variant: "warning", message: "Conversion rate at {value}% is critical. Recommend A/B testing the pricing page layout and adding social proof to high-traffic landing pages." },
               ]}
             />
-          </>
-        )}
-
-      </MetricGrid>
+        </MetricGrid>
+      )}
     </>
   );
 }
