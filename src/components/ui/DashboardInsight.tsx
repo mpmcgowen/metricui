@@ -58,24 +58,73 @@ function renderMarkdown(text: string): ReactNode[] {
 }
 
 /** Scroll to a component by its data-ai-title and briefly highlight it */
-function scrollToCitation(title: string) {
-  const el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
-  if (!el) return;
-
-  // Scroll with offset for sticky elements
+function scrollToElement(el: HTMLElement) {
   const stickyEls = document.querySelectorAll<HTMLElement>(".sticky");
   let offset = 0;
   for (const s of stickyEls) offset += s.getBoundingClientRect().height;
   const y = el.getBoundingClientRect().top + window.scrollY - offset - 24;
   window.scrollTo({ top: y, behavior: "smooth" });
 
-  // Brief highlight pulse
+  // Highlight pulse
   el.style.transition = "box-shadow 0.3s ease";
   el.style.boxShadow = "0 0 0 3px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 25%, transparent)";
   setTimeout(() => {
     el.style.boxShadow = "";
     setTimeout(() => { el.style.transition = ""; }, 300);
   }, 1500);
+}
+
+/** Citation chip — clickable, navigates to component (switching tabs if needed) */
+function CitationChip({ title }: { title: string }) {
+  const ai = useAi();
+
+  const handleClick = useCallback(async () => {
+    // Try to find the element in the current DOM
+    let el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
+
+    if (el) {
+      scrollToElement(el);
+      return;
+    }
+
+    // Element not in DOM — try switching tabs
+    if (ai) {
+      const tab = ai.findTab(title);
+      if (tab) {
+        ai.navigateToTab(tab);
+        // Wait for React to render the new tab content
+        await new Promise((r) => setTimeout(r, 150));
+        el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
+        if (el) {
+          scrollToElement(el);
+          return;
+        }
+      }
+
+      // Still not found — try all tabs from DashboardNav
+      const navEl = document.querySelector("[data-dashboard-tabs]");
+      const allTabs = navEl?.getAttribute("data-dashboard-tabs")?.split(",") ?? [];
+      for (const t of allTabs) {
+        ai.navigateToTab(t);
+        await new Promise((r) => setTimeout(r, 150));
+        el = document.querySelector(`[data-ai-title="${title}"]`) as HTMLElement | null;
+        if (el) {
+          scrollToElement(el);
+          return;
+        }
+      }
+    }
+  }, [title, ai]);
+
+  return (
+    <button
+      onClick={handleClick}
+      className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)]/10 px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/20 cursor-pointer"
+    >
+      <Sparkles className="h-2 w-2" />
+      {title}
+    </button>
+  );
 }
 
 /** Render inline formatting: **bold**, *italic*, `code`, [[citation]] */
@@ -95,14 +144,7 @@ function renderInline(text: string): ReactNode[] {
       // [[citation]]
       const citTitle = match[2];
       parts.push(
-        <button
-          key={match.index}
-          onClick={() => scrollToCitation(citTitle)}
-          className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)]/10 px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/20 cursor-pointer"
-        >
-          <Sparkles className="h-2 w-2" />
-          {citTitle}
-        </button>
+        <CitationChip key={match.index} title={citTitle} />
       );
     } else if (match[3]) {
       // **bold**

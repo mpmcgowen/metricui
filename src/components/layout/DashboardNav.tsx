@@ -6,6 +6,7 @@ import { CARD_CLASSES, HOVER_CLASSES } from "@/lib/styles";
 import { useMetricConfig } from "@/lib/MetricProvider";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useLocale } from "@/lib/MetricProvider";
+import { useAi } from "@/lib/AiContext";
 import type { CardVariant } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -108,6 +109,16 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
     const styles = SIZE_STYLES[resolvedSize];
     const resolvedVariant = variant ?? config.variant;
 
+    // --- Register tab navigator with AI context ---
+    const ai = useAi();
+    const handleTabClickRef = useRef<(value: string) => void>(undefined);
+
+    useEffect(() => {
+      if (ai && handleTabClickRef.current) {
+        ai.registerTabNavigator(handleTabClickRef.current);
+      }
+    }, [ai]);
+
     // --- Active tab state ---
     const [internalValue, setInternalValue] = useState<string>(() => {
       if (syncUrl) {
@@ -147,6 +158,9 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
       },
       [mode, syncUrl, onChange],
     );
+
+    // Keep ref updated for AI tab navigation
+    handleTabClickRef.current = handleTabClick;
 
     // --- Keyboard navigation ---
     const handleKeyDown = useCallback(
@@ -243,6 +257,7 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
         id={id}
         data-testid={dataTestId}
         data-dashboard-nav=""
+        data-dashboard-tabs={tabs.map((t) => t.value).join(",")}
         className={cn(
           // When standalone (sticky), render as a full card
           sticky && "noise-texture border transition-shadow duration-300",

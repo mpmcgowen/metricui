@@ -14,6 +14,8 @@ export interface AiMetric {
   title: string;
   /** Key-value data summary */
   data: Record<string, unknown>;
+  /** Which tab this component lives on (if using DashboardNav) */
+  tab?: string;
 }
 
 /** A chat message */
@@ -62,6 +64,12 @@ export interface AiContextValue {
   unregisterMetric: (id: string) => void;
   /** Get all registered metrics */
   getMetrics: () => Map<string, AiMetric>;
+  /** Register a tab navigation function (called by DashboardNav) */
+  registerTabNavigator: (fn: (tab: string) => void) => void;
+  /** Navigate to a tab (used by citation clicks) */
+  navigateToTab: (tab: string) => void;
+  /** Find which tab a metric title lives on */
+  findTab: (title: string) => string | undefined;
   /** Chat messages */
   messages: AiMessage[];
   /** Send a user message and get AI response */
@@ -151,6 +159,7 @@ interface AiProviderProps {
 
 export function AiProvider({ config, filterContext, children }: AiProviderProps) {
   const metricsRef = useRef(new Map<string, AiMetric>());
+  const tabNavigatorRef = useRef<((tab: string) => void) | null>(null);
   const [internalMessages, setInternalMessages] = useState<AiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
@@ -171,6 +180,21 @@ export function AiProvider({ config, filterContext, children }: AiProviderProps)
   }, []);
 
   const getMetrics = useCallback(() => metricsRef.current, []);
+
+  const registerTabNavigator = useCallback((fn: (tab: string) => void) => {
+    tabNavigatorRef.current = fn;
+  }, []);
+
+  const navigateToTab = useCallback((tab: string) => {
+    tabNavigatorRef.current?.(tab);
+  }, []);
+
+  const findTab = useCallback((title: string): string | undefined => {
+    for (const [, metric] of metricsRef.current) {
+      if (metric.title === title && metric.tab) return metric.tab;
+    }
+    return undefined;
+  }, []);
 
   const clear = useCallback(() => {
     setMessages([]);
@@ -261,13 +285,16 @@ export function AiProvider({ config, filterContext, children }: AiProviderProps)
     registerMetric,
     unregisterMetric,
     getMetrics,
+    registerTabNavigator,
+    navigateToTab,
+    findTab,
     messages,
     send,
     clear,
     isLoading,
     streamingText,
     abort,
-  }), [config, registerMetric, unregisterMetric, getMetrics, messages, send, clear, isLoading, streamingText, abort]);
+  }), [config, registerMetric, unregisterMetric, getMetrics, registerTabNavigator, navigateToTab, findTab, messages, send, clear, isLoading, streamingText, abort]);
 
   return (
     <AiCtx.Provider value={value}>
