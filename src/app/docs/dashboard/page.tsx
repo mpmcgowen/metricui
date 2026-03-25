@@ -245,6 +245,7 @@ export default function DashboardDocs() {
                     indexBy="month"
                     title="Monthly Revenue"
                     format={{ style: "currency" }}
+                    height={280}
                   />
                 </MetricGrid>
               </Dashboard>

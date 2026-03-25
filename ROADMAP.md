@@ -80,6 +80,36 @@ Everything listed here is built, tested, and published.
 
 ---
 
+## 0.5.0 — "The DX Release" (Shipped)
+
+**Headline: Developer experience.** Everything that makes MetricUI faster to use, less boilerplate, fewer casts, smarter defaults.
+
+### The Wow
+
+- **`<Dashboard>` wrapper** — 5 providers → 1 component. `<Dashboard theme="emerald" filters={{ defaultPreset: "30d" }} exportable>` replaces MetricProvider + FilterProvider + CrossFilterProvider + LinkedHoverProvider + DrillDown.Root.
+- **Zero `as never[]` casts** — `DataRow` type across the entire library. Typed interfaces just work with `<DataTable data={accounts} />`.
+- **Smart column inference** — omit `columns` on DataTable and it auto-detects numbers, dates, booleans, badges, sparklines from the actual values.
+- **DashboardNav** — tab and scroll navigation inside FilterBar. Multi-view dashboards with persistent filters. Sliding indicator, keyboard nav, URL sync.
+
+### Supporting Work
+
+- **Filter convenience hooks** — `useFilterValue("region")`, `useHasComparison()`, `useActiveFilterCount()`. No null-coalescing.
+- **FilterBar.Nav slot** — embed DashboardNav inside FilterBar for one unified sticky bar.
+- **MetricGrid fragment flattening** — auto-layout works through `<>` wrappers.
+- **Analytics demo** — GA-style dashboard with tab mode, 4 views, per-device filtering, cross-filter, comparisons.
+
+### New Components / Exports
+| Component | Description |
+|---|---|
+| Dashboard | All-in-one wrapper replacing 5 nested providers. |
+| DashboardNav | Tab/scroll navigation with sliding indicator and keyboard support. |
+| FilterBar.Nav | Slot for embedding DashboardNav inside FilterBar. |
+| useFilterValue | Read a dimension filter as string[] — no null checks. |
+| useHasComparison | Boolean: is comparison mode active? |
+| useActiveFilterCount | Number of active filters. |
+
+---
+
 ## 0.4.0 — "The Dashboard That Ships" (Shipped)
 
 **Headline: Everything that turns a prototype into a product.** FilterBar, DrillDown, Export, CardShell unification, auto empty states, tooltip action hints, and sticky filters. Every demo fully wired with interactive filters and drill-downs.

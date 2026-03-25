@@ -98,26 +98,28 @@ const milestones: Milestone[] = [
   },
   {
     version: "0.5",
-    title: "Kill the Boilerplate",
+    title: "The DX Release",
     tagline:
-      "useMetricQuery eliminates every line of code between your data and your components. You write the fetch, we wire the rest.",
-    status: "next",
+      "Developer experience. 5 providers → 1 component, zero type casts, smart column inference, tab navigation, filter convenience hooks.",
+    status: "shipped",
     icon: Terminal,
     highlights: [
-      "useMetricQuery — pass a fetcher, get { data, loading, error, stale, refresh } that spreads onto any component",
-      "Live mode — one prop makes the entire dashboard animate smoothly between data updates",
-      "Snapshot comparison — visual before/after diff overlay on any chart",
-      "Print/PDF mode — optimized layout for reports and presentations",
-      "Zero-config charts — auto-detect index, categories, and axis labels from data shape",
+      "Dashboard wrapper — 5 nested providers replaced by one <Dashboard> component with flat props",
+      "DataRow type — zero as-never casts, typed interfaces just work with DataTable and all charts",
+      "Smart column inference — omit columns prop, DataTable auto-detects numbers, dates, booleans, badges",
+      "DashboardNav — tab and scroll navigation with FilterBar.Nav slot for unified sticky bar",
+      "Filter convenience hooks — useFilterValue, useHasComparison, useActiveFilterCount",
+      "MetricGrid fragment flattening — auto-layout works through React fragment wrappers",
+      "Analytics demo — GA-style dashboard with 4 tab views and per-device filtering",
     ],
-    newComponents: ["SnapshotDiff", "RefreshToggle", "DataFreshness"],
+    newComponents: ["Dashboard", "DashboardNav", "FilterBar.Nav", "useFilterValue", "useHasComparison", "useActiveFilterCount"],
   },
   {
     version: "0.6",
     title: "The Intelligence Layer",
     tagline:
       "Anomaly detection scans your data and highlights what's unusual. No ML pipeline, no backend — just a prop.",
-    status: "planned",
+    status: "next",
     icon: Brain,
     highlights: [
       "Anomaly highlights — rolling mean + standard deviation bands that flag unusual data points automatically",

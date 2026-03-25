@@ -85,6 +85,87 @@ Use `<Dashboard>` for the 90% case. Drop down to individual providers when you n
 
 ---
 
+## DashboardNav
+
+Tab or scroll navigation for multi-view dashboards. Use standalone (with `sticky`) or inside `FilterBar.Nav` for a unified sticky bar.
+
+### Tab Mode (default)
+
+Switches content — dev controls which components render based on the active tab.
+
+```tsx
+const [tab, setTab] = useState("overview");
+
+<FilterBar sticky>
+  <FilterBar.Nav>
+    <DashboardNav
+      tabs={[
+        { value: "overview", label: "Overview", icon: <Eye /> },
+        { value: "revenue", label: "Revenue", badge: "$142K" },
+      ]}
+      value={tab}
+      onChange={setTab}
+    />
+  </FilterBar.Nav>
+  <FilterBar.Primary>
+    <PeriodSelector comparison />
+  </FilterBar.Primary>
+</FilterBar>
+
+{tab === "overview" && <OverviewContent />}
+{tab === "revenue" && <RevenueContent />}
+```
+
+Filters persist across tabs because FilterProvider wraps everything.
+
+### Scroll Mode
+
+Smooth-scrolls to section IDs on the page. Active tab highlights as you scroll.
+
+```tsx
+<DashboardNav
+  tabs={[
+    { value: "overview", label: "Overview" },
+    { value: "revenue", label: "Revenue" },
+  ]}
+  mode="scroll"
+  sticky
+/>
+
+<SectionHeader id="overview" title="Overview" />
+{/* ... content ... */}
+<SectionHeader id="revenue" title="Revenue" />
+```
+
+### FilterBar.Nav Slot
+
+Embed DashboardNav inside FilterBar so tabs and filters share one sticky card:
+
+```tsx
+<FilterBar sticky>
+  <FilterBar.Nav>
+    <DashboardNav tabs={tabs} value={tab} onChange={setTab} />
+  </FilterBar.Nav>
+  <FilterBar.Primary>
+    <PeriodSelector />
+  </FilterBar.Primary>
+</FilterBar>
+```
+
+### DashboardNav Props
+
+- `tabs`: DashboardNavTab[] (required) — `{ value, label, icon?, badge?, badgeFormat? }`
+- `value`: string — controlled active tab
+- `defaultValue`: string — uncontrolled default (defaults to first tab)
+- `onChange`: (value: string) => void
+- `mode`: "tabs" | "scroll" — default: "tabs"
+- `syncUrl`: string — query param name to sync active tab to URL
+- `sticky`: boolean — default: false — standalone sticky mode (not needed inside FilterBar)
+- `size`: "sm" | "md" | "lg" — default: "md"
+- `dense`: boolean
+
+---
+
 ## Unified Data Format
 
 All major chart components support a **unified flat-row data format** in addition to their legacy Nivo-specific shapes. This means you can pass the same data array to AreaChart, LineChart, BarChart, BarLineChart, DonutChart, and HeatMap — just change the component tag.
@@ -4033,7 +4114,7 @@ import { FilterBar, FilterProvider, PeriodSelector, SegmentToggle, DropdownFilte
 - `id`: string
 - `data-testid`: string
 
-### FilterBar.Primary / FilterBar.Secondary
+### FilterBar.Nav / FilterBar.Primary / FilterBar.Secondary
 
 Named slot components that render in the primary (always visible) and secondary (collapsible) rows. No extra props — just wrap your filter controls.
 

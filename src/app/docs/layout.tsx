@@ -103,6 +103,7 @@ const nav: { label: string; items: NavItem[] }[] = [
     label: "Layout",
     items: [
       { title: "Dashboard", href: "/docs/dashboard", icon: Layers },
+      { title: "Dashboard Nav", href: "/docs/dashboard-nav", icon: Milestone },
       { title: "Dashboard Header", href: "/docs/dashboard-header", icon: PanelTop },
       { title: "Section Header", href: "/docs/section-header", icon: Heading },
       { title: "Divider", href: "/docs/divider", icon: SeparatorHorizontal },

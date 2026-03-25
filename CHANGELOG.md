@@ -5,6 +5,29 @@ All notable changes to MetricUI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-03-25
+
+### Added
+
+- **`<Dashboard>` wrapper** — replaces the 5-provider nesting pattern (MetricProvider + FilterProvider + CrossFilterProvider + LinkedHoverProvider + DrillDown.Root) with a single component and flat props. Every hook works inside.
+- **`DashboardNav`** — tab and scroll navigation for multi-view dashboards. Sliding underline indicator, keyboard navigation (arrows, Home/End), optional URL sync. Two modes: `"tabs"` (switch content) and `"scroll"` (smooth-scroll to section IDs with IntersectionObserver highlight).
+- **`FilterBar.Nav` slot** — embed DashboardNav inside FilterBar. Tabs render above filter controls, sharing one sticky frosted-glass card.
+- **Smart column inference** — DataTable auto-detects column types from values when `columns` is omitted. Numbers → right-aligned + sortable, booleans → badge, Date/ISO strings → date, low-cardinality strings (≤10 unique) → badge, number arrays → sparkline.
+- **Filter convenience hooks** — `useFilterValue(field)` returns `string[]`, `useHasComparison()` returns `boolean`, `useActiveFilterCount()` returns `number`. No null-coalescing needed.
+- **Analytics demo** — GA-style dashboard at `/demos/analytics` with tab mode navigation, 4 views (Overview, Acquisition, Engagement, Conversions), per-device daily data, cross-filter on traffic sources, comparison periods, drill-downs.
+
+### Changed
+
+- **`DataRow` type** — single universal row constraint (`Record<string, any>`) replaces `Record<string, unknown>` across DataTable, CardShell, Export, DrillDown, and all chart components. Typed interfaces now work directly — no more `as never[]` casts.
+- **BarChart `data` prop** relaxed from `Record<string, string | number>[]` to `DataRow[]`.
+- **MetricGrid fragment flattening** — auto-layout now works through React fragment wrappers (`<>...</>`). KPIs inside fragments no longer stack vertically.
+- MCP server, llms.txt, and docs updated for all 0.5 features.
+
+### Fixed
+
+- FilterBar nested button hydration error (header changed from `<button>` to `<div role="button">`).
+- TooltipWrapper infinite re-render loop (replaced setState with direct DOM mutation).
+
 ## [0.4.0] - 2026-03-24
 
 ### Added
@@ -98,6 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Built-in data states (loading, empty, error, stale)
 - MCP server for AI-assisted dashboard generation
 
+[0.5.0]: https://github.com/mpmcgowen/metricui/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mpmcgowen/metricui/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mpmcgowen/metricui/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/mpmcgowen/metricui/compare/v0.2.0...v0.2.1
