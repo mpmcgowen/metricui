@@ -46,6 +46,66 @@ export interface ComponentDef {
 
 export const COMPONENTS: ComponentDef[] = [
   // =========================================================================
+  // Dashboard (All-in-One Wrapper)
+  // =========================================================================
+  {
+    name: "Dashboard",
+    importName: "Dashboard",
+    category: "ui" as const,
+    tier: "free",
+    description: "All-in-one dashboard wrapper. Replaces the 5-provider nesting pattern (MetricProvider + FilterProvider + CrossFilterProvider + LinkedHoverProvider + DrillDown.Root) with a single flat component.",
+    longDescription:
+      "Dashboard is the recommended entry point for any MetricUI dashboard. It composes MetricProvider, FilterProvider, CrossFilterProvider, LinkedHoverProvider, and DrillDown.Root into a single component with flat props. All hooks (useMetricFilters, useCrossFilter, useDrillDownAction, useLinkedHover) work inside. Omit the `filters` prop to skip FilterProvider entirely. Every prop is optional. For fine-grained control (e.g., two FilterProviders or custom provider ordering), use individual providers instead.",
+    props: [
+      { name: "theme", type: "string | ThemePreset", required: false, description: "Theme preset name or custom ThemePreset object. Built-in: indigo, emerald, rose, amber, cyan, violet, slate, orange." },
+      { name: "colorScheme", type: '"light" | "dark" | "auto"', required: false, default: '"auto"', description: "Color scheme. 'auto' detects system preference." },
+      { name: "variant", type: "CardVariant", required: false, default: '"default"', description: "Default card variant for all components." },
+      { name: "locale", type: "string", required: false, default: '"en-US"', description: "BCP 47 locale string." },
+      { name: "currency", type: "string", required: false, default: '"USD"', description: "ISO 4217 currency code." },
+      { name: "animate", type: "boolean", required: false, default: "true", description: "Global animation toggle." },
+      { name: "dense", type: "boolean", required: false, default: "false", description: "Compact layout toggle." },
+      { name: "exportable", type: "boolean", required: false, default: "false", description: "Global export toggle. Enables ExportButton on all components." },
+      { name: "tooltipHint", type: "boolean", required: false, default: "true", description: "Show action hints in chart tooltips." },
+      { name: "loading", type: "boolean", required: false, default: "false", description: "Global loading toggle. Shows skeletons on all components." },
+      { name: "texture", type: "boolean", required: false, default: "true", description: "Noise texture on card surfaces." },
+      { name: "filters", type: "{ defaultPreset?: PeriodPreset; defaultComparison?: ComparisonMode; referenceDate?: Date }", required: false, description: "Filter configuration. Omit to skip FilterProvider entirely." },
+      { name: "maxDrillDepth", type: "number", required: false, default: "4", description: "Max nested drill-down levels." },
+      { name: "renderContent", type: "(trigger: DrillDownTrigger) => ReactNode | null", required: false, description: "Render function for reactive drill content. Runs in the parent render cycle for live data." },
+      { name: "emptyState", type: "{ message?: string; icon?: ReactNode }", required: false, description: "Default empty state template." },
+      { name: "errorState", type: "{ message?: string }", required: false, description: "Default error state template." },
+    ],
+    minimalExample: `<Dashboard theme="emerald" filters={{ defaultPreset: "30d" }}>
+  <KpiCard title="Revenue" value={142800} format="currency" />
+</Dashboard>`,
+    examples: [
+      {
+        title: "Full-featured dashboard",
+        description: "Dashboard with theme, filters, comparison, export, and dense mode.",
+        code: `<Dashboard
+  theme="emerald"
+  exportable
+  dense
+  filters={{ defaultPreset: "ytd", defaultComparison: "previous", referenceDate: new Date(2024, 11, 31) }}
+>
+  <DashboardHeader title="Analytics" status="live" />
+  <MetricGrid>
+    <KpiCard title="Revenue" value={142800} format="currency" />
+    <AreaChart data={data} index="month" categories={["revenue"]} />
+  </MetricGrid>
+</Dashboard>`,
+      },
+    ],
+    notes: [
+      "Dashboard replaces the 5-provider nesting pattern. Use it as the outermost wrapper for any MetricUI dashboard.",
+      "All props are optional. Omit `filters` to skip FilterProvider entirely.",
+      "Every hook (useMetricFilters, useCrossFilter, useDrillDownAction, useLinkedHover) works inside Dashboard.",
+      "For fine-grained control (two FilterProviders, custom provider ordering), use individual providers instead.",
+      "Dashboard renders: MetricProvider → FilterProvider (if filters prop) → CrossFilterProvider → LinkedHoverProvider → DrillDownProvider + DrillDownOverlay.",
+    ],
+    configFields: ["theme", "variant", "locale", "currency", "animate", "dense", "exportable", "tooltipHint", "loading", "texture"],
+    relatedComponents: ["MetricProvider", "FilterProvider", "MetricGrid", "DashboardHeader"],
+  },
+  // =========================================================================
   // PeriodSelector
   // =========================================================================
   {
@@ -1550,7 +1610,8 @@ interface FooterRow {
     relatedComponents: ["Badge", "KpiCard"],
     configFields: ["variant", "dense", "nullDisplay"],
     notes: [
-      "Generic component — TypeScript infers T from the data prop.",
+      "Generic component — TypeScript infers T from the data prop. Accepts any typed interface or object directly — no `as never[]` casts needed. Uses DataRow (Record<string, any>) as the base constraint.",
+      "Smart column inference when columns are omitted: numbers → right-aligned + format:number, booleans → badge, Date/ISO strings → date, low-cardinality strings (≤10 unique) → badge, number arrays → sparkline. All sortable. Override with explicit columns.",
       "When columns are omitted, they are auto-inferred from the first row's keys with camelCase-to-Title-Case conversion.",
       "Sort cycles through: asc -> desc -> none. With multiSort, Shift+click adds secondary/tertiary sorts.",
       "Column `header` is preferred over `label` (which is deprecated).",

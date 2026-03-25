@@ -206,7 +206,7 @@ function CountryTable({ data, tableView }: {
 }) {
   return (
     <DataTable
-      data={data as never[]}
+      data={data }
       columns={
         [
           {
@@ -291,8 +291,7 @@ function CountryTable({ data, tableView }: {
             header: "Currency",
             width: 90,
           },
-        ] as never[]
-      }
+        ]      }
       title={`${tableView === "All" ? "All Countries" : tableView} (${data.length})`}
       subtitle="Sorted by population — click a row for country details"
       pageSize={15}
@@ -340,11 +339,11 @@ function CountryDetail({ country }: { country: Country }) {
         data={country.languages.map((lang) => {
           const speakingCountries = countries.filter((c) => c.languages.includes(lang));
           return { language: lang, countries: speakingCountries.length };
-        }) as never[]}
+        }) }
         columns={[
           { key: "language", header: "Language", sortable: true },
           { key: "countries", header: "Countries Speaking", format: "number" as const, sortable: true, align: "right" as const },
-        ] as never[]}
+        ] }
         title={`Languages (${country.languages.length})`}
         dense
         drillDown={(row) => {
@@ -361,7 +360,7 @@ function CountryDetail({ country }: { country: Country }) {
                   population: c.population,
                   capital: c.capital || "\u2014",
                   flag: c.flag,
-                })) as never[]}
+                })) }
                 columns={[
                   { key: "name", header: "Country", sortable: true, render: (val: unknown, r: Record<string, unknown>) => (
                     <span className="flex items-center gap-2">
@@ -372,7 +371,7 @@ function CountryDetail({ country }: { country: Country }) {
                   { key: "capital", header: "Capital" },
                   { key: "region", header: "Region", sortable: true },
                   { key: "population", header: "Population", format: "compact" as const, sortable: true, align: "right" as const },
-                ] as never[]}
+                ] }
                 title={`Countries with ${lang}`}
                 pageSize={15}
                 dense
@@ -383,12 +382,12 @@ function CountryDetail({ country }: { country: Country }) {
         }}
       />
       <DataTable
-        data={country.currencies.map((c) => ({ code: c.code, name: c.name, symbol: c.symbol })) as never[]}
+        data={country.currencies.map((c) => ({ code: c.code, name: c.name, symbol: c.symbol })) }
         columns={[
           { key: "code", header: "Code" },
           { key: "name", header: "Currency" },
           { key: "symbol", header: "Symbol" },
-        ] as never[]}
+        ] }
         title={`Currencies (${country.currencies.length})`}
         dense
       />
@@ -446,7 +445,7 @@ function SubregionDrill({ region, allCountries }: { region: string; allCountries
                   area: c.area,
                   languages: c.languages.slice(0, 3).join(", "),
                   flag: c.flag,
-                })) as never[]}
+                })) }
                 columns={[
                   { key: "name", header: "Country", sortable: true, render: (val: unknown, row: Record<string, unknown>) => (
                     <span className="flex items-center gap-2">
@@ -476,7 +475,7 @@ function SubregionDrill({ region, allCountries }: { region: string; allCountries
           area: c.area,
           languages: c.languages.slice(0, 3).join(", "),
           flag: c.flag,
-        })) as never[]}
+        })) }
         columns={[
           { key: "name", header: "Country", sortable: true, render: (val: unknown, row: Record<string, unknown>) => (
             <span className="flex items-center gap-2">
@@ -582,7 +581,7 @@ function DashboardContent() {
                         density: c.area > 0 ? Math.round(c.population / c.area) : 0,
                         region: c.region,
                         flag: c.flag,
-                      })) as never[]}
+                      })) }
                       columns={[
                         { key: "name", header: "Country", sortable: true, render: (val: unknown, row: Record<string, unknown>) => (
                           <span className="flex items-center gap-2">
@@ -643,7 +642,7 @@ function DashboardContent() {
                         height={300}
                       />
                       <DataTable
-                        data={langTable as never[]}
+                        data={langTable }
                         columns={[
                           { key: "language", header: "Language", sortable: true },
                           { key: "countries", header: "Countries", format: "number" as const, sortable: true, align: "right" as const },
@@ -693,7 +692,7 @@ function DashboardContent() {
                         height={300}
                       />
                       <DataTable
-                        data={currTable as never[]}
+                        data={currTable }
                         columns={[
                           { key: "code", header: "Code", sortable: true },
                           { key: "name", header: "Currency Name", sortable: true },
@@ -776,7 +775,7 @@ function DashboardContent() {
                         population: c.population,
                         capital: c.capital || "\u2014",
                         flag: c.flag,
-                      })) as never[]}
+                      })) }
                       columns={[
                         { key: "name", header: "Country", sortable: true, render: (val: unknown, row: Record<string, unknown>) => (
                           <span className="flex items-center gap-2">

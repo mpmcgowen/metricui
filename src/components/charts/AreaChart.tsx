@@ -26,7 +26,7 @@ import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
 import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, ChartNullMode, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toLineSeries, inferSchema, categoryKeys, categoryColors, rightAxisCategories, type Category } from "@/lib/dataTransform";
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -88,7 +88,7 @@ export interface SeriesStyle {
 // ---------------------------------------------------------------------------
 
 export interface AreaChartProps {
-  data?: SeriesData[] | Record<string, unknown>[];
+  data?: SeriesData[] | DataRow[];
   /** Column name to use as the X-axis (index). When provided with `categories`,
    *  flat row data is auto-converted to series format. */
   index?: string;
@@ -578,7 +578,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   const rawData = useMemo(() => {
     // 1. Unified format: flat rows + index + categories
     if (dataProp && dataProp.length > 0 && (indexProp || categoriesProp)) {
-      const rows = dataProp as Record<string, unknown>[];
+      const rows = dataProp as DataRow[];
       const inferred = inferSchema(rows);
       const index = indexProp ?? inferred?.index;
       const categories = categoriesProp ?? inferred?.categories;
@@ -588,7 +588,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
     }
     // 2. Zero-config: infer index + categories from data shape
     if (dataProp && dataProp.length > 0 && !isSeriesData(dataProp)) {
-      const rows = dataProp as Record<string, unknown>[];
+      const rows = dataProp as DataRow[];
       const inferred = inferSchema(rows);
       if (inferred) {
         return toLineSeries(rows, inferred.index, inferred.categories);
@@ -1013,7 +1013,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
       empty={empty}
       error={error}
       stale={stale}
-      exportData={dataProp as Record<string, unknown>[]}
+      exportData={dataProp as DataRow[]}
       below={<>
         {legendConfig && (
           <ChartLegend
@@ -1174,7 +1174,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
                   onPointClick?.(event);
                   if (drillDown) {
                     const content = drillDown === true
-                      ? <AutoDrillTable data={dataProp as Record<string, unknown>[]} field={indexProp ?? "x"} value={String(point.data.x)} />
+                      ? <AutoDrillTable data={dataProp as DataRow[]} field={indexProp ?? "x"} value={String(point.data.x)} />
                       : drillDown(event);
                     openDrill(
                       { title: String(point.data.x), field: crossFilterField ?? "x", value: point.data.x as string | number, mode: drillDownMode },

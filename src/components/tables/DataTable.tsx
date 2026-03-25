@@ -13,7 +13,7 @@ import type { StatusRule, StatusSize } from "@/components/ui/StatusIndicator";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useScrollIndicators } from "@/lib/useScrollIndicators";
 import { devWarn } from "@/lib/devWarnings";
-import type { CardVariant, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig } from "@/lib/types";
+import type { CardVariant, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig, DataRow } from "@/lib/types";
 import { useLinkedHover } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
@@ -57,7 +57,7 @@ const BADGE_VARIANT_MAP: Record<string, "success" | "danger" | "warning" | "defa
 // Types
 // ---------------------------------------------------------------------------
 
-export interface Column<T> {
+export interface Column<T = DataRow> {
   key: string;
   header?: string;
   /** @deprecated Use `header` instead */
@@ -95,9 +95,10 @@ export interface FooterRow {
   [key: string]: React.ReactNode;
 }
 
-export interface DataTableProps<T extends Record<string, unknown>> {
+export interface DataTableProps<T extends DataRow = DataRow> {
   data: T[];
-  columns?: ColumnDef<T>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns?: ColumnDef<any>[];
   title?: string;
   subtitle?: string;
   description?: string | React.ReactNode;
@@ -111,7 +112,7 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   dense?: boolean;
   onRowClick?: (row: T, index: number) => void;
   /** Drill-down content renderer. When set, clicking a row opens the drill-down panel. Takes priority over crossFilter for the click action. */
-  drillDown?: (row: Record<string, unknown>, index: number) => React.ReactNode;
+  drillDown?: (row: DataRow, index: number) => React.ReactNode;
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   nullDisplay?: NullDisplay;
@@ -159,7 +160,7 @@ function resolveHeader<T>(col: Column<T>): string {
   return col.header ?? col.label ?? String(col.key);
 }
 
-function getNestedValue(obj: Record<string, unknown>, key: string): unknown {
+function getNestedValue(obj: DataRow, key: string): unknown {
   return obj[key];
 }
 
@@ -173,12 +174,63 @@ function keyToHeader(key: string): string {
   return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 }
 
-function inferColumns<T extends Record<string, unknown>>(data: T[]): ColumnDef<T>[] {
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}(T|\s)/;
+
+function inferColumnType<T extends DataRow>(data: T[], key: string): { type?: ColumnType; format?: FormatOption; align?: "left" | "center" | "right" } {
+  // Sample up to 20 rows for type detection
+  const sample = data.slice(0, 20);
+  const values = sample.map((row) => row[key]).filter((v) => v != null);
+  if (values.length === 0) return {};
+
+  const first = values[0];
+
+  // Boolean → badge
+  if (typeof first === "boolean") {
+    return { type: "badge", align: "center" };
+  }
+
+  // Number → right-aligned, sortable, number format
+  if (typeof first === "number") {
+    return { format: "number", align: "right" };
+  }
+
+  // Date object → date
+  if (first instanceof Date) {
+    return { type: "date", align: "left" };
+  }
+
+  // ISO date string → date
+  if (typeof first === "string" && ISO_DATE_RE.test(first)) {
+    return { type: "date", align: "left" };
+  }
+
+  // Low-cardinality string (≤10 unique values) → badge
+  if (typeof first === "string") {
+    const unique = new Set(values as string[]);
+    if (unique.size <= 10 && unique.size < values.length) {
+      return { type: "badge", align: "left" };
+    }
+  }
+
+  // Array of numbers → sparkline
+  if (Array.isArray(first) && first.length > 0 && typeof first[0] === "number") {
+    return { type: "sparkline", align: "center" };
+  }
+
+  return {};
+}
+
+function inferColumns<T extends DataRow>(data: T[]): ColumnDef<T>[] {
   if (data.length === 0) return [];
   const firstRow = data[0];
   return Object.keys(firstRow).map((key) => {
-    const isNum = typeof firstRow[key] === "number";
-    return { key, header: keyToHeader(key), align: isNum ? "right" as const : "left" as const, sortable: true, ...(isNum ? { format: "number" as const } : {}) };
+    const inferred = inferColumnType(data, key);
+    return {
+      key,
+      header: keyToHeader(key),
+      sortable: true,
+      ...inferred,
+    };
   });
 }
 
@@ -200,7 +252,7 @@ function isNumericColumn<T>(col: ColumnDef<T>, data: T[]): boolean {
   if (col.type) return NUMERIC_TYPES.has(col.type);
   if (col.format) return true;
   for (const row of data) {
-    const val = getNestedValue(row as Record<string, unknown>, col.key as string);
+    const val = getNestedValue(row as DataRow, col.key as string);
     if (val != null) return isNumeric(val);
   }
   return false;
@@ -212,7 +264,7 @@ function inferAlign<T>(col: ColumnDef<T>, data: T[]): "left" | "center" | "right
   if (typeAlign) return typeAlign;
   if (col.format) return "right";
   for (const row of data) {
-    const val = getNestedValue(row as Record<string, unknown>, col.key as string);
+    const val = getNestedValue(row as DataRow, col.key as string);
     if (val != null) return isNumeric(val) ? "right" : "left";
   }
   return "left";
@@ -276,7 +328,7 @@ function renderHeader(title?: string, subtitle?: string, description?: string | 
 // Component
 // ---------------------------------------------------------------------------
 
-function DataTableInner<T extends Record<string, unknown>>(
+function DataTableInner<T extends DataRow = DataRow>(
   {
     data, columns: columnsProp, title, subtitle, description, footnote, action,
     pageSize, pagination: paginationProp, maxRows, onViewAll, striped = false, dense,
@@ -314,7 +366,7 @@ function DataTableInner<T extends Record<string, unknown>>(
 
   // Dev warnings
   if (process.env.NODE_ENV !== "production" && data.length > 0 && columns.length > 0) {
-    const firstRow = data[0] as Record<string, unknown>;
+    const firstRow = data[0] as DataRow;
     for (const col of columns) {
       if (col.key && !(String(col.key) in firstRow)) {
         devWarn(`DataTable.column.${String(col.key)}`, `<DataTable> column key "${String(col.key)}" not found in data. Available keys: ${Object.keys(firstRow).join(", ")}`);
@@ -335,7 +387,7 @@ function DataTableInner<T extends Record<string, unknown>>(
     // Initialize all parent rows as expanded
     const set = new Set<number>();
     data.forEach((row, i) => {
-      const children = (row as Record<string, unknown>)[childrenField];
+      const children = (row as DataRow)[childrenField];
       if (Array.isArray(children) && children.length > 0) set.add(i);
     });
     return set;
@@ -395,8 +447,8 @@ function DataTableInner<T extends Record<string, unknown>>(
     if (sorts.length === 0) return data;
     return [...data].sort((a, b) => {
       for (const { key, dir } of sorts) {
-        const aVal = getNestedValue(a as Record<string, unknown>, key);
-        const bVal = getNestedValue(b as Record<string, unknown>, key);
+        const aVal = getNestedValue(a as DataRow, key);
+        const bVal = getNestedValue(b as DataRow, key);
         if (aVal === bVal) continue;
         if (aVal == null) return 1;
         if (bVal == null) return -1;
@@ -411,7 +463,7 @@ function DataTableInner<T extends Record<string, unknown>>(
     if (!searchable || !search.trim()) return sorted;
     const term = search.toLowerCase();
     return sorted.filter((row) =>
-      columns.some((col) => { const val = getNestedValue(row as Record<string, unknown>, col.key as string); return val != null && String(val).toLowerCase().includes(term); })
+      columns.some((col) => { const val = getNestedValue(row as DataRow, col.key as string); return val != null && String(val).toLowerCase().includes(term); })
     );
   }, [sorted, search, searchable, columns]);
 
@@ -440,7 +492,7 @@ function DataTableInner<T extends Record<string, unknown>>(
     let flatIdx = 0;
     for (let i = 0; i < paged.length; i++) {
       const row = paged[i];
-      const children = (row as Record<string, unknown>)[childrenField!];
+      const children = (row as DataRow)[childrenField!];
       const hasChildren = Array.isArray(children) && children.length > 0;
       const parentFlatIdx = flatIdx;
       const globalIdx = enablePagination ? page * effectivePageSize + i : i;
@@ -466,7 +518,7 @@ function DataTableInner<T extends Record<string, unknown>>(
     for (const col of columns) {
       if (col.type === "bar") {
         let max = 0;
-        for (const row of data) { const v = getNestedValue(row as Record<string, unknown>, col.key as string); if (typeof v === "number" && v > max) max = v; }
+        for (const row of data) { const v = getNestedValue(row as DataRow, col.key as string); if (typeof v === "number" && v > max) max = v; }
         maxes[col.key as string] = max;
       }
     }
@@ -552,7 +604,7 @@ function DataTableInner<T extends Record<string, unknown>>(
       empty={resolvedEmpty}
       stale={stale}
       exportable={resolvedExportable}
-      exportData={overrideExportData ?? (data as Record<string, unknown>[])}
+      exportData={overrideExportData ?? (data as DataRow[])}
       className={cn("p-0", className)}
       classNames={{ root: classNames?.root }}
     >
@@ -625,7 +677,7 @@ function DataTableInner<T extends Record<string, unknown>>(
                 const isParent = hasChildren;
                 const rcClasses = rowConditions?.filter((rc) => rc.when(row, gi)).map((rc) => rc.className).join(" ") ?? "";
                 const showExpandChevron = renderExpanded || isGrouped;
-                const isLinkedHighlight = linkedIndexField && linkedHover?.hoveredIndex != null && (row as Record<string, unknown>)[linkedIndexField] === linkedHover.hoveredIndex;
+                const isLinkedHighlight = linkedIndexField && linkedHover?.hoveredIndex != null && (row as DataRow)[linkedIndexField] === linkedHover.hoveredIndex;
                 return (
                   <React.Fragment key={ri}>
                   <tr className={cn(
@@ -642,7 +694,7 @@ function DataTableInner<T extends Record<string, unknown>>(
                   }} onClick={() => {
                     onRowClick?.(row, gi);
                     if (drillDown) {
-                      const rowRecord = row as Record<string, unknown>;
+                      const rowRecord = row as DataRow;
                       const firstCol = columns[0]?.key;
                       const titleVal = firstCol ? String(rowRecord[firstCol] ?? "") : `Row ${gi + 1}`;
                       openDrill(
@@ -650,7 +702,7 @@ function DataTableInner<T extends Record<string, unknown>>(
                         drillDown(rowRecord, gi),
                       );
                     } else if (crossFilterProp && crossFilter && crossFilterField) {
-                      crossFilter.select({ field: crossFilterField, value: (row as Record<string, unknown>)[crossFilterField] as string | number });
+                      crossFilter.select({ field: crossFilterField, value: (row as DataRow)[crossFilterField] as string | number });
                     }
                   }}>
                     {/* Expand/group chevron */}
@@ -671,7 +723,7 @@ function DataTableInner<T extends Record<string, unknown>>(
                     {columns.map((col, ci) => {
                       const align = alignments[ci];
                       const isMono = isMonoColumn[ci];
-                      const value = getNestedValue(row as Record<string, unknown>, col.key as string);
+                      const value = getNestedValue(row as DataRow, col.key as string);
                       const isPinned = col.pin === "left";
                       const isBar = col.type === "bar";
                       const isWrapped = col.wrap === true;
@@ -790,7 +842,7 @@ function DataTableInner<T extends Record<string, unknown>>(
   );
 }
 
-export const DataTable = React.forwardRef(DataTableInner) as <T extends Record<string, unknown>>(
+export const DataTable = React.forwardRef(DataTableInner) as <T extends DataRow = DataRow>(
   props: DataTableProps<T> & { ref?: React.Ref<HTMLDivElement> }
 ) => React.ReactElement | null;
 

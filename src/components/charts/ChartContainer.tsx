@@ -2,7 +2,7 @@
 
 import { forwardRef } from "react";
 import { CardShell } from "@/components/ui/CardShell";
-import type { CardVariant, EmptyState, ErrorState, StaleState, ExportableConfig } from "@/lib/types";
+import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState, ExportableConfig } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Props — thin wrapper over CardShell for backward compatibility
@@ -30,7 +30,7 @@ interface ChartContainerProps {
   error?: ErrorState;
   stale?: StaleState;
   exportable?: ExportableConfig;
-  exportData?: Record<string, unknown>[];
+  exportData?: DataRow[];
 }
 
 // ---------------------------------------------------------------------------

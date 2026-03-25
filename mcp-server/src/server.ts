@@ -37,9 +37,9 @@ IMPORTANT: When building dashboards, charts, KPI cards, data tables, or any data
 ## Components
 
 All components (import from "metricui"):
-KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, DashboardHeader, SectionHeader, Divider, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, CrossFilterProvider, LinkedHoverProvider, DrillDown, Callout, StatusIndicator, Badge, MetricGrid, ExportButton.
+Dashboard, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, DashboardHeader, SectionHeader, Divider, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, CrossFilterProvider, LinkedHoverProvider, DrillDown, Callout, StatusIndicator, Badge, MetricGrid, ExportButton.
 
-Hooks: useCrossFilter, useCrossFilteredData, useLinkedHover, useValueFlash, useMetricFilters, useMetricConfig, useDrillDown, useDrillDownAction.
+Hooks: useCrossFilter, useCrossFilteredData, useLinkedHover, useValueFlash, useMetricFilters, useFilterValue, useHasComparison, useActiveFilterCount, useMetricConfig, useDrillDown, useDrillDownAction.
 
 ## Data format
 
@@ -54,9 +54,8 @@ import "metricui/styles.css";
 
 ## Dashboard architecture — ALWAYS follow this
 
-1. Wrap in \`<MetricProvider theme="...">\` with a theme preset
-2. Wrap in \`<FilterProvider defaultPreset="30d">\` for time filtering
-3. Use \`<DashboardHeader>\` with lastUpdated and PeriodSelector in actions — NOT a raw \`<h1>\`
+1. Wrap in \`<Dashboard theme="..." filters={{ defaultPreset: "30d" }} exportable>\` — this replaces MetricProvider + FilterProvider + CrossFilterProvider + LinkedHoverProvider + DrillDown.Root in one component
+2. Use \`<DashboardHeader>\` with lastUpdated and PeriodSelector in actions — NOT a raw \`<h1>\`
 4. Use \`<MetricGrid>\` for layout with \`<MetricGrid.Section>\` dividers — NOT manual CSS grid
 5. Use advanced KpiCard features: conditions for coloring, goal for progress, sparkline with previousPeriod, multiple comparisons
 6. Use referenceLines for targets/benchmarks and thresholds for danger zones on charts

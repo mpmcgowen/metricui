@@ -18,7 +18,7 @@ import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig, SliceClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, ChartNullMode, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toDonutData, type Category } from "@/lib/dataTransform";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
@@ -52,7 +52,7 @@ type SortMode = "desc" | "asc" | "none";
 // ---------------------------------------------------------------------------
 
 export interface DonutChartProps {
-  data?: DonutDatum[] | Record<string, unknown>[];
+  data?: DonutDatum[] | DataRow[];
   /** Column name to use as slice labels. */
   index?: string;
   /** Value column(s) to chart. For donut charts, typically a single category. */
@@ -346,7 +346,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   const data = useMemo((): DonutDatum[] => {
     // 1. Unified format: flat rows + index + categories
     if (dataProp && dataProp.length > 0 && (indexProp || categoriesProp)) {
-      const rows = dataProp as Record<string, unknown>[];
+      const rows = dataProp as DataRow[];
       if (indexProp && categoriesProp) {
         return toDonutData(rows, indexProp, categoriesProp);
       }
@@ -356,7 +356,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
       const first = dataProp[0] as Record<string, unknown>;
       if ("id" in first && "value" in first) return dataProp as DonutDatum[];
       // 2b. Auto-infer from flat rows (first string col = label, first number col = value)
-      const rows = dataProp as Record<string, unknown>[];
+      const rows = dataProp as DataRow[];
       let labelKey: string | null = null;
       let valueKey: string | null = null;
       for (const [k, v] of Object.entries(rows[0])) {
@@ -526,7 +526,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
         empty={empty}
         error={error}
         stale={stale}
-        exportData={dataProp as Record<string, unknown>[]}
+        exportData={dataProp as DataRow[]}
         below={legendConfig ? (
           <ChartLegend
             items={legendItems}
@@ -593,7 +593,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
                   onSliceClick?.(event);
                   if (drillDown) {
                     const content = drillDown === true
-                      ? <AutoDrillTable data={dataProp as Record<string, unknown>[]} field={indexProp ?? "id"} value={String(datum.id)} />
+                      ? <AutoDrillTable data={dataProp as DataRow[]} field={indexProp ?? "id"} value={String(datum.id)} />
                       : drillDown(event);
                     openDrill(
                       { title: String(datum.label), field: crossFilterField ?? "id", value: datum.id, mode: drillDownMode },

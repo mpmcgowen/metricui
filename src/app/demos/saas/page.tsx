@@ -19,11 +19,12 @@ import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { PeriodSelector } from "@/components/filters/PeriodSelector";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { FilterBar } from "@/components/filters/FilterBar";
-import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
-import { MetricProvider } from "@/lib/MetricProvider";
-import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
+import { useMetricFilters } from "@/lib/FilterContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { Dashboard } from "@/components/layout/Dashboard";
 import { fmt, formatValue } from "@/lib/format";
-import { DrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
+import { useDrillDownAction } from "@/components/ui/DrillDown";
+import { DashboardNav } from "@/components/layout/DashboardNav";
 import { accounts, type Account } from "@/data/saas-accounts";
 import {
   DollarSign,
@@ -31,6 +32,8 @@ import {
   TrendingDown,
   BarChart3,
   Activity,
+  PieChart,
+  Table2,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -235,6 +238,18 @@ function DashboardContent() {
         tags={{ showCrossFilter: true, crossFilterLabels: { country: "Country" } }}
         className="mt-4"
       >
+        <FilterBar.Nav>
+          <DashboardNav
+            tabs={[
+              { value: "overview", label: "Overview", icon: <Activity className="h-3.5 w-3.5" /> },
+              { value: "revenue", label: "Revenue", icon: <DollarSign className="h-3.5 w-3.5" /> },
+              { value: "conversion", label: "Conversion", icon: <TrendingDown className="h-3.5 w-3.5" /> },
+              { value: "customers", label: "Customers", icon: <Users className="h-3.5 w-3.5" /> },
+              { value: "growth", label: "Growth", icon: <BarChart3 className="h-3.5 w-3.5" /> },
+            ]}
+            mode="scroll"
+          />
+        </FilterBar.Nav>
         <FilterBar.Primary>
           <PeriodSelector
             presets={["30d", "90d", "quarter", "ytd", "year"]}
@@ -256,7 +271,7 @@ function DashboardContent() {
       <MetricGrid className="mt-6">
 
       {/* ── Overview ── */}
-      <SectionHeader title="Overview" subtitle={filterLabel || "Key metrics this period"} />
+      <SectionHeader id="overview" title="Overview" subtitle={filterLabel || "Key metrics this period"} />
       <KpiCard
         title="Monthly Recurring Revenue"
         value={data.kpis.mrr}
@@ -293,12 +308,12 @@ function DashboardContent() {
                   height={280}
                 />
                 <DataTable
-                  data={topByMrr as never[]}
+                  data={topByMrr}
                   columns={[
                     { key: "name", header: "Account", sortable: true },
                     { key: "plan", header: "Plan", sortable: true },
-                    { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
-                    { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" as const },
+                    { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" },
+                    { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" },
                     { key: "industry", header: "Industry", sortable: true },
                   ]}
                   title="Top 15 Accounts by MRR"
@@ -354,13 +369,13 @@ function DashboardContent() {
                   layout="horizontal"
                 />
                 <DataTable
-                  data={activeAccts as never[]}
+                  data={activeAccts}
                   columns={[
                     { key: "name", header: "Account", sortable: true },
                     { key: "industry", header: "Industry", sortable: true },
                     { key: "plan", header: "Plan", sortable: true },
-                    { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
-                    { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" as const },
+                    { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" },
+                    { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" },
                     { key: "country", header: "Country", sortable: true },
                   ]}
                   title="All Active Accounts"
@@ -394,7 +409,7 @@ function DashboardContent() {
             <MetricGrid>
               <DonutChart data={data.churnReasons} title="Churn Reasons" showPercentage innerRadius={0.6} height={260} />
               <DataTable
-                data={filtered.filter((a) => a.status === "churned") as never[]}
+                data={filtered.filter((a) => a.status === "churned")}
                 columns={[
                   { key: "name", header: "Account", sortable: true },
                   { key: "industry", header: "Industry", sortable: true },
@@ -434,7 +449,7 @@ function DashboardContent() {
       />
 
       {/* ── Revenue ── */}
-      <SectionHeader title="Revenue" subtitle="MRR trends and revenue bridge" />
+      <SectionHeader id="revenue" title="Revenue" subtitle="MRR trends and revenue bridge" />
       <AreaChart
         data={data.cumulativeMrr}
         index="month"
@@ -452,7 +467,7 @@ function DashboardContent() {
       <Divider spacing="lg" />
 
       {/* ── Conversion & Retention ── */}
-      <SectionHeader title="Conversion & Retention" />
+      <SectionHeader id="conversion" title="Conversion & Retention" />
       <Funnel
         data={data.funnel}
         title="Conversion Funnel"
@@ -475,7 +490,7 @@ function DashboardContent() {
       />
 
       {/* ── Customers ── */}
-      <SectionHeader title="Customers" subtitle="Account distribution — click a country bar to cross-filter" />
+      <SectionHeader id="customers" title="Customers" subtitle="Account distribution — click a country bar to cross-filter" />
       <BarChart
         data={countryBarData.countryDistribution}
         keys={["accounts"]}
@@ -492,12 +507,12 @@ function DashboardContent() {
             <KpiCard title="Accounts" value={filtered.filter((a) => a.country === e.indexValue).length} format="number" />
             <KpiCard title="MRR" value={filtered.filter((a) => a.country === e.indexValue && a.status === "active").reduce((s, a) => s + a.mrr, 0)} format="currency" />
             <DataTable
-              data={filtered.filter((a) => a.country === e.indexValue) as never[]}
+              data={filtered.filter((a) => a.country === e.indexValue)}
               columns={[
                 { key: "name", header: "Account", sortable: true },
                 { key: "industry", header: "Industry", sortable: true },
                 { key: "plan", header: "Plan", sortable: true },
-                { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
+                { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" },
                 { key: "status", header: "Status", sortable: true },
               ]}
               title="Accounts"
@@ -520,12 +535,12 @@ function DashboardContent() {
             <KpiCard title="MRR" value={filtered.filter((a) => a.plan === event.id && a.status === "active").reduce((s, a) => s + a.mrr, 0)} format="currency" />
             <KpiCard title="Churn Rate" value={(() => { const planAccts = filtered.filter((a) => a.plan === event.id); const churned = planAccts.filter((a) => a.status === "churned").length; return planAccts.length > 0 ? Math.round((churned / planAccts.length) * 1000) / 10 : 0; })()} format="percent" />
             <DataTable
-              data={filtered.filter((a) => a.plan === event.id) as never[]}
+              data={filtered.filter((a) => a.plan === event.id)}
               columns={[
                 { key: "name", header: "Account", sortable: true },
                 { key: "industry", header: "Industry", sortable: true },
-                { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
-                { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" as const },
+                { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" },
+                { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" },
                 { key: "status", header: "Status", sortable: true },
                 { key: "country", header: "Country", sortable: true },
               ]}
@@ -549,12 +564,12 @@ function DashboardContent() {
             <KpiCard title="MRR" value={filtered.filter((a) => a.industry === event.id && a.status === "active").reduce((s, a) => s + a.mrr, 0)} format="currency" />
             <KpiCard title="Avg Seats" value={(() => { const indAccts = filtered.filter((a) => a.industry === event.id && a.status === "active"); return indAccts.length > 0 ? Math.round(indAccts.reduce((s, a) => s + a.seats, 0) / indAccts.length) : 0; })()} format="number" />
             <DataTable
-              data={filtered.filter((a) => a.industry === event.id) as never[]}
+              data={filtered.filter((a) => a.industry === event.id)}
               columns={[
                 { key: "name", header: "Account", sortable: true },
                 { key: "plan", header: "Plan", sortable: true },
-                { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
-                { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" as const },
+                { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" },
+                { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" },
                 { key: "status", header: "Status", sortable: true },
                 { key: "country", header: "Country", sortable: true },
               ]}
@@ -568,7 +583,7 @@ function DashboardContent() {
       />
 
       {/* ── Growth ── */}
-      <SectionHeader title="Growth" subtitle="Signups vs churn trends" />
+      <SectionHeader id="growth" title="Growth" subtitle="Signups vs churn trends" />
       <AreaChart
         data={data.growthData}
         index="month"
@@ -589,7 +604,7 @@ function DashboardContent() {
         subtitle={`${data.topAccounts.length} accounts by MRR`}
       />
       <DataTable
-        data={data.topAccounts as never[]}
+        data={data.topAccounts}
         description="Top 20 active accounts ranked by MRR. Click a row to drill into account details."
         columns={[
           { key: "name", header: "Account", sortable: true },
@@ -603,8 +618,8 @@ function DashboardContent() {
               </Badge>
             ),
           },
-          { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" as const },
-          { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" as const },
+          { key: "mrr", header: "MRR", format: "currency", sortable: true, align: "right" },
+          { key: "seats", header: "Seats", format: "number", sortable: true, align: "right" },
           { key: "country", header: "Country", sortable: true },
         ]}
         title="Top Accounts"
@@ -639,27 +654,18 @@ function DashboardContent() {
 
 export default function SaaSDashboard() {
   return (
-    <MetricProvider theme="emerald" exportable>
+    <Dashboard theme="emerald" exportable filters={{ defaultPreset: "ytd", referenceDate: new Date(2024, 11, 31) }}>
       <div className="min-h-screen bg-[var(--background)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
-          <FilterProvider defaultPreset="ytd" referenceDate={new Date(2024, 11, 31)}>
-            <CrossFilterProvider>
-              <DrillDown.Root>
-
-                <DashboardHeader
-                  title="RavenStack Analytics"
-                  subtitle="SaaS metrics dashboard — powered by 500 generated accounts"
-                  status="live"
-                  back={{ href: "/docs/kpi-card" }}
-                />
-
-                <DashboardContent />
-
-              </DrillDown.Root>
-            </CrossFilterProvider>
-          </FilterProvider>
+          <DashboardHeader
+            title="RavenStack Analytics"
+            subtitle="SaaS metrics dashboard — powered by 500 generated accounts"
+            status="live"
+            back={{ href: "/docs/kpi-card" }}
+          />
+          <DashboardContent />
         </div>
       </div>
-    </MetricProvider>
+    </Dashboard>
   );
 }

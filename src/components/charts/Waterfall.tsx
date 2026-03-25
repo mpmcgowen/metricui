@@ -11,7 +11,7 @@ import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
-import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { BarClickEvent } from "@/lib/chartTypes";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
@@ -441,7 +441,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
         empty={empty}
         error={error}
         stale={stale}
-        exportData={rawData as unknown as Record<string, unknown>[]}
+        exportData={rawData as unknown as DataRow[]}
       >
         <div style={{ height: resolvedHeight }}>
           <ResponsiveBar
@@ -518,7 +518,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
                         indexValue: datum.indexValue,
                       };
                       const content = drillDown === true
-                        ? <AutoDrillTable data={rawData as unknown as Record<string, unknown>[]} field="label" value={String(datum.indexValue)} />
+                        ? <AutoDrillTable data={rawData as unknown as DataRow[]} field="label" value={String(datum.indexValue)} />
                         : drillDown(event);
                       openDrill(
                         { title: String(datum.indexValue), field: crossFilterField ?? "label", value: datum.indexValue, mode: drillDownMode },

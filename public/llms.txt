@@ -14,7 +14,7 @@ npx metricui init
 ## Import
 
 ```tsx
-import { KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, useCrossFilteredData, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction, ExportButton } from "metricui";
+import { Dashboard, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, useCrossFilteredData, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction, ExportButton } from "metricui";
 import "metricui/styles.css";
 ```
 
@@ -24,6 +24,64 @@ import "metricui/styles.css";
 import { MetricProvider, DEFAULT_METRIC_CONFIG, DEFAULT_MOTION_CONFIG, SERIES_COLORS, fmt } from "metricui";
 import { ThemeProvider } from "metricui/theme";
 ```
+
+---
+
+## Dashboard (All-in-One Wrapper)
+
+`<Dashboard>` replaces the 5-provider nesting pattern. One component, flat props, every hook works inside.
+
+### Before (5 providers)
+
+```tsx
+<MetricProvider theme="emerald" exportable>
+  <FilterProvider defaultPreset="30d">
+    <CrossFilterProvider>
+      <LinkedHoverProvider>
+        <DrillDown.Root>
+          <Content />
+        </DrillDown.Root>
+      </LinkedHoverProvider>
+    </CrossFilterProvider>
+  </FilterProvider>
+</MetricProvider>
+```
+
+### After (1 component)
+
+```tsx
+<Dashboard theme="emerald" exportable filters={{ defaultPreset: "30d" }}>
+  <Content />
+</Dashboard>
+```
+
+### Dashboard Props
+
+All props are optional. Omit `filters` to skip FilterProvider entirely.
+
+- `theme`: string | ThemePreset — theme preset (indigo, emerald, rose, amber, cyan, violet, slate, orange)
+- `colorScheme`: "light" | "dark" | "auto" — default: "auto"
+- `variant`: CardVariant — default card variant
+- `locale`: string — BCP 47 locale. Default: "en-US"
+- `currency`: string — ISO 4217 currency. Default: "USD"
+- `animate`: boolean — global animation toggle. Default: true
+- `dense`: boolean — compact layout. Default: false
+- `exportable`: boolean — global export toggle. Default: false
+- `tooltipHint`: boolean — tooltip action hints. Default: true
+- `loading`: boolean — global loading skeletons. Default: false
+- `texture`: boolean — noise texture on cards. Default: true
+- `filters`: `{ defaultPreset?, defaultComparison?, referenceDate? }` — filter config. Omit to skip FilterProvider.
+- `maxDrillDepth`: number — max nested drill levels. Default: 4
+- `renderContent`: `(trigger) => ReactNode | null` — reactive drill content renderer
+- `emptyState`: `{ message?, icon? }` — default empty state
+- `errorState`: `{ message? }` — default error state
+
+### When to Use Individual Providers
+
+Use `<Dashboard>` for the 90% case. Drop down to individual providers when you need:
+- Two separate FilterProviders for different page sections
+- DrillDownProvider without the auto-rendered overlay
+- Fine-grained control over provider ordering
 
 ---
 
@@ -1373,6 +1431,17 @@ Smart auto-layout grid for dashboards. Drop components in, it figures out the la
 
 Category: table
 Data table with sorting, pagination, search, formatting, sticky headers, pinned columns, and footer row. Generic over row type T.
+
+**Type inference:** DataTable accepts any typed interface or object — no `as never[]` casts needed. Pass `data={myTypedArray}` directly. Column `key` values are strings (not constrained to `keyof T`) so pre-defined column arrays work without casts. Internally uses `DataRow` (`Record<string, any>`) as the base constraint.
+
+**Smart column inference:** When `columns` is omitted, DataTable infers column types from the actual values (not key names):
+- Numbers → right-aligned, `format: "number"`, sortable
+- Booleans → badge (center-aligned)
+- Date objects or ISO date strings → date column
+- Low-cardinality strings (≤10 unique values) → badge
+- Number arrays → sparkline
+- Everything else → text
+All columns are sortable by default. Pass explicit `columns` to override any inference.
 
 #### Props
 
@@ -3207,6 +3276,22 @@ function MyComponent() {
   // filters.clearAll()
 }
 ```
+
+### Convenience Hooks
+
+Shortcuts for common filter reads. No null-coalescing needed.
+
+```tsx
+import { useFilterValue, useHasComparison, useActiveFilterCount } from "metricui";
+
+const regions = useFilterValue("region");       // string[] — empty array if unset
+const hasComparison = useHasComparison();        // boolean
+const count = useActiveFilterCount();            // number (period + comparison + dimensions)
+```
+
+- `useFilterValue(field)` — returns `filters.dimensions[field]` or `[]`. No null checks.
+- `useHasComparison()` — true when comparison mode is active and period exists.
+- `useActiveFilterCount()` — count of active filters (period, comparison, each dimension). Does not include cross-filter — use `useCrossFilter()?.isActive` for that.
 
 ### Filter Types
 

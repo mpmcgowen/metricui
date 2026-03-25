@@ -48,6 +48,7 @@ import {
   Map,
   Milestone,
   Download,
+  Sparkles,
 } from "lucide-react";
 
 interface NavItem {
@@ -70,6 +71,7 @@ const nav: { label: string; items: NavItem[] }[] = [
       { title: "Interactions", href: "/docs/guides/interactions", icon: Crosshair },
       { title: "Data States", href: "/docs/guides/data-states", icon: AlertCircle },
       { title: "Accessibility", href: "/docs/guides/accessibility", icon: Accessibility },
+      { title: "AI Tools", href: "/docs/guides/ai-tools", icon: Sparkles },
       { title: "MCP Server", href: "/docs/guides/mcp-server", icon: Bot },
       { title: "Cookbook", href: "/docs/guides/cookbook", icon: Layers },
     ],
@@ -100,6 +102,7 @@ const nav: { label: string; items: NavItem[] }[] = [
   {
     label: "Layout",
     items: [
+      { title: "Dashboard", href: "/docs/dashboard", icon: Layers },
       { title: "Dashboard Header", href: "/docs/dashboard-header", icon: PanelTop },
       { title: "Section Header", href: "/docs/section-header", icon: Heading },
       { title: "Divider", href: "/docs/divider", icon: SeparatorHorizontal },
@@ -135,6 +138,7 @@ const nav: { label: string; items: NavItem[] }[] = [
   {
     label: "Demos",
     items: [
+      { title: "Web Analytics", href: "/demos/analytics", icon: BarChart3 },
       { title: "SaaS Analytics", href: "/demos/saas", icon: TrendingUp },
       { title: "GitHub Analytics", href: "/demos/github", icon: Github },
       { title: "Wikipedia Live", href: "/demos/wikipedia", icon: Globe },

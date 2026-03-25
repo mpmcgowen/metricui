@@ -181,6 +181,60 @@ export function useMetricFilters(): FilterContextValue | null {
   return useContext(FilterCtx);
 }
 
+/**
+ * Read a single dimension filter value. Returns the selected values as a
+ * string array, or an empty array if nothing is selected or no provider exists.
+ *
+ * @example
+ * ```tsx
+ * const regions = useFilterValue("region"); // string[]
+ * const industry = useFilterValue("industry"); // string[]
+ * ```
+ */
+export function useFilterValue(field: string): string[] {
+  const filters = useContext(FilterCtx);
+  return filters?.dimensions[field] ?? [];
+}
+
+/**
+ * Returns true when a comparison period is active (mode is not "none" and
+ * comparisonPeriod exists). Useful for conditionally showing comparison data.
+ *
+ * @example
+ * ```tsx
+ * const hasComparison = useHasComparison();
+ * <AreaChart comparisonData={hasComparison ? prevData : undefined} />
+ * ```
+ */
+export function useHasComparison(): boolean {
+  const filters = useContext(FilterCtx);
+  if (!filters) return false;
+  return filters.comparisonMode !== "none" && filters.comparisonPeriod != null;
+}
+
+/**
+ * Returns the number of active filters (period, comparison, dimensions, cross-filter).
+ * Useful for badges, conditional UI, and "N filters active" indicators.
+ *
+ * @example
+ * ```tsx
+ * const count = useActiveFilterCount();
+ * {count > 0 && <Badge>{count} active</Badge>}
+ * ```
+ */
+export function useActiveFilterCount(): number {
+  const filters = useContext(FilterCtx);
+  let count = 0;
+  if (filters?.period) count++;
+  if (filters?.comparisonMode && filters.comparisonMode !== "none") count++;
+  if (filters?.dimensions) {
+    for (const k of Object.keys(filters.dimensions)) {
+      if (filters.dimensions[k]?.length > 0) count++;
+    }
+  }
+  return count;
+}
+
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------

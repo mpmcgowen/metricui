@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { DataTable } from "@/components/tables/DataTable";
 import { MetricGrid } from "@/components/layout/MetricGrid";
 import { KpiCard } from "@/components/cards/KpiCard";
+import type { DataRow } from "@/lib/types";
 
 /**
  * Auto-generated drill-down content. Shows a summary KPI row + a DataTable
@@ -16,7 +17,7 @@ export function AutoDrillTable({
   field,
   value,
 }: {
-  data: Record<string, unknown>[];
+  data: DataRow[];
   field: string;
   value: string | number;
 }) {

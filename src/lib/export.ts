@@ -1,5 +1,7 @@
 "use client";
 
+import type { DataRow } from "@/lib/types";
+
 // ---------------------------------------------------------------------------
 // Export utilities — image capture, CSV generation, clipboard, file naming
 // ---------------------------------------------------------------------------
@@ -43,7 +45,7 @@ export async function captureElementAsPng(element: HTMLElement): Promise<Blob> {
  * Generate CSV content from tabular data.
  */
 export function generateCsv(
-  data: Record<string, unknown>[],
+  data: DataRow[],
   columns?: { key: string; header?: string; format?: ((v: unknown) => string) | undefined }[],
   metadata?: string,
 ): string {

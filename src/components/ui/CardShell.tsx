@@ -8,7 +8,7 @@ import { ExportButton } from "@/components/ui/ExportButton";
 import { ChartSkeletonContent, KpiSkeletonContent, DataStateWrapper } from "@/components/ui/DataStateWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useMetricConfig } from "@/lib/MetricProvider";
-import type { CardVariant, EmptyState, ErrorState, StaleState, ExportableConfig } from "@/lib/types";
+import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState, ExportableConfig } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -65,7 +65,7 @@ export interface CardShellProps {
   // --- Export ---
   exportable?: ExportableConfig;
   /** Auto-passed source data for CSV export */
-  exportData?: Record<string, unknown>[];
+  exportData?: DataRow[];
   /** Formatted value for clipboard copy (KPIs) */
   copyValue?: string;
 

@@ -26,7 +26,7 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import { devWarn, devWarnDeprecated } from "@/lib/devWarnings";
 import type { LegendConfig, ReferenceLine, ThresholdBand, BarClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, ChartNullMode, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { inferSchema, categoryKeys, categoryColors, type Category } from "@/lib/dataTransform";
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -64,7 +64,7 @@ export interface BarChartProps {
   /** Preset configuration that sets sensible defaults for common use cases.
    *  Individual props override preset values. */
   preset?: BarChartPreset;
-  data?: Record<string, string | number>[];
+  data?: DataRow[];
   /** Column name to use as the X-axis (index). Alias for `indexBy`. */
   index?: string;
   /** Value columns to chart. Can be plain strings or rich config objects.
@@ -1018,7 +1018,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
         empty={empty}
         error={error}
         stale={stale}
-        exportData={rawData as Record<string, unknown>[]}
+        exportData={rawData as DataRow[]}
         below={legendConfig ? (
           <ChartLegend
             items={legendItems}
@@ -1100,7 +1100,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
                   onBarClick?.(event);
                   if (drillDown) {
                     const content = drillDown === true
-                      ? <AutoDrillTable data={rawData as Record<string, unknown>[]} field={indexBy} value={String(datum.indexValue)} />
+                      ? <AutoDrillTable data={rawData as DataRow[]} field={indexBy} value={String(datum.indexValue)} />
                       : drillDown(event);
                     openDrill(
                       { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue, mode: drillDownMode },

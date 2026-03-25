@@ -13,6 +13,7 @@ import {
   exportFilename,
   buildFilterMetadata,
 } from "@/lib/export";
+import type { DataRow } from "@/lib/types";
 import { useMetricFilters } from "@/lib/FilterContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 
@@ -22,7 +23,7 @@ interface ExportButtonProps {
   /** The element to capture for PNG export */
   targetRef: React.RefObject<HTMLElement | null>;
   /** Raw data for CSV export. If not provided, CSV option is hidden. */
-  data?: Record<string, unknown>[];
+  data?: DataRow[];
   /** Column definitions for CSV export */
   columns?: { key: string; header?: string }[];
   /** Formatted value for clipboard copy (KPI cards) */

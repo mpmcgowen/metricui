@@ -797,8 +797,8 @@ function DashboardContent() {
           />
           {view === "Issues" ? (
             <DataTable
-              data={filteredIssues as never[]}
-              columns={issueColumns as never[]}
+              data={filteredIssues}
+              columns={issueColumns}
               title="Recent Issues"
               subtitle={labelFilter.length > 0 ? `Filtered by: ${labelFilter.join(", ")}` : "Click a row to drill into issue details"}
               pageSize={8}
@@ -940,8 +940,8 @@ function DashboardContent() {
             />
           ) : (
             <DataTable
-              data={periodPulls as never[]}
-              columns={prColumns as never[]}
+              data={periodPulls}
+              columns={prColumns}
               title="Recent Pull Requests"
               pageSize={8}
               dense

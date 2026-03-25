@@ -7,6 +7,15 @@
 import type { FormatOption, Condition, GoalConfig, ComparisonMode } from "./format";
 
 // ---------------------------------------------------------------------------
+// Data row — the universal row constraint used across DataTable, CardShell,
+// Export, DrillDown, and all chart components. Defined once here so changing
+// the constraint propagates everywhere.
+// ---------------------------------------------------------------------------
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DataRow = Record<string, any>;
+
+// ---------------------------------------------------------------------------
 // Comparison
 // ---------------------------------------------------------------------------
 
@@ -149,7 +158,7 @@ export interface Annotation {
 // ---------------------------------------------------------------------------
 
 /** Export configuration. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. */
-export type ExportableConfig = boolean | { data: Record<string, unknown>[] };
+export type ExportableConfig = boolean | { data: DataRow[] };
 
 // ---------------------------------------------------------------------------
 // Click / drill-down

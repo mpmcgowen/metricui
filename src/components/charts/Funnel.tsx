@@ -19,7 +19,7 @@ import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
-import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -350,7 +350,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
         empty={empty}
         error={error}
         stale={stale}
-        exportData={dataProp as unknown as Record<string, unknown>[]}
+        exportData={dataProp as unknown as DataRow[]}
         below={<>
           {legendConfig && (
             <ChartLegend
@@ -428,7 +428,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
                     }
                     if (drillDown) {
                       const content = drillDown === true
-                        ? <AutoDrillTable data={data as unknown as Record<string, unknown>[]} field="id" value={String(part.data.id)} />
+                        ? <AutoDrillTable data={data as unknown as DataRow[]} field="id" value={String(part.data.id)} />
                         : drillDown({ id: String(part.data.id), value: part.data.value, label: partLabel });
                       openDrill(
                         { title: partLabel, field: crossFilterField ?? "id", value: String(part.data.id), mode: drillDownMode },

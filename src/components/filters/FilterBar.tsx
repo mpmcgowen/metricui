@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { CARD_CLASSES, HOVER_CLASSES } from "@/lib/styles";
 import { useMetricConfig } from "@/lib/MetricProvider";
 import { FilterTags, type FilterTagsProps } from "./FilterTags";
-import { useMetricFilters } from "@/lib/FilterContext";
+import { useMetricFilters, useActiveFilterCount } from "@/lib/FilterContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import type { CardVariant } from "@/lib/types";
 
@@ -37,6 +37,9 @@ interface SlotProps { children: ReactNode }
 // Slots
 // ---------------------------------------------------------------------------
 
+function FilterBarNav({ children }: SlotProps) { return <>{children}</>; }
+FilterBarNav.displayName = "FilterBar.Nav";
+
 function FilterBarPrimary({ children }: SlotProps) { return <>{children}</>; }
 FilterBarPrimary.displayName = "FilterBar.Primary";
 
@@ -48,32 +51,25 @@ FilterBarSecondary.displayName = "FilterBar.Secondary";
 // ---------------------------------------------------------------------------
 
 function parseChildren(children: ReactNode) {
+  let nav: ReactNode[] = [];
   let primary: ReactNode[] = [];
   let secondary: ReactNode[] = [];
   let foundSlot = false;
   Children.forEach(children, (child) => {
     if (!isValidElement(child)) return;
     const name = (child.type as { displayName?: string })?.displayName ?? "";
-    if (name === "FilterBar.Primary") { foundSlot = true; primary = Children.toArray((child.props as SlotProps).children); }
+    if (name === "FilterBar.Nav") { foundSlot = true; nav = Children.toArray((child.props as SlotProps).children); }
+    else if (name === "FilterBar.Primary") { foundSlot = true; primary = Children.toArray((child.props as SlotProps).children); }
     else if (name === "FilterBar.Secondary") { foundSlot = true; secondary = Children.toArray((child.props as SlotProps).children); }
   });
   if (!foundSlot) primary = Children.toArray(children);
-  return { primary, secondary };
+  return { nav, primary, secondary };
 }
 
-function useActiveFilterCount(): number {
-  const filters = useMetricFilters();
+function useActiveFilterCountWithCrossFilter(): number {
+  const base = useActiveFilterCount();
   const cf = useCrossFilter();
-  let count = 0;
-  if (filters?.period) count++;
-  if (filters?.comparisonMode && filters.comparisonMode !== "none") count++;
-  if (filters?.dimensions) {
-    for (const k of Object.keys(filters.dimensions)) {
-      if (filters.dimensions[k]?.length > 0) count++;
-    }
-  }
-  if (cf?.isActive) count++;
-  return count;
+  return base + (cf?.isActive ? 1 : 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -117,12 +113,14 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [secondaryExpanded, setSecondaryExpanded] = useState(false);
 
-  const { primary, secondary } = parseChildren(children);
+  const { nav, primary, secondary } = parseChildren(children);
+  const hasNav = nav.length > 0;
   const hasSecondary = secondary.length > 0;
-  const activeCount = useActiveFilterCount();
+  const activeCount = useActiveFilterCountWithCrossFilter();
   const hasActive = activeCount > 0;
   const filters = useMetricFilters();
   const cf = useCrossFilter();
+
 
   return (
     <div
@@ -143,6 +141,13 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
       )}
       style={sticky ? { background: "color-mix(in srgb, var(--card-bg) 80%, transparent)" } : undefined}
     >
+      {/* ── Nav tabs — rendered above the filter header ── */}
+      {hasNav && (
+        <div className="flex items-center border-b border-[var(--card-border)] px-[var(--mu-padding)]">
+          {nav}
+        </div>
+      )}
+
       {/* ── Header — always visible ── */}
       <button
         onClick={() => collapsible && setCollapsed((c) => !c)}
@@ -267,6 +272,7 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
 // ---------------------------------------------------------------------------
 
 export const FilterBar = Object.assign(FilterBarInner, {
+  Nav: FilterBarNav,
   Primary: FilterBarPrimary,
   Secondary: FilterBarSecondary,
 });

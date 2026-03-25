@@ -1,18 +1,16 @@
 "use client";
 
-import { useRef, useLayoutEffect, useState } from "react";
+import { useRef, useLayoutEffect } from "react";
 
 /**
  * Viewport-aware tooltip wrapper.
  *
- * Wraps any tooltip content and nudges it back into the viewport
- * if it would overflow the right or bottom edge. Works with Nivo's
- * default tooltip positioning (absolute inside the chart container).
+ * Nudges tooltip content back into the viewport if it overflows.
+ * Uses direct DOM mutation (no setState) to avoid render loops
+ * with Nivo's useLayoutEffect-based tooltip positioning.
  */
 export function TooltipWrapper({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const nudgeRef = useRef({ x: 0, y: 0 });
-  const [nudge, setNudge] = useState({ x: 0, y: 0 });
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -23,34 +21,19 @@ export function TooltipWrapper({ children }: { children: React.ReactNode }) {
     const vh = window.innerHeight;
     const pad = 8;
 
-    // Compute the natural (untransformed) rect by subtracting current nudge
-    const naturalRight = rect.right - nudgeRef.current.x;
-    const naturalLeft = rect.left - nudgeRef.current.x;
-    const naturalBottom = rect.bottom - nudgeRef.current.y;
-    const naturalTop = rect.top - nudgeRef.current.y;
-
     let dx = 0;
     let dy = 0;
 
-    if (naturalRight > vw - pad) dx = vw - pad - naturalRight;
-    if (naturalLeft + dx < pad) dx = pad - naturalLeft;
-    if (naturalBottom > vh - pad) dy = vh - pad - naturalBottom;
-    if (naturalTop + dy < pad) dy = pad - naturalTop;
+    if (rect.right > vw - pad) dx = vw - pad - rect.right;
+    if (rect.left + dx < pad) dx = pad - rect.left;
+    if (rect.bottom > vh - pad) dy = vh - pad - rect.bottom;
+    if (rect.top + dy < pad) dy = pad - rect.top;
 
-    if (dx !== nudgeRef.current.x || dy !== nudgeRef.current.y) {
-      nudgeRef.current = { x: dx, y: dy };
-      setNudge({ x: dx, y: dy });
-    }
+    el.style.transform = dx || dy ? `translate(${dx}px, ${dy}px)` : "";
   });
 
   return (
-    <div
-      ref={ref}
-      style={{
-        transform: nudge.x || nudge.y ? `translate(${nudge.x}px, ${nudge.y}px)` : undefined,
-        pointerEvents: "none",
-      }}
-    >
+    <div ref={ref} style={{ pointerEvents: "none" }}>
       {children}
     </div>
   );

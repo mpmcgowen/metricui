@@ -367,7 +367,7 @@ function WikipediaDashboardInner() {
             layout="horizontal"
           />
           <DataTable
-            data={recentForTable as never[]}
+            data={recentForTable}
             columns={[
               { key: "title", header: "Page", sortable: true },
               { key: "user", header: "Editor" },
@@ -614,7 +614,7 @@ function WikipediaDashboardInner() {
                     <KpiCard title="Unique Editors" value={new Set(wikiEdits.map((e) => e.user)).size} format="number" />
                     <KpiCard title="Bot Ratio" value={wBotRatio} format="percent" />
                     <DataTable
-                      data={recentWikiEdits as never[]}
+                      data={recentWikiEdits}
                       columns={[
                         { key: "title", header: "Page", sortable: true },
                         { key: "user", header: "Editor" },
@@ -658,7 +658,7 @@ function WikipediaDashboardInner() {
                     <KpiCard title="% of Total" value={event.percentage} format="percent" />
                     <KpiCard title="Unique Editors" value={new Set(typeEdits.map((e) => e.user)).size} format="number" />
                     <DataTable
-                      data={recentTypeEdits as never[]}
+                      data={recentTypeEdits}
                       columns={[
                         { key: "title", header: "Page", sortable: true },
                         { key: "user", header: "Editor" },
@@ -692,8 +692,8 @@ function WikipediaDashboardInner() {
             {/* \u2500\u2500 Live Feed \u2500\u2500 */}
             <MetricGrid.Section title="Live Feed" subtitle="Recent edits streaming in real-time" />
             <DataTable
-              data={filteredEdits as never[]}
-              columns={editColumns as never[]}
+              data={filteredEdits}
+              columns={editColumns}
               title={editFilter === "All Edits" ? "Recent Edits" : `Recent Edits (${editFilter})`}
               subtitle="Last 50 edits — click a row for edit detail"
               pageSize={15}
@@ -742,9 +742,9 @@ function WikipediaDashboardInner() {
                   </MetricGrid>
                 );
               }}
-              renderExpanded={renderEditExpanded as never}
+              renderExpanded={renderEditExpanded}
               rowConditions={[
-                { when: (row: Record<string, unknown>) => row.bot === true, className: "bg-blue-50/30 dark:bg-blue-950/15" },
+                { when: (row: WikiEdit) => row.bot === true, className: "bg-blue-50/30 dark:bg-blue-950/15" },
               ]}
             />
 

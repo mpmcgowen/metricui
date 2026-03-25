@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { DataTable } from "@/components/tables/DataTable";
 import type { ColumnDef } from "@/components/tables/DataTable";
+import type { DataRow } from "@/lib/types";
 import { Badge } from "@/components/ui/Badge";
 import {
   Toggle,
@@ -314,8 +315,8 @@ export function DataTablePlayground() {
           </p>
           <div className="mx-auto max-w-4xl">
               <DataTable
-                data={data as Record<string, unknown>[]}
-                columns={columns as ColumnDef<Record<string, unknown>>[]}
+                data={data as DataRow[]}
+                columns={columns as ColumnDef<DataRow>[]}
                 title={title}
                 subtitle={subtitle || undefined}
                 description={description || undefined}

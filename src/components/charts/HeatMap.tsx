@@ -10,7 +10,7 @@ import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
-import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { CellClickEvent } from "@/lib/chartTypes";
 import { toHeatMapSeries, inferSchema, categoryKeys, type Category } from "@/lib/dataTransform";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
@@ -32,7 +32,7 @@ type HeatMapSeries = {
 export type HeatMapColorScale = "sequential" | "diverging";
 
 export interface HeatMapProps {
-  data?: HeatMapSeries[] | Record<string, unknown>[];
+  data?: HeatMapSeries[] | DataRow[];
   /** Column name to use as row labels. */
   index?: string;
   /** Column names to use as cell values (become the X-axis). */
@@ -236,7 +236,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   const data = useMemo(() => {
     // 1. Unified format: flat rows + index + categories
     if (dataProp && dataProp.length > 0 && (indexProp || categoriesProp)) {
-      const rows = dataProp as Record<string, unknown>[];
+      const rows = dataProp as DataRow[];
       const inferred = inferSchema(rows);
       const index = indexProp ?? inferred?.index;
       const categories = categoriesProp ?? inferred?.categories;
@@ -249,7 +249,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
       const first = dataProp[0] as Record<string, unknown>;
       if ("id" in first && "data" in first) return dataProp as HeatMapSeries[];
       // 2b. Auto-infer from flat rows
-      const rows = dataProp as Record<string, unknown>[];
+      const rows = dataProp as DataRow[];
       const inferred = inferSchema(rows);
       if (inferred) return toHeatMapSeries(rows, inferred.index, inferred.categories);
       return dataProp as HeatMapSeries[];
@@ -313,7 +313,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
         empty={empty}
         error={error}
         stale={stale}
-        exportData={dataProp as Record<string, unknown>[]}
+        exportData={dataProp as DataRow[]}
       >
         <div style={{ height: resolvedHeight }}>
           <ResponsiveHeatMap
@@ -374,7 +374,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
                     onCellClick?.(event);
                     if (drillDown) {
                       const content = drillDown === true
-                        ? <AutoDrillTable data={dataProp as Record<string, unknown>[]} field={indexProp ?? "x"} value={String(cell.data.x)} />
+                        ? <AutoDrillTable data={dataProp as DataRow[]} field={indexProp ?? "x"} value={String(cell.data.x)} />
                         : drillDown(event);
                       openDrill(
                         { title: String(cell.data.x), field: crossFilterField ?? "x", value: String(cell.data.x), mode: drillDownMode },
