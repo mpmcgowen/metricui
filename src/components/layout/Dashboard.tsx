@@ -8,7 +8,7 @@ import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
 import { DrillDownProvider } from "@/lib/DrillDownContext";
 import { DrillDownOverlay, type DrillDownOverlayProps } from "@/components/ui/DrillDownPanel";
 import { AiProvider, type AiConfig } from "@/lib/AiContext";
-import type { CardVariant, NullDisplay, ChartNullMode } from "@/lib/types";
+import type { CardVariant, NullDisplay, ChartNullMode, ExportableConfig } from "@/lib/types";
 import type { ThemePreset } from "@/lib/themes";
 import type { ColorScheme } from "@/lib/MetricProvider";
 import type { MotionConfig } from "@/lib/motion";
@@ -51,8 +51,8 @@ export interface DashboardProps {
   loading?: boolean;
   /** Noise texture on cards. Default: true. */
   texture?: boolean;
-  /** Global export toggle. Default: false. */
-  exportable?: boolean;
+  /** Global export toggle. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. */
+  exportable?: ExportableConfig;
   /** Show action hints in chart tooltips. Default: true. */
   tooltipHint?: boolean;
 
@@ -168,7 +168,7 @@ export function Dashboard({
       errorState={errorState}
       loading={loading}
       texture={texture}
-      exportable={exportable}
+      exportable={!!exportable}
       tooltipHint={tooltipHint}
     >
       {content}

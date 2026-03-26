@@ -111,7 +111,7 @@ export default function WikipediaDashboard() {
       theme="violet"
       variant="elevated"
       exportable
-      filters={{}}
+      filters={{}} /* activates FilterProvider for dimension filters (editType, wiki) — no period preset needed */
       renderContent={(trigger) => renderContentRef.current(trigger)}
       ai={{
         analyze: analyzeWithClaude as any, // eslint-disable-line @typescript-eslint/no-explicit-any

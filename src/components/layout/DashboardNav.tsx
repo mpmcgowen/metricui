@@ -10,11 +10,6 @@ import { useAi } from "@/lib/AiContext";
 import type { BaseComponentProps, CardVariant } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
-// Shared context for tab panels — allows DashboardNavPanels to render separately
-// ---------------------------------------------------------------------------
-
-
-// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -29,8 +24,6 @@ export interface DashboardNavTab {
   badge?: number | string;
   /** Badge format option */
   badgeFormat?: FormatOption;
-  /** Tab content — rendered by DashboardNav. All tabs stay mounted (hidden via CSS). */
-  content?: React.ReactNode;
 }
 
 export interface DashboardNavProps extends BaseComponentProps {

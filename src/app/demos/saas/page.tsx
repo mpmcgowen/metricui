@@ -363,8 +363,8 @@ function DashboardContent() {
                 <KpiCard title="Avg Seats" value={activeAccts.length > 0 ? Math.round(activeAccts.reduce((s, a) => s + a.seats, 0) / activeAccts.length) : 0} format="number" />
                 <BarChart
                   data={byIndustry}
-                  keys={["accounts"]}
-                  indexBy="industry"
+                  categories={["accounts"]}
+                  index="industry"
                   title="Accounts by Industry"
                   format="number"
                   height={260}
@@ -499,8 +499,8 @@ function DashboardContent() {
       <SectionHeader id="customers" title="Customers" subtitle="Account distribution — click a country bar to cross-filter" />
       <BarChart
         data={countryBarData.countryDistribution}
-        keys={["accounts"]}
-        indexBy="country"
+        categories={["accounts"]}
+        index="country"
         title="Accounts by Country"
         description="Click a bar to drill into that country's accounts."
         aiContext="US dominates account count but ARPU is highest in UK and Germany (Enterprise-heavy). APAC is growing fastest QoQ. Brazil accounts have highest churn."

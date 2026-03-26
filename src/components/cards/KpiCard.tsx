@@ -104,10 +104,14 @@ export interface KpiCardProps extends DataComponentProps {
   highlight?: boolean | string;
   /** X-axis value this KPI represents — when linked hover matches, card highlights. */
   linkedIndex?: string | number;
-  /** Cross-filter field this KPI represents — dims when a non-matching selection is active. */
+  /** Cross-filter field this KPI represents — dims when a non-matching selection is active.
+   *  @deprecated Use `crossFilter` instead. */
   crossFilterField?: string;
-  /** Cross-filter value this KPI represents — matches against active selection. */
+  /** Cross-filter value this KPI represents — matches against active selection.
+   *  @deprecated Use `crossFilter` instead. */
   crossFilterValue?: string | number;
+  /** Cross-filter config — unified shape (same as charts). Takes precedence over legacy crossFilterField/crossFilterValue. */
+  crossFilter?: boolean | { field?: string; value?: string | number };
   /** Custom trend icons for comparison badges */
   trendIcon?: TrendIconConfig;
   /** What to show when value is null/undefined/NaN/Infinity. Default: "dash" */
@@ -237,8 +241,9 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   animate,
   highlight,
   linkedIndex,
-  crossFilterField,
-  crossFilterValue,
+  crossFilterField: crossFilterFieldLegacy,
+  crossFilterValue: crossFilterValueLegacy,
+  crossFilter: crossFilterProp,
   trendIcon,
   nullDisplay,
   titlePosition = "top",
@@ -278,9 +283,19 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   const error = stateConfig?.error ?? errorProp;
   const stale = stateConfig?.stale ?? staleProp;
 
+  // --- Resolve unified crossFilter prop (takes precedence over legacy) ---
+  const crossFilterField = crossFilterProp
+    ? (typeof crossFilterProp === "object" && crossFilterProp.field ? crossFilterProp.field : crossFilterFieldLegacy)
+    : crossFilterFieldLegacy;
+  const crossFilterValue = crossFilterProp
+    ? (typeof crossFilterProp === "object" && crossFilterProp.value !== undefined ? crossFilterProp.value : crossFilterValueLegacy)
+    : crossFilterValueLegacy;
+
   // --- Deprecation warnings ---
   if (process.env.NODE_ENV !== "production") {
     if (sparklineDataProp !== undefined) devWarnDeprecated("KpiCard", "sparklineData", "sparkline={{ data: [...] }}");
+    if (crossFilterFieldLegacy !== undefined) devWarnDeprecated("KpiCard", "crossFilterField", "crossFilter={{ field: '...' }}");
+    if (crossFilterValueLegacy !== undefined) devWarnDeprecated("KpiCard", "crossFilterValue", "crossFilter={{ value: '...' }}");
   }
 
   // --- String value passthrough ---

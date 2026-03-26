@@ -12,7 +12,7 @@ import { StatusIndicator } from "@/components/ui/StatusIndicator";
 import type { StatusRule, StatusSize } from "@/components/ui/StatusIndicator";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useScrollIndicators } from "@/lib/useScrollIndicators";
-import { devWarn } from "@/lib/devWarnings";
+import { devWarn, devWarnDeprecated } from "@/lib/devWarnings";
 import type { CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig, DataRow } from "@/lib/types";
 import { useLinkedHover } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
@@ -355,11 +355,20 @@ function DataTableInner<T extends DataRow = DataRow>(
   const columns = resolvedColumns;
 
   // Dev warnings
-  if (process.env.NODE_ENV !== "production" && data.length > 0 && columns.length > 0) {
-    const firstRow = data[0] as DataRow;
-    for (const col of columns) {
-      if (col.key && !(String(col.key) in firstRow)) {
-        devWarn(`DataTable.column.${String(col.key)}`, `<DataTable> column key "${String(col.key)}" not found in data. Available keys: ${Object.keys(firstRow).join(", ")}`);
+  if (process.env.NODE_ENV !== "production") {
+    for (const col of resolvedColumns) {
+      if (col.label && !col.header) {
+        devWarnDeprecated("DataTable", "column.label", "column.header");
+        break; // warn once
+      }
+    }
+
+    if (data.length > 0 && columns.length > 0) {
+      const firstRow = data[0] as DataRow;
+      for (const col of columns) {
+        if (col.key && !(String(col.key) in firstRow)) {
+          devWarn(`DataTable.column.${String(col.key)}`, `<DataTable> column key "${String(col.key)}" not found in data. Available keys: ${Object.keys(firstRow).join(", ")}`);
+        }
       }
     }
   }
