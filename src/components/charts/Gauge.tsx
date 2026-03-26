@@ -65,7 +65,7 @@ export interface GaugeProps extends DataComponentProps {
   // Standard MetricUI props
   animate?: boolean | AnimationConfig;
   nullDisplay?: NullDisplay;
-  classNames?: { root?: string; header?: string; chart?: string };
+  classNames?: { root?: string; header?: string; chart?: string; /** Alias for `chart` */ body?: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -407,7 +407,7 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
         variant={resolvedVariant}
 
         className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
+        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
         loading={loading}
         empty={empty}
         error={error}

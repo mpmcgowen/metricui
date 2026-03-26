@@ -79,7 +79,7 @@ export interface WaterfallProps extends DataComponentProps {
   /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
   tooltipHint?: boolean | string;
   /** Sub-element class name overrides */
-  classNames?: { root?: string; header?: string; chart?: string };
+  classNames?: { root?: string; header?: string; chart?: string; /** Alias for `chart` */ body?: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -423,7 +423,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
 
         dense={resolvedDense}
         className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
+        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
         loading={loading}
         empty={empty}
         error={error}

@@ -17,7 +17,7 @@ interface ChartContainerProps {
   children: React.ReactNode;
   below?: React.ReactNode;
   className?: string;
-  classNames?: { root?: string; header?: string; body?: string; footnote?: string };
+  classNames?: { root?: string; header?: string; body?: string; /** Alias for `body` — accepted for chart-level consistency */ chart?: string; footnote?: string };
   id?: string;
   "data-testid"?: string;
   height?: number;
@@ -38,11 +38,17 @@ interface ChartContainerProps {
 // Component — now a thin pass-through to CardShell
 // ---------------------------------------------------------------------------
 
-export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(function ChartContainer(props, ref) {
+export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(function ChartContainer({ classNames, ...props }, ref) {
+  // Resolve chart → body alias so CardShell gets the right key
+  const resolvedClassNames = classNames
+    ? { root: classNames.root, header: classNames.header, body: classNames.body ?? classNames.chart, footnote: classNames.footnote }
+    : undefined;
+
   return (
     <CardShell
       ref={ref as React.Ref<HTMLElement>}
       {...props}
+      classNames={resolvedClassNames}
       skeletonType="chart"
     />
   );

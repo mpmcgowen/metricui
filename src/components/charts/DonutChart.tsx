@@ -26,6 +26,7 @@ import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
 import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import { assertPeer } from "@/lib/peerCheck";
+import { devWarn } from "@/lib/devWarnings";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -125,7 +126,7 @@ export interface DonutChartProps extends DataComponentProps {
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
   /** Sub-element class name overrides */
-  classNames?: { root?: string; header?: string; chart?: string; legend?: string };
+  classNames?: { root?: string; header?: string; chart?: string; /** Alias for `chart` */ body?: string; legend?: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -350,6 +351,9 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
         else if (!valueKey && typeof v === "number") valueKey = k;
       }
       if (labelKey && valueKey) {
+        if (process.env.NODE_ENV !== "production") {
+          devWarn("DonutChart.autoInfer", "DonutChart: Data was auto-inferred from flat rows. For explicit control, pass `index` and `categories` props.");
+        }
         return toDonutData(rows, labelKey, [valueKey]);
       }
       return dataProp as DonutDatum[];
@@ -508,7 +512,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
         variant={resolvedVariant}
 
         className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
+        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
         loading={loading}
         empty={empty}
         error={error}

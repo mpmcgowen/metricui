@@ -10,7 +10,7 @@ import { ChartSkeletonContent, KpiSkeletonContent, DataStateWrapper } from "@/co
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Sparkles } from "lucide-react";
 import { useMetricConfig } from "@/lib/MetricProvider";
-import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState, ExportableConfig } from "@/lib/types";
+import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState, ExportableConfig, DataComponentProps } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -67,6 +67,8 @@ export interface CardShellProps {
   empty?: EmptyState;
   error?: ErrorState;
   stale?: StaleState;
+  /** Data state configuration — alternative to individual loading/empty/error/stale props */
+  state?: DataComponentProps["state"];
 
   // --- Export ---
   exportable?: ExportableConfig;
@@ -118,10 +120,11 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     flashClass,
     height,
     skeletonType = "chart",
-    loading,
-    empty,
-    error,
-    stale,
+    loading: loadingProp,
+    empty: emptyProp,
+    error: errorProp,
+    stale: staleProp,
+    state: stateConfig,
     exportable: exportableProp,
     exportData,
     copyValue,
@@ -136,6 +139,11 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
   const config = useMetricConfig();
   const resolvedVariant = variant ?? config.variant;
   const resolvedDense = dense ?? config.dense;
+  // --- Merge state grouping with flat props (flat props take precedence, then state config, then global config) ---
+  const loading = loadingProp ?? stateConfig?.loading;
+  const empty = emptyProp ?? stateConfig?.empty;
+  const error = errorProp ?? stateConfig?.error;
+  const stale = staleProp ?? stateConfig?.stale;
   const resolvedLoading = loading ?? config.loading;
   const resolvedExportable = exportableProp !== undefined ? !!exportableProp : config.exportable;
   const overrideExportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;

@@ -47,6 +47,13 @@ export interface DataComponentProps extends BaseComponentProps {
   stale?: StaleState;
   /** Enable export. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. */
   exportable?: ExportableConfig;
+  /** Data state configuration — alternative to individual loading/empty/error/stale props */
+  state?: {
+    loading?: boolean;
+    empty?: EmptyState;
+    error?: ErrorState;
+    stale?: StaleState;
+  };
 }
 
 // ---------------------------------------------------------------------------

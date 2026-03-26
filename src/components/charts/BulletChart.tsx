@@ -85,7 +85,7 @@ export interface BulletChartProps extends DataComponentProps {
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
   /** Sub-element class name overrides */
-  classNames?: { root?: string; header?: string; chart?: string };
+  classNames?: { root?: string; header?: string; chart?: string; /** Alias for `chart` */ body?: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -247,7 +247,7 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
 
         dense={resolvedDense}
         className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
+        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
         loading={loading}
         empty={empty}
         error={error}

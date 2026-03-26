@@ -139,7 +139,7 @@ export interface BarChartProps extends DataComponentProps {
   /** @deprecated Use groupMode="grouped" instead */
   grouped?: boolean;
   /** Sub-element class name overrides */
-  classNames?: { root?: string; header?: string; chart?: string; legend?: string };
+  classNames?: { root?: string; header?: string; chart?: string; /** Alias for `chart` */ body?: string; legend?: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -1007,6 +1007,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
         variant={resolvedVariant}
 
         className={classNames?.root ?? className}
+        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
         loading={loading}
         empty={empty}
         error={error}

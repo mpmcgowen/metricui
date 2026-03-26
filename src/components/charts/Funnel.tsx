@@ -100,7 +100,7 @@ export interface FunnelChartProps extends DataComponentProps {
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
   /** Sub-element class name overrides */
-  classNames?: { root?: string; header?: string; chart?: string; legend?: string };
+  classNames?: { root?: string; header?: string; chart?: string; /** Alias for `chart` */ body?: string; legend?: string };
 }
 
 // ---------------------------------------------------------------------------
@@ -332,7 +332,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
 
         dense={resolvedDense}
         className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.chart } : undefined}
+        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
         loading={loading}
         empty={empty}
         error={error}
