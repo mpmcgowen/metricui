@@ -458,6 +458,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       id={id}
       data-testid={dataTestId}
       componentName="KpiCard"
+      aiTitle={typeof title === "string" ? title : undefined}
       aiContext={aiContext}
       onClick={onClick ?? (drillDown ? drillDown.onClick : undefined)}
       href={href}

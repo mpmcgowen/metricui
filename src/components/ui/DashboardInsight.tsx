@@ -91,10 +91,28 @@ function AssistantMessage({ message }: { message: AiMessage }) {
 }
 
 function UserMessage({ message }: { message: AiMessage }) {
+  // Render @mentions as badges
+  const parts: ReactNode[] = [];
+  const mentionRegex = /@([^@]+?)(?=\s@|\s|$)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  const text = message.content;
+  while ((match = mentionRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
+    parts.push(
+      <span key={match.index} className="inline-flex items-center gap-0.5 rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">
+        <Sparkles className="h-2 w-2" />{match[1].trim()}
+      </span>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+
   return (
     <div className="flex justify-end">
       <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--accent)] px-3.5 py-2 text-[13px] leading-relaxed text-white">
-        {message.content}
+        {parts.length > 0 ? parts : text}
       </div>
     </div>
   );
@@ -124,10 +142,11 @@ function StreamingMessage({ text }: { text: string }) {
 // @ Mention dropdown
 // ---------------------------------------------------------------------------
 
-function MentionDropdown({ query, metrics, onSelect, position }: {
+function MentionDropdown({ query, metrics, onSelect, selectedIndex, position }: {
   query: string;
   metrics: AiMetric[];
   onSelect: (title: string) => void;
+  selectedIndex: number;
   position: { bottom: number; left: number };
 }) {
   const filtered = metrics.filter((m) =>
@@ -138,17 +157,23 @@ function MentionDropdown({ query, metrics, onSelect, position }: {
 
   return createPortal(
     <div
-      className="fixed z-[10001] max-h-48 w-64 overflow-y-auto rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] py-1 shadow-xl"
+      className="fixed z-[10001] max-h-56 w-72 overflow-y-auto rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] py-1 shadow-xl"
       style={{ bottom: position.bottom, left: position.left }}
     >
-      {filtered.map((m) => (
+      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+        Components on this tab
+      </div>
+      {filtered.map((m, i) => (
         <button
           key={m.title}
           onClick={() => onSelect(m.title)}
-          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12px] transition-colors hover:bg-[var(--card-glow)]"
+          className={cn(
+            "flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] transition-colors",
+            i === selectedIndex ? "bg-[var(--accent)]/10" : "hover:bg-[var(--card-glow)]",
+          )}
         >
-          <span className="rounded bg-[var(--accent)]/10 px-1 py-0.5 text-[10px] font-medium text-[var(--accent)]">{m.component}</span>
-          <span className="text-[var(--foreground)]">{m.title}</span>
+          <span className="font-medium text-[var(--accent)]">{m.title}</span>
+          <span className="rounded bg-[var(--card-glow)] px-1.5 py-0.5 text-[10px] text-[var(--muted)]">{m.component}</span>
         </button>
       ))}
     </div>,
@@ -184,6 +209,7 @@ export function DashboardInsight({
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
   const [mentionPos, setMentionPos] = useState({ bottom: 0, left: 0 });
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -244,6 +270,7 @@ export function DashboardInsight({
       const afterAt = value.slice(lastAt + 1);
       if (!afterAt.includes(" ") || afterAt.length < 20) {
         setMentionQuery(afterAt);
+        setMentionIndex(0);
         // Position dropdown above input
         const inputEl = inputRef.current;
         if (inputEl) {
@@ -362,8 +389,15 @@ export function DashboardInsight({
               value={input}
               onChange={(e) => handleInputChange(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey && !mentionQuery) { e.preventDefault(); handleSend(); }
-                if (e.key === "Escape") { setMentionQuery(null); setOpen(false); }
+                if (mentionQuery !== null) {
+                  const filtered = metrics.filter((m) => m.title.toLowerCase().includes(mentionQuery.toLowerCase()));
+                  if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex((i) => Math.min(i + 1, filtered.length - 1)); return; }
+                  if (e.key === "ArrowUp") { e.preventDefault(); setMentionIndex((i) => Math.max(i - 1, 0)); return; }
+                  if (e.key === "Enter" && filtered[mentionIndex]) { e.preventDefault(); handleMentionSelect(filtered[mentionIndex].title); return; }
+                  if (e.key === "Escape") { e.preventDefault(); setMentionQuery(null); return; }
+                }
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+                if (e.key === "Escape") { setOpen(false); }
               }}
               placeholder={placeholder}
               disabled={ai.isLoading}
@@ -402,6 +436,7 @@ export function DashboardInsight({
           query={mentionQuery}
           metrics={metrics}
           onSelect={handleMentionSelect}
+          selectedIndex={mentionIndex}
           position={mentionPos}
         />
       )}

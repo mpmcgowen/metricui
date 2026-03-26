@@ -30,6 +30,8 @@ export interface CardShellProps {
   componentName?: string;
   /** AI context — dev-provided hint about this specific component. Included in AI prompts. */
   aiContext?: string;
+  /** AI-only title — used for registration when the component renders its own title (e.g., KpiCard). Not rendered. */
+  aiTitle?: string;
 
   // --- Interaction ---
   /** Makes the card clickable. */
@@ -102,6 +104,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     below,
     componentName,
     aiContext,
+    aiTitle,
     onClick,
     href,
     clickable,
@@ -144,8 +147,8 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
   childrenRef.current = children; // always holds latest children
 
   useEffect(() => {
-    if (!ai || !title || bare) return;
-    const titleStr = typeof title === "string" ? title : "";
+    const titleStr = aiTitle || (typeof title === "string" ? title : "");
+    if (!ai || !titleStr || bare) return;
     if (!titleStr) return;
 
     const dataSummary: Record<string, unknown> = {};
@@ -170,7 +173,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     });
 
     return () => ai.unregisterMetric(aiId);
-  }, [ai, aiId, title, componentName, exportData, copyValue, bare, aiContext]);
+  }, [ai, aiId, title, aiTitle, componentName, exportData, copyValue, bare, aiContext]);
 
   const isClickable = !!(onClick || href || clickable);
   const Tag: "a" | "div" = href ? "a" : "div";
