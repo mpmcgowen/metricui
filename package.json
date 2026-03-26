@@ -1,6 +1,6 @@
 {
   "name": "metricui",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A React component library for building data dashboards — KPI cards, charts, tables, and more with built-in formatting, theming, and data states.",
   "keywords": [
     "react",
@@ -27,6 +27,8 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "unpkg": "./dist/metricui.browser.mjs",
+  "jsdelivr": "./dist/metricui.browser.mjs",
   "exports": {
     ".": {
       "import": {
@@ -38,6 +40,7 @@
         "default": "./dist/index.js"
       }
     },
+    "./browser": "./dist/metricui.browser.mjs",
     "./styles.css": "./dist/styles.css"
   },
   "bin": {

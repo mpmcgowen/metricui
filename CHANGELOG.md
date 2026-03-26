@@ -5,6 +5,37 @@ All notable changes to MetricUI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.1] - 2026-03-25
+
+### Fixed
+
+- 14 bugs: hardcoded KPIs, absurd comparisons, empty DonutChart exports, stale dates, missing comparison badges, NaN edge cases, dead code, Divider in MetricGrid, label filter persistence
+- KpiCard crossFilter: implemented dimming + click-to-select (was a no-op)
+- ChartContainer: `state` prop now resolves through to CardShell (was silently ignored)
+- DashboardNav: fixed AI tab registration race condition
+- DashboardNav: sliding indicator recalculates on resize
+- DashboardInsight: @mention regex trims trailing punctuation
+- Analytics demo: tab state syncs to URL (`?tab=conversions`)
+
+### Added
+
+- `useFilteredData` hook: one call replaces 60 lines of filter boilerplate
+- KpiCard declarative `drillDown`: `true | ((context) => ReactNode)` — same API as charts
+- KpiCard unified `crossFilter`: `boolean | { field?, value? }` — same API as charts
+- `state` grouping on all data components via DataComponentProps (was KpiCard-only)
+- `classNames.body` alias on all charts (maps to `classNames.chart`)
+- Runtime deprecation warnings: BarChart `keys`/`indexBy`, DataTable column `label`, KpiCard `crossFilterField`/`crossFilterValue`
+- Type exports: GoalConfig, Condition, SparklineType, TitlePosition, TitleAlign, TooltipConfig, AiConfig, AiMessage, QuickPrompt, BaseComponentProps, DataComponentProps
+- Component exports: Dashboard, DashboardNav, DashboardInsight
+- 141 new tests (436 total across 29 files) — full coverage of all critical components
+
+### Changed
+
+- SaaS demo: converted legacy `keys`/`indexBy` to `index`/`categories`
+- Dashboard `exportable` accepts `ExportableConfig`, not just boolean
+- DashboardNavTab: removed dead `content` prop
+- 14 documentation fixes: broken links, missing props, aiContext notes, BaseComponentProps docs, useFilteredData in llms.txt/MCP
+
 ## [0.6.0] - 2026-03-25
 
 ### Added
@@ -154,6 +185,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Built-in data states (loading, empty, error, stale)
 - MCP server for AI-assisted dashboard generation
 
+[0.6.1]: https://github.com/mpmcgowen/metricui/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/mpmcgowen/metricui/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/mpmcgowen/metricui/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mpmcgowen/metricui/compare/v0.3.0...v0.4.0
