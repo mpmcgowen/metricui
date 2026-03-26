@@ -167,6 +167,7 @@ function MentionDropdown({ query, metrics, onSelect, selectedIndex, position }: 
         <button
           key={m.title}
           onClick={() => onSelect(m.title)}
+          ref={(el) => { if (i === selectedIndex && el) el.scrollIntoView({ block: "nearest" }); }}
           className={cn(
             "flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] transition-colors",
             i === selectedIndex ? "bg-[var(--accent)]/10" : "hover:bg-[var(--card-glow)]",
@@ -211,6 +212,7 @@ export function DashboardInsight({
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionIndex, setMentionIndex] = useState(0);
   const [mentionPos, setMentionPos] = useState({ bottom: 0, left: 0 });
+  const [selectedMentions, setSelectedMentions] = useState<string[]>([]);
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -248,17 +250,19 @@ export function DashboardInsight({
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || ai.isLoading) return;
+    if (!text && selectedMentions.length === 0) return;
+    if (ai.isLoading) return;
+
+    // Build the full message with mentions prefixed
+    const mentionPrefix = selectedMentions.map((m) => `@${m}`).join(" ");
+    const fullText = mentionPrefix ? `${mentionPrefix} ${text}` : text;
+
     setInput("");
     setMentionQuery(null);
+    setSelectedMentions([]);
 
-    // Extract @ mentions and add as trigger context
-    const mentions = text.match(/@([^@]+?)(?=\s@|\s|$)/g);
-    const triggerContext = mentions
-      ? mentions.map((m) => m.slice(1).trim()).join(", ")
-      : undefined;
-
-    await ai.send(text, triggerContext);
+    const triggerContext = selectedMentions.length > 0 ? selectedMentions.join(", ") : undefined;
+    await ai.send(fullText, triggerContext);
   };
 
   const handleInputChange = (value: string) => {
@@ -286,7 +290,8 @@ export function DashboardInsight({
   const handleMentionSelect = (title: string) => {
     const lastAt = input.lastIndexOf("@");
     const before = input.slice(0, lastAt);
-    setInput(`${before}@${title} `);
+    setInput(before.trim() ? before.trim() + " " : "");
+    setSelectedMentions((prev) => prev.includes(title) ? prev : [...prev, title]);
     setMentionQuery(null);
     inputRef.current?.focus();
   };
@@ -382,6 +387,23 @@ export function DashboardInsight({
 
         {/* Input */}
         <div className="flex-shrink-0 border-t border-[var(--card-border)] px-5 py-3">
+          {/* Mention chips */}
+          {selectedMentions.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {selectedMentions.map((m) => (
+                <span key={m} className="inline-flex items-center gap-1 rounded-md bg-[var(--accent)]/10 px-2 py-0.5 text-[11px] font-medium text-[var(--accent)]">
+                  <Sparkles className="h-2 w-2" />
+                  {m}
+                  <button
+                    onClick={() => setSelectedMentions((prev) => prev.filter((p) => p !== m))}
+                    className="ml-0.5 rounded-full p-0.5 hover:bg-[var(--accent)]/20"
+                  >
+                    <X className="h-2 w-2" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <input
               ref={inputRef}
