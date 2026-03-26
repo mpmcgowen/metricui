@@ -432,8 +432,11 @@ export function DashboardInsight({
             ) : (
               <>
                 {hasMessages && (
-                  <button onClick={ai.clear} className="rounded-lg p-1.5 text-[var(--muted)] hover:text-[var(--foreground)]" title="Clear chat">
-                    <RotateCcw className="h-3 w-3" />
+                  <button
+                    onClick={ai.clear}
+                    className="rounded-lg px-2 py-1 text-[10px] font-medium text-[var(--muted)] transition-colors hover:bg-red-500/10 hover:text-red-500"
+                  >
+                    Clear
                   </button>
                 )}
                 <button
