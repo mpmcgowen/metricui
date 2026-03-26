@@ -374,6 +374,7 @@ function AnalyticsContent() {
               sparkline={{ data: sessionSpark, type: "bar" }}
               icon={<BarChart3 className="h-3.5 w-3.5" />}
               description="Total visits to acme.dev in the selected period. Each session may include multiple page views."
+              aiContext="Our primary traffic metric. Weekend dips are normal. Holiday drops Dec 23-26 are expected. 30% QoQ growth target."
               animate={{ countUp: true }}
               drillDown={{
                 label: "Session breakdown",
@@ -397,6 +398,7 @@ function AnalyticsContent() {
               sparkline={{ data: userSpark, type: "line" }}
               icon={<Users className="h-3.5 w-3.5" />}
               description={({ value }) => `${formatValue(kpis.newUsers, "compact")} new users (${Math.round(kpis.newUsers / kpis.users * 100)}% new). Returning users drive ${Math.round((1 - kpis.newUsers / kpis.users) * 100)}% of traffic.`}
+              aiContext="High new-user ratio (58%) is expected for Series A — we're still in acquisition mode. Returning user share should climb toward 50% by Q2."
               animate={{ countUp: true, delay: 100 }}
             />
             <KpiCard
@@ -411,6 +413,7 @@ function AnalyticsContent() {
                 { when: "above", value: 55, color: "red" },
               ]}
               description="Percentage of single-page sessions. Lower is better — visitors who bounce didn't engage."
+              aiContext="Anything above 45% is concerning. Mobile bounce is structurally higher than desktop — focus optimization on desktop bounce first."
               animate={{ countUp: true, delay: 200 }}
             />
             <KpiCard
@@ -420,6 +423,7 @@ function AnalyticsContent() {
               comparison={compKpis ? { value: compKpis.revenue, label: "prev period" } : undefined}
               sparkline={{ data: revSpark, type: "line" }}
               icon={<DollarSign className="h-3.5 w-3.5" />}
+              aiContext="Q4 target is $500K. We're tracking behind — need a strong final push. Email and referral channels have the best revenue-per-session."
               animate={{ countUp: true, delay: 300 }}
             />
 
@@ -431,6 +435,7 @@ function AnalyticsContent() {
               title="Traffic Trend"
               subtitle="Daily sessions and unique users — Q4 2025"
               description="The weekend dips (Sat/Sun) and holiday valley (Dec 23–26) are clearly visible. The overall trendline shows steady 30% QoQ growth."
+              aiContext="Weekend dips and holiday valley (Dec 23-26) are normal seasonality, not problems. The gap between sessions and users indicates healthy return visits."
               format="compact"
               height={320}
               curve="monotoneX"
@@ -446,6 +451,7 @@ function AnalyticsContent() {
               categories={["sessions"]}
               title="Traffic Sources"
               subtitle="Click a bar to cross-filter the dashboard"
+              aiContext="Organic is our moat — 40% of traffic at near-zero marginal cost. Display was paused Dec 1 due to poor ROI. Social includes a one-time TikTok viral spike from Nov 20."
               format="compact"
               height={320}
               sort="desc"
@@ -514,7 +520,7 @@ function AnalyticsContent() {
             {/* ── Source KPIs ── */}
             <KpiCard title="Organic Search" value={82400} format="compact" description="40% of all traffic. Highest conversion rate at 3.5%." icon={<Search className="h-3.5 w-3.5" />} />
             <KpiCard title="Direct" value={41200} format="compact" description="Brand-aware visitors. 20% of traffic, strong return rate." />
-            <KpiCard title="Email" value={15800} format="compact" description="Lowest bounce rate (28%). Best engagement per session." />
+            <KpiCard title="Email" value={15800} format="compact" description="Lowest bounce rate (28%). Best engagement per session." aiContext="Our most efficient channel. 7.1% conversion rate — 2x the next best. We under-invest here. Growing the list is Q1 priority." />
             <KpiCard title="Paid Search" value={12200} format="compact" description="$35.8K revenue from $12.2K sessions. $2.93 CPA." conditions={[{ when: "above", value: 10000, color: "emerald" }]} />
 
             <MetricGrid.Section title="Traffic Sources" subtitle="Click a source to cross-filter — all charts respond" />
@@ -536,6 +542,7 @@ function AnalyticsContent() {
               categories={["revenue"]}
               title="Revenue by Source"
               subtitle="Email punches above its weight — 17% of revenue from 8% of traffic"
+              aiContext="Revenue concentration risk: Organic + Direct = 58% of revenue. If SEO rankings drop, we lose our two biggest channels simultaneously."
               height={340}
               showPercentage
               innerRadius={0.65}
@@ -619,6 +626,7 @@ function AnalyticsContent() {
                 { when: "above", value: 55, color: "red" },
               ]}
               description="Single-page session rate. Target: below 40%."
+              aiContext="Mobile bounce (49%) drags this up. Desktop bounce (32%) is healthy. Blog posts have structurally higher bounce — that's normal for content."
               animate={{ countUp: true }}
             />
             <KpiCard
@@ -674,6 +682,7 @@ function AnalyticsContent() {
               categories={["sessions"]}
               title="Device Split"
               subtitle="Desktop dominates but mobile is 36% of traffic"
+              aiContext="B2B SaaS naturally skews desktop. Mobile share growing 2% QoQ — mostly from social traffic. Mobile conversion (1.8%) is a known gap we're not actively optimizing."
               height={300}
               showPercentage
               innerRadius={0.65}
@@ -732,6 +741,7 @@ function AnalyticsContent() {
                 { when: "below", value: 2.5, color: "red" },
               ]}
               description="Percentage of sessions that complete signup. Q4 target is 3.5%."
+              aiContext="Q4 target is 3.5%. Pricing page is our main conversion driver. Desktop converts at 4.2% — the blended rate is dragged down by mobile (1.8%)."
               animate={{ countUp: true, delay: 100 }}
             />
             <KpiCard
@@ -762,6 +772,7 @@ function AnalyticsContent() {
               data={conversionFunnel}
               title="Signup Funnel"
               subtitle="Biggest drop-off: Engaged → Pricing (67% lost). Pricing → Signup converts at 29%."
+              aiContext="The Engaged-to-Pricing drop (67% lost) is our biggest lever. Most visitors read docs/blog but never reach pricing. Signup-to-Paid (64%) is best-in-class for B2B SaaS."
               format="compact"
               height={380}
               showConversionRate
@@ -791,6 +802,7 @@ function AnalyticsContent() {
               categories={["revenue"]}
               title="Revenue by Traffic Source"
               subtitle="Organic search drives $199K (37%) — email at $89K has the best ROI"
+              aiContext="Email has the highest revenue-per-session ($5.65) but is capped by list size. Paid search ROI is marginal at $2.93 CPA — only worth scaling if CAC stays under $50."
               format="currency"
               height={320}
               sort="desc"

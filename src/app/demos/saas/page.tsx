@@ -24,6 +24,7 @@ import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { Dashboard } from "@/components/layout/Dashboard";
 import { fmt, formatValue } from "@/lib/format";
 import { useDrillDownAction } from "@/components/ui/DrillDown";
+import { DashboardInsight } from "@/components/ui/DashboardInsight";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { accounts, type Account } from "@/data/saas-accounts";
 import {
@@ -279,6 +280,7 @@ function DashboardContent() {
         comparison={compData ? { value: compData.kpis.mrr, label: "vs comparison period" } : undefined}
         sparkline={{ data: data.mrrSparkline, type: "line" }}
         icon={<DollarSign className="h-3.5 w-3.5" />}
+        aiContext="Our north star metric. Enterprise accounts drive 52% of MRR despite being 14% of base. Expansion revenue from seat upgrades is the fastest-growing segment."
         description="Sum of all active subscription charges this month, excluding one-time fees and overages."
         animate={{ countUp: true }}
         drillDown={{
@@ -332,6 +334,7 @@ function DashboardContent() {
         format={fmt("currency", { compact: true })}
         comparison={compData ? { value: compData.kpis.arr } : undefined}
         icon={<BarChart3 className="h-3.5 w-3.5" />}
+        aiContext="ARR is MRR × 12. Board target is $2M ARR by end of year. Currently tracking behind — need 15% MRR growth in Q4 to hit it."
         description={({ value }) => `Projected annual revenue (MRR × 12). Current monthly run rate: $${Math.round(value / 12).toLocaleString()}.`}
         animate={{ countUp: true, delay: 100 }}
       />
@@ -341,6 +344,7 @@ function DashboardContent() {
         format="number"
         comparison={compData ? { value: compData.kpis.activeAccounts } : undefined}
         icon={<Users className="h-3.5 w-3.5" />}
+        aiContext="Active = not churned. Basic plan has highest absolute churn but lowest MRR impact. Enterprise retention is critical — losing one Enterprise account equals losing ~8 Basic accounts in MRR."
         description="Accounts with at least one active subscription. Excludes free-tier and trial accounts."
         animate={{ countUp: true, delay: 200 }}
         drillDown={{
@@ -395,6 +399,7 @@ function DashboardContent() {
         comparison={compData ? { value: compData.kpis.churnRate, invertTrend: true } : undefined}
         sparkline={{ data: churnSparkline, type: "bar" }}
         icon={<TrendingDown className="h-3.5 w-3.5" />}
+        aiContext="Target is below 15%. FinTech vertical has highest churn, driven by competitor pressure. Enterprise churn is low but catastrophic per-account. Most churn happens in first 90 days."
         description={({ value }) => `${value}% of accounts cancelled this period. Target is below 15%. ${value > 15 ? "Review retention strategies." : "On track."}`}
         animate={{ countUp: true, delay: 300 }}
         conditions={[
@@ -433,6 +438,7 @@ function DashboardContent() {
           { label: "Total Accounts", value: data.kpis.totalAccounts, format: "number" },
           { label: "Churned", value: data.kpis.churned, icon: <Activity className="h-3 w-3" /> },
         ]}
+        aiContext="Avg MRR/Account is a key health indicator. Rising means upsell is working. Total seats correlates with stickiness — accounts with 10+ seats churn 60% less."
       />
 
       {/* ── Churn callout ── */}
@@ -457,6 +463,7 @@ function DashboardContent() {
         title="Cumulative MRR"
         subtitle={compData ? "Current vs comparison period" : "Monthly recurring revenue growth"}
         description="Running total of MRR from account join dates. Filters apply — select an industry or country to see its MRR contribution."
+        aiContext="MRR growth flattened in Q3 2024 due to a pricing migration. The step-up in Oct 2024 reflects Enterprise renewals on new pricing. Seasonality: Q1 is slowest for new signups."
         format="currency"
         height={300}
         enableArea
@@ -473,6 +480,7 @@ function DashboardContent() {
         title="Conversion Funnel"
         subtitle="Signup → Retained pipeline"
         description="Tracks accounts through each stage from initial signup to long-term retention."
+        aiContext="Biggest drop-off is Activated → Subscribed (credit card wall). We're testing a 14-day free trial to improve this. Retained = still active after 6 months."
         format="number"
         showConversionRate
         height={280}
@@ -482,6 +490,7 @@ function DashboardContent() {
         title="Churn Reasons"
         subtitle="Why customers leave"
         description="Self-reported cancellation reasons collected from exit surveys."
+        aiContext="'Price' is the top reason but exit surveys are unreliable — many who say 'price' actually had low usage. 'Competitor' churn is concentrated in FinTech vertical."
         showPercentage
         innerRadius={0.6}
         centerValue={String(data.kpis.churned)}
@@ -497,6 +506,7 @@ function DashboardContent() {
         indexBy="country"
         title="Accounts by Country"
         description="Click a bar to drill into that country's accounts."
+        aiContext="US dominates account count but ARPU is highest in UK and Germany (Enterprise-heavy). APAC is growing fastest QoQ. Brazil accounts have highest churn."
         format="number"
         height={260}
         sort="desc"
@@ -526,6 +536,7 @@ function DashboardContent() {
       <DonutChart
         data={data.planDistribution}
         title="Plan Distribution"
+        aiContext="Basic is highest volume but Pro is the sweet spot — best retention and growing fastest. Enterprise is small count but huge MRR share. Goal: shift Basic → Pro via feature gating."
         showPercentage
         innerRadius={0.6}
         height={260}
@@ -555,6 +566,7 @@ function DashboardContent() {
       <DonutChart
         data={data.industryDistribution}
         title="Industry Breakdown"
+        aiContext="FinTech and HealthTech are largest verticals. FinTech has highest churn but also highest ARPU. E-commerce is newest vertical — early but promising retention."
         showPercentage
         innerRadius={0.6}
         height={260}
@@ -590,6 +602,7 @@ function DashboardContent() {
         categories={["signups", "churned"]}
         title="Signups vs Churn"
         subtitle={compData ? "Current vs comparison period" : "Monthly new signups and churned accounts"}
+        aiContext="Net new accounts (signups minus churn) is the key growth indicator. Positive months = healthy. The gap narrowed in mid-2024 due to a competitor launch. Recovered in Q4."
         format="number"
         height={300}
         enableArea
@@ -606,6 +619,7 @@ function DashboardContent() {
       <DataTable
         data={data.topAccounts}
         description="Top 20 active accounts ranked by MRR. Click a row to drill into account details."
+        aiContext="Top 20 accounts represent ~40% of total MRR. High concentration risk. Top 3 are all Enterprise FinTech. CSM team actively manages accounts over $2K MRR."
         columns={[
           { key: "name", header: "Account", sortable: true },
           { key: "industry", header: "Industry", sortable: true },
@@ -644,8 +658,39 @@ function DashboardContent() {
         )}
       />
     </MetricGrid>
+
+      {/* ── AI Insights — floating button + sidebar chat ── */}
+      <DashboardInsight />
     </>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Real LLM via API route — streams from Claude
+// ---------------------------------------------------------------------------
+
+async function* analyzeWithClaude(
+  messages: { role: string; content: string }[],
+): AsyncGenerator<string> {
+  const response = await fetch("/api/ai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`AI request failed: ${err}`);
+  }
+
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    yield decoder.decode(value, { stream: true });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -654,7 +699,16 @@ function DashboardContent() {
 
 export default function SaaSDashboard() {
   return (
-    <Dashboard theme="emerald" exportable filters={{ defaultPreset: "ytd", referenceDate: new Date(2024, 11, 31) }}>
+    <Dashboard
+      theme="emerald"
+      exportable
+      filters={{ defaultPreset: "ytd", referenceDate: new Date(2024, 11, 31) }}
+      ai={{
+        analyze: analyzeWithClaude as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        stream: true,
+        company: "RavenStack is a B2B SaaS selling developer productivity tools. Series B, 500 accounts. Pricing tiers: Basic, Pro, Enterprise.",
+        context: "This dashboard tracks subscription metrics. Data covers 2023-2024. 22% overall churn rate. Enterprise accounts are 14% of base but 52% of MRR.",
+      }}>
       <div className="min-h-screen bg-[var(--background)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
           <DashboardHeader
