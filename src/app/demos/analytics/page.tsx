@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/Badge";
 import { MetricGrid } from "@/components/layout/MetricGrid";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { Dashboard } from "@/components/layout/Dashboard";
-import { DashboardNav } from "@/components/layout/DashboardNav";
+import { DashboardNav, DashboardNavPanels } from "@/components/layout/DashboardNav";
 import { FilterBar } from "@/components/filters/FilterBar";
 import { PeriodSelector } from "@/components/filters/PeriodSelector";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
@@ -803,6 +803,9 @@ function AnalyticsContent() {
 
       {/* ── AI Insights ── */}
       <DashboardInsight className="mt-4" />
+
+      {/* ── Tab content panels — all mounted, only active visible ── */}
+      <DashboardNavPanels />
 
     </>
   );
