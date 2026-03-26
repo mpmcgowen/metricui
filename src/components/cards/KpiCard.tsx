@@ -52,7 +52,6 @@ import {
   Minus,
   Copy,
   Check,
-  ArrowUpRight as DrillIcon,
 } from "lucide-react";
 import { forwardRef, useState } from "react";
 
@@ -446,11 +445,6 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   );
 
   // --- Drill-down indicator icon ---
-  const drillDownIcon = drillDown ? (
-    <span className="absolute bottom-2 right-2 text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-60" aria-hidden>
-      <DrillIcon className="h-3 w-3" />
-    </span>
-  ) : undefined;
 
   return (
     <CardShell
@@ -491,7 +485,6 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
         ...(isLinkedHovered ? { boxShadow: "0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent)", outline: "2px solid color-mix(in srgb, var(--accent) 30%, transparent)", outlineOffset: "2px" } : {}),
       }}
       footnote={resolvedFootnote ?? undefined}
-      drillDownIcon={drillDownIcon}
     >
       <div
         onMouseEnter={() => setHovered(true)}

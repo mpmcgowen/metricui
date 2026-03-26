@@ -294,7 +294,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
               "noise-texture group relative flex flex-col border p-[var(--mu-padding)] transition-all duration-300",
               CARD_CLASSES,
               HOVER_CLASSES,
-              isClickable && "cursor-pointer",
+              isClickable && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-200",
             ),
         flashClass,
         classNames?.root,
@@ -387,8 +387,6 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
         </p>
       )}
 
-      {/* Drill-down indicator */}
-      {drillDownIcon}
     </Tag>
   );
 });
