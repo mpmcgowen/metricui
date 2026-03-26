@@ -28,6 +28,8 @@ export interface CardShellProps {
   below?: ReactNode;
   /** Component name for error boundary diagnostics */
   componentName?: string;
+  /** AI context — dev-provided hint about this specific component. Included in AI prompts. */
+  aiContext?: string;
 
   // --- Interaction ---
   /** Makes the card clickable. */
@@ -99,6 +101,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     action,
     below,
     componentName,
+    aiContext,
     onClick,
     href,
     clickable,
@@ -161,12 +164,13 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
       component: componentName ?? "Unknown",
       title: titleStr,
       data: dataSummary,
+      aiContext: aiContext || undefined,
       render: () => childrenRef.current,
       height,
     });
 
     return () => ai.unregisterMetric(aiId);
-  }, [ai, aiId, title, componentName, exportData, copyValue, bare]);
+  }, [ai, aiId, title, componentName, exportData, copyValue, bare, aiContext]);
 
   const isClickable = !!(onClick || href || clickable);
   const Tag: "a" | "div" = href ? "a" : "div";

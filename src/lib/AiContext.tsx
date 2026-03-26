@@ -16,6 +16,8 @@ export interface AiMetric {
   data: Record<string, unknown>;
   /** Which tab this component lives on (if using DashboardNav) */
   tab?: string;
+  /** Dev-provided context about this specific component */
+  aiContext?: string;
   /** Render function that returns the interactive component content */
   render?: () => ReactNode;
   /** Height hint for chart containers */
@@ -44,7 +46,9 @@ export interface AiConfig {
   analyze: AiAnalyzeFn;
   /** Enable token streaming. Default: true */
   stream?: boolean;
-  /** Custom system prompt addition (business context) */
+  /** Company-level context — who you are, your industry, stage, ICP. Included in every prompt. */
+  company?: string;
+  /** Dashboard-level context — what this dashboard measures, targets, recent changes. */
   context?: string;
   /** Full system prompt override */
   systemPrompt?: string;
@@ -129,8 +133,13 @@ function buildSystemPrompt(config: AiConfig, metrics: Map<string, AiMetric>, fil
     parts.push(`\nTONE: ${TONE_INSTRUCTIONS[config.tone]}`);
   }
 
+  // Three-level context hierarchy: company → dashboard → component
+  if (config.company) {
+    parts.push(`\nCOMPANY: ${config.company}`);
+  }
+
   if (config.context) {
-    parts.push(`\nBUSINESS CONTEXT: ${config.context}`);
+    parts.push(`\nDASHBOARD CONTEXT: ${config.context}`);
   }
 
   if (filterContext) {
@@ -144,7 +153,11 @@ function buildSystemPrompt(config: AiConfig, metrics: Map<string, AiMetric>, fil
       const dataStr = Object.entries(metric.data)
         .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`)
         .join(", ");
-      parts.push(`- [[${metric.title}]] (${metric.component}): ${dataStr}`);
+      let line = `- [[${metric.title}]] (${metric.component}): ${dataStr}`;
+      if (metric.aiContext) {
+        line += `\n  CONTEXT: ${metric.aiContext}`;
+      }
+      parts.push(line);
     }
   }
 
