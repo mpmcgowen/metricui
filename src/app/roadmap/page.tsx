@@ -118,22 +118,22 @@ const milestones: Milestone[] = [
     version: "0.6",
     title: "The Intelligence Layer",
     tagline:
-      "Anomaly detection scans your data and highlights what's unusual. No ML pipeline, no backend — just a prop.",
-    status: "next",
+      "Bring-your-own-LLM dashboard analysis. A floating chat that reads your live data, understands your business context, and answers questions about your metrics. Works with any model.",
+    status: "shipped",
     icon: Brain,
     highlights: [
-      "Anomaly highlights — rolling mean + standard deviation bands that flag unusual data points automatically",
-      "InsightCard — template-based plain-English summaries of what your data shows",
-      "MetricText — inline formatted values in body copy with template syntax",
-      "Histogram, Leaderboard, QuotaBar, and SummaryBanner components",
+      "DashboardInsight — floating chat button + slide-over sidebar with streaming AI responses",
+      "Auto data collection — every component registers live data, updates when filters change",
+      "Three-level context — company, dashboard, and per-component aiContext for smarter analysis",
+      "@ mentions — reference specific charts in questions, keyboard navigation, multiple mentions",
+      "Per-card sparkle icon — hover any card, click to open AI chat scoped to that metric",
+      "Works with any LLM — OpenAI, Anthropic, local models. You bring the API key, we handle the UX",
     ],
     newComponents: [
-      "InsightCard",
-      "MetricText",
-      "Histogram",
-      "Leaderboard",
-      "QuotaBar",
-      "SummaryBanner",
+      "DashboardInsight",
+      "AiContext",
+      "BaseComponentProps",
+      "DataComponentProps",
     ],
   },
   {
@@ -141,7 +141,7 @@ const milestones: Milestone[] = [
     title: "See the Shape",
     tagline:
       "Small multiples and sparkline tables. One line of code renders 20 mini-charts that share scales and let you spot the outlier instantly.",
-    status: "planned",
+    status: "next",
     icon: Eye,
     highlights: [
       "Small Multiples — split data by dimension, render a synced grid of mini-charts",
