@@ -33,8 +33,8 @@ const features = [
   },
   {
     icon: Sparkles,
-    title: "Smart format engine",
-    description: "Currency, percent, duration, compact numbers — centralized formatting with locale support.",
+    title: "AI Insights — bring your own LLM",
+    description: "Floating chat that analyzes your dashboard data. @ mention specific charts. Three-level context. Works with any model.",
   },
   {
     icon: Palette,
