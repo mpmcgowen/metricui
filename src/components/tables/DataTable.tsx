@@ -588,6 +588,7 @@ function DataTableInner<T extends DataRow = DataRow>(
       id={id}
       data-testid={dataTestId}
       componentName="DataTable"
+      aiTitle={title}
       aiContext={aiContext}
       variant={resolvedVariant}
       dense={resolvedDense}
