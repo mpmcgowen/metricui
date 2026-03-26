@@ -152,15 +152,31 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     if (!ai || !titleStr || bare) return;
     if (!titleStr) return;
 
+    // Build rich data context the LLM can understand
     const dataSummary: Record<string, unknown> = {};
     if (copyValue) dataSummary.value = copyValue;
     if (exportData && exportData.length > 0) {
-      dataSummary.rows = exportData.length;
-      if (exportData.length <= 5) {
-        dataSummary.data = exportData;
+      dataSummary.rowCount = exportData.length;
+      // Include full data for small datasets, smart summary for large ones
+      if (exportData.length <= 20) {
+        dataSummary.rows = exportData;
       } else {
-        dataSummary.sample = exportData.slice(0, 3);
-        dataSummary.total = exportData.length;
+        // Top rows + column summary for large datasets
+        dataSummary.first10 = exportData.slice(0, 10);
+        dataSummary.columns = Object.keys(exportData[0]);
+        // Compute basic stats for numeric columns
+        const stats: Record<string, { min: number; max: number; avg: number }> = {};
+        for (const key of Object.keys(exportData[0])) {
+          const vals = exportData.map((r) => r[key]).filter((v): v is number => typeof v === "number");
+          if (vals.length > 0) {
+            stats[key] = {
+              min: Math.min(...vals),
+              max: Math.max(...vals),
+              avg: Math.round(vals.reduce((a, b) => a + b, 0) / vals.length),
+            };
+          }
+        }
+        if (Object.keys(stats).length > 0) dataSummary.stats = stats;
       }
     }
 

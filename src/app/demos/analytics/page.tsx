@@ -95,35 +95,8 @@ export default function AnalyticsDashboard() {
       ai={{
         analyze: analyzeWithClaude as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         stream: true,
-        context: `B2B SaaS marketing site (acme.dev). Q4 2025. Revenue target: $500K. Series A stage.
-
-DASHBOARD DATA:
-Sessions: 191.5K | Users: 144.9K (58% new) | Bounce Rate: 47% | Revenue: $440K
-
-Traffic Sources:
-- Organic Search: 82.4K sessions, 3.5% conv, $198.6K revenue, 35% bounce
-- Direct: 41.2K sessions, 4.0% conv, $112.4K revenue, 43% bounce
-- Social: 28.6K sessions, 2.4% conv, $41.2K revenue, 52% bounce
-- Referral: 19.4K sessions, 4.6% conv, $62.1K revenue, 39% bounce
-- Email: 15.8K sessions, 7.1% conv, $89.2K revenue, 28% bounce
-- Paid Search: 12.2K sessions, 4.3% conv, $35.8K revenue, 45% bounce
-- Display: 4.8K sessions, 2.5% conv, $7.4K revenue, 61% bounce
-
-Devices:
-- Desktop: 118.4K sessions, 32% bounce, 4.2% conversion
-- Mobile: 72.8K sessions, 49% bounce, 1.8% conversion
-- Tablet: 13.2K sessions, 41% bounce, 2.9% conversion
-
-Top Pages (by conversions):
-- /pricing: 42.1K views, 18% bounce, 2,180 conversions
-- /demo: 18.9K views, 12% bounce, 1,640 conversions
-- / (homepage): 89.2K views, 38% bounce, 1,240 conversions
-- /features: 38.4K views, 24% bounce, 890 conversions
-- /contact: 5.4K views, 32% bounce, 380 conversions
-
-Funnel: 204K visitors → 129K engaged (63%) → 42K pricing (33%) → 12.4K signup (30%) → 7.9K converted (64%) → 3.4K paid (43%)
-
-Top Countries: US (82.4K), UK (24.6K), Germany (18.2K), Canada (14.8K), France (12.4K)`,
+        company: "acme.dev — B2B SaaS marketing site. Series A stage. 50 employees.",
+        context: "Q4 2025 website analytics. Revenue target: $500K. Pricing page redesigned Nov 15. Display ad spend paused Dec 1. Data auto-collected from dashboard components below.",
         tone: "executive",
       }}
     >

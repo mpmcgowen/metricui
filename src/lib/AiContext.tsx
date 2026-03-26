@@ -154,14 +154,50 @@ function buildSystemPrompt(config: AiConfig, metrics: Map<string, AiMetric>, fil
   if (metrics.size > 0) {
     parts.push("\nDASHBOARD COMPONENTS (cite using [[Title]]):");
     for (const [, metric] of metrics) {
-      const dataStr = Object.entries(metric.data)
-        .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`)
-        .join(", ");
-      let line = `- [[${metric.title}]] (${metric.component}): ${dataStr}`;
+      parts.push(`\n--- [[${metric.title}]] (${metric.component}) ---`);
       if (metric.aiContext) {
-        line += `\n  CONTEXT: ${metric.aiContext}`;
+        parts.push(`Context: ${metric.aiContext}`);
       }
-      parts.push(line);
+
+      const { data } = metric;
+      if (!data || Object.keys(data).length === 0) continue;
+
+      // KPI: just the value
+      if (data.value && !data.rows && !data.first10) {
+        parts.push(`Value: ${data.value}`);
+        continue;
+      }
+
+      // Chart/Table with full data (≤20 rows)
+      if (data.rows && Array.isArray(data.rows)) {
+        const rows = data.rows as Record<string, unknown>[];
+        if (rows.length > 0) {
+          const keys = Object.keys(rows[0]);
+          parts.push(`Columns: ${keys.join(", ")}`);
+          parts.push("Data:");
+          for (const row of rows) {
+            parts.push("  " + keys.map((k) => `${k}=${row[k]}`).join(", "));
+          }
+        }
+        continue;
+      }
+
+      // Large dataset with stats
+      if (data.first10 && Array.isArray(data.first10)) {
+        const sample = data.first10 as Record<string, unknown>[];
+        const columns = (data.columns as string[]) ?? (sample.length > 0 ? Object.keys(sample[0]) : []);
+        parts.push(`${data.rowCount} rows. Columns: ${columns.join(", ")}`);
+        parts.push(`First 10 rows:`);
+        for (const row of sample) {
+          parts.push("  " + columns.map((k) => `${k}=${row[k]}`).join(", "));
+        }
+        if (data.stats) {
+          parts.push("Column stats:");
+          for (const [col, s] of Object.entries(data.stats as Record<string, { min: number; max: number; avg: number }>)) {
+            parts.push(`  ${col}: min=${s.min}, max=${s.max}, avg=${s.avg}`);
+          }
+        }
+      }
     }
   }
 
