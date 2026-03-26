@@ -79,25 +79,33 @@ function CitationProvider({ children }: { children: ReactNode }) {
   const open = useCallback(async (title: string, mode: "modal" | "sidebar") => {
     if (!ai) return;
 
-    // Find the registered metric
-    const findMetric = () => {
+    // Find the registered metric whose render function returns content
+    const findLiveMetric = () => {
       const metrics = ai.getMetrics();
+      for (const [, m] of metrics) {
+        if (m.title === title && m.render) {
+          const content = m.render();
+          if (content) return m;
+        }
+      }
+      // Fallback: find by title even if render returns null
       for (const [, m] of metrics) {
         if (m.title === title) return m;
       }
       return null;
     };
 
-    let metric = findMetric();
+    let metric = findLiveMetric();
 
-    // If render returns null, the component might be on another tab — try switching
-    if (!metric?.render || !metric.render()) {
+    // If render returns null, the component is on another tab — switch and wait
+    if (!metric?.render?.()) {
       const navEl = document.querySelector("[data-dashboard-tabs]");
       const allTabs = navEl?.getAttribute("data-dashboard-tabs")?.split(",") ?? [];
       for (const t of allTabs) {
         ai.navigateToTab(t);
-        await new Promise((r) => setTimeout(r, 200));
-        metric = findMetric();
+        // Wait longer for React to unmount old tab, mount new tab, and run useEffects
+        await new Promise((r) => setTimeout(r, 400));
+        metric = findLiveMetric();
         if (metric?.render?.()) break;
       }
     }

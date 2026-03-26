@@ -24,6 +24,7 @@ interface ChartContainerProps {
   variant?: CardVariant;
   dense?: boolean;
   componentName?: string;
+  aiContext?: string;
   flashClass?: string;
   loading?: boolean;
   empty?: EmptyState;

@@ -23,6 +23,7 @@ import type {
   ErrorState,
   StaleState,
   TrendIconConfig,
+  DataComponentProps,
   NullDisplay,
   SparklineType,
   TitlePosition,
@@ -59,7 +60,7 @@ import { forwardRef, useState } from "react";
 // Props
 // ---------------------------------------------------------------------------
 
-export interface KpiCardProps {
+export interface KpiCardProps extends DataComponentProps {
   title: DynamicString;
   /** Pass `null` or `undefined` to trigger null-state display.
    *  Pass a string for non-numeric KPIs (times, labels, statuses) — displayed as-is. */
@@ -111,12 +112,6 @@ export interface KpiCardProps {
   titlePosition?: TitlePosition;
   /** Horizontal alignment for card content. Default: "left" */
   titleAlign?: TitleAlign;
-  /** Enable export. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. Inherits from MetricProvider. */
-  exportable?: ExportableConfig;
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
   /** Data state configuration — alternative to individual loading/empty/error/stale props */
   state?: {
     loading?: boolean;
@@ -124,11 +119,7 @@ export interface KpiCardProps {
     error?: ErrorState;
     stale?: StaleState;
   };
-  variant?: CardVariant;
-  /** Compact/dense layout. Default: false */
-  dense?: boolean;
   accent?: string;
-  className?: string;
   /** Sub-element class name overrides */
   classNames?: {
     root?: string;
@@ -139,10 +130,6 @@ export interface KpiCardProps {
     goal?: string;
     footnote?: string;
   };
-  /** HTML id attribute */
-  id?: string;
-  /** Test id for testing frameworks */
-  "data-testid"?: string;
   /** Callback when value is copied (requires copyable) */
   onCopy?: (value: string) => void;
   /** Bare mode — strips the card wrapper (no border, no shadow, no noise texture).
@@ -264,6 +251,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext,
   onCopy,
   bare,
 }, ref) {
@@ -470,6 +458,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       id={id}
       data-testid={dataTestId}
       componentName="KpiCard"
+      aiContext={aiContext}
       onClick={onClick ?? (drillDown ? drillDown.onClick : undefined)}
       href={href}
       clickable={!!(onClick || href || drillDown)}

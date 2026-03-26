@@ -16,6 +16,40 @@ import type { FormatOption, Condition, GoalConfig, ComparisonMode } from "./form
 export type DataRow = Record<string, any>;
 
 // ---------------------------------------------------------------------------
+// Shared base props — inherited by every MetricUI component
+// ---------------------------------------------------------------------------
+
+/** Props shared by ALL MetricUI components (filters, charts, KPIs, layout, UI) */
+export interface BaseComponentProps {
+  /** AI context — dev-provided hint about this component. Included in AI prompts for smarter analysis. */
+  aiContext?: string;
+  /** HTML id attribute */
+  id?: string;
+  /** Test id for testing frameworks */
+  "data-testid"?: string;
+  /** Additional CSS class names */
+  className?: string;
+}
+
+/** Props shared by all DATA components (KPIs, charts, tables, status indicators) */
+export interface DataComponentProps extends BaseComponentProps {
+  /** Card variant */
+  variant?: CardVariant;
+  /** Compact/dense layout. Default: false */
+  dense?: boolean;
+  /** Loading state — shows skeleton placeholder */
+  loading?: boolean;
+  /** Empty state */
+  empty?: EmptyState;
+  /** Error state */
+  error?: ErrorState;
+  /** Stale data indicator */
+  stale?: StaleState;
+  /** Enable export. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. */
+  exportable?: ExportableConfig;
+}
+
+// ---------------------------------------------------------------------------
 // Comparison
 // ---------------------------------------------------------------------------
 

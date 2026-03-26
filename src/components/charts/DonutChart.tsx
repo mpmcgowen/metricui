@@ -18,7 +18,7 @@ import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig, SliceClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toDonutData, type Category } from "@/lib/dataTransform";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
@@ -51,7 +51,7 @@ type SortMode = "desc" | "asc" | "none";
 // Props
 // ---------------------------------------------------------------------------
 
-export interface DonutChartProps {
+export interface DonutChartProps extends DataComponentProps {
   data?: DonutDatum[] | DataRow[];
   /** Column name to use as slice labels. */
   index?: string;
