@@ -625,6 +625,12 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   assertPeer(ResponsiveBar, "@nivo/bar", "BarChart");
   const openDrill = useDrillDownAction();
 
+  // --- Deprecation warnings for legacy Nivo props ---
+  if (process.env.NODE_ENV !== "production") {
+    if (keysProp) devWarnDeprecated("BarChart", "keys", "categories");
+    if (indexByProp) devWarnDeprecated("BarChart", "indexBy", "index");
+  }
+
   // --- Resolve unified data props (index/categories → keys/indexBy) ---
   const inferred = useMemo(
     () => (!keysProp && !indexByProp ? inferSchema(rawData) : null),

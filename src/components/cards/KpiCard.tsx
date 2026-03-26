@@ -53,7 +53,8 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { forwardRef, useState } from "react";
+import { forwardRef, useState, useCallback } from "react";
+import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -92,7 +93,11 @@ export interface KpiCardProps extends DataComponentProps {
   tooltip?: TooltipConfig;
   onClick?: () => void;
   href?: string;
-  drillDown?: DrillDownConfig;
+  /** Drill-down on card click.
+   *  - `true`: auto-generates detail panel with value and comparisons
+   *  - `(context) => ReactNode`: custom drill content
+   *  - `DrillDownConfig`: legacy imperative pattern (deprecated) */
+  drillDown?: true | ((context: { value: number | string | null | undefined; formattedValue: string; title: string }) => React.ReactNode) | DrillDownConfig;
   copyable?: boolean;
   animate?: boolean | AnimationConfig;
   /** Attention ring. `true` uses accent color, or pass a CSS color. */
@@ -444,7 +449,38 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
     </>
   );
 
-  // --- Drill-down indicator icon ---
+  // --- Drill-down handler ---
+  const openDrill = useDrillDownAction();
+  const titleStr = typeof title === "string" ? title : "Detail";
+
+  const handleDrillClick = useCallback(() => {
+    if (!drillDown) return;
+
+    // Legacy imperative pattern: { onClick }
+    if (typeof drillDown === "object" && "onClick" in drillDown) {
+      drillDown.onClick();
+      return;
+    }
+
+    // Declarative pattern: true or function
+    const drillContext = { value: rawInputValue, formattedValue, title: titleStr };
+
+    if (drillDown === true) {
+      openDrill(
+        { title: `${titleStr}: ${formattedValue}`, field: titleStr.toLowerCase().replace(/\s+/g, "_") },
+        <div className="p-4 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">{titleStr}</p>
+          <p className="mt-2 text-3xl font-bold text-[var(--foreground)]">{formattedValue}</p>
+        </div>,
+      );
+    } else if (typeof drillDown === "function") {
+      const content = drillDown(drillContext);
+      openDrill(
+        { title: `${titleStr}: ${formattedValue}`, field: titleStr.toLowerCase().replace(/\s+/g, "_") },
+        content,
+      );
+    }
+  }, [drillDown, rawInputValue, formattedValue, titleStr, openDrill, format]);
 
   return (
     <CardShell
@@ -454,7 +490,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       componentName="KpiCard"
       aiTitle={typeof title === "string" ? title : undefined}
       aiContext={aiContext}
-      onClick={onClick ?? (drillDown ? drillDown.onClick : undefined)}
+      onClick={onClick ?? (drillDown ? handleDrillClick : undefined)}
       href={href}
       clickable={!!(onClick || href || drillDown)}
       variant={resolvedVariant}

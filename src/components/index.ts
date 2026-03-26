@@ -33,7 +33,7 @@ export type { Category, CategoryConfig } from "@/lib/dataTransform";
 
 // Format helpers
 export { fmt } from "@/lib/format";
-export type { FormatOption, FormatConfig, FormatStyle } from "@/lib/format";
+export type { FormatOption, FormatConfig, FormatStyle, Condition, GoalConfig } from "@/lib/format";
 
 // Cards
 export { KpiCard } from "./cards/KpiCard";
@@ -91,6 +91,10 @@ export { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
 export { useCrossFilteredData } from "@/lib/useCrossFilteredData";
 export type { CrossFilterSelection, CrossFilterState } from "@/lib/interactionTypes";
 
+// Filtered Data (convenience hook)
+export { useFilteredData } from "@/lib/useFilteredData";
+export type { UseFilteredDataOptions, UseFilteredDataResult } from "@/lib/useFilteredData";
+
 // Linked Hover (0.3.0)
 export { LinkedHoverProvider, useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 export type { LinkedHoverState } from "@/lib/interactionTypes";
@@ -114,10 +118,15 @@ export type {
   ComparisonConfig, TrendIconConfig,
   EmptyState, ErrorState, StaleState,
   DrillDownConfig, ExportableConfig, AnimationConfig,
+  BaseComponentProps, DataComponentProps, DataRow,
 } from "@/lib/types";
 
 // Chart colors
 export { SERIES_COLORS } from "@/lib/chartColors";
+
+// AI
+export type { AiConfig, AiMessage } from "@/lib/AiContext";
+export type { QuickPrompt } from "./ui/DashboardInsight";
 
 // Themes
 export { THEME_PRESETS, PRESET_NAMES, DEFAULT_THEME } from "@/lib/themes";
