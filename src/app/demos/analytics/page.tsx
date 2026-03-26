@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { StatGroup } from "@/components/cards/StatGroup";
 import { AreaChart } from "@/components/charts/AreaChart";
@@ -154,7 +154,6 @@ Top Countries: US (82.4K), UK (24.6K), Germany (18.2K), Canada (14.8K), France (
 // ---------------------------------------------------------------------------
 
 function AnalyticsContent() {
-  const [tab, setTab] = useState("overview");
   const filters = useMetricFilters();
   const crossFilter = useCrossFilter();
   const openDrill = useDrillDownAction();
@@ -319,52 +318,8 @@ function AnalyticsContent() {
         <FilterBar.Nav>
           <DashboardNav
             tabs={[
-              { value: "overview", label: "Overview", icon: <Eye className="h-3.5 w-3.5" /> },
-              { value: "acquisition", label: "Acquisition", icon: <Globe className="h-3.5 w-3.5" /> },
-              { value: "engagement", label: "Engagement", icon: <MousePointerClick className="h-3.5 w-3.5" /> },
-              { value: "conversions", label: "Conversions", icon: <Target className="h-3.5 w-3.5" />, badge: `${formatValue(kpis.conversions, "compact")} conv.` },
-            ]}
-            value={tab}
-            onChange={setTab}
-          />
-        </FilterBar.Nav>
-        <FilterBar.Primary>
-          <PeriodSelector presets={["30d", "90d", "quarter", "ytd"]} comparison />
-          <SegmentToggle
-            options={[
-              { value: "All", label: "All Devices" },
-              { value: "Desktop", label: "Desktop", icon: <Monitor className="h-3.5 w-3.5" /> },
-              { value: "Mobile", label: "Mobile", icon: <Smartphone className="h-3.5 w-3.5" /> },
-            ]}
-            defaultValue="All"
-            field="device"
-          />
-        </FilterBar.Primary>
-      </FilterBar>
-
-      {/* ── Status bar ── */}
-      <div className="mt-3 flex items-center gap-3">
-        <StatusIndicator value={99.8} size="sm" rules={[{ min: 99, color: "emerald", label: "Site Up", pulse: true }]} />
-        <StatusIndicator value={kpis.avgBounce} size="sm" rules={[
-          { max: 40, color: "emerald", label: "Bounce Healthy" },
-          { min: 40, max: 55, color: "amber", label: "Bounce Elevated" },
-          { min: 55, color: "red", label: "Bounce High" },
-        ]} />
-        <StatusIndicator value={kpis.avgConvRate} size="sm" rules={[
-          { min: 3.5, color: "emerald", label: "Conv. On Track" },
-          { min: 2.5, max: 3.5, color: "amber", label: "Conv. At Risk" },
-          { max: 2.5, color: "red", label: "Conv. Below Target" },
-        ]} />
-      </div>
-
-      {/* ── AI Insights ── */}
-      <DashboardInsight className="mt-4" />
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/*  OVERVIEW                                                     */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {tab === "overview" && (
-        <MetricGrid className="mt-6">
+              { value: "overview", label: "Overview", icon: <Eye className="h-3.5 w-3.5" />,
+                content: <MetricGrid className="mt-6">
             {/* ── Hero KPIs ── */}
             <KpiCard
               title="Sessions"
@@ -503,14 +458,9 @@ function AnalyticsContent() {
               ]}
               dense
             />
-        </MetricGrid>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/*  ACQUISITION                                                  */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {tab === "acquisition" && (
-        <MetricGrid className="mt-6">
+        </MetricGrid> },
+              { value: "acquisition", label: "Acquisition", icon: <Globe className="h-3.5 w-3.5" />,
+                content: <MetricGrid className="mt-6">
             {/* ── Source KPIs ── */}
             <KpiCard title="Organic Search" value={82400} format="compact" description="40% of all traffic. Highest conversion rate at 3.5%." icon={<Search className="h-3.5 w-3.5" />} />
             <KpiCard title="Direct" value={41200} format="compact" description="Brand-aware visitors. 20% of traffic, strong return rate." />
@@ -597,14 +547,9 @@ function AnalyticsContent() {
               dense
               multiSort
             />
-        </MetricGrid>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/*  ENGAGEMENT                                                   */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {tab === "engagement" && (
-        <MetricGrid className="mt-6">
+        </MetricGrid> },
+              { value: "engagement", label: "Engagement", icon: <MousePointerClick className="h-3.5 w-3.5" />,
+                content: <MetricGrid className="mt-6">
             {/* ── Engagement KPIs ── */}
             <KpiCard
               title="Bounce Rate"
@@ -701,14 +646,9 @@ function AnalyticsContent() {
                 { min: 55, variant: "warning", message: "Bounce rate at {value}% is critical. Audit top entry pages for load speed, relevance, and mobile experience." },
               ]}
             />
-        </MetricGrid>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/*  CONVERSIONS                                                  */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {tab === "conversions" && (
-        <MetricGrid className="mt-6">
+        </MetricGrid> },
+              { value: "conversions", label: "Conversions", icon: <Target className="h-3.5 w-3.5" />, badge: `${formatValue(kpis.conversions, "compact")} conv.`,
+                content: <MetricGrid className="mt-6">
             {/* ── Conversion KPIs ── */}
             <KpiCard
               title="Conversions"
@@ -827,8 +767,43 @@ function AnalyticsContent() {
                 { max: 2.5, variant: "warning", message: "Conversion rate at {value}% is critical. Recommend A/B testing the pricing page layout and adding social proof to high-traffic landing pages." },
               ]}
             />
-        </MetricGrid>
-      )}
+        </MetricGrid> },
+            ]}
+            defaultValue="overview"
+          />
+        </FilterBar.Nav>
+        <FilterBar.Primary>
+          <PeriodSelector presets={["30d", "90d", "quarter", "ytd"]} comparison />
+          <SegmentToggle
+            options={[
+              { value: "All", label: "All Devices" },
+              { value: "Desktop", label: "Desktop", icon: <Monitor className="h-3.5 w-3.5" /> },
+              { value: "Mobile", label: "Mobile", icon: <Smartphone className="h-3.5 w-3.5" /> },
+            ]}
+            defaultValue="All"
+            field="device"
+          />
+        </FilterBar.Primary>
+      </FilterBar>
+
+      {/* ── Status bar ── */}
+      <div className="mt-3 flex items-center gap-3">
+        <StatusIndicator value={99.8} size="sm" rules={[{ min: 99, color: "emerald", label: "Site Up", pulse: true }]} />
+        <StatusIndicator value={kpis.avgBounce} size="sm" rules={[
+          { max: 40, color: "emerald", label: "Bounce Healthy" },
+          { min: 40, max: 55, color: "amber", label: "Bounce Elevated" },
+          { min: 55, color: "red", label: "Bounce High" },
+        ]} />
+        <StatusIndicator value={kpis.avgConvRate} size="sm" rules={[
+          { min: 3.5, color: "emerald", label: "Conv. On Track" },
+          { min: 2.5, max: 3.5, color: "amber", label: "Conv. At Risk" },
+          { max: 2.5, color: "red", label: "Conv. Below Target" },
+        ]} />
+      </div>
+
+      {/* ── AI Insights ── */}
+      <DashboardInsight className="mt-4" />
+
     </>
   );
 }

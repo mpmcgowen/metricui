@@ -76,45 +76,24 @@ function CitationProvider({ children }: { children: ReactNode }) {
   const ai = useAi();
   const [overlay, setOverlay] = useState<CitationOverlay | null>(null);
 
-  const open = useCallback(async (title: string, mode: "modal" | "sidebar") => {
+  const open = useCallback((title: string, mode: "modal" | "sidebar") => {
     if (!ai) return;
 
-    // Find the registered metric whose render function returns content
-    const findLiveMetric = () => {
-      const metrics = ai.getMetrics();
-      for (const [, m] of metrics) {
-        if (m.title === title && m.render) {
-          const content = m.render();
-          if (content) return m;
-        }
-      }
-      // Fallback: find by title even if render returns null
-      for (const [, m] of metrics) {
-        if (m.title === title) return m;
-      }
-      return null;
-    };
-
-    let metric = findLiveMetric();
-
-    // If render returns null, the component is on another tab — switch and wait
-    if (!metric?.render?.()) {
-      const navEl = document.querySelector("[data-dashboard-tabs]");
-      const allTabs = navEl?.getAttribute("data-dashboard-tabs")?.split(",") ?? [];
-      for (const t of allTabs) {
-        ai.navigateToTab(t);
-        // Wait longer for React to unmount old tab, mount new tab, and run useEffects
-        await new Promise((r) => setTimeout(r, 400));
-        metric = findLiveMetric();
-        if (metric?.render?.()) break;
+    // All tabs are mounted — just find the metric directly
+    const metrics = ai.getMetrics();
+    let match: { component: string; render?: () => ReactNode } | null = null;
+    for (const [, m] of metrics) {
+      if (m.title === title) {
+        match = m;
+        break;
       }
     }
 
     setOverlay({
       title,
       mode,
-      componentType: metric?.component ?? null,
-      renderFn: metric?.render ?? null,
+      componentType: match?.component ?? null,
+      renderFn: match?.render ?? null,
     });
   }, [ai]);
 
