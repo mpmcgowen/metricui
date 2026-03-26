@@ -246,10 +246,10 @@ export default function Home() {
             </div>
 
             <h1 className="max-w-4xl text-[clamp(2.75rem,6vw,4.5rem)] font-extrabold leading-[1.05] tracking-tight text-[var(--foreground)]">
-              Dashboards that think.
+              The last dashboard library
               <br />
               <span className="bg-gradient-to-r from-[var(--accent)] to-purple-400 bg-clip-text text-transparent">
-                Built in minutes.
+                you&apos;ll ever install.
               </span>
             </h1>
 
