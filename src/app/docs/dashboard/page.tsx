@@ -72,7 +72,7 @@ const dashboardProps: PropDef[] = [
 // ---------------------------------------------------------------------------
 
 const relatedComponents = [
-  { name: "MetricProvider", href: "/docs/metric-provider" },
+  { name: "MetricProvider", href: "/docs/guides/getting-started" },
   { name: "FilterProvider", href: "/docs/filter-bar" },
   { name: "CrossFilterProvider", href: "/docs/drill-down" },
   { name: "LinkedHoverProvider", href: "/docs/line-chart" },
@@ -272,7 +272,7 @@ export default function DashboardDocs() {
               <span>
                 <strong>Custom renderContent</strong> — the Dashboard passes{" "}
                 <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">renderContent</code>{" "}
-                to DrillDown.Overlay, but if you need the overlay placed elsewhere
+                to the drill-down overlay panel, but if you need the overlay placed elsewhere
                 in the tree, compose manually.
               </span>
             </li>
@@ -312,7 +312,7 @@ export default function DashboardDocs() {
               "All hooks work inside: useMetricFilters(), useCrossFilter(), useLinkedHover(), useDrillDownAction(), useMetricConfig().",
               "Omit the filters prop to skip FilterProvider entirely — useful when you don't need date range filtering.",
               "For fine-grained control (multiple FilterProviders, custom overlay placement), compose the individual providers directly.",
-              "The DrillDown.Overlay is rendered automatically inside Dashboard. Use renderContent to customize what appears when a drill-down opens.",
+              "The drill-down overlay panel is rendered automatically inside Dashboard. Use renderContent to customize what appears when a drill-down opens.",
             ].map((note, i) => (
               <li
                 key={i}

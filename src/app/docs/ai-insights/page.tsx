@@ -41,6 +41,12 @@ export default function AiInsightsDocs() {
             in what your dashboard actually shows. Zero vendor lock-in &mdash; you provide the
             model, MetricUI provides the wiring.
           </p>
+          <p className="mt-4 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-3 text-[13px] leading-relaxed text-[var(--muted)]">
+            See the live AI chat in action on any demo dashboard:{" "}
+            <a href="/demos/analytics" className="font-medium text-[var(--accent)] hover:underline">Web Analytics</a>{" "}
+            and{" "}
+            <a href="/demos/saas" className="font-medium text-[var(--accent)] hover:underline">SaaS Analytics</a>.
+          </p>
         </div>
 
         {/* Overview */}

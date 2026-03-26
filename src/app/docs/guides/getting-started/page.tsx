@@ -11,6 +11,7 @@ const tocItems: TocItem[] = [
   { id: "provider", title: "MetricProvider", level: 3 },
   { id: "first-card", title: "Your First Card", level: 2 },
   { id: "first-chart", title: "Your First Chart", level: 2 },
+  { id: "shared-types", title: "Shared Base Types", level: 2 },
   { id: "next-steps", title: "Next Steps", level: 2 },
 ];
 
@@ -177,6 +178,51 @@ function RevenueChart() {
   );
 }`}
           />
+        </DocSection>
+
+        <DocSection id="shared-types" title="Shared Base Types">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Every MetricUI component inherits from two shared type interfaces. Understanding
+            these helps you use consistent props across the entire library.
+          </p>
+          <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">
+            BaseComponentProps (all components)
+          </p>
+          <CodeBlock
+            code={`// Inherited by every MetricUI component
+interface BaseComponentProps {
+  aiContext?: string;       // Business context for AI Insights analysis
+  id?: string;              // HTML id attribute
+  "data-testid"?: string;   // Test id for automated testing
+  className?: string;       // Additional CSS classes
+}`}
+            language="typescript"
+          />
+          <p className="mb-2 mt-6 text-[12px] font-medium text-[var(--muted)]">
+            DataComponentProps (data-displaying components)
+          </p>
+          <CodeBlock
+            code={`// Inherited by KpiCard, charts, DataTable, and other data components
+interface DataComponentProps extends BaseComponentProps {
+  variant?: CardVariant;                    // Visual variant override
+  dense?: boolean;                          // Compact layout toggle
+  loading?: boolean;                        // Show loading skeleton
+  empty?: { message?: string; icon?: ReactNode }; // Empty state config
+  error?: { message?: string };             // Error state config
+  stale?: { message?: string };             // Stale data indicator
+  exportable?: boolean;                     // Enable export button
+  state?: {                                 // Grouped state prop
+    loading?: boolean;
+    error?: { message?: string };
+    empty?: { message?: string };
+  };
+}`}
+            language="typescript"
+          />
+          <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            You never need to import these types directly — they are built into every component&apos;s props.
+            Set them on individual components or globally via MetricProvider.
+          </p>
         </DocSection>
 
         <DocSection id="next-steps" title="Next Steps">

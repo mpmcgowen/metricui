@@ -418,7 +418,7 @@ export default function DashboardNavDocs() {
               { prop: "label", type: "string", default: "(required)", description: "Display text." },
               { prop: "icon", type: "ReactNode", default: "\u2014", description: "Icon rendered before the label." },
               { prop: "badge", type: "number | string", default: "\u2014", description: "Badge value. Numbers are formatted; strings render as-is." },
-              { prop: "badgeFormat", type: "FormatOption", default: "\u2014", description: "Format option for numeric badges (e.g., \"compact\", { style: \"percent\" })." },
+              { prop: "badgeFormat", type: "FormatOption", default: '"compact"', description: "Format option for numeric badges (e.g., \"compact\", { style: \"percent\" })." },
             ]}
             columns={[
               { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
@@ -443,6 +443,7 @@ export default function DashboardNavDocs() {
               "Badge formatting uses the same format engine as KpiCard. Pass badgeFormat: \"compact\" for abbreviated numbers.",
               "Full ARIA tablist semantics: role=\"tablist\" on the container, role=\"tab\" and aria-selected on each button.",
               "Works both standalone and inside FilterBar.Nav. When inside FilterBar, omit the sticky prop — FilterBar handles sticking.",
+              "When inside a Dashboard with AI configured, DashboardNav automatically registers its tab navigator with AiContext, enabling AI citations to reference components across tabs.",
             ].map((note, i) => (
               <li
                 key={i}

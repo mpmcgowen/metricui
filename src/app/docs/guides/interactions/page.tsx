@@ -386,6 +386,20 @@ function LiveKpi({ title, value, format }) {
             in the Filtering guide.
           </p>
         </DocSection>
+
+        {/* Cross-filter cross-reference */}
+        <div className="mt-10 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-5 py-4">
+          <p className="text-[14px] font-semibold text-[var(--foreground)]">
+            Looking for cross-filtering?
+          </p>
+          <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted)]">
+            See the{" "}
+            <a href="/docs/guides/filtering#cross-filtering" className="font-medium text-[var(--accent)] hover:underline">
+              Filtering guide
+            </a>{" "}
+            for how to wire click-based cross-filter interactions between charts.
+          </p>
+        </div>
       </div>
 
       <div className="hidden w-40 flex-shrink-0 xl:block">

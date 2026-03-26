@@ -18,6 +18,7 @@ const tocItems: TocItem[] = [
   { id: "dense-mode", title: "Dense Mode", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
+  { id: "related", title: "Related", level: 2 },
 ];
 
 export default function DashboardHeaderDocs() {
@@ -336,6 +337,26 @@ export default function DashboardHeaderDocs() {
               >
                 <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
                 {note}
+              </li>
+            ))}
+          </ul>
+        </DocSection>
+
+        {/* Related */}
+        <DocSection id="related" title="Related">
+          <ul className="space-y-2">
+            {[
+              { name: "Dashboard", desc: "All-in-one wrapper that sets up providers and renders DashboardHeader at the top." },
+              { name: "DashboardNav", desc: "Tabbed navigation for switching dashboard views. Often placed directly below DashboardHeader." },
+              { name: "FilterBar", desc: "Filter container with Primary/Secondary slots. Pairs with DashboardHeader for a complete top bar." },
+              { name: "MetricGrid", desc: "Responsive grid for KPI cards and charts. The main content area below the header." },
+            ].map((item) => (
+              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+                <span>
+                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
+                  {" \u2014 "}{item.desc}
+                </span>
               </li>
             ))}
           </ul>

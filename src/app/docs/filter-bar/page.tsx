@@ -303,6 +303,7 @@ function MyContent() {
               { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes on the root element." },
               { prop: "classNames", type: "{ root?, controls?, tags?, summary? }", default: "\u2014", description: "Sub-element class overrides." },
               { prop: "id", type: "string", default: "\u2014", description: "HTML id." },
+              { prop: "position", type: '"inline"', default: '"inline"', description: "Layout position mode." },
               { prop: "data-testid", type: "string", default: "\u2014", description: "Test id." },
             ]}
             columns={[
@@ -318,6 +319,7 @@ function MyContent() {
           <h3 className="mt-8 mb-3 text-sm font-semibold text-[var(--foreground)]">Sub-components</h3>
           <DataTable
             data={[
+              { component: "FilterBar.Nav", description: "Slot for embedding DashboardNav inside the FilterBar. Renders above the filter controls." },
               { component: "FilterBar.Primary", description: "Slot for primary (always-visible) filters. Renders children in a flex-wrap row." },
               { component: "FilterBar.Secondary", description: "Slot for secondary filters, hidden behind a \"+N more\" toggle button." },
             ]}

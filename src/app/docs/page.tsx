@@ -82,6 +82,12 @@ const guides = [
     href: "/docs/guides/mcp-server",
     icon: Rocket,
   },
+  {
+    title: "AI Insights",
+    description: "BYO LLM dashboard intelligence. Ask questions about live data with @ mentions, streaming, and three-level context.",
+    href: "/docs/ai-insights",
+    icon: Rocket,
+  },
 ];
 
 export default function DocsOverview() {
