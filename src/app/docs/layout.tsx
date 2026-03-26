@@ -97,6 +97,13 @@ const nav: { label: string; items: NavItem[] }[] = [
       { title: "Bar + Line Chart", href: "/docs/bar-line-chart", icon: Combine },
       { title: "Waterfall", href: "/docs/waterfall", icon: BarChart3 },
       { title: "Sparkline", href: "/docs/sparkline", icon: Activity },
+      { title: "Scatter Plot", href: "/docs/scatter-plot", icon: Activity },
+      { title: "Treemap", href: "/docs/treemap", icon: Grid3X3 },
+      { title: "Calendar", href: "/docs/calendar", icon: Grid3X3 },
+      { title: "Radar", href: "/docs/radar", icon: Activity },
+      { title: "Sankey", href: "/docs/sankey", icon: ArrowDownNarrowWide },
+      { title: "Choropleth", href: "/docs/choropleth", icon: Globe },
+      { title: "Bump", href: "/docs/bump", icon: Activity },
     ],
   },
   {

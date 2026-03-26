@@ -14,7 +14,7 @@ npx metricui init
 ## Import
 
 ```tsx
-import { Dashboard, DashboardInsight, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, useCrossFilteredData, useFilteredData, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction, ExportButton } from "metricui";
+import { Dashboard, DashboardInsight, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, ScatterPlot, Treemap, Calendar, Radar, Sankey, Choropleth, Bump, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, useCrossFilteredData, useFilteredData, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction, ExportButton } from "metricui";
 import "metricui/styles.css";
 ```
 
@@ -1584,6 +1584,79 @@ Smart auto-layout grid for dashboards. Drop components in, it figures out the la
 - Table/StatGroup → full width
 - Unknown components → full width (no lock-in)
 - Responsive: 4 cols → 2 cols → 1 col
+
+### ScatterPlot
+
+Scatter/bubble chart for correlation analysis. Plot two numeric dimensions against each other.
+
+- `data`: DataRow[] with `index` (x-axis) + `categories` (y-axis series). Or Nivo-native scatter series.
+- `nodeSize`: number — default 8. Point diameter.
+- `xFormat`, `yFormat`: FormatOption — axis formatting
+- `xAxisLabel`, `yAxisLabel`: string
+- `enableGridX`, `enableGridY`: boolean
+- `referenceLines`: ReferenceLine[]
+- All standard: title, subtitle, height, colors, animate, legend, crossFilter, drillDown, tooltipHint, classNames
+
+### Treemap
+
+Hierarchical breakdown visualization. Show parts of a whole with nested rectangles.
+
+- `data`: DataRow[] with `index` (category) + `value` (size field). Or Nivo hierarchical { name, value, children }.
+- `tile`: "squarify" | "binary" | "slice" | "dice" | "sliceDice" — default "squarify"
+- `innerPadding`, `outerPadding`: number
+- `labelSkipSize`: number — hide labels on tiles smaller than this
+- All standard: title, subtitle, height, colors, format, animate, legend, crossFilter, drillDown, tooltipHint
+
+### Calendar
+
+GitHub-style contribution heatmap. Show daily values over months/years.
+
+- `data`: DataRow[] with `dateField` + `valueField`. Or Nivo { day: "YYYY-MM-DD", value: number }[].
+- `from`, `to`: string — date range (auto-derived from data if omitted)
+- `direction`: "horizontal" | "vertical"
+- `emptyColor`: string
+- All standard: title, subtitle, height, colors, format, animate, crossFilter, drillDown, tooltipHint
+
+### Radar
+
+Multi-dimensional comparison. Compare entities across multiple metrics on radial axes.
+
+- `data`: DataRow[] with `index` (dimension labels) + `categories` (metrics to compare). Unified format works naturally.
+- `fillOpacity`: number — default 0.25
+- `borderWidth`: number
+- `dotSize`: number
+- `gridLevels`: number
+- All standard: title, subtitle, height, colors, format, animate, legend, crossFilter, drillDown, tooltipHint
+
+### Sankey
+
+Flow visualization. Show how quantities move between nodes (sources → destinations).
+
+- `data`: { nodes: { id }[], links: { source, target, value }[] }. Or DataRow[] with `sourceField`, `targetField`, `valueField`.
+- `nodeThickness`, `nodePadding`: number
+- `linkOpacity`: number
+- All standard: title, subtitle, height, colors, format, animate, legend, crossFilter, drillDown, tooltipHint
+
+### Choropleth
+
+Geographic data visualization on a map. Dev provides GeoJSON features.
+
+- `data`: { id: string, value: number }[]. Or DataRow[] with `idField` + `valueField`. Country ISO codes.
+- `features`: GeoJSON feature array (required — dev provides their map data)
+- `projectionType`: "mercator" | "equalEarth" | "naturalEarth1" | "orthographic"
+- `projectionScale`: number
+- `borderWidth`, `borderColor`: number, string
+- All standard: title, subtitle, height, colors, format, animate, crossFilter, drillDown, tooltipHint
+
+### Bump
+
+Ranking chart. Show how items change position over time.
+
+- `data`: DataRow[] with `index` (x-axis) + `categories` (ranked series). Or Nivo bump series.
+- `lineWidth`: number
+- `pointSize`: number
+- `startLabel`, `endLabel`: boolean — show labels at first/last position
+- All standard: title, subtitle, height, colors, format, animate, legend, crossFilter, drillDown, tooltipHint
 
 ---
 
