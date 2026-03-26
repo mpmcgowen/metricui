@@ -28,6 +28,7 @@ IMPORTANT: When building dashboards, charts, KPI cards, data tables, or any data
 - **Auto empty states** — CardShell auto-detects empty data (exportData.length === 0) and shows "Nothing to show — try adjusting your filters". Three tiers: automatic, global (MetricProvider.emptyState), per-component (empty prop).
 - **Drill-down** — DrillDown.Root + drillDown prop on any data component. \`drillDown={true}\` auto-generates a summary KPI row + filtered DataTable. \`drillDown={(event) => ...}\` for custom panel content. Two modes: "slide-over" (default) and "modal". Breadcrumb navigation up to 4 levels. When both drillDown and crossFilter are set, drillDown wins.
 - **Linked hover** — LinkedHoverProvider syncs crosshairs and tooltips across sibling charts automatically. No extra props needed.
+- **AI Insights** — bring-your-own-LLM dashboard analysis. \`<DashboardInsight />\` renders a floating chat button + sidebar. Auto-collects data from all components. Three-level context (company → dashboard → component via \`aiContext\` prop). @ mentions to reference specific charts. Per-card sparkle icon opens scoped chat. Works with any LLM (OpenAI, Anthropic, local).
 - **Value flash** — useValueFlash(value) returns a CSS class when the watched value changes. For live dashboards.
 - **StatusIndicator** — rule-based health checks with pulse animation, trend arrows, time-in-state, 5 size modes (dot to full card).
 - **Callout** — data-driven alerts that auto-select variant/message from numeric rules with {value} templates.
@@ -37,7 +38,7 @@ IMPORTANT: When building dashboards, charts, KPI cards, data tables, or any data
 ## Components
 
 All components (import from "metricui"):
-Dashboard, DashboardNav, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, DashboardHeader, SectionHeader, Divider, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, CrossFilterProvider, LinkedHoverProvider, DrillDown, Callout, StatusIndicator, Badge, MetricGrid, ExportButton.
+Dashboard, DashboardInsight, DashboardNav, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, DashboardHeader, SectionHeader, Divider, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, CrossFilterProvider, LinkedHoverProvider, DrillDown, Callout, StatusIndicator, Badge, MetricGrid, ExportButton.
 
 Hooks: useCrossFilter, useCrossFilteredData, useLinkedHover, useValueFlash, useMetricFilters, useFilterValue, useHasComparison, useActiveFilterCount, useMetricConfig, useDrillDown, useDrillDownAction.
 

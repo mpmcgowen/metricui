@@ -14,7 +14,7 @@ npx metricui init
 ## Import
 
 ```tsx
-import { Dashboard, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, useCrossFilteredData, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction, ExportButton } from "metricui";
+import { Dashboard, DashboardInsight, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, useCrossFilteredData, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction, ExportButton } from "metricui";
 import "metricui/styles.css";
 ```
 
@@ -82,6 +82,67 @@ Use `<Dashboard>` for the 90% case. Drop down to individual providers when you n
 - Two separate FilterProviders for different page sections
 - DrillDownProvider without the auto-rendered overlay
 - Fine-grained control over provider ordering
+
+---
+
+## AI Insights (Bring Your Own LLM)
+
+Add AI-powered analysis to any dashboard. You provide the LLM function (your API key, your model). MetricUI auto-collects data from every component, builds prompts, handles streaming, and renders a beautiful chat sidebar.
+
+### Setup
+
+```tsx
+<Dashboard
+  theme="emerald"
+  ai={{
+    analyze: async function* (messages) {
+      const res = await fetch("/api/ai", { method: "POST", body: JSON.stringify({ messages }) });
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      while (true) { const { done, value } = await reader.read(); if (done) break; yield decoder.decode(value, { stream: true }); }
+    },
+    company: "Acme Corp — B2B SaaS, Series A, 50 employees.",
+    context: "Q4 revenue target is $500K. Pricing page redesigned Nov 15.",
+  }}
+>
+  <DashboardInsight />
+  {/* your dashboard content */}
+</Dashboard>
+```
+
+### Three-Level Context
+
+- `company` — who you are, your industry, stage. Every prompt includes this.
+- `context` — what this dashboard measures, targets, recent changes.
+- `aiContext` (per component) — business context for individual metrics:
+
+```tsx
+<KpiCard title="Churn" value={20} aiContext="Above 15% is critical." />
+```
+
+### Auto Data Collection
+
+Components automatically register live data via CardShell. The AI sees: KPI values, chart data rows, table rows, column stats. Updates when filters change.
+
+### Features
+
+- Floating chat button + slide-over sidebar
+- @ mentions to reference specific components (keyboard nav, multiple)
+- Per-card sparkle icon opens chat pre-scoped
+- Quick prompts (customizable)
+- Streaming with abort
+- Chat persistence (controlled mode with messages/onMessage)
+- Citations rendered as styled chips
+
+### AiConfig Props
+
+- `analyze`: `(messages) => Promise<string> | AsyncIterable<string>` (required)
+- `stream`: boolean — default: true
+- `company`: string — company context
+- `context`: string — dashboard context
+- `tone`: "executive" | "technical" | "narrative"
+- `messages`: AiMessage[] — controlled history
+- `onMessage`: (msg) => void — persistence callback
 
 ---
 

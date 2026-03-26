@@ -113,6 +113,7 @@ const nav: { label: string; items: NavItem[] }[] = [
   {
     label: "UI",
     items: [
+      { title: "AI Insights", href: "/docs/ai-insights", icon: Sparkles },
       { title: "Drill Down", href: "/docs/drill-down", icon: PanelRightOpen },
       { title: "Export", href: "/docs/export", icon: Download },
       { title: "StatusIndicator", href: "/docs/status-indicator", icon: CircleDot },

@@ -55,26 +55,32 @@ const features = [
 
 const demos = [
   {
-    title: "SaaS Analytics",
-    description: "MRR, churn, user growth, channel performance",
-    href: "/demos/saas",
-    color: "bg-indigo-500/10 text-indigo-500",
+    title: "Web Analytics",
+    description: "GA-style dashboard with tab navigation, AI insights, cross-filtering, and per-device filtering",
+    href: "/demos/analytics",
+    color: "bg-violet-500/10 text-violet-500",
   },
   {
-    title: "GitHub Analytics",
-    description: "Repository stats, contributors, activity",
-    href: "/demos/github",
+    title: "SaaS Metrics",
+    description: "MRR, churn, retention funnel, industry breakdown with AI-powered analysis",
+    href: "/demos/saas",
     color: "bg-emerald-500/10 text-emerald-500",
   },
   {
+    title: "GitHub Analytics",
+    description: "Repository stats, commit velocity, issue triage, PR throughput — real facebook/react data",
+    href: "/demos/github",
+    color: "bg-slate-500/10 text-slate-500",
+  },
+  {
     title: "Wikipedia Live",
-    description: "Real-time streaming data dashboard",
+    description: "Real-time streaming edits from Wikimedia EventStreams with bot/human analysis",
     href: "/demos/wikipedia",
     color: "bg-amber-500/10 text-amber-500",
   },
   {
-    title: "World Data",
-    description: "Population, GDP, geographic metrics",
+    title: "World Explorer",
+    description: "Global statistics — population, GDP, languages, currencies with 4-level drill-downs",
     href: "/demos/world",
     color: "bg-cyan-500/10 text-cyan-500",
   },
