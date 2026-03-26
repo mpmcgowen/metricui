@@ -218,6 +218,15 @@ export function DashboardInsight({
 
   useEffect(() => setMounted(true), []);
 
+  // Register openWith handler so CardShell sparkle icons can open chat pre-scoped
+  useEffect(() => {
+    if (!ai) return;
+    ai.registerOpenHandler((title: string) => {
+      setSelectedMentions((prev) => prev.includes(title) ? prev : [...prev, title]);
+      setOpen(true);
+    });
+  }, [ai]);
+
   // Animate in/out
   useEffect(() => {
     if (open) {

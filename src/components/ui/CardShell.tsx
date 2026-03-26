@@ -8,6 +8,7 @@ import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
 import { ExportButton } from "@/components/ui/ExportButton";
 import { ChartSkeletonContent, KpiSkeletonContent, DataStateWrapper } from "@/components/ui/DataStateWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { Sparkles } from "lucide-react";
 import { useMetricConfig } from "@/lib/MetricProvider";
 import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState, ExportableConfig } from "@/lib/types";
 
@@ -308,16 +309,37 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
         </div>
       )}
 
-      {/* Export button */}
-      {resolvedExportable && (
-        <div className="absolute right-2 top-2 z-10">
-          <ExportButton
-            title={title ?? componentName ?? "Export"}
-            targetRef={cardRef}
-            data={overrideExportData ?? exportData}
-            copyValue={copyValue}
-            dense={resolvedDense}
-          />
+      {/* Action buttons — top right, visible on hover */}
+      {(resolvedExportable || (ai?.enabled && (aiTitle || typeof title === "string"))) && (
+        <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5">
+          {/* AI sparkle */}
+          {ai?.enabled && (aiTitle || typeof title === "string") && !bare && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                ai.openWith(aiTitle || (typeof title === "string" ? title : "") || "");
+              }}
+              className={cn(
+                "rounded-md p-1 text-[var(--muted)] opacity-0 transition-all",
+                "group-hover:opacity-60 hover:!opacity-100 hover:text-[var(--accent)]",
+                "focus:opacity-100",
+                resolvedDense ? "p-0.5" : "p-1",
+              )}
+              aria-label="Ask AI about this"
+            >
+              <Sparkles className="h-3 w-3" />
+            </button>
+          )}
+          {/* Export */}
+          {resolvedExportable && (
+            <ExportButton
+              title={title ?? componentName ?? "Export"}
+              targetRef={cardRef}
+              data={overrideExportData ?? exportData}
+              copyValue={copyValue}
+              dense={resolvedDense}
+            />
+          )}
         </div>
       )}
 

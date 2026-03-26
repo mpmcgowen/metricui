@@ -90,6 +90,10 @@ export interface AiContextValue {
   streamingText: string;
   /** Abort current request */
   abort: () => void;
+  /** Open the AI chat with a specific component pre-selected */
+  openWith: (title: string) => void;
+  /** Callback registry for openWith — DashboardInsight registers its handler */
+  registerOpenHandler: (fn: (title: string) => void) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -239,6 +243,16 @@ export function AiProvider({ config, filterContext, children }: AiProviderProps)
     return undefined;
   }, []);
 
+  const openHandlerRef = useRef<((title: string) => void) | null>(null);
+
+  const openWith = useCallback((title: string) => {
+    openHandlerRef.current?.(title);
+  }, []);
+
+  const registerOpenHandler = useCallback((fn: (title: string) => void) => {
+    openHandlerRef.current = fn;
+  }, []);
+
   const clear = useCallback(() => {
     setMessages([]);
     setStreamingText("");
@@ -337,7 +351,9 @@ export function AiProvider({ config, filterContext, children }: AiProviderProps)
     isLoading,
     streamingText,
     abort,
-  }), [config, registerMetric, unregisterMetric, getMetrics, registerTabNavigator, navigateToTab, findTab, messages, send, clear, isLoading, streamingText, abort]);
+    openWith,
+    registerOpenHandler,
+  }), [config, registerMetric, unregisterMetric, getMetrics, registerTabNavigator, navigateToTab, findTab, messages, send, clear, isLoading, streamingText, abort, openWith, registerOpenHandler]);
 
   return (
     <AiCtx.Provider value={value}>
