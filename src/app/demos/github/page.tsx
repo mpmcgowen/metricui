@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { StatGroup } from "@/components/cards/StatGroup";
 import { AreaChart } from "@/components/charts/AreaChart";
@@ -15,15 +16,15 @@ import { Callout } from "@/components/ui/Callout";
 import { MetricGrid } from "@/components/layout/MetricGrid";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { DetailGrid } from "@/components/ui/DetailGrid";
-import { MetricProvider } from "@/lib/MetricProvider";
 import { PeriodSelector } from "@/components/filters/PeriodSelector";
 import { FilterBar } from "@/components/filters/FilterBar";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
-import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
-import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
-import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
-import { DrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
+import { useMetricFilters } from "@/lib/FilterContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useDrillDownAction } from "@/components/ui/DrillDown";
+import { Dashboard } from "@/components/layout/Dashboard";
+import { DashboardInsight } from "@/components/ui/DashboardInsight";
 import { formatValue } from "@/lib/format";
 import {
   repoStats,
@@ -47,7 +48,6 @@ import {
   ThumbsUp,
   AlertCircle,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -131,39 +131,56 @@ function inRange(d: Date, start: Date, end: Date): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// AI streaming function
+// ---------------------------------------------------------------------------
+
+async function* analyzeWithClaude(messages: { role: string; content: string }[]): AsyncGenerator<string> {
+  const response = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) });
+  if (!response.ok) throw new Error("AI request failed");
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  while (true) { const { done, value } = await reader.read(); if (done) break; yield decoder.decode(value, { stream: true }); }
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function GitHubDashboard() {
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
-        {/* ── Code Hero ── */}
-        <div className="flex items-center justify-between">
-          <div />
-          <ThemeToggle />
+    <Dashboard
+      theme="slate"
+      exportable
+      filters={{ defaultPreset: "90d", referenceDate: new Date("2026-03-21") }}
+      ai={{
+        analyze: analyzeWithClaude as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        stream: true,
+        company: "facebook/react — the most popular open-source UI library. Maintained by Meta with significant community contributions.",
+        context: "Repository analytics for facebook/react. Data snapshot from March 2026. 244K stars, 50K forks, 1.2K open issues. Focus on commit velocity, issue triage, and PR throughput.",
+      }}
+    >
+      <div className="min-h-screen bg-[var(--background)]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+          {/* ── Code Hero ── */}
+          <div className="flex items-center justify-between">
+            <div />
+            <ThemeToggle />
+          </div>
+
+          {/* ── Header ── */}
+          <div className="mt-8">
+            <DashboardHeader
+              title="facebook/react"
+              subtitle={`${repoStats.description} — Repository Analytics`}
+              back={{ href: "/docs/kpi-card", label: "Docs" }}
+              variant="flat"
+            />
+          </div>
+
+          <DashboardContent />
         </div>
-
-        {/* ── Header ── */}
-        <div className="mt-8">
-          <DashboardHeader
-            title="facebook/react"
-            subtitle={`${repoStats.description} — Repository Analytics`}
-            back={{ href: "/docs/kpi-card", label: "Docs" }}
-            variant="flat"
-          />
-        </div>
-
-        <FilterProvider defaultPreset="90d" referenceDate={new Date("2026-03-21")}>
-
-        <CrossFilterProvider>
-        <DrillDown.Root>
-        <DashboardContent />
-        </DrillDown.Root>
-        </CrossFilterProvider>
-        </FilterProvider>
       </div>
-    </div>
+    </Dashboard>
   );
 }
 
@@ -520,8 +537,6 @@ function DashboardContent() {
           <StatusIndicator value={1} size="sm" rules={[{ min: 1, color: "blue", label: "Docs" }]} />
         </div>
 
-        <MetricProvider theme="slate" variant="outlined" exportable>
-        <LinkedHoverProvider>
         <MetricGrid className="mt-6">
 
           {/* ── Overview ── */}
@@ -532,6 +547,7 @@ function DashboardContent() {
             format="compact"
             icon={<Star className="h-3.5 w-3.5" />}
             description="Total GitHub stars. A measure of community interest and project visibility."
+            aiContext="Vanity metric but signals community interest. Growth has plateaued — most devs already know React."
             animate={{ countUp: true }}
             drillDown={{
               label: "Repo stats detail",
@@ -570,6 +586,7 @@ function DashboardContent() {
             format="compact"
             icon={<GitFork className="h-3.5 w-3.5" />}
             description="Active forks of the repository. Indicates downstream development and contribution potential."
+            aiContext="Fork count reflects downstream development. High fork-to-star ratio (~20%) indicates active contributor ecosystem, not just passive interest."
             animate={{ countUp: true, delay: 100 }}
             drillDown={{
               label: "Repo stats detail",
@@ -597,6 +614,7 @@ function DashboardContent() {
             format="number"
             description={labelFilter.length > 0 ? `Showing ${openIssueCount} open of ${filteredIssues.length} filtered issues.` : `Issues created in the selected period that are currently open.`}
             icon={<CircleDot className="h-3.5 w-3.5" />}
+            aiContext="42% unconfirmed. Triage backlog growing faster than team can address. 2+ year clearance at current velocity."
             animate={{ countUp: true, delay: 200 }}
           />
           <KpiCard
@@ -607,6 +625,7 @@ function DashboardContent() {
             icon={<GitPullRequest className="h-3.5 w-3.5" />}
             comparison={comparisonTotalCommits != null ? { value: comparisonTotalCommits, label: "prev period" } : undefined}
             description={({ value }) => `${value.toLocaleString()} commits${activeDayFilter ? ` on ${activeDayFilter}s` : ""} in the selected period. Sparkline shows weekly volume.`}
+            aiContext="Commit velocity tracks core team output. Weekend near-zero confirms this is corporate-driven, not community-driven."
             animate={{ countUp: true, delay: 300 }}
             drillDown={{
               label: "Commit activity detail",
@@ -679,6 +698,7 @@ function DashboardContent() {
             subtitle={`Last ${recentWeeks.length} weeks — commits by day of week`}
             description="GitHub-style contribution heatmap. Click a cell to see that day's breakdown."
             height={220}
+            aiContext="Tue-Thu concentration is normal for corporate engineering teams. Spikes correlate with release cycles."
             drillDown={(event) => {
               const dayName = event.seriesId;
               const weekLabel = event.x;
@@ -717,6 +737,7 @@ function DashboardContent() {
             curve="monotoneX"
             enableArea
             gradient
+            aiContext="Weekly trend reveals release cadence. Sustained dips may indicate team focus shifting to planning or design phases."
           />
           <BarChart
             data={commitsByDay}
@@ -725,6 +746,7 @@ function DashboardContent() {
             title="Commits by Day"
             format="number"
             height={280}
+            aiContext="Day-of-week distribution confirms corporate work pattern. Low weekend activity means community PRs are merged during business hours, not contributed on weekends."
             drillDown={(event) => {
               const dayName = String(event.indexValue);
               const dayIdx = DAY_NAMES.indexOf(dayName);
@@ -763,6 +785,7 @@ function DashboardContent() {
             height={280}
             showPercentage
             innerRadius={0.65}
+            aiContext="JavaScript dominance is expected. Growing TypeScript share reflects the ecosystem shift."
             drillDown={(event) => {
               const lang = event.id;
               const bytes = languages[lang as keyof typeof languages] ?? 0;
@@ -801,6 +824,7 @@ function DashboardContent() {
               columns={issueColumns}
               title="Recent Issues"
               subtitle={labelFilter.length > 0 ? `Filtered by: ${labelFilter.join(", ")}` : "Click a row to drill into issue details"}
+              aiContext="Issue backlog reflects project health. High-reaction issues often signal community pain points. Sort by reactions to find what matters most to users."
               pageSize={8}
               dense
               multiSort
@@ -943,6 +967,7 @@ function DashboardContent() {
               data={periodPulls}
               columns={prColumns}
               title="Recent Pull Requests"
+              aiContext="PR merge velocity indicates review capacity. High draft count suggests devs use PRs for early feedback. Time-to-merge over 7 days is a bottleneck signal."
               pageSize={8}
               dense
               multiSort
@@ -1101,9 +1126,8 @@ function DashboardContent() {
             dense
           />
 
+          <DashboardInsight />
         </MetricGrid>
-        </LinkedHoverProvider>
-        </MetricProvider>
     </>
   );
 }

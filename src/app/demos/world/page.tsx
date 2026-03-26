@@ -1,23 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { StatGroup } from "@/components/cards/StatGroup";
 import { BarChart } from "@/components/charts/BarChart";
 import { BarLineChart } from "@/components/charts/BarLineChart";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { DataTable } from "@/components/tables/DataTable";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Callout } from "@/components/ui/Callout";
 import { MetricGrid } from "@/components/layout/MetricGrid";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { Dashboard } from "@/components/layout/Dashboard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { MetricProvider } from "@/lib/MetricProvider";
-import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
-import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
+import { DashboardInsight } from "@/components/ui/DashboardInsight";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useMetricFilters } from "@/lib/FilterContext";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { FilterBar } from "@/components/filters/FilterBar";
-import { DrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
+import { useDrillDownAction } from "@/components/ui/DrillDown";
 import { formatValue } from "@/lib/format";
 import { countries } from "@/data/world";
 import type { Country } from "@/data/world";
@@ -565,6 +565,7 @@ function DashboardContent() {
               sparkline={{ data: data.populationSparkline, type: "bar" }}
               description={({ formatted }) => `${formatted.value} people across ${filteredCountries.length} countries. Sparkline shows the top 10 most populous nations.`}
               animate={{ countUp: true }}
+              aiContext="India and China hold ~36% of world population. GDP-population inversion is common — smallest countries often have highest GDP per capita."
               drillDown={{
                 label: "Top countries by population",
                 onClick: () => openDrill(
@@ -617,6 +618,7 @@ function DashboardContent() {
               icon={<Languages className="h-3.5 w-3.5" />}
               description="Distinct official and recognized languages across all countries. Many nations have multiple official languages."
               animate={{ countUp: true, delay: 200 }}
+              aiContext="English is official in 60+ countries but Mandarin has more native speakers. Africa has the highest linguistic diversity per country."
               drillDown={{
                 label: "Language distribution",
                 onClick: () => {
@@ -735,6 +737,7 @@ function DashboardContent() {
               description="Click a bar to explore subregions. Nested drill: Region -> Subregion -> Countries."
               format="compact"
               height={320}
+              aiContext="UN regional groupings. Subregions provide more meaningful comparisons than broad regions. Asia dominates but Southern/Eastern Asia drive the bulk."
               drillDown={(event) => {
                 const region = String(event.indexValue);
                 return <SubregionDrill region={region} allCountries={filteredCountries} />;
@@ -756,6 +759,7 @@ function DashboardContent() {
               subtitle="By number of countries — click a slice to see which countries speak it"
               description="Top 10 languages ranked by number of countries where they are an official language."
               height={340}
+              aiContext="Counts countries where a language is official, not native speakers. English leads by country count due to colonial history. Arabic spans Africa and Asia."
               showPercentage
               innerRadius={0.6}
               centerValue={`${data.totalLanguages}`}
@@ -815,6 +819,7 @@ function DashboardContent() {
               subtitle="Bars = land area, line = population (millions)"
               description="Click a bar to cross-filter. Dual-axis: bars = area, line = population."
               height={320}
+              aiContext="Area vs population reveals density extremes. Asia has moderate area but massive population. Oceania and Americas have vast area but relatively low density."
               legend
               crossFilter
             />
@@ -828,6 +833,7 @@ function DashboardContent() {
               subtitle="People per km² by subregion"
               format="number"
               height={380}
+              aiContext="Density varies wildly within regions. Southern Asia (India, Bangladesh) dwarfs other subregions. City-states like Singapore skew subregion averages upward."
             />
 
             {/* ── Top Countries ── */}
@@ -878,35 +884,48 @@ function DashboardContent() {
               tableView={tableView}
             />
           </MetricGrid>
+
+      {/* ── AI Insights — floating button + sidebar chat ── */}
+      <DashboardInsight />
     </>
   );
 }
 
+// ---------------------------------------------------------------------------
+// AI streaming — Claude via API route
+// ---------------------------------------------------------------------------
+
+async function* analyzeWithClaude(messages: { role: string; content: string }[]): AsyncGenerator<string> {
+  const response = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) });
+  if (!response.ok) throw new Error("AI request failed");
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  while (true) { const { done, value } = await reader.read(); if (done) break; yield decoder.decode(value, { stream: true }); }
+}
+
 export default function WorldDashboard() {
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
-        <div className="flex items-center justify-end">
-          <ThemeToggle />
-        </div>
-        <div className="mt-4">
+    <Dashboard
+      theme="cyan"
+      variant="ghost"
+      exportable
+      ai={{
+        analyze: analyzeWithClaude as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        stream: true,
+        company: "World data explorer — reference dashboard for global statistics.",
+        context: "Static dataset of world countries with population, GDP, languages, currencies, and regional groupings. Useful for geographic analysis and cross-country comparisons.",
+      }}>
+      <div className="min-h-screen bg-[var(--background)]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
           <DashboardHeader
             title="World Data Explorer"
             subtitle="Population, languages, currencies & geography — 245 countries from REST Countries API"
             back={{ href: "/docs/kpi-card", label: "Docs" }}
             variant="flat"
           />
+          <DashboardContent />
         </div>
-        <MetricProvider theme="cyan" variant="ghost" exportable>
-          <FilterProvider>
-            <CrossFilterProvider>
-              <DrillDown.Root>
-                <DashboardContent />
-              </DrillDown.Root>
-            </CrossFilterProvider>
-          </FilterProvider>
-        </MetricProvider>
       </div>
-    </div>
+    </Dashboard>
   );
 }

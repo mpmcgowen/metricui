@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { formatValue } from "@/lib/format";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { StatGroup } from "@/components/cards/StatGroup";
@@ -16,14 +17,12 @@ import { Callout } from "@/components/ui/Callout";
 import { MetricGrid } from "@/components/layout/MetricGrid";
 import { DetailGrid } from "@/components/ui/DetailGrid";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { MetricProvider } from "@/lib/MetricProvider";
-import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
+import { Dashboard } from "@/components/layout/Dashboard";
+import { DashboardInsight } from "@/components/ui/DashboardInsight";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { FilterBar } from "@/components/filters/FilterBar";
-import { DrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
-import { DrillDownProvider } from "@/lib/DrillDownContext";
-import { DrillDownOverlay } from "@/components/ui/DrillDownPanel";
+import { useDrillDownAction } from "@/components/ui/DrillDown";
 import { useWikipediaStream } from "@/lib/useWikipediaStream";
 import type { WikiEdit } from "@/lib/useWikipediaStream";
 import {
@@ -33,8 +32,8 @@ import {
   Bot,
   Zap,
 } from "lucide-react";
-import { CrossFilterProvider, useCrossFilter } from "@/lib/CrossFilterContext";
-import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
+import { useCrossFilter } from "@/lib/CrossFilterContext";
+import { useMetricFilters } from "@/lib/FilterContext";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -71,22 +70,66 @@ function timeAgo(unixTimestamp: number): string {
 }
 
 // ---------------------------------------------------------------------------
+// AI — streaming Claude analysis
+// ---------------------------------------------------------------------------
+
+async function* analyzeWithClaude(
+  messages: { role: string; content: string }[],
+): AsyncGenerator<string> {
+  const response = await fetch("/api/ai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`AI request failed: ${err}`);
+  }
+
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    yield decoder.decode(value, { stream: true });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function WikipediaDashboard() {
+  const renderContentRef = useRef<(trigger: { field?: string }) => ReactNode | null>(
+    () => null,
+  );
+
   return (
-    <FilterProvider>
-      <CrossFilterProvider>
-        <DrillDownProvider>
-          <WikipediaDashboardInner />
-        </DrillDownProvider>
-      </CrossFilterProvider>
-    </FilterProvider>
+    <Dashboard
+      theme="violet"
+      variant="elevated"
+      exportable
+      filters={{}}
+      renderContent={(trigger) => renderContentRef.current(trigger)}
+      ai={{
+        analyze: analyzeWithClaude as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        stream: true,
+        company: "Wikimedia Foundation — operates Wikipedia, the world's largest free encyclopedia.",
+        context: "Real-time edit stream from Wikimedia EventStreams. Shows live edits across all language Wikipedias. Bot vs human edit patterns, wiki activity distribution, edit velocity.",
+      }}
+    >
+      <WikipediaDashboardInner renderContentRef={renderContentRef} />
+    </Dashboard>
   );
 }
 
-function WikipediaDashboardInner() {
+function WikipediaDashboardInner({
+  renderContentRef,
+}: {
+  renderContentRef: React.MutableRefObject<(trigger: { field?: string }) => ReactNode | null>;
+}) {
   const { connected, loading, recentEdits, stats } = useWikipediaStream();
   const crossFilter = useCrossFilter();
   const filters = useMetricFilters();
@@ -336,8 +379,8 @@ function WikipediaDashboardInner() {
     </DetailGrid>
   ), []);
 
-  // Render content for live drills — runs in this component's render cycle, always fresh
-  const renderDrillContent = (trigger: { field?: string }) => {
+  // Render content for live drills — keep ref in sync so Dashboard's overlay always has fresh data
+  renderContentRef.current = (trigger: { field?: string }) => {
     if (trigger.field === "edits") {
       const wikiData = Object.entries(filteredStats.editsByWiki)
         .sort(([, a], [, b]) => b - a)
@@ -407,8 +450,6 @@ function WikipediaDashboardInner() {
   };
 
   return (
-    <>
-    <DrillDown.Overlay renderContent={renderDrillContent} />
     <div className="min-h-screen bg-[var(--background)]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
         {/* \u2500\u2500 Code Hero \u2500\u2500 */}
@@ -479,8 +520,6 @@ function WikipediaDashboardInner() {
           </FilterBar.Primary>
         </FilterBar>
 
-        <MetricProvider loading={loading} variant="elevated" theme="violet" exportable>
-          <LinkedHoverProvider>
           <MetricGrid className="mt-6">
 
             {/* \u2500\u2500 Live Metrics \u2500\u2500 */}
@@ -493,6 +532,7 @@ function WikipediaDashboardInner() {
               icon={<Pencil className="h-3.5 w-3.5" />}
               description="Cumulative edits received since connecting to the EventStream. Resets on page reload."
               animate={{ countUp: true }}
+              aiContext="Cumulative since page load. Resets on refresh. Bot edits dominate volume — filter to Human Only for editorial activity."
               drillDown={{
                 label: "Edits breakdown by wiki",
                 onClick: () => openDrill(
@@ -509,6 +549,7 @@ function WikipediaDashboardInner() {
               icon={<Zap className="h-3.5 w-3.5" />}
               description="Rolling average of edits per second over the last 30-second window."
               animate={{ countUp: true }}
+              aiContext="Rolling 30-second average. Spikes during bot batch jobs. Human rate is more meaningful for editorial health."
               drillDown={{
                 label: "Edit velocity detail",
                 onClick: () => openDrill(
@@ -524,6 +565,7 @@ function WikipediaDashboardInner() {
               icon={<Users className="h-3.5 w-3.5" />}
               description={({ value }) => `${value} distinct usernames observed in the stream. Includes both registered accounts and anonymous IPs.`}
               animate={{ countUp: true }}
+              aiContext="Distinct usernames since page load. Includes anonymous IPs. High editor count with low edit count means broad community participation."
             />
             <KpiCard
               title="Bot Edits"
@@ -532,6 +574,7 @@ function WikipediaDashboardInner() {
               description={`${botRatio}% of all edits are automated. Bots handle tasks like link fixes, category updates, and anti-vandalism patrols.`}
               icon={<Bot className="h-3.5 w-3.5" />}
               animate={{ countUp: true }}
+              aiContext="33% is typical. Wikidata and Commons are almost entirely bot-driven. Language Wikipedias are mostly human."
             />
             <StatGroup
               stats={[
@@ -577,6 +620,7 @@ function WikipediaDashboardInner() {
               height={310}
               stacked
               loading={editVelocityData.length === 0}
+              aiContext="5-second rolling windows. Bot spikes are batch jobs (Wikidata imports, anti-vandalism sweeps). Human edits follow circadian patterns — peak during European afternoon."
             />
 
             {/* \u2500\u2500 Breakdown \u2500\u2500 */}
@@ -593,6 +637,7 @@ function WikipediaDashboardInner() {
               sort="desc"
               layout="horizontal"
               loading={topWikis.length === 0}
+              aiContext="Top 10 wikis by edit volume. Wikidata and Commons often lead because they are bot-heavy. English Wikipedia is the largest human-edited wiki."
               drillDown={(event) => {
                 const wikiDisplayName = String(event.indexValue);
                 const wikiKey = Object.entries(WIKI_LABELS).find(([, label]) => label === wikiDisplayName)?.[0]
@@ -682,6 +727,7 @@ function WikipediaDashboardInner() {
               description="Percentage of total edits made by automated bots vs human editors."
               format="percent"
               height={300}
+              aiContext="Bot ratio gauge. Green (<30%) means human-dominated editing. Amber (30-60%) is normal. Red (>60%) means bots are running batch jobs."
               thresholds={[
                 { value: 30, color: "emerald" },
                 { value: 60, color: "amber" },
@@ -749,11 +795,11 @@ function WikipediaDashboardInner() {
             />
 
           </MetricGrid>
-          </LinkedHoverProvider>
-        </MetricProvider>
+
+      {/* ── AI Insights — floating button + sidebar chat ── */}
+      <DashboardInsight />
       </div>
     </div>
-    </>
   );
 }
 
