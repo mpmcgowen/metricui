@@ -24,20 +24,22 @@ const tocItems: TocItem[] = [
 
 const accountData = [
   { account: "Acme Corp", mrr: 12400, seats: 45 },
-  { account: "Globex Inc", mrr: 8200, seats: 28 },
-  { account: "Initech", mrr: 15600, seats: 62 },
+  { account: "Globex Inc", mrr: 8200, seats: 68 },       // high seats, low MRR — undermonetized
+  { account: "Initech", mrr: 15600, seats: 22 },          // low seats, high MRR — premium tier
   { account: "Umbrella Ltd", mrr: 6800, seats: 18 },
-  { account: "Stark Industries", mrr: 22100, seats: 95 },
-  { account: "Wayne Enterprises", mrr: 18400, seats: 74 },
-  { account: "Cyberdyne", mrr: 9500, seats: 32 },
+  { account: "Stark Industries", mrr: 22100, seats: 55 },
+  { account: "Wayne Enterprises", mrr: 18400, seats: 120 }, // outlier — huge team, moderate MRR
+  { account: "Cyberdyne", mrr: 28500, seats: 32 },        // outlier — small team, very high MRR
   { account: "Oscorp", mrr: 11200, seats: 41 },
-  { account: "LexCorp", mrr: 14800, seats: 55 },
-  { account: "Wonka Inc", mrr: 7300, seats: 22 },
-  { account: "Dunder Mifflin", mrr: 5400, seats: 15 },
-  { account: "Pied Piper", mrr: 19800, seats: 82 },
-  { account: "Hooli", mrr: 24600, seats: 110 },
+  { account: "LexCorp", mrr: 4800, seats: 85 },           // undermonetized — lots of seats, low MRR
+  { account: "Wonka Inc", mrr: 7300, seats: 12 },
+  { account: "Dunder Mifflin", mrr: 5400, seats: 35 },
+  { account: "Pied Piper", mrr: 19800, seats: 28 },       // efficient — few seats, high MRR
+  { account: "Hooli", mrr: 14600, seats: 110 },
   { account: "Prestige Worldwide", mrr: 3200, seats: 8 },
-  { account: "Sterling Cooper", mrr: 10700, seats: 38 },
+  { account: "Sterling Cooper", mrr: 16700, seats: 48 },
+  { account: "Bluth Co", mrr: 2100, seats: 52 },          // undermonetized outlier
+  { account: "Massive Dynamic", mrr: 31200, seats: 42 },  // top performer
 ];
 
 const multiSeriesData = [

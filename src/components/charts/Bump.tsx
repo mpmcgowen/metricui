@@ -301,10 +301,10 @@ const BumpInner = forwardRef<HTMLDivElement, BumpProps>(function Bump(props, ref
             theme={nivoTheme}
             colors={(serie: { id: string }) => colorMap.get(serie.id) ?? seriesColors[0]}
             margin={{
-              top: denseValues.marginTop,
-              right: containerWidth < 400 ? 60 : 90,
+              top: denseValues.marginTop + 8,
+              right: containerWidth < 400 ? 100 : 140,
               bottom: denseValues.marginBottom,
-              left: containerWidth < 400 ? 32 : 48,
+              left: containerWidth < 400 ? 100 : 140,
             }}
             lineWidth={lineWidth}
             activeLineWidth={lineWidth + 3}
