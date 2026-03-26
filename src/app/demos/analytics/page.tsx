@@ -127,7 +127,13 @@ export default function AnalyticsDashboard() {
 // ---------------------------------------------------------------------------
 
 function AnalyticsContent() {
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState(() => {
+    if (typeof window !== "undefined") {
+      const fromUrl = new URL(window.location.href).searchParams.get("tab");
+      if (fromUrl && ["overview", "acquisition", "engagement", "conversions"].includes(fromUrl)) return fromUrl;
+    }
+    return "overview";
+  });
   const filters = useMetricFilters();
   const crossFilter = useCrossFilter();
   const openDrill = useDrillDownAction();
@@ -299,6 +305,7 @@ function AnalyticsContent() {
             ]}
             value={tab}
             onChange={setTab}
+            syncUrl="tab"
           />
         </FilterBar.Nav>
         <FilterBar.Primary>

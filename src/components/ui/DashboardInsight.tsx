@@ -100,9 +100,10 @@ function UserMessage({ message }: { message: AiMessage }) {
   const text = message.content;
   while ((match = mentionRegex.exec(text)) !== null) {
     if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
+    const mentionText = match[1].replace(/[\s.!?,;:]+$/, "");
     parts.push(
       <span key={match.index} className="inline-flex items-center gap-0.5 rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">
-        <Sparkles className="h-2 w-2" />{match[1].trim()}
+        <Sparkles className="h-2 w-2" />{mentionText}
       </span>
     );
     lastIndex = match.index + match[0].length;

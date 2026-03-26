@@ -508,8 +508,8 @@ function DashboardContent() {
         height={260}
         sort="desc"
         layout="horizontal"
-        onBarClick={(e) => openDrill(
-          { title: `Country: ${e.label}`, field: "country", value: e.indexValue, mode: "modal" },
+        crossFilter={{ field: "country" }}
+        drillDown={(e) => (
           <MetricGrid>
             <KpiCard title="Accounts" value={filtered.filter((a) => a.country === e.indexValue).length} format="number" />
             <KpiCard title="MRR" value={filtered.filter((a) => a.country === e.indexValue && a.status === "active").reduce((s, a) => s + a.mrr, 0)} format="currency" />
@@ -527,7 +527,7 @@ function DashboardContent() {
               dense
               searchable
             />
-          </MetricGrid>,
+          </MetricGrid>
         )}
       />
       <DonutChart

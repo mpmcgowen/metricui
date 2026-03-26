@@ -226,7 +226,7 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
     const containerRef = useRef<HTMLDivElement>(null);
     const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
 
-    useEffect(() => {
+    const recalcIndicator = useCallback(() => {
       if (!containerRef.current) return;
 
       const activeIdx = tabs.findIndex((t) => t.value === activeValue);
@@ -253,6 +253,20 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
         transition: "all 200ms cubic-bezier(0.4, 0, 0.2, 1)",
       });
     }, [activeValue, tabs]);
+
+    useEffect(() => {
+      recalcIndicator();
+    }, [recalcIndicator]);
+
+    // Recalculate indicator on container resize
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const ro = new ResizeObserver(() => recalcIndicator());
+      ro.observe(container);
+      return () => ro.disconnect();
+    }, [recalcIndicator]);
 
     return (
       <div

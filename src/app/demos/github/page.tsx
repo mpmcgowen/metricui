@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { StatGroup } from "@/components/cards/StatGroup";
@@ -196,6 +196,13 @@ function DashboardContent() {
   const openDrill = useDrillDownAction();
   const view = filters?.dimensions?.view?.[0] ?? "Issues";
   const labelFilter = filters?.dimensions?.label ?? [];
+
+  // Clear label filter when switching away from Issues view
+  useEffect(() => {
+    if (view !== "Issues" && labelFilter.length > 0) {
+      filters?.clearDimension("label");
+    }
+  }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // --- Period-filtered commit activity ---
   const periodCommits = useMemo(() => {
