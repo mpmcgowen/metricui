@@ -53,6 +53,18 @@ import { KpiCard, AreaChart, MetricProvider, MetricGrid, DashboardHeader, Filter
 import "metricui/styles.css";
 \`\`\`
 
+## CDN / Browser usage (for sandboxed environments like Claude artifacts, v0, Bolt, Lovable)
+
+When there is no bundler or npm available, use the CDN bundle. This is a standalone ESM file with all dependencies inlined — only React must be provided by the host environment.
+
+\`\`\`tsx
+import { KpiCard, AreaChart, MetricProvider, MetricGrid } from "https://cdn.jsdelivr.net/npm/metricui@latest/dist/metricui.browser.mjs";
+\`\`\`
+
+CSS: \`https://cdn.jsdelivr.net/npm/metricui@latest/dist/styles.css\`
+
+Use this whenever you're generating code for a browser sandbox, artifact, or any environment without npm/bundler access. The API is identical — same components, same props, just a different import path.
+
 ## Dashboard architecture — ALWAYS follow this
 
 1. Wrap in \`<Dashboard theme="..." filters={{ defaultPreset: "30d" }} exportable>\` — this replaces MetricProvider + FilterProvider + CrossFilterProvider + LinkedHoverProvider + DrillDown.Root in one component

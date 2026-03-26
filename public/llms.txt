@@ -18,6 +18,18 @@ import { Dashboard, DashboardInsight, KpiCard, StatGroup, AreaChart, LineChart, 
 import "metricui/styles.css";
 ```
 
+## CDN / Browser bundle (for sandboxed environments — Claude artifacts, v0, Bolt, Lovable)
+
+When no bundler is available, use the standalone browser bundle. All dependencies are inlined except React.
+
+```tsx
+import { KpiCard, AreaChart, MetricProvider, MetricGrid } from "https://cdn.jsdelivr.net/npm/metricui@latest/dist/metricui.browser.mjs";
+```
+
+CSS: `https://cdn.jsdelivr.net/npm/metricui@latest/dist/styles.css`
+
+Same components, same props, same API — just a different import path. Use this whenever generating code for a browser sandbox or artifact.
+
 ### Shared Base Types
 
 All components inherit from `BaseComponentProps`: `aiContext`, `id`, `data-testid`, `className`.

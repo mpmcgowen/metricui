@@ -41,6 +41,18 @@ npm install metricui
 
 That's it. All chart dependencies are included.
 
+### CDN (no bundler needed)
+
+For browser sandboxes, Claude artifacts, v0, Bolt, or anywhere without npm:
+
+```tsx
+import { KpiCard, AreaChart, MetricProvider } from "https://cdn.jsdelivr.net/npm/metricui@latest/dist/metricui.browser.mjs";
+```
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/metricui@latest/dist/styles.css" />
+```
+
 ---
 
 ## Why MetricUI?

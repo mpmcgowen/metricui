@@ -16,99 +16,80 @@ import {
   BarChart3,
   Bot,
   Github,
+  Zap,
+  MousePointerClick,
+  Shield,
+  Download,
+  MessageSquare,
+  Filter,
+  PanelRightOpen,
 } from "lucide-react";
 import { MetricProvider } from "@/lib/MetricProvider";
 import { cn } from "@/lib/utils";
 
-const features = [
-  {
-    icon: Code2,
-    title: "One import, not six libraries",
-    description: "KPI cards, charts, tables, layout, and formatting in a single package. No glue code.",
-  },
-  {
-    icon: Layers,
-    title: "Built-in data states",
-    description: "Loading, empty, error, and stale states on every component. Pass a prop, not build a wrapper.",
-  },
+// ---------------------------------------------------------------------------
+// Data
+// ---------------------------------------------------------------------------
+
+const stats = [
+  { label: "Components", value: "44" },
+  { label: "Chart Types", value: "11" },
+  { label: "Tests", value: "436" },
+  { label: "Demos", value: "5" },
+];
+
+const capabilities = [
   {
     icon: Sparkles,
-    title: "AI Insights — bring your own LLM",
-    description: "Floating chat that analyzes your dashboard data. @ mention specific charts. Three-level context. Works with any model.",
+    label: "AI Insights",
+    title: "Your dashboard learned to talk.",
+    description: "Drop in one component. Connect your LLM. End users ask questions about their data — the AI sees every chart, every filter, every number. @ mention specific metrics. Get answers grounded in what's actually on screen.",
+    accent: "text-violet-500",
+    bg: "bg-violet-500/8",
   },
   {
-    icon: Palette,
-    title: "Theming that works",
-    description: "8 presets, CSS variables, dark mode, dense mode, 5 card variants. One provider, zero config.",
+    icon: MousePointerClick,
+    label: "Cross-Filtering",
+    title: "Click a bar. Everything responds.",
+    description: "Click a donut slice, a bar, a table row — every other component on the page filters to match. One prop: crossFilter. No wiring code. Click again to clear. Signal-only architecture — you own the data, we own the interaction.",
+    accent: "text-emerald-500",
+    bg: "bg-emerald-500/8",
   },
   {
-    icon: BarChart3,
-    title: "Unified data format",
-    description: "Same data array works across Area, Line, Bar, Donut, and HeatMap. No reshaping between chart types.",
+    icon: PanelRightOpen,
+    label: "Drill-Downs",
+    title: "Click any metric. See the detail.",
+    description: "drillDown={true} auto-generates a detail panel. Or pass a function for custom content. Slide-over or modal. Nested up to 4 levels with breadcrumbs. Works on every component — KPIs, charts, tables.",
+    accent: "text-blue-500",
+    bg: "bg-blue-500/8",
   },
   {
-    icon: Bot,
-    title: "MCP server for AI tools",
-    description: "AI coding tools generate correct MetricUI code on the first try. Full API surface exposed.",
+    icon: Download,
+    label: "Export",
+    title: "PNG. CSV. Clipboard. One prop.",
+    description: "exportable on MetricProvider. Every component gets a download button. 4x DPI PNGs via modern-screenshot. CSV with filter metadata. Clean filenames. The finance team stops asking you for screenshots.",
+    accent: "text-amber-500",
+    bg: "bg-amber-500/8",
   },
+];
+
+const features = [
+  { icon: Code2, title: "One import, not six libraries", desc: "KPI cards, 11 chart types, tables, layout, formatting, theming — one package. No glue code." },
+  { icon: Layers, title: "Built-in data states", desc: "Loading skeletons, empty states, error retry, stale indicators. On every component. Pass a prop." },
+  { icon: Filter, title: "Complete filter system", desc: "FilterBar + PeriodSelector + DropdownFilter + SegmentToggle + FilterTags. All wired through context." },
+  { icon: Palette, title: "8 theme presets + dark mode", desc: "One prop changes everything. Indigo, emerald, rose, amber, cyan, violet, slate, orange. CSS variables." },
+  { icon: Zap, title: "Smart defaults, zero config", desc: "Auto column inference on tables. Auto-format from key names. MetricGrid auto-layout. It just works." },
+  { icon: Bot, title: "MCP server for AI tools", desc: "Claude, Cursor, Copilot generate correct MetricUI code on the first try. Full API surface exposed." },
+  { icon: Shield, title: "436 tests. TypeScript-first.", desc: "Every component tested. Every prop typed. BaseComponentProps inherited everywhere. Ship with confidence." },
+  { icon: MessageSquare, title: "44 components. All free.", desc: "MIT license. No pro tier. No gates. KPIs, charts, tables, filters, layout, AI — everything ships." },
 ];
 
 const demos = [
-  {
-    title: "Web Analytics",
-    description: "GA-style dashboard with tab navigation, AI insights, cross-filtering, and per-device filtering",
-    href: "/demos/analytics",
-    color: "bg-violet-500/10 text-violet-500",
-  },
-  {
-    title: "SaaS Metrics",
-    description: "MRR, churn, retention funnel, industry breakdown with AI-powered analysis",
-    href: "/demos/saas",
-    color: "bg-emerald-500/10 text-emerald-500",
-  },
-  {
-    title: "GitHub Analytics",
-    description: "Repository stats, commit velocity, issue triage, PR throughput — real facebook/react data",
-    href: "/demos/github",
-    color: "bg-slate-500/10 text-slate-500",
-  },
-  {
-    title: "Wikipedia Live",
-    description: "Real-time streaming edits from Wikimedia EventStreams with bot/human analysis",
-    href: "/demos/wikipedia",
-    color: "bg-amber-500/10 text-amber-500",
-  },
-  {
-    title: "World Explorer",
-    description: "Global statistics — population, GDP, languages, currencies with 4-level drill-downs",
-    href: "/demos/world",
-    color: "bg-cyan-500/10 text-cyan-500",
-  },
-];
-
-const components = [
-  { name: "KpiCard", href: "/docs/kpi-card", icon: BarChart3 },
-  { name: "StatGroup", href: "/docs/stat-group", icon: Layers },
-  { name: "AreaChart", href: "/docs/area-chart", icon: BarChart3 },
-  { name: "LineChart", href: "/docs/line-chart", icon: BarChart3 },
-  { name: "BarChart", href: "/docs/bar-chart", icon: BarChart3 },
-  { name: "BarLineChart", href: "/docs/bar-line-chart", icon: BarChart3 },
-  { name: "DonutChart", href: "/docs/donut-chart", icon: BarChart3 },
-  { name: "Sparkline", href: "/docs/sparkline", icon: BarChart3 },
-  { name: "Gauge", href: "/docs/gauge", icon: BarChart3 },
-  { name: "HeatMap", href: "/docs/heatmap", icon: BarChart3 },
-  { name: "DataTable", href: "/docs/data-table", icon: Layers },
-  { name: "MetricGrid", href: "/docs/metric-grid", icon: Layers },
-  { name: "DashboardHeader", href: "/docs/dashboard-header", icon: Layers },
-  { name: "PeriodSelector", href: "/docs/period-selector", icon: Layers },
-  { name: "SegmentToggle", href: "/docs/segment-toggle", icon: Layers },
-  { name: "DropdownFilter", href: "/docs/dropdown-filter", icon: Layers },
-  { name: "FilterTags", href: "/docs/filter-tags", icon: Layers },
-  { name: "Callout", href: "/docs/callout", icon: Layers },
-  { name: "StatusIndicator", href: "/docs/status-indicator", icon: Layers },
-  { name: "Badge", href: "/docs/badge", icon: Layers },
-  { name: "SectionHeader", href: "/docs/section-header", icon: Layers },
-  { name: "Divider", href: "/docs/divider", icon: Layers },
+  { title: "Web Analytics", desc: "GA-style · tab nav · AI insights · cross-filter · per-device data", href: "/demos/analytics", color: "from-violet-500/20 to-violet-500/5", accent: "text-violet-400" },
+  { title: "SaaS Metrics", desc: "MRR · churn · funnel · industry breakdown · AI analysis", href: "/demos/saas", color: "from-emerald-500/20 to-emerald-500/5", accent: "text-emerald-400" },
+  { title: "GitHub Analytics", desc: "Real facebook/react data · commit velocity · issue triage", href: "/demos/github", color: "from-slate-500/20 to-slate-500/5", accent: "text-slate-400" },
+  { title: "Wikipedia Live", desc: "Real-time streaming · bot/human analysis · edit velocity", href: "/demos/wikipedia", color: "from-amber-500/20 to-amber-500/5", accent: "text-amber-400" },
+  { title: "World Explorer", desc: "Population · GDP · languages · 4-level drill-downs", href: "/demos/world", color: "from-cyan-500/20 to-cyan-500/5", accent: "text-cyan-400" },
 ];
 
 const withoutCode = `// The usual way — Recharts + shadcn + custom everything
@@ -159,7 +140,7 @@ function RevenueCard({ value, prev, sparkline, loading, error }) {
       <CardContent>
         <p className="text-2xl font-bold">{formatCurrency(value)}</p>
         <div className={cn("flex items-center gap-1 text-sm mt-1",
-          isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+          isPositive ? "text-green-600" : "text-red-600"
         )}>
           <Icon className="h-3 w-3" />
           <span>{isPositive ? "+" : ""}{change.toFixed(1)}% vs last month</span>
@@ -170,12 +151,6 @@ function RevenueCard({ value, prev, sparkline, loading, error }) {
               <AreaChart data={sparkline.map((v, i) => ({ i, v }))}>
                 <Area type="monotone" dataKey="v" stroke="#6366f1"
                   fill="url(#grad)" strokeWidth={1.5} />
-                <defs>
-                  <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -185,111 +160,143 @@ function RevenueCard({ value, prev, sparkline, loading, error }) {
   );
 }
 
-// And you still don't have: goal progress, conditional coloring,
+// 65 lines. Still missing: goal progress, conditional coloring,
 // comparison badges, copy-to-clipboard, drill-down, dense mode,
-// dark mode theming, null handling, count-up animation...`;
+// dark mode, null handling, count-up animation, export...`;
 
-const withCode = `// MetricUI — same result, zero glue code
-import { KpiCard } from "metricui";
+const withCode = `import { KpiCard } from "metricui";
 
-function RevenueCard({ value, prev, loading }) {
-  return (
-    <KpiCard
-      title="Revenue"
-      value={value}
-      format="currency"
-      comparison={{ value: prev }}
-      loading={loading}
-    />
-  );
-}`;
+<KpiCard
+  title="Revenue"
+  value={127450}
+  format="currency"
+  comparison={{ value: 113500 }}
+  sparkline={{ data: [89, 94, 98, 103, 108, 113, 127] }}
+  loading={loading}
+/>
 
-const quickStart = `import { KpiCard, AreaChart, MetricGrid, MetricProvider } from "metricui";
+// 10 lines. Everything included.
+// Goal progress, conditional colors, drill-down,
+// dark mode, export, AI context — all just props.`;
+
+const quickStart = `import { Dashboard, KpiCard, AreaChart, MetricGrid, DashboardInsight } from "metricui";
 import "metricui/styles.css";
 
-export default function Dashboard() {
+export default function MyDashboard() {
   return (
-    <MetricProvider theme="emerald" dense>
+    <Dashboard
+      theme="emerald"
+      filters={{ defaultPreset: "30d" }}
+      exportable
+      ai={{ analyze: myLLM, company: "Acme Corp", context: "Q4 revenue dashboard" }}
+    >
       <MetricGrid>
-        <KpiCard
-          title="Revenue"
-          value={127450}
-          format="currency"
+        <KpiCard title="Revenue" value={127450} format="currency"
           comparison={{ value: 113500 }}
-          sparklineData={[89, 94, 98, 103, 108, 113, 127]}
-        />
-        <AreaChart data={revenueData} title="Revenue Over Time" />
+          aiContext="Our north star metric. Enterprise drives 52%." />
+        <KpiCard title="Users" value={8420} format="number"
+          goal={{ value: 10000, showProgress: true }} />
+        <AreaChart data={revenueData} index="month" categories={["revenue"]}
+          title="Revenue Over Time" crossFilter drillDown />
       </MetricGrid>
-    </MetricProvider>
+      <DashboardInsight />
+    </Dashboard>
   );
 }`;
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export default function Home() {
   const [compareTab, setCompareTab] = useState<"without" | "with">("without");
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <header className="relative overflow-hidden border-b border-[var(--card-border)] bg-[var(--card-bg)]">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(79,70,229,0.08),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(129,140,248,0.06),transparent)]" />
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  HERO                                                              */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <header className="relative overflow-hidden border-b border-[var(--card-border)]">
+        {/* Gradient backdrop */}
+        <div className="absolute inset-0 bg-[var(--card-bg)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-30%,rgba(99,102,241,0.12),transparent)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-30%,rgba(129,140,248,0.08),transparent)]" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent" />
+
+        {/* Nav */}
         <nav className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--foreground)] text-xs font-bold text-[var(--background)]">
-              M
-            </div>
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--foreground)] text-xs font-bold text-[var(--background)]">M</div>
             <span className="text-base font-bold tracking-tight">MetricUI</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="/docs" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">
-              Docs
-            </a>
-            <a href="#demos" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">
-              Demos
-            </a>
-            <a href="https://github.com/mpmcgowen/metricui" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">
-              <Github className="h-4 w-4" />
-            </a>
+            <a href="/docs" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Docs</a>
+            <a href="#demos" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Demos</a>
+            <a href="/roadmap" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Roadmap</a>
+            <a href="https://github.com/mpmcgowen/metricui" className="text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"><Github className="h-4 w-4" /></a>
             <ThemeToggle />
           </div>
         </nav>
 
-        <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 text-center">
-          <div className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)] bg-[var(--background)] px-3 py-1 text-xs font-medium text-[var(--muted)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-            Open source — MIT license
+        {/* Hero content */}
+        <div className="relative mx-auto max-w-7xl px-6 pb-28 pt-24">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-1.5 text-xs font-semibold text-[var(--accent)]">
+              <Sparkles className="h-3 w-3" />
+              Now with AI Insights — ask your dashboard questions
+            </div>
+
+            <h1 className="max-w-4xl text-[clamp(2.75rem,6vw,4.5rem)] font-extrabold leading-[1.05] tracking-tight text-[var(--foreground)]">
+              Dashboards that think.
+              <br />
+              <span className="bg-gradient-to-r from-[var(--accent)] to-purple-400 bg-clip-text text-transparent">
+                Built in minutes.
+              </span>
+            </h1>
+
+            <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-[var(--muted)]">
+              44 components. 11 chart types. AI-powered analysis. Cross-filtering. Drill-downs. Export.
+              One import replaces six libraries — and your dashboard can explain itself.
+            </p>
+
+            <div className="mt-10 flex items-center gap-4">
+              <a href="/docs/guides/getting-started" className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[var(--accent)]/25 transition-all hover:shadow-xl hover:shadow-[var(--accent)]/30 hover:scale-[1.02]">
+                Get Started <ArrowRight className="h-4 w-4" />
+              </a>
+              <a href="#demos" className="inline-flex items-center gap-2 rounded-xl border border-[var(--card-border)] bg-[var(--background)]/50 px-7 py-3.5 text-sm font-medium text-[var(--muted)] backdrop-blur transition-all hover:border-[var(--foreground)]/20 hover:text-[var(--foreground)]">
+                See 5 Live Demos
+              </a>
+            </div>
+
+            <div className="mt-6 flex items-center gap-6">
+              <code className="rounded-lg border border-[var(--card-border)] bg-[var(--background)] px-4 py-2 text-sm text-[var(--muted)] font-[family-name:var(--font-mono)]">
+                npm install metricui
+              </code>
+              <span className="text-xs text-[var(--muted)]">MIT · Open Source · Free</span>
+            </div>
           </div>
-          <h1 className="mx-auto max-w-3xl text-[clamp(2.5rem,5vw,3.75rem)] font-bold leading-[1.1] tracking-tight text-[var(--foreground)]">
-            The missing UI layer
-            <br />
-            <span className="text-[var(--accent)]">
-              for React dashboards
-            </span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-[var(--muted)]">
-            KPI cards, charts, tables, and layout — with built-in formatting, theming, data states, and zero config. One import, not six libraries.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-3">
-            <a href="/docs/guides/getting-started" className="inline-flex items-center gap-2 rounded-xl bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--background)] transition-all hover:opacity-80">
-              Get Started
-              <ArrowRight className="h-4 w-4" />
-            </a>
-            <a href="#demos" className="inline-flex items-center gap-2 rounded-xl border border-[var(--card-border)] px-6 py-3 text-sm font-medium text-[var(--muted)] transition-all hover:border-[var(--foreground)]/20 hover:text-[var(--foreground)]">
-              See Demos
-            </a>
-          </div>
-          <div className="mt-6">
-            <code className="rounded-lg border border-[var(--card-border)] bg-[var(--background)] px-4 py-2 text-sm text-[var(--muted)]">
-              npm install metricui
-            </code>
+
+          {/* Stats bar */}
+          <div className="mx-auto mt-16 flex max-w-lg items-center justify-center gap-8">
+            {stats.map((s) => (
+              <div key={s.label} className="text-center">
+                <div className="text-2xl font-bold tracking-tight text-[var(--foreground)]">{s.value}</div>
+                <div className="mt-0.5 text-[11px] font-medium uppercase tracking-widest text-[var(--muted)]">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </header>
 
-      {/* Inline preview — 3 KPI cards with context */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  LIVE KPI PREVIEW                                                  */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="border-b border-[var(--card-border)] bg-[var(--background)] py-16">
         <div className="mx-auto max-w-4xl px-6">
-          <p className="mb-8 text-center text-sm text-[var(--muted)]">
-            3 props each. No formatting code. No layout CSS. No loading state wrapper.
+          <p className="mb-2 text-center text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
+            Live Components
+          </p>
+          <p className="mb-10 text-center text-sm text-[var(--muted)]">
+            Real MetricUI components rendering below. Sparklines, comparisons, goals, conditional colors — no screenshots.
           </p>
           <MetricProvider animate>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -297,9 +304,10 @@ export default function Home() {
                 title="Revenue"
                 value={127450}
                 format="currency"
-                comparison={{ value: 113500 }}
-                sparklineData={[89, 94, 98, 103, 108, 113, 127]}
+                comparison={{ value: 113500, label: "vs last month" }}
+                sparkline={{ data: [89, 94, 98, 103, 108, 113, 127], type: "bar" }}
                 icon={<DollarSign className="h-3.5 w-3.5" />}
+                description="Monthly recurring revenue across all plans."
                 animate={{ countUp: true }}
               />
               <KpiCard
@@ -308,8 +316,8 @@ export default function Home() {
                 format="number"
                 comparison={{ value: 7680 }}
                 icon={<Users className="h-3.5 w-3.5" />}
-                goal={{ value: 10000, showProgress: true }}
-                animate={{ countUp: true, delay: 100 }}
+                goal={{ value: 10000, label: "Q4 Target", showProgress: true, showTarget: true }}
+                animate={{ countUp: true, delay: 150 }}
               />
               <KpiCard
                 title="Conversion"
@@ -322,37 +330,61 @@ export default function Home() {
                   { when: "between", min: 3, max: 4, color: "amber" },
                   { when: "below", value: 3, color: "red" },
                 ]}
-                animate={{ countUp: true, delay: 200 }}
+                animate={{ countUp: true, delay: 300 }}
               />
             </div>
           </MetricProvider>
         </div>
       </section>
 
-      {/* Before / After comparison */}
-      <section className="py-20">
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  CAPABILITIES — the big four                                       */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Superpowers</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--foreground)]">
+              Not just charts.<br />A complete dashboard intelligence platform.
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2">
+            {capabilities.map((c) => (
+              <div key={c.label} className="group rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-8 transition-all hover:border-[var(--accent)]/20 hover:shadow-xl hover:shadow-[var(--accent)]/5">
+                <div className={cn("inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider", c.bg, c.accent)}>
+                  <c.icon className="h-3 w-3" />
+                  {c.label}
+                </div>
+                <h3 className="mt-5 text-xl font-bold text-[var(--foreground)]">{c.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{c.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  BEFORE / AFTER                                                    */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="border-y border-[var(--card-border)] bg-[var(--card-bg)] py-24">
         <div className="mx-auto max-w-3xl px-6">
           <div className="text-center">
-            <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
-              Before &amp; After
-            </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-              Stop assembling dashboards from scratch
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Before &amp; After</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--foreground)]">
+              65 lines of glue code?<br />Or 10 lines that do more?
             </h2>
-            <p className="mt-3 text-sm text-[var(--muted)]">
-              One KPI card with formatting, comparison, sparkline, loading, and error handling.
+            <p className="mx-auto mt-4 max-w-lg text-sm text-[var(--muted)]">
+              One KPI card with formatting, comparison, sparkline, loading, error handling, dark mode, export, and AI context.
             </p>
           </div>
 
-          {/* Tab switcher */}
-          <div className="mt-10 flex items-center justify-center gap-1 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-1 w-fit mx-auto">
+          <div className="mt-10 flex items-center justify-center gap-1 rounded-lg border border-[var(--card-border)] bg-[var(--background)] p-1 w-fit mx-auto">
             <button
               onClick={() => setCompareTab("without")}
               className={cn(
-                "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
-                compareTab === "without"
-                  ? "bg-[var(--accent)]/10 text-[var(--accent)]"
-                  : "text-[var(--muted)] hover:text-[var(--foreground)]"
+                "rounded-md px-5 py-2 text-sm font-medium transition-all",
+                compareTab === "without" ? "bg-red-500/10 text-red-500" : "text-[var(--muted)] hover:text-[var(--foreground)]"
               )}
             >
               Without MetricUI
@@ -360,63 +392,37 @@ export default function Home() {
             <button
               onClick={() => setCompareTab("with")}
               className={cn(
-                "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
-                compareTab === "with"
-                  ? "bg-[var(--accent)]/10 text-[var(--accent)]"
-                  : "text-[var(--muted)] hover:text-[var(--foreground)]"
+                "rounded-md px-5 py-2 text-sm font-medium transition-all",
+                compareTab === "with" ? "bg-emerald-500/10 text-emerald-500" : "text-[var(--muted)] hover:text-[var(--foreground)]"
               )}
             >
               With MetricUI
             </button>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-8">
             {compareTab === "without" ? (
-              <div>
-                <CodeBlock code={withoutCode} language="tsx" filename="RevenueCard.tsx — 65 lines and still missing features" />
-              </div>
+              <CodeBlock code={withoutCode} language="tsx" filename="RevenueCard.tsx — 65 lines, still missing features" />
             ) : (
-              <div>
-                <CodeBlock code={withCode} language="tsx" filename="RevenueCard.tsx — 10 lines, everything included" />
-              </div>
+              <CodeBlock code={withCode} language="tsx" filename="RevenueCard.tsx — 10 lines, everything included" />
             )}
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="border-y border-[var(--card-border)] bg-[var(--card-bg)] py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center">
-            <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
-              Why MetricUI
-            </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-              Everything a dashboard needs, nothing it doesn&apos;t
-            </h2>
-          </div>
-          <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => (
-              <div key={f.title} className="rounded-xl border border-[var(--card-border)] bg-[var(--background)] p-6">
-                <f.icon className="h-5 w-5 text-[var(--accent)]" />
-                <h3 className="mt-3 text-sm font-semibold text-[var(--foreground)]">{f.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted)]">{f.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Quick start code */}
-      <section className="py-20">
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  QUICK START                                                       */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-24">
         <div className="mx-auto max-w-3xl px-6">
           <div className="text-center">
-            <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
-              Quick Start
-            </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-              A complete dashboard in 20 lines
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Quick Start</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--foreground)]">
+              A complete AI-powered dashboard.<br />25 lines.
             </h2>
+            <p className="mx-auto mt-4 max-w-lg text-sm text-[var(--muted)]">
+              Dashboard wrapper, filters, cross-filtering, drill-downs, export, and AI chat — all configured.
+            </p>
           </div>
           <div className="mt-10">
             <CodeBlock code={quickStart} language="tsx" filename="app/dashboard/page.tsx" />
@@ -424,77 +430,99 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Live demos */}
-      <section id="demos" className="border-y border-[var(--card-border)] bg-[var(--card-bg)] py-20">
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  FEATURES GRID                                                     */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="border-y border-[var(--card-border)] bg-[var(--card-bg)] py-24">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center">
-            <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
-              Live Demos
-            </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-              See it in action
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Everything Included</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--foreground)]">
+              The features real dashboards need
             </h2>
-            <p className="mt-3 text-sm text-[var(--muted)]">
-              Full interactive dashboards built entirely with MetricUI.
+          </div>
+          <div className="mx-auto mt-14 grid max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((f) => (
+              <div key={f.title} className="rounded-xl border border-[var(--card-border)] bg-[var(--background)] p-5 transition-all hover:border-[var(--accent)]/20">
+                <f.icon className="h-4 w-4 text-[var(--accent)]" />
+                <h3 className="mt-3 text-[13px] font-semibold text-[var(--foreground)]">{f.title}</h3>
+                <p className="mt-1.5 text-[12px] leading-relaxed text-[var(--muted)]">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  LIVE DEMOS                                                        */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section id="demos" className="py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Live Demos</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--foreground)]">
+              Don&apos;t take our word for it.
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-sm text-[var(--muted)]">
+              Five fully interactive dashboards. Real data. Real AI. Real cross-filtering. Click around.
             </p>
           </div>
-          <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2">
-            {demos.map((d) => (
+          <div className="mx-auto mt-14 grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {demos.map((d, i) => (
               <a
                 key={d.href}
                 href={d.href}
-                className="group rounded-xl border border-[var(--card-border)] bg-[var(--background)] p-6 transition-all hover:border-[var(--accent)]/30 hover:shadow-lg hover:shadow-[var(--accent)]/5"
+                className={cn(
+                  "group relative overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-7 transition-all hover:border-[var(--accent)]/30 hover:shadow-xl hover:shadow-[var(--accent)]/5 hover:-translate-y-0.5",
+                  i === 0 && "sm:col-span-2 lg:col-span-2",
+                )}
               >
-                <div className={cn("mb-3 inline-flex rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-wider", d.color)}>
-                  Demo
+                <div className={cn("absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity group-hover:opacity-100", d.color)} />
+                <div className="relative">
+                  <h3 className={cn("text-lg font-bold transition-colors group-hover:text-[var(--accent)]", "text-[var(--foreground)]")}>
+                    {d.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-[var(--muted)]">{d.desc}</p>
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1">
+                    Explore <ArrowRight className="h-3 w-3" />
+                  </span>
                 </div>
-                <h3 className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors">
-                  {d.title}
-                </h3>
-                <p className="mt-1 text-sm text-[var(--muted)]">{d.description}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-100">
-                  View demo <ArrowRight className="h-3 w-3" />
-                </span>
               </a>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Components grid */}
-      <section className="py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="text-center">
-            <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
-              22 Components
-            </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-              Everything ships free
-            </h2>
-          </div>
-          <div className="mx-auto mt-12 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            {components.map((c) => (
-              <a
-                key={c.name}
-                href={c.href}
-                className="group flex items-center gap-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2.5 text-sm font-medium text-[var(--muted)] transition-all hover:border-[var(--accent)]/30 hover:text-[var(--accent)]"
-              >
-                <span className="font-[family-name:var(--font-mono)] text-xs">{c.name}</span>
-              </a>
-            ))}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  CTA                                                               */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="border-t border-[var(--card-border)] bg-[var(--card-bg)]">
+        <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-[var(--foreground)]">
+            Your next dashboard deserves better.
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-sm text-[var(--muted)]">
+            Stop assembling six libraries into a dashboard. Start building one that thinks.
+          </p>
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <a href="/docs/guides/getting-started" className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[var(--accent)]/25 transition-all hover:shadow-xl hover:shadow-[var(--accent)]/30 hover:scale-[1.02]">
+              Get Started <ArrowRight className="h-4 w-4" />
+            </a>
+            <a href="https://github.com/mpmcgowen/metricui" className="inline-flex items-center gap-2 rounded-xl border border-[var(--card-border)] px-7 py-3.5 text-sm font-medium text-[var(--muted)] transition-all hover:border-[var(--foreground)]/20 hover:text-[var(--foreground)]">
+              <Github className="h-4 w-4" /> Star on GitHub
+            </a>
           </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-[var(--card-border)] py-8">
-        <div className="mx-auto max-w-7xl flex items-center justify-between px-6">
-          <p className="text-sm text-[var(--muted)]">
-            &copy; {new Date().getFullYear()} MetricUI. MIT License.
-          </p>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6">
+          <p className="text-sm text-[var(--muted)]">&copy; {new Date().getFullYear()} MetricUI. MIT License.</p>
           <div className="flex items-center gap-4">
-            <a href="/docs" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">Docs</a>
-            <a href="https://github.com/mpmcgowen/metricui" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">GitHub</a>
+            <a href="/docs" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Docs</a>
+            <a href="/roadmap" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Roadmap</a>
+            <a href="https://github.com/mpmcgowen/metricui" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">GitHub</a>
           </div>
         </div>
       </footer>
