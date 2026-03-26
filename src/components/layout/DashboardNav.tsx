@@ -7,7 +7,7 @@ import { useMetricConfig } from "@/lib/MetricProvider";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useLocale } from "@/lib/MetricProvider";
 import { useAi } from "@/lib/AiContext";
-import type { CardVariant } from "@/lib/types";
+import type { BaseComponentProps, CardVariant } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,9 +24,11 @@ export interface DashboardNavTab {
   badge?: number | string;
   /** Badge format option */
   badgeFormat?: FormatOption;
+  /** Tab content — rendered by DashboardNav. All tabs stay mounted (hidden via CSS). */
+  content?: React.ReactNode;
 }
 
-export interface DashboardNavProps {
+export interface DashboardNavProps extends BaseComponentProps {
   /** Tab definitions */
   tabs: DashboardNavTab[];
   /** Controlled active tab value */
@@ -47,10 +49,6 @@ export interface DashboardNavProps {
   dense?: boolean;
   /** Card variant */
   variant?: CardVariant;
-  /** Additional class names */
-  className?: string;
-  id?: string;
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -251,7 +249,7 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
       });
     }, [activeValue, tabs]);
 
-    return (
+    return (<>
       <div
         ref={ref}
         id={id}
@@ -328,7 +326,25 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
             );
           })}
         </div>
+
       </div>
+
+      {/* Tab content panels — all mounted, only active visible */}
+      {tabs.some((t) => t.content !== undefined) && (
+        <div data-dashboard-nav-panels="">
+          {tabs.map((tab) => (
+            <div
+              key={tab.value}
+              role="tabpanel"
+              id={`panel-${tab.value}`}
+              style={{ display: tab.value === activeValue ? "block" : "none" }}
+            >
+              {tab.content}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
     );
   },
 );

@@ -3,6 +3,7 @@
 import { forwardRef, useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useMetricConfig, useLocale } from "@/lib/MetricProvider";
+import type { BaseComponentProps } from "@/lib/types";
 import { useMetricFilters } from "@/lib/FilterContext";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { springDuration } from "@/lib/motion";
@@ -26,7 +27,7 @@ export interface SegmentOption {
   color?: string;
 }
 
-export interface SegmentToggleProps {
+export interface SegmentToggleProps extends BaseComponentProps {
   /** Segment options */
   options: SegmentOption[] | string[];
   /** Controlled value — the active segment(s) */
@@ -47,8 +48,6 @@ export interface SegmentToggleProps {
   fullWidth?: boolean;
   /** Dense mode */
   dense?: boolean;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class overrides */
   classNames?: {
     root?: string;
@@ -56,8 +55,6 @@ export interface SegmentToggleProps {
     indicator?: string;
     badge?: string;
   };
-  id?: string;
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------

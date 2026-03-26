@@ -26,7 +26,7 @@ import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
 import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toLineSeries, inferSchema, categoryKeys, categoryColors, rightAxisCategories, type Category } from "@/lib/dataTransform";
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -87,7 +87,7 @@ export interface SeriesStyle {
 // Props
 // ---------------------------------------------------------------------------
 
-export interface AreaChartProps {
+export interface AreaChartProps extends DataComponentProps {
   data?: SeriesData[] | DataRow[];
   /** Column name to use as the X-axis (index). When provided with `categories`,
    *  flat row data is auto-converted to series format. */
@@ -173,27 +173,12 @@ export interface AreaChartProps {
   crossFilter?: boolean | { field?: string };
   /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
   tooltipHint?: boolean | string;
-  /** Compact layout — reduces margins and default height. Default: false */
-  dense?: boolean;
   /** How null / missing data points are handled. Default: "gap" */
   chartNullMode?: ChartNullMode;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
-  /** Variant */
-  variant?: CardVariant;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string; legend?: string };
-  /** HTML id attribute */
-  id?: string;
-  /** Test id for testing frameworks */
-  "data-testid"?: string;
-  /** Data states */
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
 }
 
 // Tooltip is rendered inline in the component below for access to
@@ -543,6 +528,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext,
   loading,
   empty,
   error,
@@ -999,6 +985,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
     >
     <div ref={containerRef} style={{ height: "100%" }}>
     <ChartContainer componentName="AreaChart"
+      aiContext={aiContext}
       title={title}
       subtitle={subtitle}
       description={description}

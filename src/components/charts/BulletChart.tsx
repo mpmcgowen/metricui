@@ -10,7 +10,7 @@ import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
-import type { CardVariant, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ export interface SimpleBulletData {
 // Props
 // ---------------------------------------------------------------------------
 
-export interface BulletChartProps {
+export interface BulletChartProps extends DataComponentProps {
   /** Full bullet data — for complete control */
   data?: BulletDatum[];
   /** Simple data format — for the common "value vs target" case.
@@ -84,23 +84,8 @@ export interface BulletChartProps {
   showAxis?: boolean;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
-  /** Dense mode */
-  dense?: boolean;
-  /** Variant */
-  variant?: CardVariant;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string };
-  /** HTML id attribute */
-  id?: string;
-  /** Test id for testing frameworks */
-  "data-testid"?: string;
-  /** Data states */
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,6 +137,7 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext,
   loading,
   empty,
   error,
@@ -250,6 +236,7 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
         id={id}
         data-testid={dataTestId}
         componentName="BulletChart"
+        aiContext={aiContext}
         title={title}
         subtitle={subtitle}
         description={description}

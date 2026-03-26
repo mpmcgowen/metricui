@@ -10,7 +10,7 @@ import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
-import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { CellClickEvent } from "@/lib/chartTypes";
 import { toHeatMapSeries, inferSchema, categoryKeys, type Category } from "@/lib/dataTransform";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
@@ -31,7 +31,7 @@ type HeatMapSeries = {
 
 export type HeatMapColorScale = "sequential" | "diverging";
 
-export interface HeatMapProps {
+export interface HeatMapProps extends DataComponentProps {
   data?: HeatMapSeries[] | DataRow[];
   /** Column name to use as row labels. */
   index?: string;
@@ -84,23 +84,8 @@ export interface HeatMapProps {
   tooltipHint?: boolean | string;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
-  /** Variant */
-  variant?: CardVariant;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string };
-  /** HTML id */
-  id?: string;
-  /** Test id */
-  "data-testid"?: string;
-  /** Dense mode */
-  dense?: boolean;
-  /** Data states */
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
 }
 
 // ---------------------------------------------------------------------------
@@ -203,6 +188,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   id,
   dense,
   "data-testid": dataTestId,
+  aiContext,
   loading,
   empty,
   error,
@@ -299,6 +285,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
     <div ref={ref} id={id} data-testid={dataTestId} style={{ minWidth: 120, height: "100%" }}>
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="HeatMap"
+        aiContext={aiContext}
         title={title}
         subtitle={subtitle}
         description={description}

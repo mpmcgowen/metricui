@@ -3,6 +3,7 @@
 import { forwardRef, useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useMetricConfig } from "@/lib/MetricProvider";
+import type { BaseComponentProps } from "@/lib/types";
 import {
   useMetricFilters,
   PRESET_LABELS,
@@ -16,7 +17,7 @@ import { Calendar, ChevronDown, ArrowLeftRight, X } from "lucide-react";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface PeriodSelectorProps {
+export interface PeriodSelectorProps extends BaseComponentProps {
   /** Which presets to show. Default: ["7d", "30d", "90d", "month", "quarter", "ytd"] */
   presets?: PeriodPreset[];
   /** Allow custom date range. Default: true */
@@ -31,10 +32,6 @@ export interface PeriodSelectorProps {
   onComparisonChange?: (mode: ComparisonMode, period: DateRange | null) => void;
   /** Dense mode */
   dense?: boolean;
-  /** Additional class names */
-  className?: string;
-  id?: string;
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------

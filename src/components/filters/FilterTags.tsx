@@ -3,6 +3,7 @@
 import { forwardRef, useMemo, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useMetricConfig } from "@/lib/MetricProvider";
+import type { BaseComponentProps } from "@/lib/types";
 import { useMetricFilters, PRESET_LABELS } from "@/lib/FilterContext";
 import type { DateRange, PeriodPreset } from "@/lib/FilterContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
@@ -12,7 +13,7 @@ import { X } from "lucide-react";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface FilterTagsProps {
+export interface FilterTagsProps extends BaseComponentProps {
   /** Fields to exclude from display */
   exclude?: string[];
   /** Fields to include (whitelist — if set, only these show) */
@@ -45,16 +46,12 @@ export interface FilterTagsProps {
   crossFilterLabels?: Record<string, string>;
   /** Dense mode */
   dense?: boolean;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class overrides */
   classNames?: {
     root?: string;
     chip?: string;
     clearAll?: string;
   };
-  id?: string;
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------

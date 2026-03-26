@@ -13,7 +13,7 @@ import type { StatusRule, StatusSize } from "@/components/ui/StatusIndicator";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useScrollIndicators } from "@/lib/useScrollIndicators";
 import { devWarn } from "@/lib/devWarnings";
-import type { CardVariant, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig, DataRow } from "@/lib/types";
+import type { CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig, DataRow } from "@/lib/types";
 import { useLinkedHover } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
@@ -95,7 +95,7 @@ export interface FooterRow {
   [key: string]: React.ReactNode;
 }
 
-export interface DataTableProps<T extends DataRow = DataRow> {
+export interface DataTableProps<T extends DataRow = DataRow> extends DataComponentProps {
   data: T[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns?: ColumnDef<any>[];
@@ -117,16 +117,6 @@ export interface DataTableProps<T extends DataRow = DataRow> {
   drillDownMode?: "slide-over" | "modal";
   nullDisplay?: NullDisplay;
   footer?: FooterRow;
-  variant?: CardVariant;
-  className?: string;
-  /** Enable export. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. Inherits from MetricProvider. */
-  exportable?: ExportableConfig;
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
-  id?: string;
-  "data-testid"?: string;
   stickyHeader?: boolean;
   classNames?: {
     root?: string; header?: string; table?: string; thead?: string;
@@ -333,7 +323,7 @@ function DataTableInner<T extends DataRow = DataRow>(
     data, columns: columnsProp, title, subtitle, description, footnote, action,
     pageSize, pagination: paginationProp, maxRows, onViewAll, striped = false, dense,
     onRowClick, drillDown, drillDownMode, nullDisplay, footer, variant, className, exportable: exportableProp, loading, empty, error, stale,
-    id, "data-testid": dataTestId, stickyHeader, classNames, searchable,
+    id, "data-testid": dataTestId, aiContext, stickyHeader, classNames, searchable,
     scrollIndicators: scrollIndicatorsProp, rowConditions,
     multiSort: multiSortProp, renderExpanded,
     childrenField, defaultExpanded: defaultExpandedProp,
@@ -597,9 +587,10 @@ function DataTableInner<T extends DataRow = DataRow>(
       ref={ref}
       id={id}
       data-testid={dataTestId}
+      componentName="DataTable"
+      aiContext={aiContext}
       variant={resolvedVariant}
       dense={resolvedDense}
-      componentName="DataTable"
       error={error}
       empty={resolvedEmpty}
       stale={stale}

@@ -8,13 +8,13 @@ import { useMetricConfig } from "@/lib/MetricProvider";
 import { FilterTags, type FilterTagsProps } from "./FilterTags";
 import { useMetricFilters, useActiveFilterCount } from "@/lib/FilterContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
-import type { CardVariant } from "@/lib/types";
+import type { BaseComponentProps, CardVariant } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export interface FilterBarProps {
+export interface FilterBarProps extends BaseComponentProps {
   children: ReactNode;
   position?: "inline";
   /** Stick to the top of the viewport when scrolling. Default: false */
@@ -25,10 +25,7 @@ export interface FilterBarProps {
   defaultCollapsed?: boolean;
   variant?: CardVariant;
   dense?: boolean;
-  className?: string;
   classNames?: { root?: string; controls?: string; tags?: string; summary?: string };
-  id?: string;
-  "data-testid"?: string;
 }
 
 interface SlotProps { children: ReactNode }

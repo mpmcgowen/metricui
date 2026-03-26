@@ -3,6 +3,7 @@
 import { forwardRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useMetricConfig } from "@/lib/MetricProvider";
+import type { DataComponentProps } from "@/lib/types";
 import { CardShell } from "@/components/ui/CardShell";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
 import { Check, AlertTriangle, X, Minus } from "lucide-react";
@@ -28,7 +29,7 @@ export interface StatusRule {
 
 export type StatusSize = "dot" | "sm" | "md" | "lg" | "card";
 
-export interface StatusIndicatorProps {
+export interface StatusIndicatorProps extends DataComponentProps {
   /** The value to evaluate against rules. Not displayed unless showValue is true. */
   value: number | null | undefined;
   /** Rules evaluated top-to-bottom. First match wins. Last rule with no min/max is the fallback. */
@@ -51,14 +52,8 @@ export interface StatusIndicatorProps {
   tooltip?: string;
   /** Click handler */
   onClick?: () => void;
-  /** Loading state */
-  loading?: boolean;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class overrides */
   classNames?: { root?: string; icon?: string; label?: string; value?: string };
-  id?: string;
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -217,6 +212,7 @@ export const StatusIndicator = forwardRef<HTMLDivElement, StatusIndicatorProps>(
       classNames,
       id,
       "data-testid": dataTestId,
+      aiContext,
     },
     ref,
   ) {
@@ -440,6 +436,7 @@ export const StatusIndicator = forwardRef<HTMLDivElement, StatusIndicatorProps>(
         description={description}
         subtitle={subtitle}
         componentName="StatusIndicator"
+        aiContext={aiContext}
         onClick={onClick}
         loading={resolvedLoading}
         skeletonType="kpi"

@@ -177,6 +177,7 @@ interface AiProviderProps {
 export function AiProvider({ config, filterContext, children }: AiProviderProps) {
   const metricsRef = useRef(new Map<string, AiMetric>());
   const tabNavigatorRef = useRef<((tab: string) => void) | null>(null);
+  const waitersRef = useRef(new Map<string, (metric: AiMetric) => void>());
   const [internalMessages, setInternalMessages] = useState<AiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
@@ -190,6 +191,12 @@ export function AiProvider({ config, filterContext, children }: AiProviderProps)
 
   const registerMetric = useCallback((id: string, metric: AiMetric) => {
     metricsRef.current.set(id, metric);
+    // Resolve any waiters looking for this metric by title
+    const waiter = waitersRef.current.get(metric.title);
+    if (waiter) {
+      waitersRef.current.delete(metric.title);
+      waiter(metric);
+    }
   }, []);
 
   const unregisterMetric = useCallback((id: string) => {
@@ -204,6 +211,25 @@ export function AiProvider({ config, filterContext, children }: AiProviderProps)
 
   const navigateToTab = useCallback((tab: string) => {
     tabNavigatorRef.current?.(tab);
+  }, []);
+
+  /** Wait for a metric to register (after tab switch) — resolves when the component mounts */
+  const waitForMetric = useCallback((title: string, timeoutMs = 3000): Promise<AiMetric | null> => {
+    // Check if already registered and live
+    for (const [, m] of metricsRef.current) {
+      if (m.title === title && m.render?.()) return Promise.resolve(m);
+    }
+    // Wait for registration
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        waitersRef.current.delete(title);
+        resolve(null);
+      }, timeoutMs);
+      waitersRef.current.set(title, (metric) => {
+        clearTimeout(timer);
+        resolve(metric);
+      });
+    });
   }, []);
 
   const findTab = useCallback((title: string): string | undefined => {

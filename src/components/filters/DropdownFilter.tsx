@@ -3,6 +3,7 @@
 import { forwardRef, useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useMetricConfig } from "@/lib/MetricProvider";
+import type { BaseComponentProps } from "@/lib/types";
 import { useMetricFilters } from "@/lib/FilterContext";
 import { ChevronDown, Search, X, Check } from "lucide-react";
 
@@ -23,7 +24,7 @@ export interface DropdownOption {
   group?: string;
 }
 
-export interface DropdownFilterProps {
+export interface DropdownFilterProps extends BaseComponentProps {
   /** Label shown on the trigger button */
   label: string;
   /** Options — array of objects or simple strings */
@@ -50,8 +51,6 @@ export interface DropdownFilterProps {
   maxHeight?: number;
   /** Dense mode */
   dense?: boolean;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class overrides */
   classNames?: {
     root?: string;
@@ -60,8 +59,6 @@ export interface DropdownFilterProps {
     option?: string;
     search?: string;
   };
-  id?: string;
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------

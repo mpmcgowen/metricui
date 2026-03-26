@@ -11,7 +11,7 @@ import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
-import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { BarClickEvent } from "@/lib/chartTypes";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
@@ -38,7 +38,7 @@ export interface WaterfallItem {
 // Props
 // ---------------------------------------------------------------------------
 
-export interface WaterfallProps {
+export interface WaterfallProps extends DataComponentProps {
   data: WaterfallItem[];
   title?: string;
   subtitle?: string;
@@ -78,23 +78,8 @@ export interface WaterfallProps {
   crossFilter?: boolean | { field?: string };
   /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
   tooltipHint?: boolean | string;
-  /** Dense mode */
-  dense?: boolean;
-  /** Variant */
-  variant?: CardVariant;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string };
-  /** HTML id attribute */
-  id?: string;
-  /** Test id */
-  "data-testid"?: string;
-  /** Data states */
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
 }
 
 // ---------------------------------------------------------------------------
@@ -276,6 +261,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext,
   loading,
   empty,
   error,
@@ -426,6 +412,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
         id={id}
         data-testid={dataTestId}
         componentName="Waterfall"
+        aiContext={aiContext}
         title={title}
         subtitle={subtitle}
         description={description}

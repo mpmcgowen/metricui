@@ -120,27 +120,12 @@ export interface DonutChartProps extends DataComponentProps {
   crossFilter?: boolean | { field?: string };
   /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
   tooltipHint?: boolean | string;
-  /** Compact layout — reduces margins and default height. Default: false */
-  dense?: boolean;
   /** How null / missing data points are handled. No behavioral change for donut; included for API consistency. */
   chartNullMode?: ChartNullMode;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
-  /** Variant */
-  variant?: CardVariant;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string; legend?: string };
-  /** HTML id attribute */
-  id?: string;
-  /** Test id for testing frameworks */
-  "data-testid"?: string;
-  /** Data states */
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
 }
 
 // ---------------------------------------------------------------------------
@@ -313,6 +298,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext,
   loading,
   empty,
   error,
@@ -512,6 +498,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
     <div ref={ref} id={id} data-testid={dataTestId} style={{ minWidth: 120, height: "100%" }}>
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="DonutChart"
+        aiContext={aiContext}
         title={title}
         subtitle={subtitle}
         description={description}

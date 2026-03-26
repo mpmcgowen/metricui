@@ -14,6 +14,7 @@ import type {
   AnimationConfig,
   DrillDownConfig,
   CardVariant,
+  DataComponentProps,
   EmptyState,
   ErrorState,
   StaleState,
@@ -37,7 +38,7 @@ export interface GaugeThreshold {
   color: string;
 }
 
-export interface GaugeProps {
+export interface GaugeProps extends DataComponentProps {
   value: number | null | undefined;
   min?: number;
   max?: number;
@@ -62,18 +63,9 @@ export interface GaugeProps {
   drillDown?: DrillDownConfig;
 
   // Standard MetricUI props
-  variant?: CardVariant;
-  dense?: boolean;
   animate?: boolean | AnimationConfig;
   nullDisplay?: NullDisplay;
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
-  className?: string;
   classNames?: { root?: string; header?: string; chart?: string };
-  id?: string;
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -272,6 +264,7 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext,
 }, ref) {
   assertPeer(ResponsivePie, "@nivo/pie", "Gauge");
   const { theme } = useTheme();
@@ -405,6 +398,7 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
     >
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="Gauge"
+        aiContext={aiContext}
         title={title}
         subtitle={undefined}
         description={description}

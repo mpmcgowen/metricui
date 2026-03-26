@@ -19,7 +19,7 @@ import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
 
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
-import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,7 +42,7 @@ export type { LegendConfig };
 // Props
 // ---------------------------------------------------------------------------
 
-export interface FunnelChartProps {
+export interface FunnelChartProps extends DataComponentProps {
   data: FunnelDatumInput[];
   /** Simple data format — plain key-value object like { "Visited": 1000, "Signed Up": 400 }.
    *  Converted to FunnelDatumInput[] internally. `data` takes precedence when non-empty. */
@@ -99,23 +99,8 @@ export interface FunnelChartProps {
   drillDownMode?: "slide-over" | "modal";
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
-  /** Dense mode */
-  dense?: boolean;
-  /** Variant */
-  variant?: CardVariant;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string; legend?: string };
-  /** HTML id attribute */
-  id?: string;
-  /** Test id for testing frameworks */
-  "data-testid"?: string;
-  /** Data states */
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
 }
 
 // ---------------------------------------------------------------------------
@@ -156,6 +141,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext,
   loading,
   empty,
   error,
@@ -335,6 +321,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
         id={id}
         data-testid={dataTestId}
         componentName="Funnel"
+        aiContext={aiContext}
         title={title}
         subtitle={subtitle}
         description={description}

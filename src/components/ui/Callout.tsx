@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useMetricConfig, useLocale } from "@/lib/MetricProvider";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { CARD_CLASSES } from "@/lib/styles";
-import type { DrillDownConfig } from "@/lib/types";
+import type { DataComponentProps, DrillDownConfig } from "@/lib/types";
 import {
   Info,
   AlertTriangle,
@@ -53,7 +53,7 @@ export interface CalloutAction {
   onClick: () => void;
 }
 
-export interface CalloutProps {
+export interface CalloutProps extends DataComponentProps {
   /** Visual variant. Default: "info". Ignored when `rules` is used. */
   variant?: CalloutVariant;
   /** Title text */
@@ -94,10 +94,6 @@ export interface CalloutProps {
   drillDown?: DrillDownConfig;
 
   // --- Standard MetricUI props ---
-  /** Dense mode */
-  dense?: boolean;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class overrides */
   classNames?: {
     root?: string;
@@ -107,8 +103,6 @@ export interface CalloutProps {
     metric?: string;
     action?: string;
   };
-  id?: string;
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -230,6 +224,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
       classNames,
       id,
       "data-testid": dataTestId,
+      aiContext: _aiContext,
     },
     ref
   ) {

@@ -20,7 +20,7 @@ import { useContainerSize } from "@/lib/useContainerSize";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { LegendConfig, BarClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toBarLineData, categoryKeys, resolveCategory, type Category } from "@/lib/dataTransform";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
@@ -47,7 +47,7 @@ type CurveType =
 
 type LineSeriesData = { id: string; data: { x: string | number; y: number | null }[] };
 
-export interface BarLineChartProps {
+export interface BarLineChartProps extends DataComponentProps {
   /** Unified flat row data. Use with `index` and `categories` (mark line series with `axis: "right"`). */
   data?: DataRow[];
   /** Column name for the X-axis. Used with unified `data` prop. */
@@ -79,15 +79,6 @@ export interface BarLineChartProps {
   colors?: string[];
   /** Line colors. Default: theme series palette offset after bar keys */
   lineColors?: string[];
-  /** Variant */
-  variant?: CardVariant;
-  /** Additional class names */
-  className?: string;
-  /** Data states */
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
   /** Legend configuration. Default: shown for multi-key data */
   legend?: boolean | LegendConfig;
 
@@ -119,8 +110,6 @@ export interface BarLineChartProps {
   /** Right Y-axis label (lines) */
   rightAxisLabel?: string;
 
-  /** Compact layout — reduces margins and default height. Default: false */
-  dense?: boolean;
   /** How null / missing data points are handled. Default: "gap" */
   chartNullMode?: ChartNullMode;
   /** Enable/disable chart animation. Default: true */
@@ -136,10 +125,6 @@ export interface BarLineChartProps {
   tooltipHint?: boolean | string;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string; legend?: string };
-  /** HTML id attribute */
-  id?: string;
-  /** Test id for testing frameworks */
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -404,6 +389,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext,
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "BarLineChart");
   const openDrill = useDrillDownAction();
@@ -603,6 +589,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
     <div ref={ref} id={id} data-testid={dataTestId} style={{ minWidth: 120, height: "100%" }}>
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="BarLineChart"
+        aiContext={aiContext}
         title={title}
         subtitle={subtitle}
         description={description}

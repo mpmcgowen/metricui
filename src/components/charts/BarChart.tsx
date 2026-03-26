@@ -26,7 +26,7 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import { devWarn, devWarnDeprecated } from "@/lib/devWarnings";
 import type { LegendConfig, ReferenceLine, ThresholdBand, BarClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, DataRow, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { inferSchema, categoryKeys, categoryColors, type Category } from "@/lib/dataTransform";
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -60,7 +60,7 @@ const BAR_PRESETS: Record<BarChartPreset, Partial<BarChartProps>> = {
 // Props
 // ---------------------------------------------------------------------------
 
-export interface BarChartProps {
+export interface BarChartProps extends DataComponentProps {
   /** Preset configuration that sets sensible defaults for common use cases.
    *  Individual props override preset values. */
   preset?: BarChartPreset;
@@ -132,29 +132,14 @@ export interface BarChartProps {
   crossFilter?: boolean | { field?: string };
   /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */
   tooltipHint?: boolean | string;
-  /** Compact layout — reduces margins and default height. Default: false */
-  dense?: boolean;
   /** How null / missing data points are handled. Default: "gap" */
   chartNullMode?: ChartNullMode;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
-  /** Variant */
-  variant?: CardVariant;
-  /** Additional class names */
-  className?: string;
-  /** Data states */
-  loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
-  stale?: StaleState;
   /** @deprecated Use groupMode="grouped" instead */
   grouped?: boolean;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string; legend?: string };
-  /** HTML id attribute */
-  id?: string;
-  /** Test id for testing frameworks */
-  "data-testid"?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -634,6 +619,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext,
   } = props;
 
   assertPeer(ResponsiveBar, "@nivo/bar", "BarChart");
@@ -1005,6 +991,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
     >
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="BarChart"
+        aiContext={aiContext}
         title={title}
         subtitle={subtitle}
         description={description}

@@ -3,7 +3,7 @@
 import { forwardRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { FormatOption, ComparisonMode } from "@/lib/format";
-import type { CardVariant, DrillDownConfig } from "@/lib/types";
+import type { CardVariant, DataComponentProps, DrillDownConfig } from "@/lib/types";
 import { useMetricConfig } from "@/lib/MetricProvider";
 import { KpiCard } from "./KpiCard";
 
@@ -32,24 +32,16 @@ export interface StatItem {
   drillDown?: DrillDownConfig;
 }
 
-export interface StatGroupProps {
+export interface StatGroupProps extends DataComponentProps {
   stats: StatItem[];
   /** Group title */
   title?: string;
   /** Group subtitle */
   subtitle?: string;
-  /** Visual variant */
-  variant?: CardVariant;
-  /** Compact/dense layout. Default: false */
-  dense?: boolean;
   /** Override column count (auto-detected from stat count by default) */
   columns?: 1 | 2 | 3 | 4 | 5 | 6;
   /** Default format applied to all numeric values (per-stat format overrides this) */
   format?: FormatOption;
-  /** Loading state — shows skeleton placeholders */
-  loading?: boolean;
-  /** Additional class names */
-  className?: string;
   /** Sub-element class name overrides */
   classNames?: {
     root?: string;
@@ -59,10 +51,6 @@ export interface StatGroupProps {
     label?: string;
     value?: string;
   };
-  /** HTML id attribute */
-  id?: string;
-  /** Test id for testing frameworks */
-  "data-testid"?: string;
   /** Click handler for individual stats */
   onStatClick?: (stat: StatItem, index: number) => void;
   /** What to show when a stat value is null/undefined. Default: "dash" */
@@ -148,6 +136,7 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
   classNames,
   id,
   "data-testid": dataTestId,
+  aiContext: _aiContext,
   onStatClick,
   nullDisplay,
   animate,
