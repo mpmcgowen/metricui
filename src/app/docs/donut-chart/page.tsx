@@ -279,6 +279,18 @@ export default function DonutChartDocs() {
               <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
               The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
             </li>
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              {"When passing flat rows without "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">index</code>
+              {" and "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">categories</code>
+              {", DonutChart auto-infers the label column (first string) and value column (first number). A dev warning fires in development. Pass explicit "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">index</code>
+              {" and "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">categories</code>
+              {" to suppress it."}
+            </li>
           </ul>
         </DocSection>
 

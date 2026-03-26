@@ -303,7 +303,7 @@ function MyContent() {
               { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes on the root element." },
               { prop: "classNames", type: "{ root?, controls?, tags?, summary? }", default: "\u2014", description: "Sub-element class overrides." },
               { prop: "id", type: "string", default: "\u2014", description: "HTML id." },
-              { prop: "position", type: '"inline"', default: '"inline"', description: "Layout position mode." },
+              { prop: "position", type: '"inline"', default: '"inline"', description: "Layout position. Currently only \"inline\" is supported. Reserved for future sticky/fixed modes." },
               { prop: "data-testid", type: "string", default: "\u2014", description: "Test id." },
             ]}
             columns={[
