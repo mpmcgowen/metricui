@@ -150,7 +150,6 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
   useEffect(() => {
     const titleStr = aiTitle || (typeof title === "string" ? title : "");
     if (!ai || !titleStr || bare) return;
-    if (!titleStr) return;
 
     // Build rich data context the LLM can understand
     const dataSummary: Record<string, unknown> = {};
@@ -190,7 +189,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     });
 
     return () => ai.unregisterMetric(aiId);
-  }, [ai, aiId, title, aiTitle, componentName, exportData, copyValue, bare, aiContext]);
+  }, [ai, aiId, title, aiTitle, componentName, exportData, copyValue, bare, aiContext, height]);
 
   const isClickable = !!(onClick || href || clickable);
   const Tag: "a" | "div" = href ? "a" : "div";

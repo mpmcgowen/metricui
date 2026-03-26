@@ -13,7 +13,6 @@ import { DataTable } from "@/components/tables/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Callout } from "@/components/ui/Callout";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { Divider } from "@/components/ui/Divider";
 import { MetricGrid } from "@/components/layout/MetricGrid";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { PeriodSelector } from "@/components/filters/PeriodSelector";
@@ -396,7 +395,7 @@ function DashboardContent() {
         title="Churn Rate"
         value={data.kpis.churnRate}
         format="percent"
-        comparison={compData ? { value: compData.kpis.churnRate, invertTrend: true } : undefined}
+        comparison={compData && compData.kpis.totalAccounts > 20 ? { value: compData.kpis.churnRate, invertTrend: true } : undefined}
         sparkline={{ data: churnSparkline, type: "bar" }}
         icon={<TrendingDown className="h-3.5 w-3.5" />}
         aiContext="Target is below 15%. FinTech vertical has highest churn, driven by competitor pressure. Enterprise churn is low but catastrophic per-account. Most churn happens in first 90 days."
@@ -470,8 +469,6 @@ function DashboardContent() {
         gradient
         comparisonData={mrrCompSeries}
       />
-
-      <Divider spacing="lg" />
 
       {/* ── Conversion & Retention ── */}
       <SectionHeader id="conversion" title="Conversion & Retention" />

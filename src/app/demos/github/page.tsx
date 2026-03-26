@@ -69,9 +69,11 @@ function formatDate(iso: string): string {
   return `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
+const REFERENCE_DATE = new Date("2026-03-21").getTime();
+
 function daysAgo(iso: string): string {
   const diff = Math.floor(
-    (Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24)
+    (REFERENCE_DATE - new Date(iso).getTime()) / (1000 * 60 * 60 * 24)
   );
   if (diff === 0) return "today";
   if (diff === 1) return "yesterday";
@@ -84,10 +86,10 @@ function daysAgo(iso: string): string {
 // Expanded row helpers
 // ---------------------------------------------------------------------------
 
-/** Days between two ISO dates (or now) */
+/** Days between two ISO dates (or reference date) */
 function daysBetween(from: string, to?: string | null): number {
   const start = new Date(from).getTime();
-  const end = to ? new Date(to).getTime() : Date.now();
+  const end = to ? new Date(to).getTime() : REFERENCE_DATE;
   return Math.max(0, Math.floor((end - start) / (1000 * 60 * 60 * 24)));
 }
 

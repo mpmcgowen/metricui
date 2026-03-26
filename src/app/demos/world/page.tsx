@@ -821,7 +821,7 @@ function DashboardContent() {
               height={320}
               aiContext="Area vs population reveals density extremes. Asia has moderate area but massive population. Oceania and Americas have vast area but relatively low density."
               legend
-              crossFilter
+              crossFilter={{ field: "region" }}
             />
             <BarChart
               preset="horizontal"
@@ -843,22 +843,24 @@ function DashboardContent() {
               border
             />
 
+            {data.top10.length >= 2 && data.totalPopulation > 0 && (
             <Callout
               variant="info"
               title="Population Leaders"
               icon={<Landmark className="h-5 w-5" />}
               dense
             >
-              India ({(data.top10[0]?.population / 1e9).toFixed(2)}B) and China
-              ({(data.top10[1]?.population / 1e9).toFixed(2)}B) together account
+              {data.top10[0].name} ({(data.top10[0].population / 1e9).toFixed(2)}B) and {data.top10[1].name}
+              ({(data.top10[1].population / 1e9).toFixed(2)}B) together account
               for{" "}
               {Math.round(
-                ((data.top10[0]?.population + data.top10[1]?.population) /
+                ((data.top10[0].population + data.top10[1].population) /
                   data.totalPopulation) *
                   100
               )}
               % of the world population.
             </Callout>
+            )}
 
             <BarChart
               data={data.top10.map((c) => ({

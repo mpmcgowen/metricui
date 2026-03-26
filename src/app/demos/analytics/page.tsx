@@ -378,6 +378,7 @@ function AnalyticsContent() {
               title="Bounce Rate"
               value={kpis.avgBounce}
               format="percent"
+              comparison={compKpis ? { value: compKpis.avgBounce } : undefined}
               sparkline={{ data: bounceSpark, type: "line" }}
 
               conditions={[
@@ -491,10 +492,10 @@ function AnalyticsContent() {
       {tab === "acquisition" && (
         <MetricGrid className="mt-6">
             {/* ── Source KPIs ── */}
-            <KpiCard title="Organic Search" value={82400} format="compact" description="40% of all traffic. Highest conversion rate at 3.5%." icon={<Search className="h-3.5 w-3.5" />} />
-            <KpiCard title="Direct" value={41200} format="compact" description="Brand-aware visitors. 20% of traffic, strong return rate." />
-            <KpiCard title="Email" value={15800} format="compact" description="Lowest bounce rate (28%). Best engagement per session." aiContext="Our most efficient channel. 7.1% conversion rate — 2x the next best. We under-invest here. Growing the list is Q1 priority." />
-            <KpiCard title="Paid Search" value={12200} format="compact" description="$35.8K revenue from $12.2K sessions. $2.93 CPA." conditions={[{ when: "above", value: 10000, color: "emerald" }]} />
+            <KpiCard title="Organic Search" value={filteredSources.filter((s) => s.source === "Organic Search").reduce((sum, s) => sum + s.sessions, 0)} format="compact" description="40% of all traffic. Highest conversion rate at 3.5%." icon={<Search className="h-3.5 w-3.5" />} />
+            <KpiCard title="Direct" value={filteredSources.filter((s) => s.source === "Direct").reduce((sum, s) => sum + s.sessions, 0)} format="compact" description="Brand-aware visitors. 20% of traffic, strong return rate." />
+            <KpiCard title="Email" value={filteredSources.filter((s) => s.source === "Email").reduce((sum, s) => sum + s.sessions, 0)} format="compact" description="Lowest bounce rate (28%). Best engagement per session." aiContext="Our most efficient channel. 7.1% conversion rate — 2x the next best. We under-invest here. Growing the list is Q1 priority." />
+            <KpiCard title="Paid Search" value={filteredSources.filter((s) => s.source === "Paid Search").reduce((sum, s) => sum + s.sessions, 0)} format="compact" description="$35.8K revenue from $12.2K sessions. $2.93 CPA." conditions={[{ when: "above", value: 10000, color: "emerald" }]} />
 
             <MetricGrid.Section title="Traffic Sources" subtitle="Click a source to cross-filter — all charts respond" />
             <BarChart
