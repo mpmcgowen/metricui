@@ -357,7 +357,7 @@ Mar,168400,3800`}
       </div>
 
       {/* Right: On This Page */}
-      <div className="hidden w-48 flex-shrink-0 xl:block">
+      <div className="hidden w-40 flex-shrink-0 xl:block">
         <div className="sticky top-8 pt-8">
           <OnThisPage items={tocItems} />
         </div>
