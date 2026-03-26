@@ -13,42 +13,6 @@ import type { BaseComponentProps, CardVariant } from "@/lib/types";
 // Shared context for tab panels — allows DashboardNavPanels to render separately
 // ---------------------------------------------------------------------------
 
-/** Module-level store for nav panel state — allows DashboardNavPanels to render anywhere */
-let _navPanelState: { tabs: DashboardNavTab[]; activeValue: string; version: number } | null = null;
-let _navPanelListeners: Set<() => void> = new Set();
-
-function setNavPanelState(tabs: DashboardNavTab[], activeValue: string) {
-  _navPanelState = { tabs, activeValue, version: (_navPanelState?.version ?? 0) + 1 };
-  _navPanelListeners.forEach((fn) => fn());
-}
-
-/** Renders tab content panels. Place wherever you want tab content to appear. */
-export function DashboardNavPanels() {
-  const [, forceUpdate] = useState(0);
-
-  useEffect(() => {
-    const listener = () => forceUpdate((v) => v + 1);
-    _navPanelListeners.add(listener);
-    return () => { _navPanelListeners.delete(listener); };
-  }, []);
-
-  if (!_navPanelState || !_navPanelState.tabs.some((t) => t.content)) return null;
-
-  return (
-    <>
-      {_navPanelState.tabs.map((tab) => (
-        <div
-          key={tab.value}
-          role="tabpanel"
-          id={`panel-${tab.value}`}
-          style={{ display: tab.value === _navPanelState!.activeValue ? "block" : "none" }}
-        >
-          {tab.content}
-        </div>
-      ))}
-    </>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -289,11 +253,6 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
         transition: "all 200ms cubic-bezier(0.4, 0, 0.2, 1)",
       });
     }, [activeValue, tabs]);
-
-    // Sync panel state for DashboardNavPanels
-    useEffect(() => {
-      setNavPanelState(tabs, activeValue);
-    }, [tabs, activeValue]);
 
     return (
       <div

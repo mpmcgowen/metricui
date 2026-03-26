@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, createContext, useContext, type ReactNode } from "react";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
-import { useAi, type AiMessage } from "@/lib/AiContext";
-import { Sparkles, Send, X, RotateCcw, Loader2, ChevronDown } from "lucide-react";
+import { useAi, type AiMessage, type AiMetric } from "@/lib/AiContext";
+import { Sparkles, Send, X, RotateCcw, Loader2, MessageSquare } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Quick prompts
@@ -13,28 +13,22 @@ import { Sparkles, Send, X, RotateCcw, Loader2, ChevronDown } from "lucide-react
 export interface QuickPrompt {
   label: string;
   prompt: string;
-  icon?: ReactNode;
 }
 
 const DEFAULT_QUICK_PROMPTS: QuickPrompt[] = [
-  { label: "What's notable?", prompt: "Analyze this dashboard. What patterns or tensions in the data would I miss by scanning the charts?" },
-  { label: "What's at risk?", prompt: "What metrics on this dashboard are showing warning signs? Focus on deteriorating trends and cross-metric tensions." },
-  { label: "Summarize", prompt: "Give me a 2-sentence executive summary of this dashboard's current state." },
+  { label: "What's notable?", prompt: "Analyze this dashboard. What patterns or tensions would I miss by scanning the charts?" },
+  { label: "What's at risk?", prompt: "What metrics are showing warning signs? Focus on deteriorating trends and cross-metric tensions." },
+  { label: "Summarize", prompt: "Give me a 2-sentence executive summary of this dashboard." },
 ];
 
 // ---------------------------------------------------------------------------
-// Simple markdown renderer — handles **bold**, *italic*, \n\n paragraphs,
-// - bullet lists, and `inline code`. No library needed.
+// Markdown renderer
 // ---------------------------------------------------------------------------
 
 function renderMarkdown(text: string): ReactNode[] {
-  const blocks = text.split(/\n\n+/);
-
-  return blocks.map((block, bi) => {
+  return text.split(/\n\n+/).map((block, bi) => {
     const trimmed = block.trim();
     if (!trimmed) return null;
-
-    // Bullet list
     const lines = trimmed.split("\n");
     if (lines.every((l) => /^[-•*]\s/.test(l.trim()))) {
       return (
@@ -48,336 +42,49 @@ function renderMarkdown(text: string): ReactNode[] {
         </ul>
       );
     }
-
-    // Paragraph
-    return (
-      <p key={bi} className={bi > 0 ? "mt-3" : ""}>
-        {renderInline(trimmed)}
-      </p>
-    );
+    return <p key={bi} className={bi > 0 ? "mt-3" : ""}>{renderInline(trimmed)}</p>;
   });
 }
 
-/** Citation overlay state */
-interface CitationOverlay {
-  title: string;
-  mode: "modal" | "sidebar";
-  componentType: string | null;
-  renderFn: (() => ReactNode) | null;
-}
-
-const CitationContext = createContext<{
-  open: (title: string, mode: "modal" | "sidebar") => void;
-  close: () => void;
-  overlay: CitationOverlay | null;
-} | null>(null);
-
-function CitationProvider({ children }: { children: ReactNode }) {
-  const ai = useAi();
-  const [overlay, setOverlay] = useState<CitationOverlay | null>(null);
-
-  const open = useCallback((title: string, mode: "modal" | "sidebar") => {
-    if (!ai) return;
-
-    // All tabs are mounted — just find the metric directly
-    const metrics = ai.getMetrics();
-    let match: { component: string; render?: () => ReactNode } | null = null;
-    for (const [, m] of metrics) {
-      if (m.title === title) {
-        match = m;
-        break;
-      }
-    }
-
-    setOverlay({
-      title,
-      mode,
-      componentType: match?.component ?? null,
-      renderFn: match?.render ?? null,
-    });
-  }, [ai]);
-
-  const close = useCallback(() => {
-    setOverlay(null);
-  }, []);
-
-  return (
-    <CitationContext.Provider value={{ open, close, overlay }}>
-      {children}
-    </CitationContext.Provider>
-  );
-}
-
-/** Citation chip — opens modal or sidebar */
-function CitationChip({ title }: { title: string }) {
-  const ctx = useContext(CitationContext);
-
-  return (
-    <span className="inline-flex items-center gap-0.5">
-      <button
-        onClick={() => ctx?.open(title, "sidebar")}
-        className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)]/10 px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/20 cursor-pointer"
-      >
-        <Sparkles className="h-2 w-2" />
-        {title}
-      </button>
-    </span>
-  );
-}
-
-/** Citation overlay — modal or sidebar showing the referenced component */
-function CitationOverlayPanel() {
-  const ctx = useContext(CitationContext);
-  const ai = useAi();
-  const [followUp, setFollowUp] = useState("");
-  const [visible, setVisible] = useState(false);
-  const chatRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (ctx?.overlay) {
-      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
-    } else {
-      setVisible(false);
-    }
-  }, [ctx?.overlay]);
-
-  // Auto-scroll chat
-  useEffect(() => {
-    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [ai?.messages, ai?.streamingText]);
-
-  if (!ctx?.overlay) return null;
-
-  const { title, mode, componentType, renderFn } = ctx.overlay;
-
-  const handleFollowUp = async () => {
-    const text = followUp.trim();
-    if (!text || !ai) return;
-    setFollowUp("");
-    await ai.send(text, `Regarding [[${title}]] (${componentType})`);
-  };
-
-  // Find height from registered metric
-  const metricHeight = (() => {
-    if (!ai) return undefined;
-    for (const [, m] of ai.getMetrics()) {
-      if (m.title === title) return m.height;
-    }
-    return undefined;
-  })();
-
-  // Rendered component content — view-only (no drill-down or cross-filter)
-  const content = renderFn?.();
-  const renderedComponent = content ? (
-    <div className="p-4">
-      <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-[var(--card-border)]">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">{title}</p>
-        </div>
-        <div
-          className="mu-citation-preview"
-          style={metricHeight ? { height: metricHeight } : undefined}
-          onClickCapture={(e) => {
-            const target = e.target as HTMLElement;
-            if (target.closest("[data-metric-card]") || target.tagName === "rect" || target.tagName === "path" || target.tagName === "circle") {
-              e.stopPropagation();
-              e.preventDefault();
-            }
-          }}
-        >
-          {content}
-        </div>
-      </div>
-    </div>
-  ) : (
-    <div className="flex items-center justify-center py-12 text-sm text-[var(--muted)]">
-      Component not available on this tab
-    </div>
-  );
-
-  if (mode === "modal") {
-    return createPortal(
-      <div className="fixed inset-0 z-[9999]">
-        <div
-          className={cn("absolute inset-0 bg-black/50 transition-opacity duration-200", visible ? "opacity-100" : "opacity-0")}
-          onClick={ctx.close}
-        />
-        <div className={cn(
-          "absolute left-1/2 top-1/2 max-h-[85vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] shadow-2xl transition-all duration-200",
-          visible ? "scale-100 opacity-100" : "scale-95 opacity-0",
-        )}>
-          <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 py-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
-              <span className="text-sm font-semibold text-[var(--foreground)]">{title}</span>
-              {componentType && (
-                <span className="rounded bg-[var(--card-glow)] px-1.5 py-0.5 text-[10px] text-[var(--muted)]">{componentType}</span>
-              )}
-            </div>
-            <button onClick={ctx.close} className="rounded-md p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="overflow-y-auto">{renderedComponent}</div>
-        </div>
-      </div>,
-      document.body,
-    );
-  }
-
-  // Sidebar mode
-  return createPortal(
-    <div className="fixed inset-0 z-[9999]">
-      <div
-        className={cn("absolute inset-0 bg-black/40 transition-opacity duration-300", visible ? "opacity-100" : "opacity-0")}
-        onClick={ctx.close}
-      />
-      <div className={cn(
-        "absolute right-0 top-0 bottom-0 flex w-full max-w-xl flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-out",
-        visible ? "translate-x-0" : "translate-x-full",
-      )}>
-        {/* Header */}
-        <div className="flex-shrink-0 border-b border-[var(--card-border)] px-5 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
-              <span className="text-sm font-semibold text-[var(--foreground)]">{title}</span>
-              {componentType && (
-                <span className="rounded bg-[var(--card-glow)] px-1.5 py-0.5 text-[10px] text-[var(--muted)]">{componentType}</span>
-              )}
-            </div>
-            <button onClick={ctx.close} className="rounded-md p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Live interactive component */}
-        <div className="flex-shrink-0 overflow-visible border-b border-[var(--card-border)]" style={{ maxHeight: "50%" }}>
-          {renderedComponent}
-        </div>
-
-        {/* Scoped AI chat */}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div ref={chatRef} className="flex-1 overflow-y-auto px-4 py-3">
-            <p className="text-[12px] text-[var(--muted)]">
-              Ask about <strong className="text-[var(--foreground)]">{title}</strong>
-            </p>
-            {ai?.messages.filter((m) => m.triggerContext?.includes(title)).map((msg, i) =>
-              msg.role === "user"
-                ? <div key={i} className="mt-3"><UserMessage message={msg} /></div>
-                : <div key={i} className="mt-3"><AssistantMessage message={msg} /></div>
-            )}
-            {ai?.isLoading && (
-              <div className="mt-3"><StreamingMessage text={ai.streamingText} /></div>
-            )}
-          </div>
-          <div className="flex-shrink-0 flex items-center gap-2 border-t border-[var(--card-border)] px-4 py-3">
-            <input
-              type="text"
-              value={followUp}
-              onChange={(e) => setFollowUp(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleFollowUp(); } }}
-              placeholder={`Ask about ${title}...`}
-              className="flex-1 bg-transparent text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted)]/40 outline-none"
-            />
-            <button
-              onClick={handleFollowUp}
-              disabled={!followUp.trim()}
-              className={cn(
-                "rounded-lg p-1.5 transition-colors",
-                followUp.trim() ? "text-[var(--accent)] hover:bg-[var(--accent)]/10" : "text-[var(--muted)]/20",
-              )}
-            >
-              <Send className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
-}
-
-/** Render inline formatting: **bold**, *italic*, `code`, [[citation]] */
 function renderInline(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
-  // Match [[citation]], **bold**, *italic*, `code`
   const regex = /(\[\[(.+?)\]\]|\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
-    }
-
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
     if (match[2]) {
-      // [[citation]]
-      const citTitle = match[2];
       parts.push(
-        <CitationChip key={match.index} title={citTitle} />
+        <span key={match.index} className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)]/10 px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent)]">
+          <Sparkles className="h-2 w-2" />{match[2]}
+        </span>
       );
     } else if (match[3]) {
-      // **bold**
-      parts.push(
-        <strong key={match.index} className="font-semibold text-[var(--foreground)]">
-          {match[3]}
-        </strong>
-      );
+      parts.push(<strong key={match.index} className="font-semibold text-[var(--foreground)]">{match[3]}</strong>);
     } else if (match[4]) {
-      // *italic*
       parts.push(<em key={match.index}>{match[4]}</em>);
     } else if (match[5]) {
-      // `code`
-      parts.push(
-        <code
-          key={match.index}
-          className="rounded bg-[var(--card-border)]/50 px-1 py-0.5 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]"
-        >
-          {match[5]}
-        </code>
-      );
+      parts.push(<code key={match.index} className="rounded bg-[var(--card-border)]/50 px-1 py-0.5 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">{match[5]}</code>);
     }
-
     lastIndex = match.index + match[0].length;
   }
-
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
   return parts.length > 0 ? parts : [text];
 }
 
 // ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
-
-export interface DashboardInsightProps {
-  quickPrompts?: QuickPrompt[] | false;
-  placeholder?: string;
-  title?: string;
-  defaultCollapsed?: boolean;
-  collapsed?: boolean;
-  onCollapseChange?: (collapsed: boolean) => void;
-  className?: string;
-}
-
-// ---------------------------------------------------------------------------
-// Message bubble
+// Message components
 // ---------------------------------------------------------------------------
 
 function AssistantMessage({ message }: { message: AiMessage }) {
   return (
-    <div className="group">
-      <div className="flex items-start gap-2.5">
-        <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-[var(--accent)]/10">
-          <Sparkles className="h-3 w-3 text-[var(--accent)]" />
-        </div>
-        <div className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--foreground)]/85">
-          {renderMarkdown(message.content)}
-        </div>
+    <div className="flex items-start gap-2.5">
+      <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-[var(--accent)]/10">
+        <Sparkles className="h-3 w-3 text-[var(--accent)]" />
+      </div>
+      <div className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--foreground)]/85">
+        {renderMarkdown(message.content)}
       </div>
     </div>
   );
@@ -395,27 +102,70 @@ function UserMessage({ message }: { message: AiMessage }) {
 
 function StreamingMessage({ text }: { text: string }) {
   return (
-    <div className="group">
-      <div className="flex items-start gap-2.5">
-        <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-[var(--accent)]/10">
-          <Sparkles className="h-3 w-3 animate-pulse text-[var(--accent)]" />
-        </div>
-        <div className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--foreground)]/85">
-          {text ? (
-            <>
-              {renderMarkdown(text)}
-              <span className="ml-0.5 inline-block h-[14px] w-[2px] animate-pulse bg-[var(--accent)] align-text-bottom" />
-            </>
-          ) : (
-            <span className="flex items-center gap-2 text-[var(--muted)]">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              <span className="text-[12px]">Analyzing your data...</span>
-            </span>
-          )}
-        </div>
+    <div className="flex items-start gap-2.5">
+      <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-[var(--accent)]/10">
+        <Sparkles className="h-3 w-3 animate-pulse text-[var(--accent)]" />
+      </div>
+      <div className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--foreground)]/85">
+        {text ? (
+          <>{renderMarkdown(text)}<span className="ml-0.5 inline-block h-[14px] w-[2px] animate-pulse bg-[var(--accent)] align-text-bottom" /></>
+        ) : (
+          <span className="flex items-center gap-2 text-[var(--muted)]">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span className="text-[12px]">Analyzing your data...</span>
+          </span>
+        )}
       </div>
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// @ Mention dropdown
+// ---------------------------------------------------------------------------
+
+function MentionDropdown({ query, metrics, onSelect, position }: {
+  query: string;
+  metrics: AiMetric[];
+  onSelect: (title: string) => void;
+  position: { bottom: number; left: number };
+}) {
+  const filtered = metrics.filter((m) =>
+    m.title.toLowerCase().includes(query.toLowerCase())
+  );
+
+  if (filtered.length === 0) return null;
+
+  return createPortal(
+    <div
+      className="fixed z-[10001] max-h-48 w-64 overflow-y-auto rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] py-1 shadow-xl"
+      style={{ bottom: position.bottom, left: position.left }}
+    >
+      {filtered.map((m) => (
+        <button
+          key={m.title}
+          onClick={() => onSelect(m.title)}
+          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12px] transition-colors hover:bg-[var(--card-glow)]"
+        >
+          <span className="rounded bg-[var(--accent)]/10 px-1 py-0.5 text-[10px] font-medium text-[var(--accent)]">{m.component}</span>
+          <span className="text-[var(--foreground)]">{m.title}</span>
+        </button>
+      ))}
+    </div>,
+    document.body,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+export interface DashboardInsightProps {
+  quickPrompts?: QuickPrompt[] | false;
+  placeholder?: string;
+  /** Position of the floating button. Default: "bottom-right" */
+  position?: "bottom-right" | "bottom-left";
+  className?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -425,157 +175,208 @@ function StreamingMessage({ text }: { text: string }) {
 export function DashboardInsight({
   quickPrompts = DEFAULT_QUICK_PROMPTS,
   placeholder = "Ask about your data...",
-  title = "AI Insights",
-  defaultCollapsed = false,
-  collapsed: collapsedProp,
-  onCollapseChange,
+  position = "bottom-right",
   className,
 }: DashboardInsightProps) {
   const ai = useAi();
+  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionPos, setMentionPos] = useState({ bottom: 0, left: 0 });
+  const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const collapsed = collapsedProp ?? internalCollapsed;
-  const setCollapsed = useCallback((v: boolean) => {
-    setInternalCollapsed(v);
-    onCollapseChange?.(v);
-  }, [onCollapseChange]);
+  useEffect(() => setMounted(true), []);
 
-  // Auto-scroll chat container
+  // Animate in/out
   useEffect(() => {
-    const el = chatContainerRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (open) {
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+      setTimeout(() => inputRef.current?.focus(), 200);
+    } else {
+      setVisible(false);
+    }
+  }, [open]);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [ai?.messages, ai?.streamingText]);
 
-  // Focus input on expand
+  // Lock body scroll when open
   useEffect(() => {
-    if (!collapsed) setTimeout(() => inputRef.current?.focus(), 100);
-  }, [collapsed]);
+    if (open) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [open]);
 
-  if (!ai?.enabled) return null;
+  if (!ai?.enabled || !mounted) return null;
+
+  const hasMessages = ai.messages.length > 0;
+
+  // Get registered metrics for @ mentions
+  const metrics = Array.from(ai.getMetrics().values());
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || ai.isLoading) return;
     setInput("");
-    await ai.send(text);
+    setMentionQuery(null);
+
+    // Extract @ mentions and add as trigger context
+    const mentions = text.match(/@([^@]+?)(?=\s@|\s|$)/g);
+    const triggerContext = mentions
+      ? mentions.map((m) => m.slice(1).trim()).join(", ")
+      : undefined;
+
+    await ai.send(text, triggerContext);
+  };
+
+  const handleInputChange = (value: string) => {
+    setInput(value);
+
+    // Detect @ mention
+    const lastAt = value.lastIndexOf("@");
+    if (lastAt >= 0) {
+      const afterAt = value.slice(lastAt + 1);
+      if (!afterAt.includes(" ") || afterAt.length < 20) {
+        setMentionQuery(afterAt);
+        // Position dropdown above input
+        const inputEl = inputRef.current;
+        if (inputEl) {
+          const rect = inputEl.getBoundingClientRect();
+          setMentionPos({ bottom: window.innerHeight - rect.top + 8, left: rect.left });
+        }
+        return;
+      }
+    }
+    setMentionQuery(null);
+  };
+
+  const handleMentionSelect = (title: string) => {
+    const lastAt = input.lastIndexOf("@");
+    const before = input.slice(0, lastAt);
+    setInput(`${before}@${title} `);
+    setMentionQuery(null);
+    inputRef.current?.focus();
   };
 
   const handleQuickPrompt = async (prompt: string) => {
     if (ai.isLoading) return;
-    if (collapsed) setCollapsed(false);
     await ai.send(prompt);
   };
 
-  const hasMessages = ai.messages.length > 0;
-
-  return (
-    <CitationProvider>
-    <div
+  // Floating button
+  const button = (
+    <button
+      onClick={() => setOpen(true)}
       className={cn(
-        "noise-texture overflow-hidden rounded-[var(--mu-card-radius)] border border-[var(--card-border)] bg-[var(--card-bg)] transition-all",
+        "fixed z-[9998] flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-white shadow-lg shadow-[var(--accent)]/25 transition-all hover:shadow-xl hover:shadow-[var(--accent)]/30 hover:scale-105",
+        position === "bottom-right" ? "bottom-6 right-6" : "bottom-6 left-6",
+        open && "scale-0 opacity-0",
         className,
       )}
     >
-      {/* ── Header ── */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setCollapsed(!collapsed)}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCollapsed(!collapsed); } }}
-        className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-left transition-colors hover:bg-[var(--card-glow)]"
-      >
-        <div className="flex h-5 w-5 items-center justify-center rounded-md bg-[var(--accent)]/10">
-          <Sparkles className="h-3 w-3 text-[var(--accent)]" />
-        </div>
-        <span className="flex-1 text-xs font-semibold tracking-wide text-[var(--foreground)]">
-          {title}
+      <Sparkles className="h-4 w-4" />
+      <span className="text-sm font-medium">AI Insights</span>
+      {hasMessages && (
+        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-white/20 px-1 text-[10px] font-bold">
+          {ai.messages.filter((m) => m.role === "assistant").length}
         </span>
-        {hasMessages && (
-          <span className="rounded-full bg-[var(--accent)]/10 px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[9px] font-bold text-[var(--accent)]">
-            {ai.messages.filter((m) => m.role === "assistant").length}
-          </span>
-        )}
-        <ChevronDown
-          className={cn(
-            "h-3.5 w-3.5 text-[var(--muted)] transition-transform duration-200",
-            !collapsed && "rotate-180",
-          )}
-        />
-      </div>
+      )}
+    </button>
+  );
 
-      {/* ── Body ── */}
-      {!collapsed && (
-        <div className="border-t border-[var(--card-border)]">
-          {/* Quick prompts */}
-          {!hasMessages && !ai.isLoading && quickPrompts && (quickPrompts as QuickPrompt[]).length > 0 && (
-            <div className="flex flex-wrap gap-2 px-4 py-3">
+  // Sidebar panel
+  const sidebar = open && createPortal(
+    <div className="fixed inset-0 z-[9999]">
+      {/* Backdrop */}
+      <div
+        className={cn("absolute inset-0 bg-black/40 transition-opacity duration-300", visible ? "opacity-100" : "opacity-0")}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* Panel */}
+      <div className={cn(
+        "absolute top-0 bottom-0 flex w-full max-w-md flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-out",
+        position === "bottom-right" ? "right-0" : "left-0",
+        visible
+          ? "translate-x-0"
+          : position === "bottom-right" ? "translate-x-full" : "-translate-x-full",
+      )}>
+        {/* Header */}
+        <div className="flex-shrink-0 border-b border-[var(--card-border)] px-5 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--accent)]/10">
+                <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+              </div>
+              <span className="text-sm font-semibold text-[var(--foreground)]">AI Insights</span>
+            </div>
+            <button onClick={() => setOpen(false)} className="rounded-md p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <p className="mt-1 text-[11px] text-[var(--muted)]">
+            Ask questions about your dashboard. Use <span className="font-medium text-[var(--accent)]">@</span> to reference specific charts.
+          </p>
+        </div>
+
+        {/* Quick prompts — show when no messages */}
+        {!hasMessages && !ai.isLoading && quickPrompts && (
+          <div className="flex-shrink-0 border-b border-[var(--card-border)] px-5 py-3">
+            <div className="flex flex-wrap gap-2">
               {(quickPrompts as QuickPrompt[]).map((qp) => (
                 <button
                   key={qp.label}
                   onClick={() => handleQuickPrompt(qp.prompt)}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] px-3 py-1.5",
-                    "text-[11px] font-medium text-[var(--muted)] transition-all duration-200",
-                    "hover:border-[var(--accent)]/40 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 hover:shadow-sm",
-                  )}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] px-3 py-1.5 text-[11px] font-medium text-[var(--muted)] transition-all hover:border-[var(--accent)]/40 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5"
                 >
-                  {qp.icon ?? <Sparkles className="h-2.5 w-2.5" />}
+                  <Sparkles className="h-2.5 w-2.5" />
                   {qp.label}
                 </button>
               ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Messages */}
-          {(hasMessages || ai.isLoading) && (
-            <div
-              ref={chatContainerRef}
-              className="max-h-[500px] space-y-4 overflow-y-auto px-4 py-4"
-            >
-              {ai.messages.map((msg, i) =>
-                msg.role === "user"
-                  ? <UserMessage key={i} message={msg} />
-                  : <AssistantMessage key={i} message={msg} />
-              )}
-              {ai.isLoading && <StreamingMessage text={ai.streamingText} />}
-            </div>
+        {/* Messages */}
+        <div ref={chatRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+          {ai.messages.map((msg, i) =>
+            msg.role === "user"
+              ? <UserMessage key={i} message={msg} />
+              : <AssistantMessage key={i} message={msg} />
           )}
+          {ai.isLoading && <StreamingMessage text={ai.streamingText} />}
+        </div>
 
-          {/* Input */}
-          <div className="flex items-center gap-2 border-t border-[var(--card-border)] px-4 py-2.5">
+        {/* Input */}
+        <div className="flex-shrink-0 border-t border-[var(--card-border)] px-5 py-3">
+          <div className="flex items-center gap-2">
             <input
               ref={inputRef}
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && !mentionQuery) { e.preventDefault(); handleSend(); }
+                if (e.key === "Escape") { setMentionQuery(null); setOpen(false); }
+              }}
               placeholder={placeholder}
               disabled={ai.isLoading}
-              className={cn(
-                "flex-1 bg-transparent text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted)]/40 outline-none",
-                "disabled:opacity-50",
-              )}
+              className="flex-1 bg-transparent text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted)]/40 outline-none disabled:opacity-50"
             />
             {ai.isLoading ? (
-              <button
-                onClick={ai.abort}
-                className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-red-500/10 hover:text-red-500"
-                aria-label="Stop generating"
-              >
+              <button onClick={ai.abort} className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-red-500/10 hover:text-red-500">
                 <X className="h-3.5 w-3.5" />
               </button>
             ) : (
               <>
                 {hasMessages && (
-                  <button
-                    onClick={ai.clear}
-                    className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--card-glow)] hover:text-[var(--foreground)]"
-                    aria-label="Clear chat"
-                    title="Clear chat"
-                  >
+                  <button onClick={ai.clear} className="rounded-lg p-1.5 text-[var(--muted)] hover:text-[var(--foreground)]" title="Clear chat">
                     <RotateCcw className="h-3 w-3" />
                   </button>
                 )}
@@ -583,12 +384,9 @@ export function DashboardInsight({
                   onClick={handleSend}
                   disabled={!input.trim()}
                   className={cn(
-                    "rounded-lg p-1.5 transition-all duration-200",
-                    input.trim()
-                      ? "text-[var(--accent)] hover:bg-[var(--accent)]/10"
-                      : "text-[var(--muted)]/20 cursor-not-allowed",
+                    "rounded-lg p-1.5 transition-all",
+                    input.trim() ? "text-[var(--accent)] hover:bg-[var(--accent)]/10" : "text-[var(--muted)]/20",
                   )}
-                  aria-label="Send message"
                 >
                   <Send className="h-3.5 w-3.5" />
                 </button>
@@ -596,9 +394,25 @@ export function DashboardInsight({
             )}
           </div>
         </div>
+      </div>
+
+      {/* @ Mention dropdown */}
+      {mentionQuery !== null && (
+        <MentionDropdown
+          query={mentionQuery}
+          metrics={metrics}
+          onSelect={handleMentionSelect}
+          position={mentionPos}
+        />
       )}
-    </div>
-    <CitationOverlayPanel />
-    </CitationProvider>
+    </div>,
+    document.body,
+  );
+
+  return (
+    <>
+      {button}
+      {sidebar}
+    </>
   );
 }
