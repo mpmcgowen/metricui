@@ -330,8 +330,19 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   const isLinkedHovered = linkedIndex != null && linkedHover?.hoveredIndex != null
     && String(linkedHover.hoveredIndex) === String(linkedIndex);
 
-  // --- Cross-filter (signal only — emits on click, no visual changes) ---
+  // --- Cross-filter (dims when non-matching selection is active, emits on click) ---
   const crossFilter = useCrossFilter();
+  const isCrossFilterDimmed = (() => {
+    if (!crossFilter?.isActive || !crossFilterField) return false;
+    const sel = crossFilter.selection;
+    if (!sel) return false;
+    // If the selection is on a different field, don't dim
+    if (sel.field !== crossFilterField) return false;
+    // If this card's value matches the selection, don't dim
+    if (crossFilterValue !== undefined && String(sel.value) === String(crossFilterValue)) return false;
+    // Selection is active on our field but doesn't match — dim
+    return true;
+  })();
 
   // --- Formatting ---
   const formattedValue = valueIsString
@@ -495,7 +506,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
         content,
       );
     }
-  }, [drillDown, rawInputValue, formattedValue, titleStr, openDrill, format]);
+  }, [drillDown, rawInputValue, formattedValue, titleStr, openDrill]);
 
   return (
     <CardShell
@@ -505,9 +516,9 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       componentName="KpiCard"
       aiTitle={typeof title === "string" ? title : undefined}
       aiContext={aiContext}
-      onClick={onClick ?? (drillDown ? handleDrillClick : undefined)}
+      onClick={onClick ?? (drillDown ? handleDrillClick : (crossFilterProp && crossFilter && crossFilterField && crossFilterValue !== undefined ? () => crossFilter.select({ field: crossFilterField!, value: crossFilterValue! }) : undefined))}
       href={href}
-      clickable={!!(onClick || href || drillDown)}
+      clickable={!!(onClick || href || drillDown || (crossFilterProp && crossFilter && crossFilterField && crossFilterValue !== undefined))}
       variant={resolvedVariant}
       dense={resolvedDense}
       bare={bare}
@@ -534,6 +545,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       style={{
         ...(conditionIsCustom && conditionColor ? { boxShadow: `0 10px 15px -3px ${withOpacity(conditionColor, 0.1)}` } : {}),
         ...(isLinkedHovered ? { boxShadow: "0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent)", outline: "2px solid color-mix(in srgb, var(--accent) 30%, transparent)", outlineOffset: "2px" } : {}),
+        ...(isCrossFilterDimmed ? { opacity: 0.35, transition: "opacity 200ms ease" } : {}),
       }}
       footnote={resolvedFootnote ?? undefined}
     >

@@ -2,7 +2,7 @@
 
 import { forwardRef } from "react";
 import { CardShell } from "@/components/ui/CardShell";
-import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState, ExportableConfig } from "@/lib/types";
+import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState, ExportableConfig, DataComponentProps } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Props — thin wrapper over CardShell for backward compatibility
@@ -30,6 +30,8 @@ interface ChartContainerProps {
   empty?: EmptyState;
   error?: ErrorState;
   stale?: StaleState;
+  /** Unified data state config — individual loading/empty/error/stale props take precedence */
+  state?: DataComponentProps["state"];
   exportable?: ExportableConfig;
   exportData?: DataRow[];
 }
@@ -38,16 +40,26 @@ interface ChartContainerProps {
 // Component — now a thin pass-through to CardShell
 // ---------------------------------------------------------------------------
 
-export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(function ChartContainer({ classNames, ...props }, ref) {
+export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(function ChartContainer({ classNames, state, loading, empty, error, stale, ...props }, ref) {
   // Resolve chart → body alias so CardShell gets the right key
   const resolvedClassNames = classNames
     ? { root: classNames.root, header: classNames.header, body: classNames.body ?? classNames.chart, footnote: classNames.footnote }
     : undefined;
 
+  // Resolve state config — individual props take precedence over state bag
+  const resolvedLoading = loading ?? state?.loading;
+  const resolvedEmpty = empty ?? state?.empty;
+  const resolvedError = error ?? state?.error;
+  const resolvedStale = stale ?? state?.stale;
+
   return (
     <CardShell
       ref={ref as React.Ref<HTMLElement>}
       {...props}
+      loading={resolvedLoading}
+      empty={resolvedEmpty}
+      error={resolvedError}
+      stale={resolvedStale}
       classNames={resolvedClassNames}
       skeletonType="chart"
     />

@@ -110,9 +110,10 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
     const handleTabClickRef = useRef<(value: string) => void>(undefined);
 
     useEffect(() => {
-      if (ai && handleTabClickRef.current) {
-        ai.registerTabNavigator(handleTabClickRef.current);
-      }
+      if (!ai) return;
+      ai.registerTabNavigator((tab: string) => {
+        handleTabClickRef.current?.(tab);
+      });
     }, [ai]);
 
     // --- Active tab state ---

@@ -48,6 +48,9 @@ export type { Column, ColumnDef, ColumnType, DataTableProps, FooterRow, RowCondi
 // Layout
 export { MetricGrid } from "./layout/MetricGrid";
 export type { MetricGridProps, MetricGridItemProps, GridHint } from "./layout/MetricGrid";
+export { Dashboard } from "./layout/Dashboard";
+export { DashboardNav } from "./layout/DashboardNav";
+export type { DashboardNavProps, DashboardNavTab } from "./layout/DashboardNav";
 export { DashboardHeader } from "./layout/DashboardHeader";
 export type { DashboardHeaderProps, DashboardStatus, BreadcrumbItem } from "./layout/DashboardHeader";
 
@@ -119,10 +122,15 @@ export type {
   EmptyState, ErrorState, StaleState,
   DrillDownConfig, ExportableConfig, AnimationConfig,
   BaseComponentProps, DataComponentProps, DataRow,
+  SparklineType, TitlePosition, TitleAlign, TooltipConfig,
 } from "@/lib/types";
 
 // Chart colors
 export { SERIES_COLORS } from "@/lib/chartColors";
+
+// UI — Dashboard Insight
+export { DashboardInsight } from "./ui/DashboardInsight";
+export type { DashboardInsightProps } from "./ui/DashboardInsight";
 
 // AI
 export type { AiConfig, AiMessage } from "@/lib/AiContext";
