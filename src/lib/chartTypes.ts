@@ -62,3 +62,12 @@ export interface CellClickEvent {
   seriesId: string;
   x: string;
 }
+
+/** Payload for ScatterPlot `onNodeClick` */
+export interface ScatterNodeClickEvent {
+  id: string;
+  serieId: string;
+  x: number | string | Date;
+  y: number | string | Date;
+  label: string;
+}

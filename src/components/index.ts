@@ -21,6 +21,20 @@ export { BulletChart } from "./charts/BulletChart";
 export type { BulletChartProps, BulletDatum, SimpleBulletData } from "./charts/BulletChart";
 export { Waterfall } from "./charts/Waterfall";
 export type { WaterfallProps, WaterfallItem } from "./charts/Waterfall";
+export { Radar } from "./charts/Radar";
+export type { RadarProps } from "./charts/Radar";
+export { Sankey } from "./charts/Sankey";
+export type { SankeyProps, SankeyData, SankeyNode, SankeyLink } from "./charts/Sankey";
+export { Choropleth } from "./charts/Choropleth";
+export type { ChoroplethProps, ChoroplethDatum } from "./charts/Choropleth";
+export { Bump } from "./charts/Bump";
+export type { BumpProps, BumpSeries, BumpSeriesDatum } from "./charts/Bump";
+export { Calendar } from "./charts/Calendar";
+export type { CalendarProps, CalendarClickEvent } from "./charts/Calendar";
+export { Treemap } from "./charts/Treemap";
+export type { TreemapProps, TreemapDatum, TreemapClickEvent } from "./charts/Treemap";
+export { ScatterPlot } from "./charts/ScatterPlot";
+export type { ScatterPlotProps, ScatterPlotDatumInput } from "./charts/ScatterPlot";
 
 export { ChartContainer } from "./charts/ChartContainer";
 export { ChartTooltip } from "./charts/ChartTooltip";
@@ -28,7 +42,7 @@ export type { ChartTooltipProps, ChartTooltipItem } from "./charts/ChartTooltip"
 export { ChartLegend } from "./charts/ChartLegend";
 export type { ChartLegendProps, ChartLegendItem } from "./charts/ChartLegend";
 
-export type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent, BarClickEvent, SliceClickEvent, CellClickEvent } from "@/lib/chartTypes";
+export type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent, BarClickEvent, SliceClickEvent, CellClickEvent, ScatterNodeClickEvent } from "@/lib/chartTypes";
 export type { Category, CategoryConfig } from "@/lib/dataTransform";
 
 // Format helpers

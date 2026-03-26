@@ -16,6 +16,11 @@ const INSTALL_HINTS: Record<string, string[]> = {
   "@nivo/heatmap": ["HeatMap"],
   "@nivo/bullet": ["BulletChart"],
   "@nivo/funnel": ["Funnel"],
+  "@nivo/treemap": ["Treemap"],
+  "@nivo/radar": ["Radar"],
+  "@nivo/sankey": ["Sankey"],
+  "@nivo/geo": ["Choropleth"],
+  "@nivo/bump": ["Bump"],
 };
 
 export function assertPeer(
