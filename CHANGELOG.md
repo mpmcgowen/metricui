@@ -5,6 +5,39 @@ All notable changes to MetricUI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-03-25
+
+### Added
+
+- **AI Insights — bring your own LLM.** `<DashboardInsight />` renders a floating chat button + slide-over sidebar. Connect any LLM (OpenAI, Anthropic, local models) via the `ai` prop on `<Dashboard>`. The AI auto-collects live data from every component on the dashboard and builds context-rich prompts. No hardcoded data — updates when filters change.
+- **Three-level AI context.** `company` (who you are), `context` (what this dashboard measures), `aiContext` (per-component business hints). The more context the dev provides, the smarter the analysis.
+- **@ mentions in AI chat.** Type `@` to reference specific charts/KPIs. Keyboard navigation (arrows + Enter). Multiple mentions. Mentions render as styled chips in messages.
+- **Per-card AI sparkle icon.** Hover any card → sparkle icon in top-right. Click → opens AI chat pre-scoped to that component.
+- **Auto data collection.** CardShell automatically registers component data with AiContext: KPI values, chart data (full rows ≤20, first 10 + stats for larger sets), table rows. Live — updates when filters change.
+- **Streaming responses.** Token-by-token rendering with pulsing cursor and abort button.
+- **Quick prompts.** "What's notable?", "What's at risk?", "Summarize" — customizable or hideable.
+- **Chat persistence.** In-memory by default. Controlled mode with `messages`/`onMessage` for database persistence.
+- **Citations.** LLM cites sources with `[[Component Title]]` rendered as styled accent chips.
+- **`BaseComponentProps` / `DataComponentProps`.** Shared base types for all components. `aiContext`, `id`, `data-testid`, `className` defined once, inherited everywhere. New universal props added in one place.
+- **All 5 demos wired with AI.** Analytics, SaaS, GitHub, Wikipedia, World — all have `<Dashboard>` wrapper, AI context, `<DashboardInsight />`, and 6-14 `aiContext` props each.
+- **Analytics demo.** New GA-style dashboard with tab navigation, 4 views, per-device daily data, cross-filtering, comparison periods.
+
+### Changed
+
+- **Drill-down icon removed from KPIs.** Cards are clickable directly with a hover lift effect. Cleaner top-right with just sparkle (AI) and download (export) icons.
+- **`DataRow` type** used across all components — eliminates `as never[]` casts.
+- **MetricGrid fragment flattening** — auto-layout works through `<>` wrappers.
+- **GitHub, Wikipedia, World demos** converted from individual providers to `<Dashboard>` wrapper.
+- Homepage updated with all 5 demos and AI Insights as headline feature.
+- MCP server, llms.txt, docs, sidebar all updated for 0.6.
+
+### Fixed
+
+- FilterBar nested button hydration error.
+- TooltipWrapper infinite re-render loop.
+- KPIs and DataTables now register with AiContext via `aiTitle`.
+- Doc page TOC width standardized to w-40 across all 31 pages.
+
 ## [0.5.0] - 2026-03-25
 
 ### Added
@@ -121,6 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Built-in data states (loading, empty, error, stale)
 - MCP server for AI-assisted dashboard generation
 
+[0.6.0]: https://github.com/mpmcgowen/metricui/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/mpmcgowen/metricui/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mpmcgowen/metricui/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mpmcgowen/metricui/compare/v0.2.1...v0.3.0

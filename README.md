@@ -13,8 +13,10 @@
 <p align="center">
   <a href="https://metricui.com">Homepage</a> ·
   <a href="https://metricui.com/docs">Docs</a> ·
+  <a href="https://metricui.com/demos/analytics">Analytics Demo</a> ·
   <a href="https://metricui.com/demos/saas">SaaS Demo</a> ·
   <a href="https://metricui.com/demos/github">GitHub Demo</a> ·
+  <a href="https://metricui.com/demos/wikipedia">Wikipedia Live</a> ·
   <a href="#mcp-server">MCP Server</a> ·
   <a href="https://metricui.com/roadmap">Roadmap</a>
 </p>
@@ -26,7 +28,7 @@
 </p>
 
 <p align="center">
-  <em><a href="https://metricui.com/demos/saas">Live SaaS demo</a> — DashboardHeader, filters, KpiCards with conditions, Callout alerts, Waterfall chart. <a href="https://metricui.com/demos/github">GitHub demo</a> also available.</em>
+  <em><a href="https://metricui.com/demos/analytics">Web Analytics</a> · <a href="https://metricui.com/demos/saas">SaaS Metrics</a> · <a href="https://metricui.com/demos/github">GitHub Analytics</a> · <a href="https://metricui.com/demos/wikipedia">Wikipedia Live</a> · <a href="https://metricui.com/demos/world">World Explorer</a> — all with AI Insights, cross-filtering, drill-downs, and export.</em>
 </p>
 
 ---
@@ -105,6 +107,17 @@ export default function Dashboard() {
 ---
 
 ## Features
+
+### AI Insights — Bring Your Own LLM
+
+Drop `<DashboardInsight />` into any dashboard. A floating chat button appears — click it, ask questions about your data. The AI auto-collects live data from every component, builds context-rich prompts, and streams analysis. Use `@` to reference specific charts. Works with any LLM (OpenAI, Anthropic, local models). [Docs &rarr;](https://metricui.com/docs/ai-insights)
+
+```tsx
+<Dashboard ai={{ analyze: myLLM, company: "Acme Corp — B2B SaaS", context: "Q4 target: $500K" }}>
+  <KpiCard title="Revenue" value={142800} aiContext="Primary metric. Enterprise drives 52%." />
+  <DashboardInsight />
+</Dashboard>
+```
 
 ### KPI Cards — Not Just Numbers
 
