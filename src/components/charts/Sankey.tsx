@@ -309,7 +309,7 @@ const SankeyInner = forwardRef<HTMLDivElement, SankeyProps>(function Sankey(prop
             data={filteredData}
             theme={nivoTheme}
             colors={((node: any) => colorMap.get(String(node.id)) ?? seriesColors[0]) as any}
-            margin={{ top: 16, right: 160, bottom: 16, left: 160 }}
+            margin={{ top: 16, right: containerWidth < 500 ? 100 : 200, bottom: 40, left: containerWidth < 500 ? 100 : 200 }}
             nodeThickness={nodeThickness}
             nodeOpacity={1}
             nodeHoverOpacity={1}
