@@ -10,10 +10,9 @@ import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 
 const component = getComponent("metric-grid")!;
 
@@ -60,34 +59,32 @@ const tableColumns = [
 
 export default function MetricGridDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        {/* When to use */}
-        <DocSection id="when-to-use" title="When to Use">
-          <p className="text-[14px] leading-relaxed text-[var(--muted)]">
-            Use MetricGrid as the auto-layout container for dashboards. Drop MetricUI
-            components in and it figures out the layout — KPI cards go in equal-width rows,
-            charts split side-by-side, tables go full width. No Tailwind grid classes, no
-            manual column math, no responsive breakpoints to manage. Override individual
-            items with{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">
-              MetricGrid.Item
-            </code>{" "}
-            when the auto-layout is not what you want.
-          </p>
-        </DocSection>
+      {/* When to use */}
+      <DocSection id="when-to-use" title="When to Use">
+        <p className="text-[14px] leading-relaxed text-[var(--muted)]">
+          Use MetricGrid as the auto-layout container for dashboards. Drop MetricUI
+          components in and it figures out the layout — KPI cards go in equal-width rows,
+          charts split side-by-side, tables go full width. No Tailwind grid classes, no
+          manual column math, no responsive breakpoints to manage. Override individual
+          items with{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">
+            MetricGrid.Item
+          </code>{" "}
+          when the auto-layout is not what you want.
+        </p>
+      </DocSection>
 
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            A typical dashboard with KPI cards, charts, and a table. MetricGrid detects
-            each component type and assigns the right width automatically.
-          </p>
-          <ComponentExample
-            code={`<MetricGrid>
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          A typical dashboard with KPI cards, charts, and a table. MetricGrid detects
+          each component type and assigns the right width automatically.
+        </p>
+        <ComponentExample
+          code={`<MetricGrid>
   <KpiCard title="Revenue" value={78400} format="currency" comparison={{ value: 65200 }} />
   <KpiCard title="Users" value={3200} format="number" comparison={{ value: 2800 }} />
   <KpiCard title="Conversion" value={4.2} format="percent" comparison={{ value: 3.8 }} />
@@ -108,48 +105,48 @@ export default function MetricGridDocs() {
 
   <DataTable data={tableData} columns={columns} title="Top Pages" />
 </MetricGrid>`}
-          >
-            <div className="w-full">
-              <MetricGrid>
-                <KpiCard title="Revenue" value={78400} format="currency" comparison={{ value: 65200 }} />
-                <KpiCard title="Users" value={3200} format="number" comparison={{ value: 2800 }} />
-                <KpiCard title="Conversion" value={4.2} format="percent" comparison={{ value: 3.8 }} />
+        >
+          <div className="w-full">
+            <MetricGrid>
+              <KpiCard title="Revenue" value={78400} format="currency" comparison={{ value: 65200 }} />
+              <KpiCard title="Users" value={3200} format="number" comparison={{ value: 2800 }} />
+              <KpiCard title="Conversion" value={4.2} format="percent" comparison={{ value: 3.8 }} />
 
-                <AreaChart
-                  data={revenueData}
-                  index="date"
-                  categories={["revenue", "cost"]}
-                  title="Revenue vs Cost"
-                  format="currency"
-                />
-                <BarChart
-                  data={channelData}
-                  index="channel"
-                  categories={["visits"]}
-                  title="Traffic by Channel"
-                />
+              <AreaChart
+                data={revenueData}
+                index="date"
+                categories={["revenue", "cost"]}
+                title="Revenue vs Cost"
+                format="currency"
+              />
+              <BarChart
+                data={channelData}
+                index="channel"
+                categories={["visits"]}
+                title="Traffic by Channel"
+              />
 
-                <DataTable data={tableData} columns={tableColumns} title="Top Pages" />
-              </MetricGrid>
-            </div>
-          </ComponentExample>
-        </DocSection>
+              <DataTable data={tableData} columns={tableColumns} title="Top Pages" />
+            </MetricGrid>
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* MetricGrid.Section */}
-        <DocSection id="sections" title="MetricGrid.Section">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">
-              MetricGrid.Section
-            </code>{" "}
-            renders a full-width labeled divider between groups of components. It delegates
-            to{" "}
-            <a href="/docs/section-header" className="font-medium text-[var(--accent)] hover:underline">
-              SectionHeader
-            </a>{" "}
-            internally, so it supports all the same props: subtitle, description, action, badge, and border.
-          </p>
-          <ComponentExample
-            code={`<MetricGrid>
+      {/* MetricGrid.Section */}
+      <DocSection id="sections" title="MetricGrid.Section">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">
+            MetricGrid.Section
+          </code>{" "}
+          renders a full-width labeled divider between groups of components. It delegates
+          to{" "}
+          <a href="/docs/section-header" className="font-medium text-[var(--accent)] hover:underline">
+            SectionHeader
+          </a>{" "}
+          internally, so it supports all the same props: subtitle, description, action, badge, and border.
+        </p>
+        <ComponentExample
+          code={`<MetricGrid>
   <MetricGrid.Section title="Overview" subtitle="Key metrics at a glance" />
   <KpiCard title="Revenue" value={78400} format="currency" />
   <KpiCard title="Users" value={3200} />
@@ -161,48 +158,48 @@ export default function MetricGridDocs() {
   <MetricGrid.Section title="Details" border />
   <DataTable data={tableData} columns={columns} title="Top Pages" />
 </MetricGrid>`}
-          >
-            <div className="w-full">
-              <MetricGrid>
-                <MetricGrid.Section title="Overview" subtitle="Key metrics at a glance" />
-                <KpiCard title="Revenue" value={78400} format="currency" />
-                <KpiCard title="Users" value={3200} />
-                <KpiCard title="Conversion" value={4.2} format="percent" />
+        >
+          <div className="w-full">
+            <MetricGrid>
+              <MetricGrid.Section title="Overview" subtitle="Key metrics at a glance" />
+              <KpiCard title="Revenue" value={78400} format="currency" />
+              <KpiCard title="Users" value={3200} />
+              <KpiCard title="Conversion" value={4.2} format="percent" />
 
-                <MetricGrid.Section title="Trends" border />
-                <AreaChart
-                  data={revenueData}
-                  index="date"
-                  categories={["revenue"]}
-                  title="Revenue Over Time"
-                  format="currency"
-                />
+              <MetricGrid.Section title="Trends" border />
+              <AreaChart
+                data={revenueData}
+                index="date"
+                categories={["revenue"]}
+                title="Revenue Over Time"
+                format="currency"
+              />
 
-                <MetricGrid.Section title="Details" border />
-                <DataTable data={tableData} columns={tableColumns} title="Top Pages" />
-              </MetricGrid>
-            </div>
-          </ComponentExample>
-        </DocSection>
+              <MetricGrid.Section title="Details" border />
+              <DataTable data={tableData} columns={tableColumns} title="Top Pages" />
+            </MetricGrid>
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* MetricGrid.Item */}
-        <DocSection id="item-overrides" title="MetricGrid.Item">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Wrap any child in{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">
-              MetricGrid.Item
-            </code>{" "}
-            to override the auto-detected width. The{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">span</code>{" "}
-            prop accepts{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;sm&quot;</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;md&quot;</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;lg&quot;</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;full&quot;</code>,{" "}
-            or a number from 1 to 12.
-          </p>
-          <CodeBlock
-            code={`<MetricGrid>
+      {/* MetricGrid.Item */}
+      <DocSection id="item-overrides" title="MetricGrid.Item">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Wrap any child in{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">
+            MetricGrid.Item
+          </code>{" "}
+          to override the auto-detected width. The{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">span</code>{" "}
+          prop accepts{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;sm&quot;</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;md&quot;</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;lg&quot;</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;full&quot;</code>,{" "}
+          or a number from 1 to 12.
+        </p>
+        <CodeBlock
+          code={`<MetricGrid>
   <KpiCard title="Revenue" value={78400} format="currency" />
   <KpiCard title="Users" value={3200} />
 
@@ -213,61 +210,61 @@ export default function MetricGridDocs() {
 
   <DataTable data={tableData} title="Details" />
 </MetricGrid>`}
-          />
-          <DataTable
-            data={[
-              { span: '"sm"', behavior: "1/4 width" },
-              { span: '"md"', behavior: "1/3 width" },
-              { span: '"lg"', behavior: "2/3 width" },
-              { span: '"full"', behavior: "Full width" },
-              { span: "1-12", behavior: "Explicit column count out of 12" },
-            ]}
-            columns={[
-              { key: "span", header: "Span", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
-              { key: "behavior", header: "Behavior" },
-            ]}
-            dense
-            variant="ghost"
-            className="mt-4"
-          />
-        </DocSection>
+        />
+        <DataTable
+          data={[
+            { span: '"sm"', behavior: "1/4 width" },
+            { span: '"md"', behavior: "1/3 width" },
+            { span: '"lg"', behavior: "2/3 width" },
+            { span: '"full"', behavior: "Full width" },
+            { span: "1-12", behavior: "Explicit column count out of 12" },
+          ]}
+          columns={[
+            { key: "span", header: "Span", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--accent)]">{String(v)}</code> },
+            { key: "behavior", header: "Behavior" },
+          ]}
+          dense
+          variant="ghost"
+          className="mt-4"
+        />
+      </DocSection>
 
-        {/* Auto-Detection */}
-        <DocSection id="auto-detection" title="Auto-Detection">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            MetricGrid inspects each child&apos;s component type to decide how to lay it out. It checks
-            for a static{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">__gridHint</code>{" "}
-            property first, then falls back to matching the component&apos;s{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">displayName</code>.
-            Unknown component types default to full width, so custom components are never broken.
-          </p>
-          <DataTable
-            data={[
-              { component: "KpiCard", hint: "kpi", layout: "Equal-width row with other KPIs (up to 4 per row)" },
-              { component: "Gauge", hint: "gauge", layout: "Equal-width row with other small items" },
-              { component: "StatGroup", hint: "stat", layout: "Full width" },
-              { component: "AreaChart, LineChart, BarChart, ...", hint: "chart", layout: "Two charts: 2:1 split. Three: equal thirds. Single: full width" },
-              { component: "DataTable", hint: "table", layout: "Full width" },
-              { component: "DashboardHeader", hint: "header", layout: "Full width" },
-              { component: "MetricGrid.Section", hint: "full", layout: "Full width (labeled divider)" },
-              { component: "Unknown / custom", hint: "unknown", layout: "Full width (safe default)" },
-            ]}
-            columns={[
-              { key: "component", header: "Component", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "hint", header: "Grid Hint", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "layout", header: "Layout Behavior" },
-            ]}
-            dense
-            variant="ghost"
-          />
-          <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            To make your own custom component auto-detected, set the static{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">__gridHint</code>{" "}
-            property:
-          </p>
-          <CodeBlock
-            code={`import type { GridHint } from "metricui";
+      {/* Auto-Detection */}
+      <DocSection id="auto-detection" title="Auto-Detection">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          MetricGrid inspects each child&apos;s component type to decide how to lay it out. It checks
+          for a static{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">__gridHint</code>{" "}
+          property first, then falls back to matching the component&apos;s{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">displayName</code>.
+          Unknown component types default to full width, so custom components are never broken.
+        </p>
+        <DataTable
+          data={[
+            { component: "KpiCard", hint: "kpi", layout: "Equal-width row with other KPIs (up to 4 per row)" },
+            { component: "Gauge", hint: "gauge", layout: "Equal-width row with other small items" },
+            { component: "StatGroup", hint: "stat", layout: "Full width" },
+            { component: "AreaChart, LineChart, BarChart, ...", hint: "chart", layout: "Two charts: 2:1 split. Three: equal thirds. Single: full width" },
+            { component: "DataTable", hint: "table", layout: "Full width" },
+            { component: "DashboardHeader", hint: "header", layout: "Full width" },
+            { component: "MetricGrid.Section", hint: "full", layout: "Full width (labeled divider)" },
+            { component: "Unknown / custom", hint: "unknown", layout: "Full width (safe default)" },
+          ]}
+          columns={[
+            { key: "component", header: "Component", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+            { key: "hint", header: "Grid Hint", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+            { key: "layout", header: "Layout Behavior" },
+          ]}
+          dense
+          variant="ghost"
+        />
+        <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          To make your own custom component auto-detected, set the static{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">__gridHint</code>{" "}
+          property:
+        </p>
+        <CodeBlock
+          code={`import type { GridHint } from "metricui";
 
 function MyCustomChart(props) {
   return <div>...</div>;
@@ -275,84 +272,52 @@ function MyCustomChart(props) {
 MyCustomChart.__gridHint = "chart" as GridHint;
 
 // Now MetricGrid will treat it like any other chart`}
-            className="mt-2"
-          />
-        </DocSection>
+          className="mt-2"
+        />
+      </DocSection>
 
-        {/* Props Table */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
+      <ComponentDocFooter component={component} />
 
-          <h3 className="mt-8 mb-3 text-[15px] font-semibold text-[var(--foreground)]">
-            MetricGrid.Section Props
-          </h3>
-          <DataTable
-            data={[
-              { prop: "title", type: "string", default: "(required)", description: "Section label." },
-              { prop: "subtitle", type: "string", default: "\u2014", description: "Secondary label below the title." },
-              { prop: "description", type: "string | ReactNode", default: "\u2014", description: "Content for the info popover." },
-              { prop: "action", type: "ReactNode", default: "\u2014", description: "Right-aligned action slot." },
-              { prop: "badge", type: "ReactNode", default: "\u2014", description: "Inline badge after the title." },
-              { prop: "border", type: "boolean", default: "false", description: "Show a border line above the section." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+      {/* Sub-component props tables (after the standard footer) */}
+      <DocSection id="section-props" title="MetricGrid.Section Props">
+        <DataTable
+          data={[
+            { prop: "title", type: "string", default: "(required)", description: "Section label." },
+            { prop: "subtitle", type: "string", default: "\u2014", description: "Secondary label below the title." },
+            { prop: "description", type: "string | ReactNode", default: "\u2014", description: "Content for the info popover." },
+            { prop: "action", type: "ReactNode", default: "\u2014", description: "Right-aligned action slot." },
+            { prop: "badge", type: "ReactNode", default: "\u2014", description: "Inline badge after the title." },
+            { prop: "border", type: "boolean", default: "false", description: "Show a border line above the section." },
+            { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
+          ]}
+          columns={[
+            { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+            { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+            { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+            { key: "description", header: "Description" },
+          ]}
+          dense
+          variant="ghost"
+        />
+      </DocSection>
 
-          <h3 className="mt-8 mb-3 text-[15px] font-semibold text-[var(--foreground)]">
-            MetricGrid.Item Props
-          </h3>
-          <DataTable
-            data={[
-              { prop: "span", type: '"sm" | "md" | "lg" | "full" | number', default: "\u2014", description: "Override the auto-detected column width." },
-              { prop: "children", type: "ReactNode", default: "(required)", description: "The component to render." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
-        </DocSection>
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-          </ul>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <DocSection id="item-props" title="MetricGrid.Item Props">
+        <DataTable
+          data={[
+            { prop: "span", type: '"sm" | "md" | "lg" | "full" | number', default: "\u2014", description: "Override the auto-detected column width." },
+            { prop: "children", type: "ReactNode", default: "(required)", description: "The component to render." },
+            { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
+          ]}
+          columns={[
+            { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
+            { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+            { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
+            { key: "description", header: "Description" },
+          ]}
+          dense
+          variant="ghost"
+        />
+      </DocSection>
+    </DocPageLayout>
   );
 }

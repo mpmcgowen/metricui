@@ -3,13 +3,12 @@
 import { BarLineChart } from "@/components/charts/BarLineChart";
 import { getComponent } from "@/lib/docs/component-data";
 import { ComponentHero } from "@/components/docs/ComponentHero";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 import { BarLineChartPlayground } from "@/components/docs/playgrounds/BarLineChartPlayground";
 
 const component = getComponent("bar-line-chart")!;
@@ -74,30 +73,28 @@ const tocItems: TocItem[] = [
 
 export default function BarLineChartDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        {/* When to use */}
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Use BarLineChart when you need to overlay a rate or percentage on top of volume data
-          — revenue bars with growth rate lines, sales volume with conversion percentage, or
-          any dual-axis scenario. For bars only, use{" "}
-          <a href="/docs/bar-chart" className="font-medium text-[var(--accent)] hover:underline">
-            BarChart
-          </a>
-          . For lines only, use{" "}
-          <a href="/docs/line-chart" className="font-medium text-[var(--accent)] hover:underline">
-            LineChart
-          </a>
-          .
-        </p>
+      {/* When to use */}
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Use BarLineChart when you need to overlay a rate or percentage on top of volume data
+        — revenue bars with growth rate lines, sales volume with conversion percentage, or
+        any dual-axis scenario. For bars only, use{" "}
+        <a href="/docs/bar-chart" className="font-medium text-[var(--accent)] hover:underline">
+          BarChart
+        </a>
+        . For lines only, use{" "}
+        <a href="/docs/line-chart" className="font-medium text-[var(--accent)] hover:underline">
+          LineChart
+        </a>
+        .
+      </p>
 
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <ComponentExample
-            code={`<BarLineChart
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <ComponentExample
+          code={`<BarLineChart
   barData={[{ month: "Jan", revenue: 42000 }, ...]}
   barKeys={["revenue"]}
   indexBy="month"
@@ -106,29 +103,29 @@ export default function BarLineChartDocs() {
   format={{ style: "currency", compact: true }}
   lineFormat={{ style: "percent", precision: 1 }}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <BarLineChart
-                barData={basicBarData}
-                barKeys={["revenue"]}
-                indexBy="month"
-                lineData={basicLineData}
-                title="Revenue & Growth"
-                format={{ style: "currency", compact: true }}
-                lineFormat={{ style: "percent", precision: 1 }}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <BarLineChart
+              barData={basicBarData}
+              barKeys={["revenue"]}
+              indexBy="month"
+              lineData={basicLineData}
+              title="Revenue & Growth"
+              format={{ style: "currency", compact: true }}
+              lineFormat={{ style: "percent", precision: 1 }}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Stacked Bars + Line */}
-        <DocSection id="stacked-bars" title="Stacked Bars + Line">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Pass multiple <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">barKeys</code> to
-            stack (or group) bars. The line overlay uses the right Y-axis with its own scale.
-          </p>
-          <ComponentExample
-            code={`<BarLineChart
+      {/* Stacked Bars + Line */}
+      <DocSection id="stacked-bars" title="Stacked Bars + Line">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Pass multiple <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">barKeys</code> to
+          stack (or group) bars. The line overlay uses the right Y-axis with its own scale.
+        </p>
+        <ComponentExample
+          code={`<BarLineChart
   barData={monthlyData}
   barKeys={["revenue", "costs"]}
   indexBy="month"
@@ -139,32 +136,32 @@ export default function BarLineChartDocs() {
   groupMode="stacked"
   legend
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <BarLineChart
-                barData={stackedBarData}
-                barKeys={["revenue", "costs"]}
-                indexBy="month"
-                lineData={marginLineData}
-                title="Revenue, Costs & Margin"
-                format={{ style: "currency", compact: true }}
-                lineFormat={{ style: "percent", precision: 1 }}
-                groupMode="stacked"
-                legend={{ position: "bottom", toggleable: true }}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <BarLineChart
+              barData={stackedBarData}
+              barKeys={["revenue", "costs"]}
+              indexBy="month"
+              lineData={marginLineData}
+              title="Revenue, Costs & Margin"
+              format={{ style: "currency", compact: true }}
+              lineFormat={{ style: "percent", precision: 1 }}
+              groupMode="stacked"
+              legend={{ position: "bottom", toggleable: true }}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Dual-Axis Labels */}
-        <DocSection id="dual-axis" title="Dual-Axis Labels">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">yAxisLabel</code> and{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">rightAxisLabel</code> to
-            label each axis for clarity.
-          </p>
-          <CodeBlock
-            code={`<BarLineChart
+      {/* Dual-Axis Labels */}
+      <DocSection id="dual-axis" title="Dual-Axis Labels">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">yAxisLabel</code> and{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">rightAxisLabel</code> to
+          label each axis for clarity.
+        </p>
+        <CodeBlock
+          code={`<BarLineChart
   barData={data}
   barKeys={["revenue"]}
   indexBy="month"
@@ -174,98 +171,52 @@ export default function BarLineChartDocs() {
   format="currency"
   lineFormat="percent"
 />`}
-          />
-        </DocSection>
+        />
+      </DocSection>
 
-        {/* Data States */}
-        <DocSection id="data-states" title="Data States">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Every component handles loading, empty, and error states.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
-              <BarLineChart
-                barData={[]}
-                barKeys={["revenue"]}
-                indexBy="month"
-                lineData={[]}
-                title="Revenue"
-                loading
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
-              <BarLineChart
-                barData={[]}
-                barKeys={["revenue"]}
-                indexBy="month"
-                lineData={[]}
-                title="Revenue"
-                error={{ message: "Failed to load data" }}
-              />
-            </div>
+      {/* Data States */}
+      <DocSection id="data-states" title="Data States">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Every component handles loading, empty, and error states.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
+            <BarLineChart
+              barData={[]}
+              barKeys={["revenue"]}
+              indexBy="month"
+              lineData={[]}
+              title="Revenue"
+              loading
+            />
           </div>
-          <CodeBlock
-            code={`// Loading state
+          <div>
+            <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
+            <BarLineChart
+              barData={[]}
+              barKeys={["revenue"]}
+              indexBy="month"
+              lineData={[]}
+              title="Revenue"
+              error={{ message: "Failed to load data" }}
+            />
+          </div>
+        </div>
+        <CodeBlock
+          code={`// Loading state
 <BarLineChart barData={[]} barKeys={["revenue"]} indexBy="month" lineData={[]} loading />
 
 // Error state
 <BarLineChart barData={[]} barKeys={["revenue"]} indexBy="month" lineData={[]} error={{ message: "Failed" }} />`}
-            className="mt-4"
-          />
-        </DocSection>
+          className="mt-4"
+        />
+      </DocSection>
 
-        {/* Props Table */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Data Shape */}
-        {component.dataShape && (
-          <DocSection id="data-shape" title="Data Shape">
-            <CodeBlock code={component.dataShape} language="typescript" />
-          </DocSection>
-        )}
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-          </ul>
-        </DocSection>
-
-        {/* Playground */}
-        <DocSection id="playground" title="Playground">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Experiment with every prop interactively. Adjust the controls on the right to see the
-            component update in real time.
-          </p>
-          <div className="rounded-xl border border-[var(--card-border)]">
-            <BarLineChartPlayground />
-          </div>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter
+        component={component}
+        playground={<BarLineChartPlayground />}
+      />
+    </DocPageLayout>
   );
 }

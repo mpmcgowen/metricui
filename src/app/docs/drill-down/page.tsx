@@ -8,13 +8,12 @@ import { DataTable } from "@/components/tables/DataTable";
 import { MetricGrid } from "@/components/layout/MetricGrid";
 import { getComponent } from "@/lib/docs/component-data";
 import { ComponentHero } from "@/components/docs/ComponentHero";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 
 const component = getComponent("drill-down")!;
 
@@ -361,25 +360,23 @@ function TooltipHintDemo() {
 
 export default function DrillDownDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        {/* Overview */}
-        <DocSection id="overview" title="Overview">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            The DrillDown system is composed of three pieces: a{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">DrillDown.Root</code>{" "}
-            wrapper that provides context and renders the overlay portal, a{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">drillDown</code>{" "}
-            prop on chart components that wires up click-to-drill, and hooks ({" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useDrillDown</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useDrillDownAction</code>
-            ) for programmatic control.
-          </p>
-          <CodeBlock
-            code={`import { DrillDown, useDrillDownAction } from "metricui";
+      {/* Overview */}
+      <DocSection id="overview" title="Overview">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          The DrillDown system is composed of three pieces: a{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">DrillDown.Root</code>{" "}
+          wrapper that provides context and renders the overlay portal, a{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">drillDown</code>{" "}
+          prop on chart components that wires up click-to-drill, and hooks ({" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useDrillDown</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useDrillDownAction</code>
+          ) for programmatic control.
+        </p>
+        <CodeBlock
+          code={`import { DrillDown, useDrillDownAction } from "metricui";
 
 function Dashboard() {
   return (
@@ -394,19 +391,19 @@ function Dashboard() {
     </DrillDown.Root>
   );
 }`}
-          />
-        </DocSection>
+        />
+      </DocSection>
 
-        {/* Zero-Config DrillDown */}
-        <DocSection id="zero-config" title="Zero-Config DrillDown">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Pass{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">drillDown={"{true}"}</code>{" "}
-            to any chart. Clicking a bar, slice, or point opens a slide-over with an auto-generated detail
-            table showing filtered rows, summary KPIs, and search.
-          </p>
-          <ComponentExample
-            code={`<DrillDown.Root>
+      {/* Zero-Config DrillDown */}
+      <DocSection id="zero-config" title="Zero-Config DrillDown">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Pass{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">drillDown={"{true}"}</code>{" "}
+          to any chart. Clicking a bar, slice, or point opens a slide-over with an auto-generated detail
+          table showing filtered rows, summary KPIs, and search.
+        </p>
+        <ComponentExample
+          code={`<DrillDown.Root>
   <BarChart
     data={revenueByRegion}
     indexBy="region"
@@ -416,21 +413,21 @@ function Dashboard() {
     tooltipHint
   />
 </DrillDown.Root>`}
-          >
-            <ZeroConfigDemo />
-          </ComponentExample>
-        </DocSection>
+        >
+          <ZeroConfigDemo />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Custom Content */}
-        <DocSection id="custom-content" title="Custom Content">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Pass a function to{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">drillDown</code>{" "}
-            to render custom content. The function receives the click event and returns a ReactNode.
-            Use MetricGrid, KpiCards, DataTable, or any component inside.
-          </p>
-          <ComponentExample
-            code={`<DrillDown.Root>
+      {/* Custom Content */}
+      <DocSection id="custom-content" title="Custom Content">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Pass a function to{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">drillDown</code>{" "}
+          to render custom content. The function receives the click event and returns a ReactNode.
+          Use MetricGrid, KpiCards, DataTable, or any component inside.
+        </p>
+        <ComponentExample
+          code={`<DrillDown.Root>
   <BarChart
     data={revenueByRegion}
     indexBy="region"
@@ -462,21 +459,21 @@ function Dashboard() {
     tooltipHint="Click to view accounts"
   />
 </DrillDown.Root>`}
-          >
-            <CustomContentDemo />
-          </ComponentExample>
-        </DocSection>
+        >
+          <CustomContentDemo />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Modal Mode */}
-        <DocSection id="modal-mode" title="Modal Mode">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Set{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">drillDownMode=&quot;modal&quot;</code>{" "}
-            to open the drill content in a centered modal instead of the default slide-over panel.
-            The modal is capped at 85vh height and 3xl width.
-          </p>
-          <ComponentExample
-            code={`<DrillDown.Root>
+      {/* Modal Mode */}
+      <DocSection id="modal-mode" title="Modal Mode">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Set{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">drillDownMode=&quot;modal&quot;</code>{" "}
+          to open the drill content in a centered modal instead of the default slide-over panel.
+          The modal is capped at 85vh height and 3xl width.
+        </p>
+        <ComponentExample
+          code={`<DrillDown.Root>
   <BarChart
     data={revenueByRegion}
     indexBy="region"
@@ -486,20 +483,20 @@ function Dashboard() {
     tooltipHint
   />
 </DrillDown.Root>`}
-          >
-            <ModalModeDemo />
-          </ComponentExample>
-        </DocSection>
+        >
+          <ModalModeDemo />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Nested Drills */}
-        <DocSection id="nested-drills" title="Nested Drills">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Drill levels stack up to 4 deep. Inside drill content, use{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useDrillDownAction()</code>{" "}
-            to open sub-drills. Breadcrumbs appear automatically for navigation, and Escape goes back one level.
-          </p>
-          <ComponentExample
-            code={`function NestedDrill() {
+      {/* Nested Drills */}
+      <DocSection id="nested-drills" title="Nested Drills">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Drill levels stack up to 4 deep. Inside drill content, use{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useDrillDownAction()</code>{" "}
+          to open sub-drills. Breadcrumbs appear automatically for navigation, and Escape goes back one level.
+        </p>
+        <ComponentExample
+          code={`function NestedDrill() {
   const openDrill = useDrillDownAction();
 
   return (
@@ -532,24 +529,24 @@ function Dashboard() {
     />
   );
 }`}
-          >
-            <NestedDrillWrapper />
-          </ComponentExample>
-        </DocSection>
+        >
+          <NestedDrillWrapper />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Reactive Content (renderContent) */}
-        <DocSection id="render-content" title="Reactive Content (renderContent)">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">DrillDown.Root</code>{" "}
-            accepts a{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">renderContent</code>{" "}
-            prop — a function called on every render with the active trigger. This is useful when the drill
-            content should react to live data changes (e.g., real-time dashboards). Return{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--muted)]">null</code>{" "}
-            to fall through to the stored content.
-          </p>
-          <ComponentExample
-            code={`<DrillDown.Root
+      {/* Reactive Content (renderContent) */}
+      <DocSection id="render-content" title="Reactive Content (renderContent)">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">DrillDown.Root</code>{" "}
+          accepts a{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">renderContent</code>{" "}
+          prop — a function called on every render with the active trigger. This is useful when the drill
+          content should react to live data changes (e.g., real-time dashboards). Return{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--muted)]">null</code>{" "}
+          to fall through to the stored content.
+        </p>
+        <ComponentExample
+          code={`<DrillDown.Root
   renderContent={(trigger) => {
     const region = String(trigger.value);
     const regionAccounts = accounts.filter((a) => a.region === region);
@@ -571,44 +568,44 @@ function Dashboard() {
     tooltipHint
   />
 </DrillDown.Root>`}
-          >
-            <RenderContentDemo />
-          </ComponentExample>
-        </DocSection>
+        >
+          <RenderContentDemo />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Hooks */}
-        <DocSection id="hooks" title="Hooks">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Two hooks provide full programmatic control over the drill-down system.
-          </p>
+      {/* Hooks */}
+      <DocSection id="hooks" title="Hooks">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Two hooks provide full programmatic control over the drill-down system.
+        </p>
 
-          <div className="mb-6 space-y-4">
-            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
-              <h4 className="mb-1 font-[family-name:var(--font-mono)] text-[13px] font-semibold text-[var(--accent)]">
-                useDrillDownAction()
-              </h4>
-              <p className="text-[14px] leading-relaxed text-[var(--muted)]">
-                Returns an{" "}
-                <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">openDrill(trigger, content)</code>{" "}
-                function. Use it in click handlers, buttons, or any event to imperatively open a drill level.
-              </p>
-            </div>
-            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
-              <h4 className="mb-1 font-[family-name:var(--font-mono)] text-[13px] font-semibold text-[var(--accent)]">
-                useDrillDown()
-              </h4>
-              <p className="text-[14px] leading-relaxed text-[var(--muted)]">
-                Returns the full drill-down state:{" "}
-                <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--muted)]">
-                  {"{ isOpen, depth, breadcrumbs, back, close, goTo, open, activeContent, activeTrigger }"}
-                </code>.
-                Use it to build custom navigation, conditionally render UI based on drill state, or close drills programmatically.
-              </p>
-            </div>
+        <div className="mb-6 space-y-4">
+          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
+            <h4 className="mb-1 font-[family-name:var(--font-mono)] text-[13px] font-semibold text-[var(--accent)]">
+              useDrillDownAction()
+            </h4>
+            <p className="text-[14px] leading-relaxed text-[var(--muted)]">
+              Returns an{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">openDrill(trigger, content)</code>{" "}
+              function. Use it in click handlers, buttons, or any event to imperatively open a drill level.
+            </p>
           </div>
+          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
+            <h4 className="mb-1 font-[family-name:var(--font-mono)] text-[13px] font-semibold text-[var(--accent)]">
+              useDrillDown()
+            </h4>
+            <p className="text-[14px] leading-relaxed text-[var(--muted)]">
+              Returns the full drill-down state:{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--muted)]">
+                {"{ isOpen, depth, breadcrumbs, back, close, goTo, open, activeContent, activeTrigger }"}
+              </code>.
+              Use it to build custom navigation, conditionally render UI based on drill state, or close drills programmatically.
+            </p>
+          </div>
+        </div>
 
-          <ComponentExample
-            code={`import { useDrillDown, useDrillDownAction } from "metricui";
+        <ComponentExample
+          code={`import { useDrillDown, useDrillDownAction } from "metricui";
 
 function MyComponent() {
   const drill = useDrillDown();
@@ -631,67 +628,32 @@ function MyComponent() {
     </div>
   );
 }`}
-          >
-            <HooksDemo />
-          </ComponentExample>
-        </DocSection>
+        >
+          <HooksDemo />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Tooltip Hints */}
-        <DocSection id="tooltip-hints" title="Tooltip Hints">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            The{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">tooltipHint</code>{" "}
-            prop adds an action hint to chart tooltips so users know they can click to drill.
-            Pass <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--muted)]">true</code> for
-            the default &quot;Click to drill down&quot; text, or pass a custom string.
-          </p>
-          <ComponentExample
-            code={`{/* Default hint */}
+      {/* Tooltip Hints */}
+      <DocSection id="tooltip-hints" title="Tooltip Hints">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          The{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">tooltipHint</code>{" "}
+          prop adds an action hint to chart tooltips so users know they can click to drill.
+          Pass <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--muted)]">true</code> for
+          the default &quot;Click to drill down&quot; text, or pass a custom string.
+        </p>
+        <ComponentExample
+          code={`{/* Default hint */}
 <BarChart drillDown tooltipHint />
 
 {/* Custom hint text */}
 <BarChart drillDown tooltipHint="Click to see breakdown" />`}
-          >
-            <TooltipHintDemo />
-          </ComponentExample>
-        </DocSection>
+        >
+          <TooltipHintDemo />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Props Table */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
-            </li>
-          </ul>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter component={component} />
+    </DocPageLayout>
   );
 }

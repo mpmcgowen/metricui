@@ -5,10 +5,9 @@ import { getComponent } from "@/lib/docs/component-data";
 import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 
 const component = getComponent("sankey")!;
 
@@ -83,26 +82,25 @@ const simpleFlow = {
 
 export default function SankeyDocs() {
   return (
-    <div className="flex">
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Use Sankey for flow analysis — traffic sources to conversions, budget allocation,
-          user journey paths, energy distribution. For sequential stage conversion, use{" "}
-          <a href="/docs/funnel" className="font-medium text-[var(--accent)] hover:underline">
-            Funnel
-          </a>
-          ; for hierarchical part-to-whole, use{" "}
-          <a href="/docs/treemap" className="font-medium text-[var(--accent)] hover:underline">
-            Treemap
-          </a>.
-        </p>
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Use Sankey for flow analysis — traffic sources to conversions, budget allocation,
+        user journey paths, energy distribution. For sequential stage conversion, use{" "}
+        <a href="/docs/funnel" className="font-medium text-[var(--accent)] hover:underline">
+          Funnel
+        </a>
+        ; for hierarchical part-to-whole, use{" "}
+        <a href="/docs/treemap" className="font-medium text-[var(--accent)] hover:underline">
+          Treemap
+        </a>.
+      </p>
 
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <ComponentExample
-            code={`<Sankey
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <ComponentExample
+          code={`<Sankey
   data={{
     nodes: [
       { id: "Organic Search" },
@@ -124,54 +122,54 @@ export default function SankeyDocs() {
   format="number"
   height={400}
 />`}
-          >
-            <div className="w-full">
-              <Sankey
-                data={trafficFlow}
-                title="Traffic Flow: Source to Conversion"
-                format="number"
-                height={400}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full">
+            <Sankey
+              data={trafficFlow}
+              title="Traffic Flow: Source to Conversion"
+              format="number"
+              height={400}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Custom Node Colors */}
-        <DocSection id="custom-nodes" title="Custom Node Colors">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Pass a <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">colors</code> array
-            to control node coloring. Colors are assigned in order of node appearance.
-          </p>
-          <ComponentExample
-            code={`<Sankey
+      {/* Custom Node Colors */}
+      <DocSection id="custom-nodes" title="Custom Node Colors">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Pass a <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">colors</code> array
+          to control node coloring. Colors are assigned in order of node appearance.
+        </p>
+        <ComponentExample
+          code={`<Sankey
   data={simpleFlow}
   title="Acquisition Funnel"
   format="number"
   colors={["#6366F1", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444"]}
   height={300}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Sankey
-                data={simpleFlow}
-                title="Acquisition Funnel"
-                format="number"
-                colors={["#6366F1", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444"]}
-                height={300}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Sankey
+              data={simpleFlow}
+              title="Acquisition Funnel"
+              format="number"
+              colors={["#6366F1", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444"]}
+              height={300}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Link Opacity */}
-        <DocSection id="link-opacity" title="Link Opacity">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Adjust <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">linkOpacity</code> to
-            control link transparency. Lower values help when many links overlap; higher values make
-            individual flows easier to trace.
-          </p>
-          <ComponentExample
-            code={`<Sankey
+      {/* Link Opacity */}
+      <DocSection id="link-opacity" title="Link Opacity">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Adjust <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">linkOpacity</code> to
+          control link transparency. Lower values help when many links overlap; higher values make
+          individual flows easier to trace.
+        </p>
+        <ComponentExample
+          code={`<Sankey
   data={simpleFlow}
   title="High Contrast Links"
   format="number"
@@ -180,56 +178,22 @@ export default function SankeyDocs() {
   nodePadding={16}
   height={300}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Sankey
-                data={simpleFlow}
-                title="High Contrast Links"
-                format="number"
-                linkOpacity={0.7}
-                nodeThickness={24}
-                nodePadding={16}
-                height={300}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Sankey
+              data={simpleFlow}
+              title="High Contrast Links"
+              format="number"
+              linkOpacity={0.7}
+              nodeThickness={24}
+              nodePadding={16}
+              height={300}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Props */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI-powered insights. Pass a string describing what this component shows.
-            </li>
-          </ul>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter component={component} />
+    </DocPageLayout>
   );
 }

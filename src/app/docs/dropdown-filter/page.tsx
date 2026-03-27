@@ -6,13 +6,12 @@ import type { DropdownOption } from "@/components/filters/DropdownFilter";
 import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
 import { getComponent } from "@/lib/docs/component-data";
 import { ComponentHero } from "@/components/docs/ComponentHero";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 
 const component = getComponent("dropdown-filter")!;
 
@@ -205,30 +204,28 @@ function ToggleControl({ label, value, onChange }: { label: string; value: boole
 
 export default function DropdownFilterDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        {/* When to use */}
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Use DropdownFilter to let users filter by a dimension — region, plan, status, etc.
-          It&apos;s <strong>pure UI</strong> — it captures the user&apos;s selection and exposes it
-          via context, but never touches, fetches, or filters your data. You read the
-          active selection and pass it to your own data-fetching logic. See the{" "}
-          <a href="/docs/guides/filtering" className="font-medium text-[var(--accent)] hover:underline">
-            Filtering guide
-          </a>{" "}
-          for the full architecture.
+      {/* When to use */}
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Use DropdownFilter to let users filter by a dimension — region, plan, status, etc.
+        It&apos;s <strong>pure UI</strong> — it captures the user&apos;s selection and exposes it
+        via context, but never touches, fetches, or filters your data. You read the
+        active selection and pass it to your own data-fetching logic. See the{" "}
+        <a href="/docs/guides/filtering" className="font-medium text-[var(--accent)] hover:underline">
+          Filtering guide
+        </a>{" "}
+        for the full architecture.
+      </p>
+
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          A simple single-select dropdown. Click an option to select it — the dropdown closes automatically.
         </p>
-
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            A simple single-select dropdown. Click an option to select it — the dropdown closes automatically.
-          </p>
-          <ComponentExample
-            code={`<DropdownFilter
+        <ComponentExample
+          code={`<DropdownFilter
   label="Region"
   options={[
     { value: "us", label: "US" },
@@ -237,20 +234,20 @@ export default function DropdownFilterDocs() {
     { value: "latam", label: "LATAM" },
   ]}
 />`}
-          >
-            <DropdownFilter label="Region" options={regionOptions} />
-          </ComponentExample>
-        </DocSection>
+        >
+          <DropdownFilter label="Region" options={regionOptions} />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Multi-Select */}
-        <DocSection id="multi-select" title="Multi-Select">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Enable <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">multiple</code> to
-            allow selecting more than one option. The dropdown stays open while selecting. Count badges show
-            how many items belong to each option.
-          </p>
-          <ComponentExample
-            code={`<DropdownFilter
+      {/* Multi-Select */}
+      <DocSection id="multi-select" title="Multi-Select">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Enable <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">multiple</code> to
+          allow selecting more than one option. The dropdown stays open while selecting. Count badges show
+          how many items belong to each option.
+        </p>
+        <ComponentExample
+          code={`<DropdownFilter
   label="Plan"
   options={[
     { value: "free", label: "Free", count: 8421 },
@@ -261,37 +258,37 @@ export default function DropdownFilterDocs() {
   multiple
   showAll
 />`}
-          >
-            <DropdownFilter label="Plan" options={planOptions} multiple showAll />
-          </ComponentExample>
-        </DocSection>
+        >
+          <DropdownFilter label="Plan" options={planOptions} multiple showAll />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Searchable */}
-        <DocSection id="searchable" title="Searchable">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Search is enabled automatically when there are more than 8 options, or you can force it
-            with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">searchable</code>.
-            The search input filters by label and value.
-          </p>
-          <ComponentExample
-            code={`<DropdownFilter
+      {/* Searchable */}
+      <DocSection id="searchable" title="Searchable">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Search is enabled automatically when there are more than 8 options, or you can force it
+          with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">searchable</code>.
+          The search input filters by label and value.
+        </p>
+        <ComponentExample
+          code={`<DropdownFilter
   label="Country"
   options={countries}  // 24 countries
   searchable
 />`}
-          >
-            <DropdownFilter label="Country" options={countryOptions} searchable />
-          </ComponentExample>
-        </DocSection>
+        >
+          <DropdownFilter label="Country" options={countryOptions} searchable />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Grouped Options */}
-        <DocSection id="grouped" title="Grouped Options">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Set a <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">group</code> property
-            on each option to organize them under section headers.
-          </p>
-          <ComponentExample
-            code={`<DropdownFilter
+      {/* Grouped Options */}
+      <DocSection id="grouped" title="Grouped Options">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Set a <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">group</code> property
+          on each option to organize them under section headers.
+        </p>
+        <ComponentExample
+          code={`<DropdownFilter
   label="Region"
   options={[
     { value: "us", label: "United States", group: "Americas" },
@@ -304,20 +301,20 @@ export default function DropdownFilterDocs() {
   multiple
   searchable
 />`}
-          >
-            <DropdownFilter label="Region" options={groupedRegions} multiple searchable />
-          </ComponentExample>
-        </DocSection>
+        >
+          <DropdownFilter label="Region" options={groupedRegions} multiple searchable />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Connected (FilterProvider) */}
-        <DocSection id="connected" title="Connected (FilterProvider)">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            When you set the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">field</code> prop,
-            DropdownFilter reads and writes to FilterContext dimensions. Any component can read the active value via{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useMetricFilters().dimensions[field]</code>.
-          </p>
-          <ComponentExample
-            code={`import { FilterProvider, useMetricFilters, DropdownFilter } from "metricui";
+      {/* Connected (FilterProvider) */}
+      <DocSection id="connected" title="Connected (FilterProvider)">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          When you set the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">field</code> prop,
+          DropdownFilter reads and writes to FilterContext dimensions. Any component can read the active value via{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useMetricFilters().dimensions[field]</code>.
+        </p>
+        <ComponentExample
+          code={`import { FilterProvider, useMetricFilters, DropdownFilter } from "metricui";
 
 function Dashboard() {
   return (
@@ -340,29 +337,29 @@ function MyContent() {
   // Use regions to fetch/filter data
   return <div>Regions: {regions.join(", ")}</div>;
 }`}
-          >
-            <FilterProvider>
-              <ConnectedInner />
-            </FilterProvider>
-          </ComponentExample>
-        </DocSection>
+        >
+          <FilterProvider>
+            <ConnectedInner />
+          </FilterProvider>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Interactive Controls */}
-        <DocSection id="interactive" title="Interactive Controls">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Experiment with multiple, searchable, showAll, and dense toggles.
-          </p>
-          <InteractivePlayground />
-        </DocSection>
+      {/* Interactive Controls */}
+      <DocSection id="interactive" title="Interactive Controls">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Experiment with multiple, searchable, showAll, and dense toggles.
+        </p>
+        <InteractivePlayground />
+      </DocSection>
 
-        {/* Standalone (onChange) */}
-        <DocSection id="standalone" title="Standalone (onChange)">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">onChange</code> without
-            a FilterProvider for simple use cases where you just need the selected value.
-          </p>
-          <ComponentExample
-            code={`<DropdownFilter
+      {/* Standalone (onChange) */}
+      <DocSection id="standalone" title="Standalone (onChange)">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">onChange</code> without
+          a FilterProvider for simple use cases where you just need the selected value.
+        </p>
+        <ComponentExample
+          code={`<DropdownFilter
   label="Region"
   options={regions}
   onChange={(value) => {
@@ -370,47 +367,12 @@ function MyContent() {
     // Fetch data for this selection
   }}
 />`}
-          >
-            <StandaloneExample />
-          </ComponentExample>
-        </DocSection>
+        >
+          <StandaloneExample />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Props Table */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
-            </li>
-          </ul>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter component={component} />
+    </DocPageLayout>
   );
 }

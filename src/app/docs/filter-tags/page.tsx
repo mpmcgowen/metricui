@@ -8,13 +8,11 @@ import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
 import { getComponent } from "@/lib/docs/component-data";
 import { ComponentHero } from "@/components/docs/ComponentHero";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
-import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 
 const component = getComponent("filter-tags")!;
 
@@ -207,27 +205,25 @@ function ToggleControl({ label, value, onChange }: { label: string; value: boole
 
 export default function FilterTagsDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        {/* When to use */}
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Drop <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{`<FilterTags />`}</code> anywhere
-          inside a <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">FilterProvider</code> and it
-          automatically shows chips for every active filter. No props required &mdash; it reads from FilterContext.
-          Users can dismiss individual filters or clear all at once.
+      {/* When to use */}
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Drop <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{`<FilterTags />`}</code> anywhere
+        inside a <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">FilterProvider</code> and it
+        automatically shows chips for every active filter. No props required &mdash; it reads from FilterContext.
+        Users can dismiss individual filters or clear all at once.
+      </p>
+
+      {/* Full Filter Setup */}
+      <DocSection id="full-filter-setup" title="Full Filter Setup">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          A complete filter bar with PeriodSelector, SegmentToggle, DropdownFilter, and FilterTags.
+          Interact with the controls above &mdash; tags appear and disappear automatically.
         </p>
-
-        {/* Full Filter Setup */}
-        <DocSection id="full-filter-setup" title="Full Filter Setup">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            A complete filter bar with PeriodSelector, SegmentToggle, DropdownFilter, and FilterTags.
-            Interact with the controls above &mdash; tags appear and disappear automatically.
-          </p>
-          <ComponentExample
-            code={`import {
+        <ComponentExample
+          code={`import {
   FilterProvider,
   PeriodSelector,
   DropdownFilter,
@@ -248,85 +244,50 @@ function Dashboard() {
     </FilterProvider>
   );
 }`}
-          >
-            <FullFilterSetup />
-          </ComponentExample>
-        </DocSection>
+        >
+          <FullFilterSetup />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Interactive Controls */}
-        <DocSection id="interactive" title="Interactive Controls">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Experiment with dismissible, clearAll, maxVisible, showPeriod, and showComparison toggles.
-            Select some regions and plans in the dropdowns to see tags appear.
-          </p>
-          <InteractivePlayground />
-        </DocSection>
+      {/* Interactive Controls */}
+      <DocSection id="interactive" title="Interactive Controls">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Experiment with dismissible, clearAll, maxVisible, showPeriod, and showComparison toggles.
+          Select some regions and plans in the dropdowns to see tags appear.
+        </p>
+        <InteractivePlayground />
+      </DocSection>
 
-        {/* Custom Labels */}
-        <DocSection id="custom-labels" title="Custom Labels">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Override the default field-name labels with custom display names using the{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">labels</code> prop.
-          </p>
-          <ComponentExample
-            code={`<FilterTags labels={{ region: "Market", plan: "Tier" }} />`}
-          >
-            <CustomLabelsExample />
-          </ComponentExample>
-        </DocSection>
+      {/* Custom Labels */}
+      <DocSection id="custom-labels" title="Custom Labels">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Override the default field-name labels with custom display names using the{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">labels</code> prop.
+        </p>
+        <ComponentExample
+          code={`<FilterTags labels={{ region: "Market", plan: "Tier" }} />`}
+        >
+          <CustomLabelsExample />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Exclude */}
-        <DocSection id="exclude" title="Exclude Fields">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Hide specific tags with the{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">exclude</code> prop.
-            Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">&quot;_period&quot;</code> for
-            the period tag and <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">&quot;_comparison&quot;</code> for
-            the comparison tag.
-          </p>
-          <ComponentExample
-            code={`<FilterTags exclude={["_period", "plan"]} />`}
-          >
-            <ExcludeExample />
-          </ComponentExample>
-        </DocSection>
+      {/* Exclude */}
+      <DocSection id="exclude" title="Exclude Fields">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Hide specific tags with the{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">exclude</code> prop.
+          Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">&quot;_period&quot;</code> for
+          the period tag and <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">&quot;_comparison&quot;</code> for
+          the comparison tag.
+        </p>
+        <ComponentExample
+          code={`<FilterTags exclude={["_period", "plan"]} />`}
+        >
+          <ExcludeExample />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Props Table */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
-            </li>
-          </ul>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter component={component} />
+    </DocPageLayout>
   );
 }

@@ -5,10 +5,9 @@ import { getComponent } from "@/lib/docs/component-data";
 import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 
 const component = getComponent("scatter-plot")!;
 
@@ -63,28 +62,26 @@ const multiSeriesData = [
 
 export default function ScatterPlotDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Use ScatterPlot to explore correlations — MRR vs seats, revenue vs headcount, spend vs
-          conversion rate. Supports multiple series, node sizing, reference lines, cross-filtering,
-          and drill-down. For categorical comparison use{" "}
-          <a href="/docs/bar-chart" className="font-medium text-[var(--accent)] hover:underline">
-            BarChart
-          </a>
-          ; for time-series trends use{" "}
-          <a href="/docs/line-chart" className="font-medium text-[var(--accent)] hover:underline">
-            LineChart
-          </a>.
-        </p>
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Use ScatterPlot to explore correlations — MRR vs seats, revenue vs headcount, spend vs
+        conversion rate. Supports multiple series, node sizing, reference lines, cross-filtering,
+        and drill-down. For categorical comparison use{" "}
+        <a href="/docs/bar-chart" className="font-medium text-[var(--accent)] hover:underline">
+          BarChart
+        </a>
+        ; for time-series trends use{" "}
+        <a href="/docs/line-chart" className="font-medium text-[var(--accent)] hover:underline">
+          LineChart
+        </a>.
+      </p>
 
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <ComponentExample
-            code={`<ScatterPlot
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <ComponentExample
+          code={`<ScatterPlot
   data={accountData}
   index="mrr"
   categories={["seats"]}
@@ -93,29 +90,29 @@ export default function ScatterPlotDocs() {
   yFormat="number"
   height={300}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <ScatterPlot
-                data={accountData}
-                index="mrr"
-                categories={["seats"]}
-                title="MRR vs Seats"
-                xFormat="currency"
-                yFormat="number"
-                height={300}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <ScatterPlot
+              data={accountData}
+              index="mrr"
+              categories={["seats"]}
+              title="MRR vs Seats"
+              xFormat="currency"
+              yFormat="number"
+              height={300}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Node Sizing */}
-        <DocSection id="node-sizing" title="Node Sizing">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Use the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">nodeSize</code> prop
-            to control dot size in pixels.
-          </p>
-          <ComponentExample
-            code={`<ScatterPlot
+      {/* Node Sizing */}
+      <DocSection id="node-sizing" title="Node Sizing">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Use the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">nodeSize</code> prop
+          to control dot size in pixels.
+        </p>
+        <ComponentExample
+          code={`<ScatterPlot
   data={accountData}
   index="mrr"
   categories={["seats"]}
@@ -123,29 +120,29 @@ export default function ScatterPlotDocs() {
   nodeSize={14}
   height={300}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <ScatterPlot
-                data={accountData}
-                index="mrr"
-                categories={["seats"]}
-                title="Large Nodes"
-                nodeSize={14}
-                height={300}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <ScatterPlot
+              data={accountData}
+              index="mrr"
+              categories={["seats"]}
+              title="Large Nodes"
+              nodeSize={14}
+              height={300}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Multiple Series */}
-        <DocSection id="multiple-series" title="Multiple Series">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Pass Nivo-native series data with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">id</code> and{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">data</code> arrays to
-            render multiple colored series with a legend.
-          </p>
-          <ComponentExample
-            code={`<ScatterPlot
+      {/* Multiple Series */}
+      <DocSection id="multiple-series" title="Multiple Series">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Pass Nivo-native series data with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">id</code> and{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">data</code> arrays to
+          render multiple colored series with a legend.
+        </p>
+        <ComponentExample
+          code={`<ScatterPlot
   data={[
     { id: "Enterprise", data: [{ x: 120, y: 22000 }, ...] },
     { id: "Mid-Market", data: [{ x: 45, y: 8200 }, ...] },
@@ -156,26 +153,26 @@ export default function ScatterPlotDocs() {
   yFormat="currency"
   height={350}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <ScatterPlot
-                data={multiSeriesData}
-                title="Accounts by Segment"
-                xFormat="number"
-                yFormat="currency"
-                height={350}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <ScatterPlot
+              data={multiSeriesData}
+              title="Accounts by Segment"
+              xFormat="number"
+              yFormat="currency"
+              height={350}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Reference Lines */}
-        <DocSection id="reference-lines" title="Reference Lines">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Add horizontal or vertical reference lines for targets or thresholds.
-          </p>
-          <ComponentExample
-            code={`<ScatterPlot
+      {/* Reference Lines */}
+      <DocSection id="reference-lines" title="Reference Lines">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Add horizontal or vertical reference lines for targets or thresholds.
+        </p>
+        <ComponentExample
+          code={`<ScatterPlot
   data={accountData}
   index="mrr"
   categories={["seats"]}
@@ -186,59 +183,24 @@ export default function ScatterPlotDocs() {
     { axis: "x", value: 15000, label: "Target MRR", color: "#EF4444", style: "dashed" },
   ]}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <ScatterPlot
-                data={accountData}
-                index="mrr"
-                categories={["seats"]}
-                title="MRR vs Seats — with Target"
-                xFormat="currency"
-                height={300}
-                referenceLines={[
-                  { axis: "x", value: 15000, label: "Target MRR", color: "#EF4444", style: "dashed" },
-                ]}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <ScatterPlot
+              data={accountData}
+              index="mrr"
+              categories={["seats"]}
+              title="MRR vs Seats — with Target"
+              xFormat="currency"
+              height={300}
+              referenceLines={[
+                { axis: "x", value: 15000, label: "Target MRR", color: "#EF4444", style: "dashed" },
+              ]}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Props */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI-powered insights. Pass a string describing what this component shows.
-            </li>
-          </ul>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter component={component} />
+    </DocPageLayout>
   );
 }

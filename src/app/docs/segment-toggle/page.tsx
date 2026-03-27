@@ -8,10 +8,9 @@ import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 import { Activity, TrendingUp, BarChart3 } from "lucide-react";
 
 const component = getComponent("segment-toggle")!;
@@ -127,181 +126,179 @@ function ToggleControl({ label, value, onChange }: { label: string; value: boole
 
 export default function SegmentToggleDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        {/* When to use */}
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Use SegmentToggle to let users switch between views, granularities, or filter
-          dimensions. It writes to FilterContext via the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">field</code> prop,
-          or fires <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">onChange</code> for
-          standalone usage. See the{" "}
-          <a href="/docs/guides/filtering" className="font-medium text-[var(--accent)] hover:underline">
-            Filtering guide
-          </a>{" "}
-          for the full architecture.
+      {/* When to use */}
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Use SegmentToggle to let users switch between views, granularities, or filter
+        dimensions. It writes to FilterContext via the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">field</code> prop,
+        or fires <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">onChange</code> for
+        standalone usage. See the{" "}
+        <a href="/docs/guides/filtering" className="font-medium text-[var(--accent)] hover:underline">
+          Filtering guide
+        </a>{" "}
+        for the full architecture.
+      </p>
+
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <ComponentExample
+          code={`<SegmentToggle options={["Daily", "Weekly", "Monthly"]} />`}
+        >
+          <SegmentToggle options={["Daily", "Weekly", "Monthly"]} />
+        </ComponentExample>
+      </DocSection>
+
+      {/* With Icons */}
+      <DocSection id="with-icons" title="With Icons">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Each segment option can include an icon rendered before the label.
         </p>
-
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <ComponentExample
-            code={`<SegmentToggle options={["Daily", "Weekly", "Monthly"]} />`}
-          >
-            <SegmentToggle options={["Daily", "Weekly", "Monthly"]} />
-          </ComponentExample>
-        </DocSection>
-
-        {/* With Icons */}
-        <DocSection id="with-icons" title="With Icons">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Each segment option can include an icon rendered before the label.
-          </p>
-          <ComponentExample
-            code={`<SegmentToggle options={[
+        <ComponentExample
+          code={`<SegmentToggle options={[
   { value: "activity", label: "Activity", icon: <Activity className="h-3.5 w-3.5" /> },
   { value: "trends", label: "Trends", icon: <TrendingUp className="h-3.5 w-3.5" /> },
   { value: "stats", label: "Stats", icon: <BarChart3 className="h-3.5 w-3.5" /> },
 ]} />`}
-          >
-            <SegmentToggle
-              options={[
-                { value: "activity", label: "Activity", icon: <Activity className="h-3.5 w-3.5" /> },
-                { value: "trends", label: "Trends", icon: <TrendingUp className="h-3.5 w-3.5" /> },
-                { value: "stats", label: "Stats", icon: <BarChart3 className="h-3.5 w-3.5" /> },
-              ]}
-            />
-          </ComponentExample>
-        </DocSection>
+        >
+          <SegmentToggle
+            options={[
+              { value: "activity", label: "Activity", icon: <Activity className="h-3.5 w-3.5" /> },
+              { value: "trends", label: "Trends", icon: <TrendingUp className="h-3.5 w-3.5" /> },
+              { value: "stats", label: "Stats", icon: <BarChart3 className="h-3.5 w-3.5" /> },
+            ]}
+          />
+        </ComponentExample>
+      </DocSection>
 
-        {/* With Badge Counts */}
-        <DocSection id="with-badges" title="With Badge Counts">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Show formatted badge counts on each segment. Numbers pass through the MetricUI format engine.
-          </p>
-          <ComponentExample
-            code={`<SegmentToggle options={[
+      {/* With Badge Counts */}
+      <DocSection id="with-badges" title="With Badge Counts">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Show formatted badge counts on each segment. Numbers pass through the MetricUI format engine.
+        </p>
+        <ComponentExample
+          code={`<SegmentToggle options={[
   { value: "active", label: "Active", badge: 1234 },
   { value: "inactive", label: "Inactive", badge: 56 },
   { value: "archived", label: "Archived", badge: 8 },
 ]} />`}
-          >
-            <SegmentToggle
-              options={[
-                { value: "active", label: "Active", badge: 1234 },
-                { value: "inactive", label: "Inactive", badge: 56 },
-                { value: "archived", label: "Archived", badge: 8 },
-              ]}
-            />
-          </ComponentExample>
-        </DocSection>
+        >
+          <SegmentToggle
+            options={[
+              { value: "active", label: "Active", badge: 1234 },
+              { value: "inactive", label: "Inactive", badge: 56 },
+              { value: "archived", label: "Archived", badge: 8 },
+            ]}
+          />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Multi-Select Mode */}
-        <DocSection id="multi-select" title="Multi-Select Mode">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Enable <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">multiple</code> to
-            allow selecting more than one segment. At least one segment always stays selected.
-          </p>
-          <ComponentExample
-            code={`<SegmentToggle
+      {/* Multi-Select Mode */}
+      <DocSection id="multi-select" title="Multi-Select Mode">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Enable <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">multiple</code> to
+          allow selecting more than one segment. At least one segment always stays selected.
+        </p>
+        <ComponentExample
+          code={`<SegmentToggle
   options={["Frontend", "Backend", "Mobile", "DevOps"]}
   multiple
   defaultValue={["Frontend", "Backend"]}
 />`}
-          >
-            <SegmentToggle
-              options={["Frontend", "Backend", "Mobile", "DevOps"]}
-              multiple
-              defaultValue={["Frontend", "Backend"]}
-            />
-          </ComponentExample>
-        </DocSection>
+        >
+          <SegmentToggle
+            options={["Frontend", "Backend", "Mobile", "DevOps"]}
+            multiple
+            defaultValue={["Frontend", "Backend"]}
+          />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Size Variants */}
-        <DocSection id="sizes" title="Size Variants">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Three sizes: <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">sm</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">md</code> (default),{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">lg</code>.
-          </p>
-          <div className="space-y-4">
-            {(["sm", "md", "lg"] as const).map((s) => (
-              <div key={s}>
-                <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">{s}</p>
-                <SegmentToggle options={["Daily", "Weekly", "Monthly"]} size={s} />
-              </div>
-            ))}
-          </div>
-          <CodeBlock
-            code={`<SegmentToggle options={["Daily", "Weekly", "Monthly"]} size="sm" />
+      {/* Size Variants */}
+      <DocSection id="sizes" title="Size Variants">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Three sizes: <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">sm</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">md</code> (default),{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">lg</code>.
+        </p>
+        <div className="space-y-4">
+          {(["sm", "md", "lg"] as const).map((s) => (
+            <div key={s}>
+              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">{s}</p>
+              <SegmentToggle options={["Daily", "Weekly", "Monthly"]} size={s} />
+            </div>
+          ))}
+        </div>
+        <CodeBlock
+          code={`<SegmentToggle options={["Daily", "Weekly", "Monthly"]} size="sm" />
 <SegmentToggle options={["Daily", "Weekly", "Monthly"]} size="md" />
 <SegmentToggle options={["Daily", "Weekly", "Monthly"]} size="lg" />`}
-            className="mt-4"
-          />
-        </DocSection>
+          className="mt-4"
+        />
+      </DocSection>
 
-        {/* Full Width */}
-        <DocSection id="full-width" title="Full Width">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">fullWidth</code> to
-            stretch segments to fill the container.
-          </p>
-          <ComponentExample
-            code={`<SegmentToggle options={["Daily", "Weekly", "Monthly"]} fullWidth />`}
-          >
-            <div className="w-full max-w-xl">
-              <SegmentToggle options={["Daily", "Weekly", "Monthly"]} fullWidth />
-            </div>
-          </ComponentExample>
-        </DocSection>
+      {/* Full Width */}
+      <DocSection id="full-width" title="Full Width">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">fullWidth</code> to
+          stretch segments to fill the container.
+        </p>
+        <ComponentExample
+          code={`<SegmentToggle options={["Daily", "Weekly", "Monthly"]} fullWidth />`}
+        >
+          <div className="w-full max-w-xl">
+            <SegmentToggle options={["Daily", "Weekly", "Monthly"]} fullWidth />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Vertical */}
-        <DocSection id="vertical" title="Vertical Orientation">
-          <ComponentExample
-            code={`<SegmentToggle
+      {/* Vertical */}
+      <DocSection id="vertical" title="Vertical Orientation">
+        <ComponentExample
+          code={`<SegmentToggle
   options={["Overview", "Details", "Settings"]}
   orientation="vertical"
 />`}
-          >
-            <SegmentToggle
-              options={["Overview", "Details", "Settings"]}
-              orientation="vertical"
-            />
-          </ComponentExample>
-        </DocSection>
+        >
+          <SegmentToggle
+            options={["Overview", "Details", "Settings"]}
+            orientation="vertical"
+          />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Color-Coded */}
-        <DocSection id="color-coded" title="Color-Coded Segments">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Each segment can have its own color accent when active.
-          </p>
-          <ComponentExample
-            code={`<SegmentToggle options={[
+      {/* Color-Coded */}
+      <DocSection id="color-coded" title="Color-Coded Segments">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Each segment can have its own color accent when active.
+        </p>
+        <ComponentExample
+          code={`<SegmentToggle options={[
   { value: "success", label: "Healthy", color: "#10B981" },
   { value: "warning", label: "Warning", color: "#F59E0B" },
   { value: "error", label: "Critical", color: "#EF4444" },
 ]} />`}
-          >
-            <SegmentToggle
-              options={[
-                { value: "success", label: "Healthy", color: "#10B981" },
-                { value: "warning", label: "Warning", color: "#F59E0B" },
-                { value: "error", label: "Critical", color: "#EF4444" },
-              ]}
-            />
-          </ComponentExample>
-        </DocSection>
+        >
+          <SegmentToggle
+            options={[
+              { value: "success", label: "Healthy", color: "#10B981" },
+              { value: "warning", label: "Warning", color: "#F59E0B" },
+              { value: "error", label: "Critical", color: "#EF4444" },
+            ]}
+          />
+        </ComponentExample>
+      </DocSection>
 
-        {/* Connected (FilterProvider) */}
-        <DocSection id="connected" title="Connected (FilterProvider)">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            When you set the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">field</code> prop,
-            SegmentToggle reads and writes to FilterContext dimensions. Any component can read the active value via{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useMetricFilters().dimensions[field]</code>.
-          </p>
-          <ComponentExample
-            code={`import { FilterProvider, useMetricFilters, SegmentToggle } from "metricui";
+      {/* Connected (FilterProvider) */}
+      <DocSection id="connected" title="Connected (FilterProvider)">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          When you set the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">field</code> prop,
+          SegmentToggle reads and writes to FilterContext dimensions. Any component can read the active value via{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useMetricFilters().dimensions[field]</code>.
+        </p>
+        <ComponentExample
+          code={`import { FilterProvider, useMetricFilters, SegmentToggle } from "metricui";
 
 function Dashboard() {
   return (
@@ -318,57 +315,22 @@ function MyContent() {
   // Render content based on active segment
   return <div>Active: {view.join(", ")}</div>;
 }`}
-          >
-            <FilterProvider>
-              <ConnectedInner />
-            </FilterProvider>
-          </ComponentExample>
-        </DocSection>
+        >
+          <FilterProvider>
+            <ConnectedInner />
+          </FilterProvider>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Interactive Controls */}
-        <DocSection id="interactive" title="Interactive Controls">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Experiment with size, multiple, fullWidth, and orientation.
-          </p>
-          <InteractivePlayground />
-        </DocSection>
+      {/* Interactive Controls */}
+      <DocSection id="interactive" title="Interactive Controls">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Experiment with size, multiple, fullWidth, and orientation.
+        </p>
+        <InteractivePlayground />
+      </DocSection>
 
-        {/* Props Table */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
-            </li>
-          </ul>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter component={component} />
+    </DocPageLayout>
   );
 }

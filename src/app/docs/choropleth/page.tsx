@@ -6,13 +6,12 @@ import { worldFeatures } from "@/lib/geoFeatures";
 import { countries } from "@/data/world";
 import { getComponent } from "@/lib/docs/component-data";
 import { ComponentHero } from "@/components/docs/ComponentHero";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 import countries_lib from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
 countries_lib.registerLocale(enLocale);
@@ -94,47 +93,45 @@ export default function ChoroplethDocs() {
   );
 
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Use Choropleth for geographic data — revenue by country, user density by state,
-          support tickets by region. Pass GeoJSON features to control which map renders
-          (world, US states, EU countries, etc.). MetricUI bundles{" "}
-          <code className="font-[family-name:var(--font-mono)] text-[12px]">worldFeatures</code> out
-          of the box, or bring your own. For non-geographic heatmaps use{" "}
-          <a href="/docs/heatmap" className="font-medium text-[var(--accent)] hover:underline">
-            HeatMap
-          </a>
-          ; for hierarchical area use{" "}
-          <a href="/docs/treemap" className="font-medium text-[var(--accent)] hover:underline">
-            Treemap
-          </a>.
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Use Choropleth for geographic data — revenue by country, user density by state,
+        support tickets by region. Pass GeoJSON features to control which map renders
+        (world, US states, EU countries, etc.). MetricUI bundles{" "}
+        <code className="font-[family-name:var(--font-mono)] text-[12px]">worldFeatures</code> out
+        of the box, or bring your own. For non-geographic heatmaps use{" "}
+        <a href="/docs/heatmap" className="font-medium text-[var(--accent)] hover:underline">
+          HeatMap
+        </a>
+        ; for hierarchical area use{" "}
+        <a href="/docs/treemap" className="font-medium text-[var(--accent)] hover:underline">
+          Treemap
+        </a>.
+      </p>
+
+      {/* Overview */}
+      <DocSection id="overview" title="Overview">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          The Choropleth component wraps Nivo&apos;s <code className="font-[family-name:var(--font-mono)] text-[12px]">ResponsiveChoropleth</code> with
+          MetricUI&apos;s card shell, theming, format engine, cross-filtering, and drill-down. It accepts
+          two data formats: native <code className="font-[family-name:var(--font-mono)] text-[12px]">ChoroplethDatum[]</code> ({`{ id, value }`}) or
+          flat <code className="font-[family-name:var(--font-mono)] text-[12px]">DataRow[]</code> with configurable field names.
         </p>
+      </DocSection>
 
-        {/* Overview */}
-        <DocSection id="overview" title="Overview">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            The Choropleth component wraps Nivo&apos;s <code className="font-[family-name:var(--font-mono)] text-[12px]">ResponsiveChoropleth</code> with
-            MetricUI&apos;s card shell, theming, format engine, cross-filtering, and drill-down. It accepts
-            two data formats: native <code className="font-[family-name:var(--font-mono)] text-[12px]">ChoroplethDatum[]</code> ({`{ id, value }`}) or
-            flat <code className="font-[family-name:var(--font-mono)] text-[12px]">DataRow[]</code> with configurable field names.
-          </p>
-        </DocSection>
-
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Import <code className="font-[family-name:var(--font-mono)] text-[12px]">worldFeatures</code> from
-            MetricUI and pass it alongside your region data. Feature IDs are standard ISO 3166-1
-            alpha-3 codes (e.g. <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;USA&quot;</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;GBR&quot;</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;HND&quot;</code>).
-          </p>
-          <ComponentExample
-            code={`import { Choropleth, worldFeatures } from "metricui";
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Import <code className="font-[family-name:var(--font-mono)] text-[12px]">worldFeatures</code> from
+          MetricUI and pass it alongside your region data. Feature IDs are standard ISO 3166-1
+          alpha-3 codes (e.g. <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;USA&quot;</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;GBR&quot;</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;HND&quot;</code>).
+        </p>
+        <ComponentExample
+          code={`import { Choropleth, worldFeatures } from "metricui";
 
 const populationData = [
   { id: "USA", value: 340_000_000 },
@@ -157,35 +154,35 @@ const populationData = [
   projectionScale={120}
   height={450}
 />`}
-          >
-            <div className="w-full">
-              <Choropleth
-                data={populationData}
-                features={worldFeatures}
-                title="Population by Country"
-                tooltipLabel="Population"
-                format="compact"
-                scaleType="sqrt"
-                projectionType="naturalEarth1"
-                projectionScale={120}
-                height={450}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full">
+            <Choropleth
+              data={populationData}
+              features={worldFeatures}
+              title="Population by Country"
+              tooltipLabel="Population"
+              format="compact"
+              scaleType="sqrt"
+              projectionType="naturalEarth1"
+              projectionScale={120}
+              height={450}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Projections */}
-        <DocSection id="projections" title="Projections">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">projectionType</code> prop
-            controls the map projection. Available options:{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">mercator</code> (default),{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">naturalEarth1</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">equalEarth</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">orthographic</code>.
-          </p>
-          <ComponentExample
-            code={`<Choropleth
+      {/* Projections */}
+      <DocSection id="projections" title="Projections">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">projectionType</code> prop
+          controls the map projection. Available options:{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">mercator</code> (default),{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">naturalEarth1</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">equalEarth</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">orthographic</code>.
+        </p>
+        <ComponentExample
+          code={`<Choropleth
   data={areaData}
   features={worldFeatures}
   title="Land Area (km²)"
@@ -196,31 +193,31 @@ const populationData = [
   colors={["#fef3c7", "#f59e0b", "#b45309", "#78350f"]}
   height={400}
 />`}
-          >
-            <div className="w-full">
-              <Choropleth
-                data={areaData}
-                features={worldFeatures}
-                title="Land Area (km²)"
-                tooltipLabel="Area"
-                format={{ style: "number", suffix: " km²", compact: true }}
-                projectionType="equalEarth"
-                projectionScale={130}
-                colors={["#fef3c7", "#f59e0b", "#b45309", "#78350f"]}
-                height={400}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full">
+            <Choropleth
+              data={areaData}
+              features={worldFeatures}
+              title="Land Area (km²)"
+              tooltipLabel="Area"
+              format={{ style: "number", suffix: " km²", compact: true }}
+              projectionType="equalEarth"
+              projectionScale={130}
+              colors={["#fef3c7", "#f59e0b", "#b45309", "#78350f"]}
+              height={400}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Custom Colors */}
-        <DocSection id="custom-colors" title="Custom Colors">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Pass a <code className="font-[family-name:var(--font-mono)] text-[12px]">colors</code> array to
-            define the sequential color scale. Colors are interpolated between stops based on the data domain.
-          </p>
-          <ComponentExample
-            code={`<Choropleth
+      {/* Custom Colors */}
+      <DocSection id="custom-colors" title="Custom Colors">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Pass a <code className="font-[family-name:var(--font-mono)] text-[12px]">colors</code> array to
+          define the sequential color scale. Colors are interpolated between stops based on the data domain.
+        </p>
+        <ComponentExample
+          code={`<Choropleth
   data={populationData}
   features={worldFeatures}
   title="Population — Cool Palette"
@@ -231,33 +228,33 @@ const populationData = [
   colors={["#ecfdf5", "#6ee7b7", "#059669", "#064e3b"]}
   height={400}
 />`}
-          >
-            <div className="w-full">
-              <Choropleth
-                data={populationData}
-                features={worldFeatures}
-                title="Population — Cool Palette"
-                format="compact"
-                scaleType="sqrt"
-                projectionType="naturalEarth1"
-                projectionScale={120}
-                colors={["#ecfdf5", "#6ee7b7", "#059669", "#064e3b"]}
-                height={400}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full">
+            <Choropleth
+              data={populationData}
+              features={worldFeatures}
+              title="Population — Cool Palette"
+              format="compact"
+              scaleType="sqrt"
+              projectionType="naturalEarth1"
+              projectionScale={120}
+              colors={["#ecfdf5", "#6ee7b7", "#059669", "#064e3b"]}
+              height={400}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Data Format */}
-        <DocSection id="data-format" title="Data Format">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Choropleth accepts two data formats. The native format uses{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">{`{ id, value }`}</code> objects.
-            For flat DataRow arrays, specify <code className="font-[family-name:var(--font-mono)] text-[12px]">idField</code> and{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">valueField</code> to map columns.
-          </p>
-          <CodeBlock
-            code={`// Native format — id is an ISO 3166-1 alpha-3 code
+      {/* Data Format */}
+      <DocSection id="data-format" title="Data Format">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Choropleth accepts two data formats. The native format uses{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">{`{ id, value }`}</code> objects.
+          For flat DataRow arrays, specify <code className="font-[family-name:var(--font-mono)] text-[12px]">idField</code> and{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">valueField</code> to map columns.
+        </p>
+        <CodeBlock
+          code={`// Native format — id is an ISO 3166-1 alpha-3 code
 const data = [
   { id: "USA", value: 340_000_000 },
   { id: "GBR", value: 67_000_000 },
@@ -275,90 +272,55 @@ const rows = [
   idField="country_code"
   valueField="population"
 />`}
-            language="tsx"
-          />
-        </DocSection>
+          language="tsx"
+        />
+      </DocSection>
 
-        {/* Bundled Features */}
-        <DocSection id="bundled-features" title="Bundled Features">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            MetricUI bundles <code className="font-[family-name:var(--font-mono)] text-[12px]">worldFeatures</code> — world
-            country boundaries at 110m resolution (~105KB). Feature IDs are standard ISO 3166-1 alpha-3 codes
-            (USA, GBR, DEU, etc.).
-          </p>
-          <CodeBlock
-            code={`import { Choropleth, worldFeatures } from "metricui";
+      {/* Bundled Features */}
+      <DocSection id="bundled-features" title="Bundled Features">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          MetricUI bundles <code className="font-[family-name:var(--font-mono)] text-[12px]">worldFeatures</code> — world
+          country boundaries at 110m resolution (~105KB). Feature IDs are standard ISO 3166-1 alpha-3 codes
+          (USA, GBR, DEU, etc.).
+        </p>
+        <CodeBlock
+          code={`import { Choropleth, worldFeatures } from "metricui";
 
 // worldFeatures is ready to use — no extra packages needed
 <Choropleth data={myData} features={worldFeatures} />`}
-            language="tsx"
-          />
+          language="tsx"
+        />
 
-          <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            For other maps (US states, EU countries, custom regions), provide your own GeoJSON.
-            Recommended sources:
-          </p>
-          <ul className="mt-2 space-y-1">
-            {[
-              { label: "world-atlas", desc: "World and US TopoJSON (npm)" },
-              { label: "natural-earth-vector", desc: "High-res country/state/province shapefiles" },
-              { label: "us-atlas", desc: "US states and counties TopoJSON (npm)" },
-            ].map(({ label, desc }) => (
-              <li
-                key={label}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[12px] font-semibold">{label}</code> — {desc}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-4 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3">
-            <p className="text-[13px] leading-relaxed text-[var(--muted)]">
-              <strong>Common codes:</strong> USA, GBR, DEU, FRA, JPN, CHN, IND, BRA, AUS, CAN, RUS, KOR, MEX, ARG, ZAF, NGA, IDN, ITA, ESP, TUR
-            </p>
-          </div>
-        </DocSection>
-
-        {/* Props */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+        <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          For other maps (US states, EU countries, custom regions), provide your own GeoJSON.
+          Recommended sources:
+        </p>
+        <ul className="mt-2 space-y-1">
+          {[
+            { label: "world-atlas", desc: "World and US TopoJSON (npm)" },
+            { label: "natural-earth-vector", desc: "High-res country/state/province shapefiles" },
+            { label: "us-atlas", desc: "US states and counties TopoJSON (npm)" },
+          ].map(({ label, desc }) => (
+            <li
+              key={label}
+              className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
+            >
               <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI-powered insights. Pass a string describing what this component shows.
+              <span>
+                <code className="font-[family-name:var(--font-mono)] text-[12px] font-semibold">{label}</code> — {desc}
+              </span>
             </li>
-          </ul>
-        </DocSection>
+          ))}
+        </ul>
 
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
+        <div className="mt-4 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3">
+          <p className="text-[13px] leading-relaxed text-[var(--muted)]">
+            <strong>Common codes:</strong> USA, GBR, DEU, FRA, JPN, CHN, IND, BRA, AUS, CAN, RUS, KOR, MEX, ARG, ZAF, NGA, IDN, ITA, ESP, TUR
+          </p>
         </div>
-      </div>
-    </div>
+      </DocSection>
+
+      <ComponentDocFooter component={component} />
+    </DocPageLayout>
   );
 }

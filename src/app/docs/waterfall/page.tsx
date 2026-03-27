@@ -6,10 +6,9 @@ import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 
 const component = getComponent("waterfall")!;
 
@@ -77,35 +76,33 @@ const quarterlyData = [
 
 export default function WaterfallDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        {/* When to use */}
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Use Waterfall for sequential change analysis — showing how an initial
-          value is affected by a series of positive and negative changes.
-          Perfect for P&L breakdowns, MRR bridges, and budget analysis. Supports
-          subtotals, totals, connector lines, per-bar color overrides, and
-          custom positive/negative/total colors. For categorical comparison, use{" "}
-          <a href="/docs/bar-chart" className="font-medium text-[var(--accent)] hover:underline">
-            BarChart
-          </a>{" "}
-          instead.
+      {/* When to use */}
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Use Waterfall for sequential change analysis — showing how an initial
+        value is affected by a series of positive and negative changes.
+        Perfect for P&L breakdowns, MRR bridges, and budget analysis. Supports
+        subtotals, totals, connector lines, per-bar color overrides, and
+        custom positive/negative/total colors. For categorical comparison, use{" "}
+        <a href="/docs/bar-chart" className="font-medium text-[var(--accent)] hover:underline">
+          BarChart
+        </a>{" "}
+        instead.
+      </p>
+
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Pass an array of items with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">label</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">value</code>, and{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">type</code>.
+          Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">type: &quot;total&quot;</code> for
+          the final computed sum.
         </p>
-
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Pass an array of items with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">label</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">value</code>, and{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">type</code>.
-            Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">type: &quot;total&quot;</code> for
-            the final computed sum.
-          </p>
-          <ComponentExample
-            code={`<Waterfall
+        <ComponentExample
+          code={`<Waterfall
   data={[
     { label: "Starting MRR", value: 85000, type: "value" },
     { label: "New Sales", value: 28400, type: "value" },
@@ -119,28 +116,28 @@ export default function WaterfallDocs() {
   connectors
   height={320}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Waterfall
-                data={mrrBridgeData}
-                title="MRR Bridge"
-                format="currency"
-                connectors
-                height={320}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Waterfall
+              data={mrrBridgeData}
+              title="MRR Bridge"
+              format="currency"
+              connectors
+              height={320}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* With Subtotals */}
-        <DocSection id="subtotals" title="With Subtotals">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">type: &quot;subtotal&quot;</code> to
-            insert intermediate running-total markers. Great for P&L statements where you need
-            gross income before expenses.
-          </p>
-          <ComponentExample
-            code={`<Waterfall
+      {/* With Subtotals */}
+      <DocSection id="subtotals" title="With Subtotals">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Use <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">type: &quot;subtotal&quot;</code> to
+          insert intermediate running-total markers. Great for P&L statements where you need
+          gross income before expenses.
+        </p>
+        <ComponentExample
+          code={`<Waterfall
   data={[
     { label: "Revenue", value: 120000, type: "value" },
     { label: "Services", value: 34000, type: "value" },
@@ -157,29 +154,29 @@ export default function WaterfallDocs() {
   connectors
   height={360}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Waterfall
-                data={subtotalData}
-                title="P&L Breakdown"
-                format="currency"
-                connectors
-                height={360}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Waterfall
+              data={subtotalData}
+              title="P&L Breakdown"
+              format="currency"
+              connectors
+              height={360}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Custom Colors */}
-        <DocSection id="custom-colors" title="Custom Colors">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Override colors per-bar with the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">color</code> property
-            on individual data items, or set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">positiveColor</code>,{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">negativeColor</code>, and{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">totalColor</code> globally.
-          </p>
-          <ComponentExample
-            code={`<Waterfall
+      {/* Custom Colors */}
+      <DocSection id="custom-colors" title="Custom Colors">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Override colors per-bar with the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">color</code> property
+          on individual data items, or set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">positiveColor</code>,{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">negativeColor</code>, and{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">totalColor</code> globally.
+        </p>
+        <ComponentExample
+          code={`<Waterfall
   data={[
     { label: "Q1 Target", value: 50000 },
     { label: "Outperformance", value: 8200, color: "#6366f1" },
@@ -195,29 +192,29 @@ export default function WaterfallDocs() {
   totalColor="#8b5cf6"
   height={320}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Waterfall
-                data={customColorData}
-                title="Q1 Revenue Bridge"
-                format="currency"
-                positiveColor="#10b981"
-                negativeColor="#f43f5e"
-                totalColor="#8b5cf6"
-                height={320}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Waterfall
+              data={customColorData}
+              title="Q1 Revenue Bridge"
+              format="currency"
+              positiveColor="#10b981"
+              negativeColor="#f43f5e"
+              totalColor="#8b5cf6"
+              height={320}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Without Connectors */}
-        <DocSection id="no-connectors" title="Without Connectors">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">connectors=&#123;false&#125;</code> to
-            hide the dashed connector lines between bars for a cleaner look.
-          </p>
-          <ComponentExample
-            code={`<Waterfall
+      {/* Without Connectors */}
+      <DocSection id="no-connectors" title="Without Connectors">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">connectors=&#123;false&#125;</code> to
+          hide the dashed connector lines between bars for a cleaner look.
+        </p>
+        <ComponentExample
+          code={`<Waterfall
   data={[
     { label: "Budget", value: 200000 },
     { label: "Personnel", value: -82000 },
@@ -231,27 +228,27 @@ export default function WaterfallDocs() {
   connectors={false}
   height={320}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Waterfall
-                data={budgetData}
-                title="Budget Allocation"
-                format="currency"
-                connectors={false}
-                height={320}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Waterfall
+              data={budgetData}
+              title="Budget Allocation"
+              format="currency"
+              connectors={false}
+              height={320}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Quarterly Changes */}
-        <DocSection id="quarterly-changes" title="Quarterly Changes">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Show how periodic changes contribute to a final total. Each bar represents
-            the delta for that period, and the total bar shows the cumulative result.
-          </p>
-          <ComponentExample
-            code={`<Waterfall
+      {/* Quarterly Changes */}
+      <DocSection id="quarterly-changes" title="Quarterly Changes">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Show how periodic changes contribute to a final total. Each bar represents
+          the delta for that period, and the total bar shows the cumulative result.
+        </p>
+        <ComponentExample
+          code={`<Waterfall
   data={[
     { label: "Q1", value: 120000 },
     { label: "Q2", value: 45000 },
@@ -264,94 +261,56 @@ export default function WaterfallDocs() {
   connectors
   height={320}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Waterfall
-                data={quarterlyData}
-                title="Quarterly Revenue"
-                format="currency"
-                connectors
-                height={320}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
-
-        {/* Data States */}
-        <DocSection id="data-states" title="Data States">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Every component handles loading, empty, and error states.
-            Pass individual props or use the grouped <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">state</code> prop.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
-              <Waterfall
-                data={[]}
-                title="Revenue Bridge"
-                loading
-                height={280}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
-              <Waterfall
-                data={[]}
-                title="Revenue Bridge"
-                error={{ message: "Failed to load data" }}
-                height={280}
-              />
-            </div>
+        >
+          <div className="w-full max-w-2xl">
+            <Waterfall
+              data={quarterlyData}
+              title="Quarterly Revenue"
+              format="currency"
+              connectors
+              height={320}
+            />
           </div>
-          <CodeBlock
-            code={`// Loading state
+        </ComponentExample>
+      </DocSection>
+
+      {/* Data States */}
+      <DocSection id="data-states" title="Data States">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Every component handles loading, empty, and error states.
+          Pass individual props or use the grouped <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">state</code> prop.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
+            <Waterfall
+              data={[]}
+              title="Revenue Bridge"
+              loading
+              height={280}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
+            <Waterfall
+              data={[]}
+              title="Revenue Bridge"
+              error={{ message: "Failed to load data" }}
+              height={280}
+            />
+          </div>
+        </div>
+        <CodeBlock
+          code={`// Loading state
 <Waterfall data={[]} title="Revenue Bridge" loading />
 
 // Error state
 <Waterfall data={[]} title="Revenue Bridge" error={{ message: "Failed to load" }} />`}
-            className="mt-4"
-          />
-        </DocSection>
+          className="mt-4"
+        />
+      </DocSection>
 
-        {/* Props Table */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Data Shape */}
-        {component.dataShape && (
-          <DocSection id="data-shape" title="Data Shape">
-            <CodeBlock code={component.dataShape} language="typescript" />
-          </DocSection>
-        )}
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-          </ul>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter component={component} />
+    </DocPageLayout>
   );
 }

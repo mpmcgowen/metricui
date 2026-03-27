@@ -3,13 +3,12 @@
 import { Funnel } from "@/components/charts/Funnel";
 import { getComponent } from "@/lib/docs/component-data";
 import { ComponentHero } from "@/components/docs/ComponentHero";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 
 const component = getComponent("funnel")!;
 
@@ -44,28 +43,26 @@ const onboardingData = [
 
 export default function FunnelDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        {/* When to use */}
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Use Funnel to visualize conversion pipelines — showing how values
-          decrease through sequential stages like signup flows, sales pipelines,
-          or onboarding processes. Supports vertical and horizontal layouts,
-          smooth and linear interpolation, conversion rate annotations, and the
-          simple data shorthand. For comparing categorical values, use{" "}
-          <a href="/docs/bar-chart" className="font-medium text-[var(--accent)] hover:underline">
-            BarChart
-          </a>{" "}
-          instead.
-        </p>
+      {/* When to use */}
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Use Funnel to visualize conversion pipelines — showing how values
+        decrease through sequential stages like signup flows, sales pipelines,
+        or onboarding processes. Supports vertical and horizontal layouts,
+        smooth and linear interpolation, conversion rate annotations, and the
+        simple data shorthand. For comparing categorical values, use{" "}
+        <a href="/docs/bar-chart" className="font-medium text-[var(--accent)] hover:underline">
+          BarChart
+        </a>{" "}
+        instead.
+      </p>
 
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <ComponentExample
-            code={`<Funnel
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <ComponentExample
+          code={`<Funnel
   data={[
     { id: "visited", label: "Visited", value: 10000 },
     { id: "signed-up", label: "Signed Up", value: 4200 },
@@ -75,25 +72,25 @@ export default function FunnelDocs() {
   title="Conversion Funnel"
   height={360}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Funnel
-                data={conversionData}
-                title="Conversion Funnel"
-                height={360}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Funnel
+              data={conversionData}
+              title="Conversion Funnel"
+              height={360}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Conversion Rates */}
-        <DocSection id="conversion-rates" title="Conversion Rates">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Enable <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">showConversionRate</code> to
-            display percentage drop-off annotations between each stage.
-          </p>
-          <ComponentExample
-            code={`<Funnel
+      {/* Conversion Rates */}
+      <DocSection id="conversion-rates" title="Conversion Rates">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Enable <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">showConversionRate</code> to
+          display percentage drop-off annotations between each stage.
+        </p>
+        <ComponentExample
+          code={`<Funnel
   data={[
     { id: "visited", label: "Visited", value: 10000 },
     { id: "signed-up", label: "Signed Up", value: 4200 },
@@ -104,27 +101,27 @@ export default function FunnelDocs() {
   showConversionRate
   height={360}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Funnel
-                data={conversionData}
-                title="With Conversion Rates"
-                showConversionRate
-                height={360}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Funnel
+              data={conversionData}
+              title="With Conversion Rates"
+              showConversionRate
+              height={360}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Horizontal Layout */}
-        <DocSection id="horizontal" title="Horizontal Layout">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">direction=&quot;horizontal&quot;</code> for
-            a left-to-right funnel layout. Works well when horizontal space is plentiful
-            and stage labels are short.
-          </p>
-          <ComponentExample
-            code={`<Funnel
+      {/* Horizontal Layout */}
+      <DocSection id="horizontal" title="Horizontal Layout">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Set <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">direction=&quot;horizontal&quot;</code> for
+          a left-to-right funnel layout. Works well when horizontal space is plentiful
+          and stage labels are short.
+        </p>
+        <ComponentExample
+          code={`<Funnel
   data={[
     { id: "visited", label: "Visited", value: 10000 },
     { id: "signed-up", label: "Signed Up", value: 4200 },
@@ -136,29 +133,29 @@ export default function FunnelDocs() {
   showConversionRate
   height={280}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Funnel
-                data={conversionData}
-                title="Horizontal Funnel"
-                direction="horizontal"
-                showConversionRate
-                height={280}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Funnel
+              data={conversionData}
+              title="Horizontal Funnel"
+              direction="horizontal"
+              showConversionRate
+              height={280}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Linear Interpolation */}
-        <DocSection id="interpolation" title="Linear Interpolation">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Switch from the default smooth curves to sharp linear edges with{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">interpolation=&quot;linear&quot;</code>.
-            Combine with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">shapeBlending</code> to
-            control how rectangular vs. tapered the stages appear.
-          </p>
-          <ComponentExample
-            code={`<Funnel
+      {/* Linear Interpolation */}
+      <DocSection id="interpolation" title="Linear Interpolation">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Switch from the default smooth curves to sharp linear edges with{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">interpolation=&quot;linear&quot;</code>.
+          Combine with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">shapeBlending</code> to
+          control how rectangular vs. tapered the stages appear.
+        </p>
+        <ComponentExample
+          code={`<Funnel
   data={[
     { id: "download", label: "Download", value: 8500 },
     { id: "install", label: "Install", value: 7200 },
@@ -172,30 +169,30 @@ export default function FunnelDocs() {
   showConversionRate
   height={400}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Funnel
-                data={onboardingData}
-                title="Onboarding Funnel"
-                interpolation="linear"
-                shapeBlending={0.4}
-                showConversionRate
-                height={400}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <Funnel
+              data={onboardingData}
+              title="Onboarding Funnel"
+              interpolation="linear"
+              shapeBlending={0.4}
+              showConversionRate
+              height={400}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Simple Data Format */}
-        <DocSection id="simple-data" title="Simple Data Format">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            For quick prototyping, pass a plain key-value object via{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">simpleData</code> instead
-            of the full <code className="font-[family-name:var(--font-mono)] text-[12px]">FunnelDatumInput[]</code> array.
-            Keys become labels and ids are auto-generated.
-          </p>
-          <ComponentExample
-            code={`<Funnel
+      {/* Simple Data Format */}
+      <DocSection id="simple-data" title="Simple Data Format">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          For quick prototyping, pass a plain key-value object via{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">simpleData</code> instead
+          of the full <code className="font-[family-name:var(--font-mono)] text-[12px]">FunnelDatumInput[]</code> array.
+          Keys become labels and ids are auto-generated.
+        </p>
+        <ComponentExample
+          code={`<Funnel
   simpleData={{
     Leads: 5000,
     Qualified: 2200,
@@ -206,99 +203,61 @@ export default function FunnelDocs() {
   showConversionRate
   height={340}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <Funnel
-                data={[]}
-                simpleData={{
-                  Leads: 5000,
-                  Qualified: 2200,
-                  Proposal: 1100,
-                  Closed: 450,
-                }}
-                title="Sales Pipeline"
-                showConversionRate
-                height={340}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
-
-        {/* Data States */}
-        <DocSection id="data-states" title="Data States">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Every component handles loading, empty, and error states.
-            Pass individual props or use the grouped <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">state</code> prop.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
-              <Funnel
-                data={[]}
-                title="Conversion Funnel"
-                loading
-                height={240}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
-              <Funnel
-                data={[]}
-                title="Conversion Funnel"
-                error={{ message: "Failed to load data" }}
-                height={240}
-              />
-            </div>
+        >
+          <div className="w-full max-w-2xl">
+            <Funnel
+              data={[]}
+              simpleData={{
+                Leads: 5000,
+                Qualified: 2200,
+                Proposal: 1100,
+                Closed: 450,
+              }}
+              title="Sales Pipeline"
+              showConversionRate
+              height={340}
+            />
           </div>
-          <CodeBlock
-            code={`// Loading state
+        </ComponentExample>
+      </DocSection>
+
+      {/* Data States */}
+      <DocSection id="data-states" title="Data States">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Every component handles loading, empty, and error states.
+          Pass individual props or use the grouped <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">state</code> prop.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
+            <Funnel
+              data={[]}
+              title="Conversion Funnel"
+              loading
+              height={240}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
+            <Funnel
+              data={[]}
+              title="Conversion Funnel"
+              error={{ message: "Failed to load data" }}
+              height={240}
+            />
+          </div>
+        </div>
+        <CodeBlock
+          code={`// Loading state
 <Funnel data={[]} title="Conversion Funnel" loading />
 
 // Error state
 <Funnel data={[]} title="Conversion Funnel" error={{ message: "Failed to load" }} />`}
-            className="mt-4"
-          />
-        </DocSection>
+          className="mt-4"
+        />
+      </DocSection>
 
-        {/* Props Table */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Data Shape */}
-        {component.dataShape && (
-          <DocSection id="data-shape" title="Data Shape">
-            <CodeBlock code={component.dataShape} language="typescript" />
-          </DocSection>
-        )}
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-          </ul>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter component={component} />
+    </DocPageLayout>
   );
 }

@@ -3,13 +3,12 @@
 import { AreaChart } from "@/components/charts/AreaChart";
 import { getComponent } from "@/lib/docs/component-data";
 import { ComponentHero } from "@/components/docs/ComponentHero";
+import { DocPageLayout } from "@/components/docs/DocPageLayout";
+import type { TocItem } from "@/components/docs/DocPageLayout";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { PropsTable } from "@/components/docs/PropsTable";
-import { RelatedComponents } from "@/components/docs/RelatedComponents";
-import { OnThisPage } from "@/components/docs/OnThisPage";
-import type { TocItem } from "@/components/docs/OnThisPage";
+import { ComponentDocFooter } from "@/components/docs/ComponentDocFooter";
 import { AreaChartPlayground } from "@/components/docs/playgrounds/AreaChartPlayground";
 
 const component = getComponent("area-chart")!;
@@ -79,26 +78,24 @@ const comparisonPrev = [
 
 export default function AreaChartDocs() {
   return (
-    <div className="flex">
-      {/* Main content */}
-      <div className="min-w-0 flex-1 px-8 py-8">
-        <ComponentHero component={component} />
+    <DocPageLayout tocItems={tocItems}>
+      <ComponentHero component={component} />
 
-        {/* When to use */}
-        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
-          Use AreaChart to visualize time-series data with filled areas that emphasize volume and
-          trends. It supports gradient fills, stacking, dual Y-axis, comparison overlays, reference
-          lines, and threshold bands. For clean lines without area fills, use{" "}
-          <a href="/docs/line-chart" className="font-medium text-[var(--accent)] hover:underline">
-            LineChart
-          </a>{" "}
-          instead.
-        </p>
+      {/* When to use */}
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+        Use AreaChart to visualize time-series data with filled areas that emphasize volume and
+        trends. It supports gradient fills, stacking, dual Y-axis, comparison overlays, reference
+        lines, and threshold bands. For clean lines without area fills, use{" "}
+        <a href="/docs/line-chart" className="font-medium text-[var(--accent)] hover:underline">
+          LineChart
+        </a>{" "}
+        instead.
+      </p>
 
-        {/* Basic Example */}
-        <DocSection id="basic-example" title="Basic Example">
-          <ComponentExample
-            code={`<AreaChart
+      {/* Basic Example */}
+      <DocSection id="basic-example" title="Basic Example">
+        <ComponentExample
+          code={`<AreaChart
   data={[{
     id: "Revenue",
     data: [
@@ -111,83 +108,83 @@ export default function AreaChartDocs() {
   title="Revenue Over Time"
   format={{ style: "currency" }}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <AreaChart
-                data={revenueData}
-                title="Revenue Over Time"
-                format={{ style: "currency" }}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <AreaChart
+              data={revenueData}
+              title="Revenue Over Time"
+              format={{ style: "currency" }}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Stacked Areas */}
-        <DocSection id="stacked" title="Stacked Areas">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Pass multiple series and enable{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">stacked</code>{" "}
-            to stack areas. Use{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">stackMode=&quot;percent&quot;</code>{" "}
-            to normalize to 100%.
-          </p>
-          <ComponentExample
-            code={`<AreaChart
+      {/* Stacked Areas */}
+      <DocSection id="stacked" title="Stacked Areas">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Pass multiple series and enable{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">stacked</code>{" "}
+          to stack areas. Use{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">stackMode=&quot;percent&quot;</code>{" "}
+          to normalize to 100%.
+        </p>
+        <ComponentExample
+          code={`<AreaChart
   data={trafficData}
   stacked
   title="Traffic Sources"
   format={{ style: "number", compact: true }}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <AreaChart
-                data={stackedData}
-                stacked
-                title="Traffic Sources"
-                format={{ style: "number", compact: true }}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <AreaChart
+              data={stackedData}
+              stacked
+              title="Traffic Sources"
+              format={{ style: "number", compact: true }}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Comparison Overlay */}
-        <DocSection id="comparison" title="Comparison Overlay">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Pass{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">comparisonData</code>{" "}
-            to render a dashed overlay of a previous period. The comparison lines use 50% opacity
-            so the current period stays prominent.
-          </p>
-          <ComponentExample
-            code={`<AreaChart
+      {/* Comparison Overlay */}
+      <DocSection id="comparison" title="Comparison Overlay">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Pass{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">comparisonData</code>{" "}
+          to render a dashed overlay of a previous period. The comparison lines use 50% opacity
+          so the current period stays prominent.
+        </p>
+        <ComponentExample
+          code={`<AreaChart
   data={currentPeriod}
   comparisonData={previousPeriod}
   title="Revenue vs Last Year"
   format={{ style: "currency" }}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <AreaChart
-                data={revenueData}
-                comparisonData={comparisonPrev}
-                title="Revenue vs Last Year"
-                format={{ style: "currency" }}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
+        >
+          <div className="w-full max-w-2xl">
+            <AreaChart
+              data={revenueData}
+              comparisonData={comparisonPrev}
+              title="Revenue vs Last Year"
+              format={{ style: "currency" }}
+            />
+          </div>
+        </ComponentExample>
+      </DocSection>
 
-        {/* Reference Lines & Thresholds */}
-        <DocSection id="reference-lines" title="Reference Lines & Thresholds">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Add horizontal or vertical{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">referenceLines</code>{" "}
-            for targets and benchmarks. Use{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">thresholds</code>{" "}
-            to highlight Y-axis ranges (e.g., danger zones, target bands).
-          </p>
-          <ComponentExample
-            code={`<AreaChart
+      {/* Reference Lines & Thresholds */}
+      <DocSection id="reference-lines" title="Reference Lines & Thresholds">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Add horizontal or vertical{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">referenceLines</code>{" "}
+          for targets and benchmarks. Use{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">thresholds</code>{" "}
+          to highlight Y-axis ranges (e.g., danger zones, target bands).
+        </p>
+        <ComponentExample
+          code={`<AreaChart
   data={revenueData}
   title="Revenue with Target"
   format={{ style: "currency" }}
@@ -198,108 +195,58 @@ export default function AreaChartDocs() {
     { from: 40000, to: 55000, color: "#F59E0B", label: "Warning zone" },
   ]}
 />`}
-          >
-            <div className="w-full max-w-2xl">
-              <AreaChart
-                data={revenueData}
-                title="Revenue with Target"
-                format={{ style: "currency" }}
-                referenceLines={[
-                  { axis: "y", value: 60000, label: "Target", color: "#EF4444", style: "dashed" },
-                ]}
-                thresholds={[
-                  { from: 40000, to: 55000, color: "#F59E0B", label: "Warning zone" },
-                ]}
-              />
-            </div>
-          </ComponentExample>
-        </DocSection>
-
-        {/* Data States */}
-        <DocSection id="data-states" title="Data States">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Every component handles loading, empty, error, and stale states.
-            Pass individual props or use the grouped{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">state</code> prop.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
-              <AreaChart data={[]} title="Revenue" loading />
-            </div>
-            <div>
-              <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
-              <AreaChart
-                data={[]}
-                title="Revenue"
-                error={{ message: "Failed to load data" }}
-              />
-            </div>
+        >
+          <div className="w-full max-w-2xl">
+            <AreaChart
+              data={revenueData}
+              title="Revenue with Target"
+              format={{ style: "currency" }}
+              referenceLines={[
+                { axis: "y", value: 60000, label: "Target", color: "#EF4444", style: "dashed" },
+              ]}
+              thresholds={[
+                { from: 40000, to: 55000, color: "#F59E0B", label: "Warning zone" },
+              ]}
+            />
           </div>
-          <CodeBlock
-            code={`// Loading state
+        </ComponentExample>
+      </DocSection>
+
+      {/* Data States */}
+      <DocSection id="data-states" title="Data States">
+        <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+          Every component handles loading, empty, error, and stale states.
+          Pass individual props or use the grouped{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">state</code> prop.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
+            <AreaChart data={[]} title="Revenue" loading />
+          </div>
+          <div>
+            <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
+            <AreaChart
+              data={[]}
+              title="Revenue"
+              error={{ message: "Failed to load data" }}
+            />
+          </div>
+        </div>
+        <CodeBlock
+          code={`// Loading state
 <AreaChart data={[]} title="Revenue" loading />
 
 // Error state
 <AreaChart data={[]} title="Revenue" error={{ message: "Failed to load" }} />`}
-            className="mt-4"
-          />
-        </DocSection>
+          className="mt-4"
+        />
+      </DocSection>
 
-        {/* Props Table */}
-        <DocSection id="props" title="Props">
-          <PropsTable props={component.props} />
-        </DocSection>
-
-        {/* Data Shape */}
-        {component.dataShape && (
-          <DocSection id="data-shape" title="Data Shape">
-            <CodeBlock code={component.dataShape} language="typescript" />
-          </DocSection>
-        )}
-
-        {/* Notes */}
-        <DocSection id="notes" title="Notes">
-          <ul className="space-y-2">
-            {component.notes.map((note, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                {note}
-              </li>
-            ))}
-            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
-            </li>
-          </ul>
-        </DocSection>
-
-        {/* Playground */}
-        <DocSection id="playground" title="Playground">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Experiment with every prop interactively. Adjust the controls on the right to see the
-            component update in real time.
-          </p>
-          <div className="rounded-xl border border-[var(--card-border)]">
-            <AreaChartPlayground />
-          </div>
-        </DocSection>
-
-        {/* Related Components */}
-        <DocSection id="related" title="Related Components">
-          <RelatedComponents names={component.relatedComponents} />
-        </DocSection>
-      </div>
-
-      {/* Right: On This Page */}
-      <div className="hidden w-40 flex-shrink-0 xl:block">
-        <div className="sticky top-8 pt-8">
-          <OnThisPage items={tocItems} />
-        </div>
-      </div>
-    </div>
+      <ComponentDocFooter
+        component={component}
+        playground={<AreaChartPlayground />}
+      />
+    </DocPageLayout>
   );
 }
