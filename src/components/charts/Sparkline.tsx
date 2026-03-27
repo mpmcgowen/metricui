@@ -36,6 +36,8 @@ export interface SparklineBand {
 }
 
 export interface SparklineProps {
+  /** Business context for AI-powered insights. */
+  aiContext?: string;
   /** Data points. `null` values create gaps in the line. */
   data: (number | null)[];
   /** Trend direction for auto-coloring. */

@@ -59,6 +59,8 @@ export interface GaugeProps extends DataComponentProps {
   icon?: React.ReactNode;
   /** Height in px. Default: 300 */
   height?: number;
+  /** Action slot rendered in the card header. */
+  action?: React.ReactNode;
   /** Drill-down config. When set, the gauge card becomes clickable and opens the drill-down panel. */
   drillDown?: DrillDownConfig;
 
@@ -251,6 +253,7 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   showValue = true,
   icon,
   height,
+  action,
   drillDown,
   variant,
   dense,
@@ -403,6 +406,7 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
         subtitle={undefined}
         description={description}
         footnote={footnote}
+        action={action}
         height={resolvedHeight}
         variant={resolvedVariant}
 
