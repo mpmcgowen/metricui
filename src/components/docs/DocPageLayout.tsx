@@ -28,7 +28,7 @@ export function DocPageLayout({
       <div
         className={cn(
           "px-8 py-8 2xl:pr-56",
-          maxWidth === "prose" && "lg:max-w-3xl",
+          maxWidth === "prose" && "max-w-4xl",
         )}
       >
         {children}
