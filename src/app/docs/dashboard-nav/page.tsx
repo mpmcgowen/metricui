@@ -6,12 +6,17 @@ import { Dashboard } from "@/components/layout/Dashboard";
 import { FilterBar } from "@/components/filters/FilterBar";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { MetricGrid } from "@/components/layout/MetricGrid";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
+
+const component = getComponent("dashboard-nav")!;
 
 const tocItems: TocItem[] = [
   { id: "overview", title: "Overview", level: 2 },
@@ -22,8 +27,9 @@ const tocItems: TocItem[] = [
   { id: "keyboard-navigation", title: "Keyboard Navigation", level: 2 },
   { id: "url-sync", title: "URL Sync", level: 2 },
   { id: "props", title: "Props", level: 2 },
+  { id: "data-shape", title: "Data Shape", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -173,24 +179,7 @@ export default function DashboardNavDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div className="mb-8">
-          <p className="text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
-            Layout
-          </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-[var(--foreground)]">
-            DashboardNav
-          </h1>
-          <p className="mt-3 text-[14px] leading-relaxed text-[var(--muted)]">
-            Tabbed navigation for switching dashboard views or smooth-scrolling
-            to page sections. Supports controlled and uncontrolled modes, URL
-            sync, live badges, keyboard navigation, and nests cleanly inside{" "}
-            <a href="/docs/filter-bar" className="font-medium text-[var(--accent)] hover:underline">
-              FilterBar
-            </a>{" "}
-            via the <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">FilterBar.Nav</code> slot.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         {/* Overview */}
         <DocSection id="overview" title="Overview">
@@ -385,66 +374,20 @@ export default function DashboardNavDocs() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "tabs", type: "DashboardNavTab[]", default: "(required)", description: "Array of tab definitions. Each tab has value, label, and optional icon, badge, and badgeFormat." },
-              { prop: "value", type: "string", default: "\u2014", description: "Controlled active tab value." },
-              { prop: "defaultValue", type: "string", default: "First tab", description: "Default active tab for uncontrolled usage." },
-              { prop: "onChange", type: "(value: string) => void", default: "\u2014", description: "Callback fired when the active tab changes." },
-              { prop: "mode", type: '"tabs" | "scroll"', default: '"tabs"', description: 'In "tabs" mode, use value/onChange to swap content. In "scroll" mode, clicking scrolls to the matching section ID.' },
-              { prop: "syncUrl", type: "string", default: "\u2014", description: "URL search param name. Persists the active tab in the URL for deep-linking." },
-              { prop: "sticky", type: "boolean", default: "false", description: "Stick to the viewport top with frosted-glass backdrop blur." },
-              { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "Size variant controlling text, padding, and icon sizing." },
-              { prop: "dense", type: "boolean", default: "false", description: "Compact layout. Falls back to MetricProvider config." },
-              { prop: "variant", type: "CardVariant", default: "\u2014", description: "Visual variant. Falls back to MetricProvider config." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes on the root element." },
-              { prop: "id", type: "string", default: "\u2014", description: "HTML id attribute." },
-              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id for testing frameworks." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
-
-          <h3 className="mt-8 mb-3 text-sm font-semibold text-[var(--foreground)]">DashboardNavTab</h3>
-          <DataTable
-            data={[
-              { prop: "value", type: "string", default: "(required)", description: "Unique identifier for the tab." },
-              { prop: "label", type: "string", default: "(required)", description: "Display text." },
-              { prop: "icon", type: "ReactNode", default: "\u2014", description: "Icon rendered before the label." },
-              { prop: "badge", type: "number | string", default: "\u2014", description: "Badge value. Numbers are formatted; strings render as-is." },
-              { prop: "badgeFormat", type: "FormatOption", default: '"compact"', description: "Format option for numeric badges (e.g., \"compact\", { style: \"percent\" })." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
+
+        {/* Data Shape */}
+        {component.dataShape && (
+          <DocSection id="data-shape" title="Data Shape">
+            <CodeBlock code={component.dataShape} language="typescript" />
+          </DocSection>
+        )}
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "DashboardNav uses forwardRef and passes through id, data-testid, and className.",
-              "In scroll mode, an IntersectionObserver highlights the section currently in view. A 1-second lock prevents the observer from overriding the active tab immediately after a click-to-scroll.",
-              "The sliding underline indicator animates with a 200ms cubic-bezier transition.",
-              "Sticky mode applies frosted-glass styling (backdrop-blur-xl, 80% card-bg opacity) and sticks to the viewport top with z-index 31.",
-              "When dense is true and size is \"md\", the component automatically downsizes to \"sm\" for compact layouts.",
-              "Badge formatting uses the same format engine as KpiCard. Pass badgeFormat: \"compact\" for abbreviated numbers.",
-              "Full ARIA tablist semantics: role=\"tablist\" on the container, role=\"tab\" and aria-selected on each button.",
-              "Works both standalone and inside FilterBar.Nav. When inside FilterBar, omit the sticky prop — FilterBar handles sticking.",
-              "When inside a Dashboard with AI configured, DashboardNav automatically registers its tab navigator with AiContext, enabling AI citations to reference components across tabs.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -453,28 +396,16 @@ export default function DashboardNavDocs() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="space-y-2">
-            {[
-              { name: "Dashboard", desc: "Top-level layout wrapper. Use as the parent container around DashboardNav and content panels." },
-              { name: "FilterBar", desc: "Filter bar with slots. Nest DashboardNav inside FilterBar.Nav for integrated nav + filters." },
-              { name: "MetricGrid", desc: "Responsive grid for KPI cards and chart panels. Place below DashboardNav for tab content." },
-              { name: "KpiCard", desc: "Metric display card. Common content inside DashboardNav tab panels." },
-              { name: "MetricProvider", desc: "Global config. DashboardNav inherits dense and variant from MetricProvider." },
-            ].map((item) => (
-              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
-                  {" \u2014 "}{item.desc}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

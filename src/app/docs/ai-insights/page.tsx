@@ -1,10 +1,16 @@
 "use client";
 
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
 import { DataTable } from "@/components/tables/DataTable";
+
+const component = getComponent("ai-insights")!;
 
 const tocItems: TocItem[] = [
   { id: "overview", title: "Overview", level: 2 },
@@ -19,7 +25,7 @@ const tocItems: TocItem[] = [
   { id: "chat-persistence", title: "Chat Persistence", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 export default function AiInsightsDocs() {
@@ -27,27 +33,14 @@ export default function AiInsightsDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-            AI
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            AI Insights
-          </h1>
-          <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted)]">
-            Bring-your-own-LLM dashboard intelligence. Ask questions about your live data,
-            reference specific components with @ mentions, and get streaming answers grounded
-            in what your dashboard actually shows. Zero vendor lock-in &mdash; you provide the
-            model, MetricUI provides the wiring.
-          </p>
-          <p className="mt-4 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-3 text-[13px] leading-relaxed text-[var(--muted)]">
-            See the live AI chat in action on any demo dashboard:{" "}
-            <a href="/demos/analytics" className="font-medium text-[var(--accent)] hover:underline">Web Analytics</a>{" "}
-            and{" "}
-            <a href="/demos/saas" className="font-medium text-[var(--accent)] hover:underline">SaaS Analytics</a>.
-          </p>
-        </div>
+        <ComponentHero component={component} />
+
+        <p className="mt-4 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-3 text-[13px] leading-relaxed text-[var(--muted)]">
+          See the live AI chat in action on any demo dashboard:{" "}
+          <a href="/demos/analytics" className="font-medium text-[var(--accent)] hover:underline">Web Analytics</a>{" "}
+          and{" "}
+          <a href="/demos/saas" className="font-medium text-[var(--accent)] hover:underline">SaaS Analytics</a>.
+        </p>
 
         {/* Overview */}
         <DocSection id="overview" title="Overview">
@@ -451,64 +444,13 @@ function MyDashboard() {
 
         {/* Props */}
         <DocSection id="props" title="Props">
-          <p className="mb-4 text-[12px] font-medium text-[var(--muted)]">
-            DashboardInsightProps
-          </p>
-          <DataTable
-            data={[
-              { prop: "quickPrompts", type: "QuickPrompt[] | false", default: "3 defaults", description: "Quick prompt buttons shown when chat is empty. Pass false to hide." },
-              { prop: "placeholder", type: "string", default: '"Ask about your data..."', description: "Placeholder text for the chat input." },
-              { prop: "position", type: '"bottom-right" | "bottom-left"', default: '"bottom-right"', description: "Position of the floating button." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes on the floating button." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
-          <p className="mb-4 mt-8 text-[12px] font-medium text-[var(--muted)]">
-            AiConfig (passed to Dashboard&apos;s ai prop)
-          </p>
-          <DataTable
-            data={[
-              { prop: "analyze", type: "(messages, options?) => Promise<string> | AsyncIterable<string>", default: "(required)", description: "Your LLM function. Receives the full message array (system + history + user). Return a string or yield chunks for streaming." },
-              { prop: "stream", type: "boolean", default: "true", description: "Enable streaming mode. When true, the analyze function can return an AsyncIterable." },
-              { prop: "company", type: "string", default: "\u2014", description: "Company-level context. Who you are, your industry, stage, ICP. Included in every system prompt." },
-              { prop: "context", type: "string", default: "\u2014", description: "Dashboard-level context. What this dashboard measures, targets, recent changes." },
-              { prop: "systemPrompt", type: "string", default: "(built-in)", description: "Full system prompt override. Replaces the entire default prompt including tone and context assembly." },
-              { prop: "tone", type: '"executive" | "technical" | "narrative"', default: "\u2014", description: 'Tone preset. Executive: business impact, concise. Technical: precise numbers, ratios. Narrative: story-driven.' },
-              { prop: "onMessage", type: "(message: AiMessage) => void", default: "\u2014", description: "Callback fired for every message (user and assistant). Use for database persistence." },
-              { prop: "messages", type: "AiMessage[]", default: "\u2014", description: "Controlled message history. When provided, MetricUI does not manage internal state." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "BYO LLM \u2014 MetricUI never calls an API. Your analyze function is the only thing that talks to a model.",
-              "All data stays client-side until your analyze function sends it. MetricUI assembles the system prompt with dashboard data, but the network call is yours.",
-              "Works with any model: OpenAI, Anthropic, Google, Mistral, local models via Ollama \u2014 anything that accepts messages and returns text.",
-              "The aiContext prop is available on every component (KpiCard, BarChart, AreaChart, LineChart, BarLineChart, DonutChart, DataTable, etc.). Use it to add business definitions and caveats.",
-              "The built-in system prompt instructs the AI to cite sources using [[Component Title]] syntax. Citations render as styled badges in the chat.",
-              "Active filters from FilterContext are automatically included in the system prompt so the AI knows the current data slice.",
-              "The AI chat sidebar locks body scroll when open and renders via React portal to avoid z-index issues.",
-              "If you provide a systemPrompt in the ai config, it replaces the entire default prompt. You lose the built-in rules, tone, and context assembly. Use company/context/tone instead for most cases.",
-              "The analyze function receives an AbortSignal via options.signal. Always forward it to your fetch call so abort works correctly.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -517,28 +459,16 @@ function MyDashboard() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="space-y-2">
-            {[
-              { name: "Dashboard", desc: "The ai prop configures the entire AI system. Wraps AiProvider automatically." },
-              { name: "KpiCard", desc: "Auto-registers value and comparisons with AiContext. Supports aiContext for business definitions." },
-              { name: "BarChart", desc: "Auto-registers chart data. For large datasets, sends sample rows + column stats." },
-              { name: "DataTable", desc: "Auto-registers table rows. Large tables send first 10 rows + column statistics." },
-              { name: "MetricProvider", desc: "Theme and locale config. AI Insights inherits the dashboard theme for consistent styling." },
-            ].map((item) => (
-              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
-                  {" \u2014 "}{item.desc}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

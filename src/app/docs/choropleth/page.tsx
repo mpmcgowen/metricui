@@ -4,15 +4,20 @@ import { useMemo } from "react";
 import { Choropleth } from "@/components/charts/Choropleth";
 import { worldFeatures } from "@/lib/geoFeatures";
 import { countries } from "@/data/world";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
 import countries_lib from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
 countries_lib.registerLocale(enLocale);
+
+const component = getComponent("choropleth")!;
 
 const tocItems: TocItem[] = [
   { id: "overview", title: "Overview", level: 2 },
@@ -23,14 +28,14 @@ const tocItems: TocItem[] = [
   { id: "bundled-features", title: "Bundled Features", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
 // Build choropleth data from the world countries dataset
 // ---------------------------------------------------------------------------
 
-/** Common short names → alpha-3 for names i18n-iso-countries doesn't recognize */
+/** Common short names -> alpha-3 for names i18n-iso-countries doesn't recognize */
 const NAME_ALIASES: Record<string, string> = {
   "DR Congo": "COD",
   "Laos": "LAO",
@@ -55,7 +60,7 @@ const NAME_ALIASES: Record<string, string> = {
   "French Southern and Antarctic Lands": "ATF",
 };
 
-/** Resolve country name → alpha-3 code */
+/** Resolve country name -> alpha-3 code */
 function nameToAlpha3(name: string): string | undefined {
   return NAME_ALIASES[name] ?? countries_lib.getAlpha3Code(name, "en") ?? undefined;
 }
@@ -92,20 +97,7 @@ export default function ChoroplethDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-xs text-[var(--muted)] mb-2">
-            <a href="/docs" className="hover:text-[var(--foreground)]">Docs</a>
-            <span>/</span>
-            <span>Charts</span>
-            <span>/</span>
-            <span>Choropleth</span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Choropleth</h1>
-          <p className="mt-2 text-[14px] text-[var(--muted)]">
-            A geographic heatmap that colors regions by value. Each feature in the GeoJSON
-            is shaded on a sequential color scale, making it easy to compare values across regions.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
           Use Choropleth for geographic data — revenue by country, user density by state,
@@ -333,53 +325,13 @@ const rows = [
 
         {/* Props */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "data", type: "ChoroplethDatum[] | DataRow[]", default: "[]", description: "Region data: { id, value } or flat rows with idField + valueField." },
-              { prop: "features", type: "GeoJSON Feature[]", default: "(required)", description: "GeoJSON features array. Use worldFeatures from MetricUI or your own." },
-              { prop: "idField", type: "string", default: '"id"', description: "Column name for region code (flat format)." },
-              { prop: "valueField", type: "string", default: '"value"', description: "Column name for region value (flat format)." },
-              { prop: "title", type: "string", default: "\u2014", description: "Card title." },
-              { prop: "subtitle", type: "string", default: "\u2014", description: "Card subtitle." },
-              { prop: "height", type: "number", default: "400", description: "Chart height in px." },
-              { prop: "colors", type: "string[]", default: "theme palette", description: "Sequential color scale stops." },
-              { prop: "format", type: "FormatOption", default: "\u2014", description: "Format for value labels and tooltips." },
-              { prop: "projectionType", type: '"mercator" | "naturalEarth1" | "equalEarth" | "orthographic"', default: '"mercator"', description: "Map projection type." },
-              { prop: "projectionScale", type: "number", default: "100", description: "Projection scale factor." },
-              { prop: "projectionTranslation", type: "[number, number]", default: "[0.5, 0.5]", description: "Projection translation [x, y]." },
-              { prop: "borderWidth", type: "number", default: "0.5", description: "Border width on features." },
-              { prop: "borderColor", type: "string", default: "theme-aware", description: "Border color." },
-              { prop: "domain", type: "[number, number]", default: "auto", description: "Domain for the color scale [min, max]." },
-              { prop: "scaleType", type: '"linear" | "log" | "sqrt"', default: '"linear"', description: "Color scale distribution. Use \"sqrt\" or \"log\" for skewed data like population." },
-              { prop: "animate", type: "boolean", default: "true", description: "Enable/disable animation." },
-              { prop: "legend", type: "boolean | LegendConfig", default: "auto", description: "Legend configuration." },
-              { prop: "tooltipLabel", type: "string", default: "valueField name", description: "Label for the value in tooltips (e.g. \"Population\", \"Revenue\")." },
-              { prop: "crossFilter", type: "boolean | { field? }", default: "\u2014", description: "Enable cross-filtering on region click." },
-              { prop: "drillDown", type: "true | function", default: "\u2014", description: "true for auto table, or custom render function." },
-              { prop: "drillDownMode", type: '"slide-over" | "modal"', default: '"slide-over"', description: "Drill-down panel mode." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "MetricUI bundles worldFeatures (110m world countries). Import it directly: import { worldFeatures } from \"metricui\".",
-              "Feature IDs are ISO 3166-1 alpha-3 codes (\"USA\", \"GBR\", \"HND\", etc.) — the standard 3-letter country codes.",
-              "For US state maps or other regions, provide your own GeoJSON from world-atlas, us-atlas, or natural-earth-vector.",
-              "Use the domain prop to set explicit color scale boundaries. Auto-computed from data min/max if omitted.",
-              "Flat DataRow[] format uses idField and valueField to extract region codes and values.",
-              "Built on @nivo/geo — all Nivo theming and tooltip conventions apply.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -388,23 +340,16 @@ const rows = [
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI-powered insights. Pass a string describing what this component shows.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="flex flex-wrap gap-2">
-            {["HeatMap", "Treemap", "BarChart", "DataTable"].map((name) => (
-              <li key={name}>
-                <a
-                  href={`/docs/${name.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/^-/, "")}`}
-                  className="inline-block rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
-                >
-                  {name}
-                </a>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

@@ -1,8 +1,12 @@
 "use client";
 
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
 import { DataTable } from "@/components/tables/DataTable";
@@ -10,6 +14,8 @@ import { KpiCard } from "@/components/cards/KpiCard";
 import { BarChart } from "@/components/charts/BarChart";
 import { MetricProvider } from "@/lib/MetricProvider";
 import { MetricGrid } from "@/components/layout/MetricGrid";
+
+const component = getComponent("export")!;
 
 const sampleBarData = [
   { region: "North America", revenue: 142800 },
@@ -27,9 +33,9 @@ const tocItems: TocItem[] = [
   { id: "export-behavior", title: "Export Behavior", level: 2 },
   { id: "filenames", title: "Filenames", level: 2 },
   { id: "filter-metadata", title: "Filter Metadata", level: 2 },
-  { id: "props", title: "Props (ExportButton)", level: 2 },
+  { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 export default function ExportDocs() {
@@ -37,21 +43,7 @@ export default function ExportDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-            System
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            Export
-          </h1>
-          <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted)]">
-            One-click image, CSV, and clipboard export for every component. Enable globally
-            via MetricProvider or per-component with the{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">exportable</code>{" "}
-            prop.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         {/* Overview */}
         <DocSection id="overview" title="Overview">
@@ -280,48 +272,19 @@ Mar,168400,3800`}
         </DocSection>
 
         {/* Props Table */}
-        <DocSection id="props" title="Props (ExportButton)">
+        <DocSection id="props" title="Props">
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
             ExportButton is typically auto-rendered by CardShell. If you need to render it
             manually, import it from{" "}
             <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">@/components/ui/ExportButton</code>.
           </p>
-          <DataTable
-            data={[
-              { prop: "title", type: "string", default: '"Chart"', description: "Title used in the exported filename." },
-              { prop: "targetRef", type: "RefObject<HTMLElement>", default: "(required)", description: "Ref to the DOM element to capture for PNG export." },
-              { prop: "data", type: "Record<string, unknown>[]", default: "\u2014", description: "Raw data for CSV export. If not provided, the CSV option is hidden." },
-              { prop: "columns", type: "{ key: string; header?: string }[]", default: "\u2014", description: "Column definitions for CSV export. Auto-inferred from data keys if omitted." },
-              { prop: "copyValue", type: "string", default: "\u2014", description: "Formatted value for clipboard copy (used by KPI cards instead of image)." },
-              { prop: "dense", type: "boolean", default: "false", description: "Compact mode for smaller cards." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes on the wrapper." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "Export is disabled by default. Enable it globally via MetricProvider or per-component with the exportable prop.",
-              "CardShell auto-renders ExportButton when export is enabled \u2014 you rarely need to import it directly.",
-              "KPI cards export the raw numeric value by default (e.g. 142800, not \"142.8K\"). Override with exportable={{ data: rows }} to customize CSV columns.",
-              "Image capture uses modern-screenshot, not html2canvas. This correctly handles oklch(), color-mix(), lab(), and CSS custom properties.",
-              "PNG exports render at 4x device pixel ratio for crisp screenshots on retina displays.",
-              "CSV exports include a filter metadata header comment with period, dimensions, and cross-filter context.",
-              "The export dropdown renders via React portal to avoid clipping by overflow:hidden containers.",
-              "Copy to clipboard uses the Clipboard API. For charts it copies a PNG image; for KPI cards it copies the formatted text value.",
-              "Filenames are sanitized \u2014 special characters (<>:\"/\\|?*) are stripped for cross-platform filesystem compatibility.",
-              "The export button appears on hover with a smooth opacity transition. It is always accessible via keyboard focus.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -330,29 +293,16 @@ Mar,168400,3800`}
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="space-y-2">
-            {[
-              { name: "MetricProvider", desc: "Global config. Set exportable={true} to enable export on all components." },
-              { name: "CardShell", desc: "Internal wrapper that auto-renders ExportButton when export is enabled." },
-              { name: "FilterProvider", desc: "Filter context. Active filters are included in export filenames and CSV metadata." },
-              { name: "KpiCard", desc: "Exports formatted value to clipboard, single-row CSV, and card PNG." },
-              { name: "DataTable", desc: "Exports all rows as CSV with column headers." },
-              { name: "AreaChart / BarChart / LineChart", desc: "Export source data as CSV and card as 4x DPI PNG." },
-            ].map((item) => (
-              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
-                  {" \u2014 "}{item.desc}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

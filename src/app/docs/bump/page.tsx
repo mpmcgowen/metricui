@@ -1,11 +1,16 @@
 "use client";
 
 import { Bump } from "@/components/charts/Bump";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
+
+const component = getComponent("bump")!;
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -13,7 +18,7 @@ const tocItems: TocItem[] = [
   { id: "start-end-labels", title: "Start & End Labels", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -32,21 +37,7 @@ export default function BumpDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-xs text-[var(--muted)] mb-2">
-            <a href="/docs" className="hover:text-[var(--foreground)]">Docs</a>
-            <span>/</span>
-            <span>Charts</span>
-            <span>/</span>
-            <span>Bump</span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Bump</h1>
-          <p className="mt-2 text-[14px] text-[var(--muted)]">
-            Visualize how rankings change over time. Each line represents a series, and its
-            vertical position at each x-tick shows its rank. Lines cross as positions swap,
-            making it easy to spot trend leaders and laggards.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
           Use Bump for competitive rankings — product performance over quarters, team
@@ -160,47 +151,13 @@ export default function BumpDocs() {
 
         {/* Props */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "data", type: "BumpSeries[] | DataRow[]", default: "[]", description: "Nivo series or flat rows. Flat rows use index + categories (auto-ranked)." },
-              { prop: "index", type: "string", default: "\u2014", description: "X-axis field name (flat-row mode)." },
-              { prop: "categories", type: "Category[]", default: "\u2014", description: "Series field(s) \u2014 each becomes a ranked line (flat-row mode)." },
-              { prop: "title", type: "string", default: "\u2014", description: "Card title." },
-              { prop: "subtitle", type: "string", default: "\u2014", description: "Card subtitle." },
-              { prop: "format", type: "FormatOption", default: "\u2014", description: "Format for value labels and tooltips." },
-              { prop: "height", type: "number", default: "300", description: "Chart height in px." },
-              { prop: "colors", type: "string[]", default: "theme palette", description: "Series colors." },
-              { prop: "lineWidth", type: "number", default: "3", description: "Line thickness in px." },
-              { prop: "pointSize", type: "number", default: "8", description: "Point dot size in px." },
-              { prop: "pointBorderWidth", type: "number", default: "2", description: "Point border width in px." },
-              { prop: "animate", type: "boolean", default: "true", description: "Enable/disable animation." },
-              { prop: "legend", type: "boolean | LegendConfig", default: "auto", description: "Legend configuration. Shown for multi-series data." },
-              { prop: "crossFilter", type: "boolean | { field? }", default: "\u2014", description: "Enable cross-filtering on series click." },
-              { prop: "drillDown", type: "true | function", default: "\u2014", description: "true for auto table, or custom render function." },
-              { prop: "drillDownMode", type: '"slide-over" | "modal"', default: '"slide-over"', description: "Drill-down panel mode." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "Flat-row mode: values represent rank positions (1 = top). Each category column becomes a series. The component auto-converts to Nivo format.",
-              "Nivo-native mode: pass BumpSeries[] with { id, data: [{ x, y }] }. The y values are rank positions.",
-              "Start and end labels are always shown by default, colored to match each series. Set legend={false} to rely solely on labels.",
-              "Inactive lines fade to 25% opacity on hover, making the active series stand out.",
-              "Cross-filtering emits the series id by default. Override with crossFilter={{ field: 'myField' }}.",
-              "Built on @nivo/bump \u2014 all Nivo theming and tooltip conventions apply.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -209,23 +166,16 @@ export default function BumpDocs() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI-powered insights. Pass a string describing what this component shows.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="flex flex-wrap gap-2">
-            {["LineChart", "BarChart", "Radar", "HeatMap"].map((name) => (
-              <li key={name}>
-                <a
-                  href={`/docs/${name.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/^-/, "")}`}
-                  className="inline-block rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
-                >
-                  {name}
-                </a>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

@@ -6,12 +6,17 @@ import { PeriodSelector } from "@/components/filters/PeriodSelector";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
+
+const component = getComponent("filter-tags")!;
 
 const tocItems: TocItem[] = [
   { id: "full-filter-setup", title: "Full Filter Setup", level: 2 },
@@ -20,7 +25,7 @@ const tocItems: TocItem[] = [
   { id: "exclude", title: "Exclude Fields", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -205,19 +210,7 @@ export default function FilterTagsDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-            Filters
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            FilterTags
-          </h1>
-          <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted)]">
-            Context-driven filter chips that automatically display active filters from FilterProvider.
-            Renders removable chips for the active period, comparison mode, and dimension filters.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         {/* When to use */}
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
@@ -300,51 +293,13 @@ function Dashboard() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "exclude", type: "string[]", default: "\u2014", description: "Fields to exclude from display. Use '_period' and '_comparison' for built-in tags." },
-              { prop: "include", type: "string[]", default: "\u2014", description: "Whitelist — if set, only these fields show." },
-              { prop: "labels", type: "Record<string, string>", default: "\u2014", description: "Custom labels for dimension fields. Default: capitalized field name." },
-              { prop: "formatPeriod", type: "(range, preset) => string", default: "preset label or date range", description: "Custom period formatter." },
-              { prop: "formatDimension", type: "(field, values) => string", default: 'joins with ", "', description: "Custom dimension value formatter." },
-              { prop: "dismissible", type: "boolean", default: "true", description: "Show dismiss buttons on each chip." },
-              { prop: "clearAll", type: "boolean", default: "true", description: "Show 'Clear all' button when multiple filters active." },
-              { prop: "clearAllLabel", type: "string", default: '"Clear all"', description: "Label for the clear all button." },
-              { prop: "onClear", type: "(field: string) => void", default: "\u2014", description: "Callback when a specific filter is cleared." },
-              { prop: "onClearAll", type: "() => void", default: "\u2014", description: "Callback when all filters are cleared." },
-              { prop: "maxVisible", type: "number", default: "0 (no limit)", description: "Max visible chips before collapsing. Shows '+N more' button." },
-              { prop: "showPeriod", type: "boolean", default: "true", description: "Show the period filter as a tag." },
-              { prop: "showComparison", type: "boolean", default: "true", description: "Show the comparison mode as a tag." },
-              { prop: "dense", type: "boolean", default: "false", description: "Compact mode. Falls back to MetricProvider." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
-              { prop: "classNames", type: "{ root?, chip?, clearAll? }", default: "\u2014", description: "Sub-element class overrides." },
-              { prop: "id", type: "string", default: "\u2014", description: "HTML id." },
-              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "FilterTags reads from FilterContext automatically \u2014 no manual wiring needed. Just place it inside a FilterProvider.",
-              "It renders nothing when no filters are active. No empty state to worry about.",
-              "Period and comparison tags use special keys '_period' and '_comparison' for exclude/include.",
-              "Dismiss buttons call clearDimension() / setPeriod() / setComparisonMode() on the FilterContext.",
-              "Clear all calls filterContext.clearAll() which resets to the FilterProvider defaults.",
-              "maxVisible collapses overflow into a '+N more' button that expands when clicked.",
-              "Dense mode can be set per-component or inherited from MetricProvider.",
-              "FilterTags uses forwardRef and passes through id, data-testid, className, and classNames.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -353,28 +308,16 @@ function Dashboard() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="space-y-2">
-            {[
-              { name: "FilterProvider", desc: "Context provider that holds the active filter state. Wrap your dashboard in this." },
-              { name: "PeriodSelector", desc: "Date-range picker with presets and comparison toggle." },
-              { name: "DropdownFilter", desc: "Single or multi-select dropdown for dimension filtering." },
-              { name: "SegmentToggle", desc: "Pill-style toggle for switching between segments." },
-              { name: "useMetricFilters()", desc: "Hook to read the active period, comparison, and dimension filters." },
-            ].map((item) => (
-              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
-                  {" \u2014 "}{item.desc}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

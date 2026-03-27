@@ -1,12 +1,16 @@
 "use client";
 
 import { ScatterPlot } from "@/components/charts/ScatterPlot";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
-import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
+
+const component = getComponent("scatter-plot")!;
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -15,7 +19,7 @@ const tocItems: TocItem[] = [
   { id: "reference-lines", title: "Reference Lines", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -24,22 +28,22 @@ const tocItems: TocItem[] = [
 
 const accountData = [
   { account: "Acme Corp", mrr: 12400, seats: 45 },
-  { account: "Globex Inc", mrr: 8200, seats: 68 },       // high seats, low MRR — undermonetized
-  { account: "Initech", mrr: 15600, seats: 22 },          // low seats, high MRR — premium tier
+  { account: "Globex Inc", mrr: 8200, seats: 68 },
+  { account: "Initech", mrr: 15600, seats: 22 },
   { account: "Umbrella Ltd", mrr: 6800, seats: 18 },
   { account: "Stark Industries", mrr: 22100, seats: 55 },
-  { account: "Wayne Enterprises", mrr: 18400, seats: 120 }, // outlier — huge team, moderate MRR
-  { account: "Cyberdyne", mrr: 28500, seats: 32 },        // outlier — small team, very high MRR
+  { account: "Wayne Enterprises", mrr: 18400, seats: 120 },
+  { account: "Cyberdyne", mrr: 28500, seats: 32 },
   { account: "Oscorp", mrr: 11200, seats: 41 },
-  { account: "LexCorp", mrr: 4800, seats: 85 },           // undermonetized — lots of seats, low MRR
+  { account: "LexCorp", mrr: 4800, seats: 85 },
   { account: "Wonka Inc", mrr: 7300, seats: 12 },
   { account: "Dunder Mifflin", mrr: 5400, seats: 35 },
-  { account: "Pied Piper", mrr: 19800, seats: 28 },       // efficient — few seats, high MRR
+  { account: "Pied Piper", mrr: 19800, seats: 28 },
   { account: "Hooli", mrr: 14600, seats: 110 },
   { account: "Prestige Worldwide", mrr: 3200, seats: 8 },
   { account: "Sterling Cooper", mrr: 16700, seats: 48 },
-  { account: "Bluth Co", mrr: 2100, seats: 52 },          // undermonetized outlier
-  { account: "Massive Dynamic", mrr: 31200, seats: 42 },  // top performer
+  { account: "Bluth Co", mrr: 2100, seats: 52 },
+  { account: "Massive Dynamic", mrr: 31200, seats: 42 },
 ];
 
 const multiSeriesData = [
@@ -62,19 +66,7 @@ export default function ScatterPlotDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-xs text-[var(--muted)] mb-2">
-            <a href="/docs" className="hover:text-[var(--foreground)]">Docs</a>
-            <span>/</span>
-            <span>ScatterPlot</span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">ScatterPlot</h1>
-          <p className="mt-2 text-[14px] text-[var(--muted)]">
-            Visualize relationships between two numeric variables. Each point represents a data record
-            plotted by its x and y values. Supports flat-row mode (index + categories) and native
-            Nivo series format.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
           Use ScatterPlot to explore correlations — MRR vs seats, revenue vs headcount, spend vs
@@ -213,47 +205,13 @@ export default function ScatterPlotDocs() {
 
         {/* Props */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "data", type: "ScatterPlotDatumInput[] | DataRow[]", default: "[]", description: "Nivo series or flat rows. Flat rows use index + categories." },
-              { prop: "index", type: "string", default: "—", description: "X-axis field name (flat-row mode)." },
-              { prop: "categories", type: "Category[]", default: "—", description: "Y-axis field(s) — each becomes a series (flat-row mode)." },
-              { prop: "xFormat", type: "FormatOption", default: "—", description: "Format for x-axis values." },
-              { prop: "yFormat", type: "FormatOption", default: "—", description: "Format for y-axis values." },
-              { prop: "title", type: "string", default: "—", description: "Card title." },
-              { prop: "subtitle", type: "string", default: "—", description: "Card subtitle." },
-              { prop: "height", type: "number", default: "300", description: "Chart height in px." },
-              { prop: "colors", type: "string[]", default: "theme palette", description: "Series colors." },
-              { prop: "nodeSize", type: "number", default: "8", description: "Dot size in pixels." },
-              { prop: "referenceLines", type: "ReferenceLine[]", default: "—", description: "Horizontal or vertical reference lines." },
-              { prop: "animate", type: "boolean", default: "true", description: "Enable/disable animation." },
-              { prop: "legend", type: "boolean | LegendConfig", default: "auto", description: "Legend configuration. Shown for multi-series data." },
-              { prop: "crossFilter", type: "boolean | { field? }", default: "—", description: "Enable cross-filtering on click." },
-              { prop: "drillDown", type: "true | function", default: "—", description: "true for auto table, or custom render function." },
-              { prop: "xAxisLabel", type: "string", default: "—", description: "X-axis label text." },
-              { prop: "yAxisLabel", type: "string", default: "—", description: "Y-axis label text." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "Flat-row mode: pass data as DataRow[], set index for x-axis and categories for y-axis fields. Each category becomes a series.",
-              "Nivo-native mode: pass an array of { id, data: [{ x, y }] } objects. index and categories are ignored.",
-              "Reference lines support axis: 'x' or 'y', with optional label, color, and style ('solid' | 'dashed').",
-              "Cross-filtering emits the series id by default. Override with crossFilter={{ field: 'myField' }}.",
-              "Built on @nivo/scatterplot — all Nivo theming and tooltip conventions apply.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -262,23 +220,16 @@ export default function ScatterPlotDocs() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI-powered insights. Pass a string describing what this component shows.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="flex flex-wrap gap-2">
-            {["LineChart", "BarChart", "HeatMap", "Radar"].map((name) => (
-              <li key={name}>
-                <a
-                  href={`/docs/${name.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/^-/, "")}`}
-                  className="inline-block rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
-                >
-                  {name}
-                </a>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

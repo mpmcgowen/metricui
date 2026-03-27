@@ -4,13 +4,17 @@ import { Dashboard } from "@/components/layout/Dashboard";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { BarChart } from "@/components/charts/BarChart";
 import { MetricGrid } from "@/components/layout/MetricGrid";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import type { PropDef } from "@/lib/docs/component-data";
+
+const component = getComponent("dashboard")!;
 
 const tocItems: TocItem[] = [
   { id: "before-after", title: "Before & After", level: 2 },
@@ -36,69 +40,20 @@ const revenueData = [
   { month: "Jun", revenue: 55400 },
 ];
 
-// ---------------------------------------------------------------------------
-// Props definitions (manual — Dashboard has no component-data entry yet)
-// ---------------------------------------------------------------------------
-
-const dashboardProps: PropDef[] = [
-  { name: "children", type: "ReactNode", required: true, description: "Dashboard content. All MetricUI hooks are available inside." },
-  { name: "theme", type: "string | ThemePreset", required: false, description: "Theme preset name or custom ThemePreset object." },
-  { name: "colorScheme", type: '"light" | "dark" | "auto"', required: false, default: '"auto"', description: 'Color scheme. "auto" detects system preference.' },
-  { name: "variant", type: "CardVariant", required: false, default: '"default"', description: "Default card variant applied to all cards." },
-  { name: "locale", type: "string", required: false, default: '"en-US"', description: "BCP 47 locale string for number/date formatting." },
-  { name: "currency", type: "string", required: false, default: '"USD"', description: "ISO 4217 currency code." },
-  { name: "animate", type: "boolean", required: false, default: "true", description: "Global animation toggle. Set false to disable all transitions." },
-  { name: "motionConfig", type: "MotionConfig", required: false, description: "Spring physics config for animations." },
-  { name: "colors", type: "string[]", required: false, description: "Default series color palette for charts." },
-  { name: "nullDisplay", type: '"dash" | "zero" | "blank" | "na"', required: false, default: '"dash"', description: "How null values display in cards and tables." },
-  { name: "chartNullMode", type: '"gap" | "zero" | "connect"', required: false, default: '"gap"', description: "How charts handle null data points." },
-  { name: "dense", type: "boolean", required: false, default: "false", description: "Compact layout toggle. Reduces padding across all components." },
-  { name: "emptyState", type: "{ message?: string; icon?: ReactNode }", required: false, description: "Default empty state template shown when data is empty." },
-  { name: "errorState", type: "{ message?: string }", required: false, description: "Default error state template." },
-  { name: "loading", type: "boolean", required: false, default: "false", description: "Global loading toggle. Shows skeletons on all components." },
-  { name: "texture", type: "boolean", required: false, default: "true", description: "Noise texture overlay on cards." },
-  { name: "exportable", type: "boolean", required: false, default: "false", description: "Global export toggle. Enables export buttons on all components." },
-  { name: "tooltipHint", type: "boolean", required: false, default: "true", description: "Show action hints in chart tooltips." },
-  { name: "filters", type: "{ defaultPreset?, defaultComparison?, referenceDate? }", required: false, description: "Filter configuration object. Omit to skip FilterProvider entirely." },
-  { name: "filters.defaultPreset", type: "PeriodPreset", required: false, description: "Initial period preset (e.g. \"7d\", \"30d\", \"90d\")." },
-  { name: "filters.defaultComparison", type: "ComparisonMode", required: false, default: '"none"', description: "Initial comparison mode." },
-  { name: "filters.referenceDate", type: "Date", required: false, default: "now", description: "Reference date for preset calculations." },
-  { name: "maxDrillDepth", type: "number", required: false, default: "4", description: "Max drill-down nesting depth." },
-  { name: "renderContent", type: "(ctx: DrillDownContext) => ReactNode", required: false, description: "Render function for reactive drill-down overlay content." },
-];
-
-// ---------------------------------------------------------------------------
-// Related components
-// ---------------------------------------------------------------------------
-
-const relatedComponents = [
-  { name: "MetricProvider", href: "/docs/guides/getting-started" },
-  { name: "FilterProvider", href: "/docs/filter-bar" },
-  { name: "CrossFilterProvider", href: "/docs/drill-down" },
-  { name: "LinkedHoverProvider", href: "/docs/line-chart" },
-  { name: "DrillDown.Root", href: "/docs/drill-down" },
-];
-
 export default function DashboardDocs() {
   return (
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div className="mb-8">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-            Layout
-          </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-[var(--foreground)]">
-            Dashboard
-          </h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--muted)]">
-            All-in-one dashboard wrapper that replaces the 5-provider nesting
-            pattern. One component sets up MetricProvider, FilterProvider,
-            CrossFilterProvider, LinkedHoverProvider, and DrillDown.Root — every
-            prop is optional, every hook works inside.
-          </p>
-        </div>
+        <ComponentHero component={component} />
+
+        {/* When to use */}
+        <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
+          Use Dashboard as the outermost wrapper for any MetricUI dashboard. It replaces
+          the 5-provider nesting pattern with a single flat component — every prop is optional,
+          every hook works inside. For fine-grained control (e.g., two FilterProviders), compose
+          the individual providers directly.
+        </p>
 
         {/* Before & After */}
         <DocSection id="before-after" title="Before & After">
@@ -300,20 +255,13 @@ export default function DashboardDocs() {
 
         {/* Props */}
         <DocSection id="props" title="Props">
-          <PropsTable props={dashboardProps} />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "Dashboard replaces the 5-provider nesting pattern: MetricProvider, FilterProvider, CrossFilterProvider, LinkedHoverProvider, and DrillDown.Root.",
-              "Every prop is optional. A bare <Dashboard> still sets up all providers with sensible defaults.",
-              "All hooks work inside: useMetricFilters(), useCrossFilter(), useLinkedHover(), useDrillDownAction(), useMetricConfig().",
-              "Omit the filters prop to skip FilterProvider entirely — useful when you don't need date range filtering.",
-              "For fine-grained control (multiple FilterProviders, custom overlay placement), compose the individual providers directly.",
-              "The drill-down overlay panel is rendered automatically inside Dashboard. Use renderContent to customize what appears when a drill-down opens.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -322,22 +270,16 @@ export default function DashboardDocs() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
         {/* Related Components */}
         <DocSection id="related" title="Related Components">
-          <div className="flex flex-wrap gap-2">
-            {relatedComponents.map((comp) => (
-              <a
-                key={comp.name}
-                href={comp.href}
-                className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-1.5 font-[family-name:var(--font-mono)] text-[13px] font-medium text-[var(--accent)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)]/5"
-              >
-                {comp.name}
-              </a>
-            ))}
-          </div>
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

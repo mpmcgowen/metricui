@@ -42,7 +42,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const DOC_COMPONENTS: DocComponent[] = COMPONENTS.map((c) => ({
   ...c,
-  slug: toSlug(c.importName),
+  slug: c.slug ?? toSlug(c.importName),
   categoryLabel: CATEGORY_LABELS[c.category] ?? c.category,
 }));
 

@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
-import type { SegmentOption } from "@/components/filters/SegmentToggle";
 import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
-import { Activity, TrendingUp, BarChart3, Zap, Users, Bot } from "lucide-react";
+import { Activity, TrendingUp, BarChart3 } from "lucide-react";
+
+const component = getComponent("segment-toggle")!;
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -25,7 +29,7 @@ const tocItems: TocItem[] = [
   { id: "interactive", title: "Interactive Controls", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -126,19 +130,7 @@ export default function SegmentToggleDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-            Filters
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            SegmentToggle
-          </h1>
-          <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted)]">
-            A pill-style toggle for switching between segments. Supports single and multi-select,
-            icons, badge counts, color-coded segments, and FilterContext integration.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         {/* When to use */}
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
@@ -343,46 +335,13 @@ function MyContent() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "options", type: "SegmentOption[] | string[]", default: "(required)", description: "Segment options. Pass string[] as shorthand." },
-              { prop: "value", type: "string | string[]", default: "\u2014", description: "Controlled active segment(s)." },
-              { prop: "defaultValue", type: "string | string[]", default: "first option", description: "Default value for uncontrolled mode." },
-              { prop: "onChange", type: "(value) => void", default: "\u2014", description: "Change handler. Receives string (single) or string[] (multiple)." },
-              { prop: "multiple", type: "boolean", default: "false", description: "Allow multiple selections." },
-              { prop: "field", type: "string", default: "\u2014", description: "FilterContext field name. Reads/writes to dimensions." },
-              { prop: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Layout orientation." },
-              { prop: "size", type: '"sm" | "md" | "lg"', default: '"md"', description: "Size variant." },
-              { prop: "fullWidth", type: "boolean", default: "false", description: "Stretch to fill container." },
-              { prop: "dense", type: "boolean", default: "false", description: "Compact mode. Falls back to MetricProvider." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
-              { prop: "classNames", type: "{ root?, option?, indicator?, badge? }", default: "\u2014", description: "Sub-element class overrides." },
-              { prop: "id", type: "string", default: "\u2014", description: "HTML id." },
-              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "SegmentToggle is UI only \u2014 it captures the user\u2019s selection and exposes it via context or onChange, but never filters your data.",
-              "Without a FilterProvider, SegmentToggle still works via onChange. Context is optional.",
-              "In single-select mode, a sliding indicator animates between segments using the unified motion system.",
-              "In multi-select mode, at least one segment must always be selected \u2014 clicking the last active segment keeps it selected.",
-              "Badge counts are formatted through the MetricUI format engine (compact by default).",
-              "SegmentToggle uses forwardRef and passes through id, data-testid, className, and classNames.",
-              "Dense mode can be set per-component or inherited from MetricProvider.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -391,27 +350,16 @@ function MyContent() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="space-y-2">
-            {[
-              { name: "PeriodSelector", desc: "Date-range picker with presets and comparison toggle." },
-              { name: "FilterProvider", desc: "Context provider that holds the active filter state. Wrap your dashboard in this." },
-              { name: "useMetricFilters()", desc: "Hook to read the active period, comparison, and dimension filters from the nearest FilterProvider." },
-              { name: "MetricProvider", desc: "Global config. SegmentToggle inherits dense mode from here." },
-            ].map((item) => (
-              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
-                  {" \u2014 "}{item.desc}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

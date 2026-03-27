@@ -4,12 +4,17 @@ import { FilterBar } from "@/components/filters/FilterBar";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { PeriodSelector } from "@/components/filters/PeriodSelector";
 import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
+
+const component = getComponent("filter-bar")!;
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -19,7 +24,7 @@ const tocItems: TocItem[] = [
   { id: "connected", title: "Connected (FilterProvider)", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -100,21 +105,7 @@ export default function FilterBarDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-            Filters
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            FilterBar
-          </h1>
-          <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted)]">
-            A container for dashboard filters with auto FilterTags, badge slot, collapsible accordion,
-            and optional frosted-glass sticky mode. Organise filters into primary and secondary groups
-            with <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">FilterBar.Primary</code> and{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">FilterBar.Secondary</code>.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         {/* When to use */}
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
@@ -290,61 +281,13 @@ function MyContent() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "children", type: "ReactNode", default: "(required)", description: "Filter components. Optionally wrap in FilterBar.Primary / FilterBar.Secondary." },
-              { prop: "sticky", type: "boolean", default: "false", description: "Stick to the top of the viewport with frosted-glass backdrop blur and 12px offset." },
-              { prop: "tags", type: "boolean | FilterTagsProps", default: "true", description: "Show active filter tags below the controls. Pass an object to customise FilterTags props." },
-              { prop: "badge", type: "ReactNode", default: "\u2014", description: "Accent pill in the header row. Use for record counts, status text, etc." },
-              { prop: "collapsible", type: "boolean", default: "true", description: "Enable expand/collapse accordion on the header click." },
-              { prop: "defaultCollapsed", type: "boolean", default: "false", description: "Start in collapsed state. Active filters show as compact tags in the header." },
-              { prop: "dense", type: "boolean", default: "false", description: "Compact mode. Falls back to MetricProvider." },
-              { prop: "variant", type: "CardVariant", default: "\u2014", description: "Visual variant. Falls back to MetricProvider." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes on the root element." },
-              { prop: "classNames", type: "{ root?, controls?, tags?, summary? }", default: "\u2014", description: "Sub-element class overrides." },
-              { prop: "id", type: "string", default: "\u2014", description: "HTML id." },
-              { prop: "position", type: '"inline"', default: '"inline"', description: "Layout position. Currently only \"inline\" is supported. Reserved for future sticky/fixed modes." },
-              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
-
-          <h3 className="mt-8 mb-3 text-sm font-semibold text-[var(--foreground)]">Sub-components</h3>
-          <DataTable
-            data={[
-              { component: "FilterBar.Nav", description: "Slot for embedding DashboardNav inside the FilterBar. Renders above the filter controls." },
-              { component: "FilterBar.Primary", description: "Slot for primary (always-visible) filters. Renders children in a flex-wrap row." },
-              { component: "FilterBar.Secondary", description: "Slot for secondary filters, hidden behind a \"+N more\" toggle button." },
-            ]}
-            columns={[
-              { key: "component", header: "Component", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "FilterBar must be inside a FilterProvider. It reads context to display active filter counts and tags.",
-              "Without FilterBar.Primary / FilterBar.Secondary slots, all children render in the primary row.",
-              "The collapsed header shows active filters as compact FilterTags. Expand to see full controls.",
-              "The \"Clear all\" button appears automatically when any filters are active. It clears dimensions, period, and cross-filter.",
-              "Sticky mode uses backdrop-blur-xl with 80% card-bg opacity for the frosted-glass effect.",
-              "Tags are shown by default (tags={true}). Pass false to hide, or a FilterTagsProps object to customise.",
-              "Dense mode can be set per-component or inherited from MetricProvider.",
-              "FilterBar uses forwardRef and passes through id, data-testid, className, and classNames.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -353,30 +296,16 @@ function MyContent() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="space-y-2">
-            {[
-              { name: "DropdownFilter", desc: "Single or multi-select dropdown for dimension filtering. Drop inside FilterBar." },
-              { name: "PeriodSelector", desc: "Date-range picker with presets and comparison toggle. Drop inside FilterBar." },
-              { name: "SegmentToggle", desc: "Pill-style toggle for switching between segments. Drop inside FilterBar." },
-              { name: "FilterTags", desc: "Displays active filters as dismissible tags. FilterBar renders these automatically." },
-              { name: "FilterProvider", desc: "Context provider that holds the active filter state. Wrap your dashboard in this." },
-              { name: "useMetricFilters()", desc: "Hook to read the active period, comparison, and dimension filters from the nearest FilterProvider." },
-              { name: "MetricProvider", desc: "Global config. FilterBar inherits dense and variant from here." },
-            ].map((item) => (
-              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
-                  {" \u2014 "}{item.desc}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

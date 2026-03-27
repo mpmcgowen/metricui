@@ -4,12 +4,17 @@ import { useState } from "react";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import type { DropdownOption } from "@/components/filters/DropdownFilter";
 import { FilterProvider, useMetricFilters } from "@/lib/FilterContext";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
+
+const component = getComponent("dropdown-filter")!;
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -21,7 +26,7 @@ const tocItems: TocItem[] = [
   { id: "standalone", title: "Standalone (onChange)", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -203,19 +208,7 @@ export default function DropdownFilterDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-            Filters
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            DropdownFilter
-          </h1>
-          <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted)]">
-            A single or multi-select dropdown for dimension filtering. Supports search, grouped options,
-            count badges, and FilterContext integration.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         {/* When to use */}
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
@@ -384,50 +377,13 @@ function MyContent() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "label", type: "string", default: "(required)", description: "Label shown on the trigger button." },
-              { prop: "options", type: "DropdownOption[] | string[]", default: "(required)", description: "Options to display. Pass string[] as shorthand." },
-              { prop: "value", type: "string | string[]", default: "\u2014", description: "Controlled selected value(s)." },
-              { prop: "defaultValue", type: "string | string[]", default: "\u2014", description: "Default value for uncontrolled mode." },
-              { prop: "onChange", type: "(value) => void", default: "\u2014", description: "Change handler. Receives string (single) or string[] (multiple)." },
-              { prop: "multiple", type: "boolean", default: "false", description: "Allow multiple selections." },
-              { prop: "searchable", type: "boolean", default: "auto", description: "Show search input. Default: true when > 8 options." },
-              { prop: "searchPlaceholder", type: "string", default: '"Search..."', description: "Placeholder text for search input." },
-              { prop: "field", type: "string", default: "\u2014", description: "FilterContext field name. Reads/writes to dimensions." },
-              { prop: "showAll", type: "boolean", default: "true (multi)", description: "Show 'All' option that clears selection." },
-              { prop: "allLabel", type: "string", default: '"All"', description: "Label for the All option." },
-              { prop: "maxHeight", type: "number", default: "280", description: "Max height of dropdown in px." },
-              { prop: "dense", type: "boolean", default: "false", description: "Compact mode. Falls back to MetricProvider." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes." },
-              { prop: "classNames", type: "{ root?, trigger?, dropdown?, option?, search? }", default: "\u2014", description: "Sub-element class overrides." },
-              { prop: "id", type: "string", default: "\u2014", description: "HTML id." },
-              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "DropdownFilter is UI only \u2014 it captures the user\u2019s selection and exposes it via context or onChange, but never filters your data.",
-              "Without a FilterProvider, DropdownFilter still works via onChange. Context is optional.",
-              "Search is auto-enabled when there are more than 8 options. Override with the searchable prop.",
-              "The 'All' option is shown by default in multiple mode. It clears all selections.",
-              "Grouped options are rendered with section headers. Set the group property on each DropdownOption.",
-              "DropdownFilter uses forwardRef and passes through id, data-testid, className, and classNames.",
-              "Dense mode can be set per-component or inherited from MetricProvider.",
-              "The dropdown closes on outside click and on single-select option click.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -436,28 +392,16 @@ function MyContent() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="space-y-2">
-            {[
-              { name: "SegmentToggle", desc: "Pill-style toggle for switching between segments. Better for 2\u20136 options." },
-              { name: "PeriodSelector", desc: "Date-range picker with presets and comparison toggle." },
-              { name: "FilterProvider", desc: "Context provider that holds the active filter state. Wrap your dashboard in this." },
-              { name: "useMetricFilters()", desc: "Hook to read the active period, comparison, and dimension filters from the nearest FilterProvider." },
-              { name: "MetricProvider", desc: "Global config. DropdownFilter inherits dense mode from here." },
-            ].map((item) => (
-              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
-                  {" \u2014 "}{item.desc}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

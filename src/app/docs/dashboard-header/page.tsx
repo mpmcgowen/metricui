@@ -1,13 +1,17 @@
 "use client";
 
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
-import { ImportStatement } from "@/components/docs/ImportStatement";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
+
+const component = getComponent("dashboard-header")!;
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -18,7 +22,7 @@ const tocItems: TocItem[] = [
   { id: "dense-mode", title: "Dense Mode", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 export default function DashboardHeaderDocs() {
@@ -26,23 +30,7 @@ export default function DashboardHeaderDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-            Layout
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            DashboardHeader
-          </h1>
-          <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted)]">
-            A full-width header bar with title, live status badge, breadcrumbs, back navigation,
-            and an actions slot. The &quot;Updated X ago&quot; timestamp auto-ticks every 15 seconds.
-          </p>
-          <ImportStatement
-            components={["DashboardHeader"]}
-            className="mt-4"
-          />
-        </div>
+        <ComponentHero component={component} />
 
         {/* When to use */}
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
@@ -290,47 +278,20 @@ export default function DashboardHeaderDocs() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "title", type: "string", default: "(required)", description: "Dashboard title displayed as an h1." },
-              { prop: "subtitle", type: "string", default: "\u2014", description: "Secondary label below the title." },
-              { prop: "description", type: "string | ReactNode", default: "\u2014", description: "Content for the info popover beside the title." },
-              { prop: "lastUpdated", type: "Date", default: "\u2014", description: 'Enables the auto-ticking "Updated Xm ago" label. Also auto-derives the status badge.' },
-              { prop: "staleAfter", type: "number", default: "5", description: "Minutes before lastUpdated turns the status to stale (amber)." },
-              { prop: "status", type: '"live" | "stale" | "offline" | "loading"', default: "\u2014", description: "Explicit status badge. Overrides auto-derivation from lastUpdated." },
-              { prop: "back", type: "{ href?, label?, onClick? }", default: "\u2014", description: "Renders a back-arrow link above the title. Hidden when breadcrumbs are set." },
-              { prop: "breadcrumbs", type: "BreadcrumbItem[]", default: "\u2014", description: "Breadcrumb trail above the title. Each item: { label, href?, onClick? }." },
-              { prop: "actions", type: "ReactNode", default: "\u2014", description: "Right-aligned action slot for buttons, controls, or dropdowns." },
-              { prop: "variant", type: "CardVariant", default: "\u2014", description: "Card variant override. Falls back to MetricProvider." },
-              { prop: "dense", type: "boolean", default: "false", description: "Compact title size. Falls back to MetricProvider." },
-              { prop: "className", type: "string", default: "\u2014", description: "Additional CSS classes on the root element." },
-              { prop: "classNames", type: "{ root?, title?, subtitle?, ... }", default: "\u2014", description: "Sub-element class name overrides for fine-grained styling." },
-              { prop: "id", type: "string", default: "\u2014", description: "HTML id attribute." },
-              { prop: "data-testid", type: "string", default: "\u2014", description: "Test id for automated testing." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
+
+        {/* Data Shape */}
+        {component.dataShape && (
+          <DocSection id="data-shape" title="Data Shape">
+            <CodeBlock code={component.dataShape} language="typescript" />
+          </DocSection>
+        )}
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              'The "Updated X ago" label auto-ticks every 15 seconds via an internal interval. No polling or manual re-renders needed on your side.',
-              "Status is auto-derived from lastUpdated and staleAfter when you don't set status explicitly. Fresh data shows a green pulsing \"Live\" badge; stale data shows amber \"Stale\".",
-              "The back link is automatically hidden when breadcrumbs are provided, so you don't need to conditionally render one or the other.",
-              "DashboardHeader uses forwardRef and passes through id, data-testid, and className.",
-              "Dense mode can be set per-component or inherited from MetricProvider.",
-              "The component is wrapped in an error boundary. If it throws, a fallback message is rendered instead of crashing the page.",
-              "The classNames prop lets you target individual sub-elements (title, subtitle, breadcrumbs, status, actions) for custom styling without overriding the root.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -339,27 +300,16 @@ export default function DashboardHeaderDocs() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="space-y-2">
-            {[
-              { name: "Dashboard", desc: "All-in-one wrapper that sets up providers and renders DashboardHeader at the top." },
-              { name: "DashboardNav", desc: "Tabbed navigation for switching dashboard views. Often placed directly below DashboardHeader." },
-              { name: "FilterBar", desc: "Filter container with Primary/Secondary slots. Pairs with DashboardHeader for a complete top bar." },
-              { name: "MetricGrid", desc: "Responsive grid for KPI cards and charts. The main content area below the header." },
-            ].map((item) => (
-              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
-                  {" \u2014 "}{item.desc}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

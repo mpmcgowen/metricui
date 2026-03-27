@@ -3,16 +3,20 @@
 import { useState } from "react";
 import { DrillDown, useDrillDown, useDrillDownAction } from "@/components/ui/DrillDown";
 import { BarChart } from "@/components/charts/BarChart";
-import { AreaChart } from "@/components/charts/AreaChart";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { DataTable } from "@/components/tables/DataTable";
 import { MetricGrid } from "@/components/layout/MetricGrid";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable as PropsTable } from "@/components/tables/DataTable";
+
+const component = getComponent("drill-down")!;
 
 const tocItems: TocItem[] = [
   { id: "overview", title: "Overview", level: 2 },
@@ -25,7 +29,7 @@ const tocItems: TocItem[] = [
   { id: "tooltip-hints", title: "Tooltip Hints", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -37,15 +41,6 @@ const revenueByRegion = [
   { region: "EU", revenue: 98000, accounts: 634 },
   { region: "APAC", revenue: 67000, accounts: 421 },
   { region: "LATAM", revenue: 31000, accounts: 198 },
-];
-
-const monthlyTrend = [
-  { month: "Jan", US: 11200, EU: 7800, APAC: 5100, LATAM: 2400 },
-  { month: "Feb", US: 11800, EU: 8200, APAC: 5400, LATAM: 2600 },
-  { month: "Mar", US: 12300, EU: 8100, APAC: 5800, LATAM: 2700 },
-  { month: "Apr", US: 11900, EU: 8500, APAC: 5600, LATAM: 2500 },
-  { month: "May", US: 12100, EU: 8300, APAC: 5900, LATAM: 2800 },
-  { month: "Jun", US: 12700, EU: 8400, APAC: 6200, LATAM: 2700 },
 ];
 
 const accountDetail = [
@@ -369,19 +364,7 @@ export default function DrillDownDocs() {
     <div className="flex">
       {/* Main content */}
       <div className="min-w-0 flex-1 px-8 py-8">
-        {/* Hero */}
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-            Interaction
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            DrillDown
-          </h1>
-          <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted)]">
-            A portal-based drill-down system for exploring chart data in detail. Click a bar, slice, or
-            row to open a slide-over panel or modal with detail content — auto-generated or fully custom.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         {/* Overview */}
         <DocSection id="overview" title="Overview">
@@ -675,104 +658,13 @@ function MyComponent() {
 
         {/* Props Table */}
         <DocSection id="props" title="Props">
-          <h3 className="mb-3 text-sm font-semibold text-[var(--foreground)]">
-            DrillDown.Root
-          </h3>
-          <PropsTable
-            data={[
-              { prop: "children", type: "ReactNode", default: "(required)", description: "Dashboard content. Charts and components that trigger drills." },
-              { prop: "maxDepth", type: "number", default: "4", description: "Maximum nesting depth. New drills at max depth replace the last level." },
-              { prop: "renderContent", type: "(trigger: DrillDownTrigger) => ReactNode | null", default: "\u2014", description: "Reactive render function called on every render. Return null to use stored content." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
-
-          <h3 className="mb-3 mt-8 text-sm font-semibold text-[var(--foreground)]">
-            Chart drillDown props
-          </h3>
-          <PropsTable
-            data={[
-              { prop: "drillDown", type: "true | (event) => ReactNode", default: "\u2014", description: "true for auto-table, or a function returning custom drill content." },
-              { prop: "drillDownMode", type: '"slide-over" | "modal"', default: '"slide-over"', description: "Presentation mode for the drill panel." },
-              { prop: "tooltipHint", type: "boolean | string", default: "\u2014", description: 'true = "Click to drill down", or pass a custom string.' },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
-
-          <h3 className="mb-3 mt-8 text-sm font-semibold text-[var(--foreground)]">
-            DrillDownTrigger
-          </h3>
-          <PropsTable
-            data={[
-              { prop: "title", type: "string", default: "(required)", description: "Display title for the panel header." },
-              { prop: "field", type: "string", default: "\u2014", description: "Field name (e.g., 'country', 'plan')." },
-              { prop: "value", type: "string | number", default: "\u2014", description: "The clicked value. Shown as subtitle." },
-              { prop: "mode", type: '"slide-over" | "modal"', default: '"slide-over"', description: "Presentation mode for this specific drill." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
-
-          <h3 className="mb-3 mt-8 text-sm font-semibold text-[var(--foreground)]">
-            useDrillDown() return value
-          </h3>
-          <PropsTable
-            data={[
-              { prop: "isOpen", type: "boolean", default: "\u2014", description: "Whether any drill level is open." },
-              { prop: "depth", type: "number", default: "\u2014", description: "Current stack depth (0 = closed)." },
-              { prop: "breadcrumbs", type: "DrillDownTrigger[]", default: "\u2014", description: "The full breadcrumb trail of open levels." },
-              { prop: "open", type: "(trigger, content) => void", default: "\u2014", description: "Push a new drill level onto the stack." },
-              { prop: "back", type: "() => void", default: "\u2014", description: "Pop the top drill level (go back)." },
-              { prop: "close", type: "() => void", default: "\u2014", description: "Close all drill levels." },
-              { prop: "goTo", type: "(depth: number) => void", default: "\u2014", description: "Navigate to a specific breadcrumb depth." },
-              { prop: "activeContent", type: "DrillDownContent | null", default: "\u2014", description: "Current level's content (ReactNode or render function)." },
-              { prop: "activeTrigger", type: "DrillDownTrigger | null", default: "\u2014", description: "Current level's trigger metadata." },
-            ]}
-            columns={[
-              { key: "prop", header: "Property", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "DrillDown.Root must wrap any component that uses drillDown props or drill-down hooks.",
-              "The overlay is rendered via a portal on document.body — it works regardless of your layout's overflow or z-index.",
-              "Maximum 4 nested drill levels. At max depth, a new drill replaces the last level.",
-              "Escape key goes back one level. Clicking the backdrop closes all levels.",
-              "Body scroll is locked while a drill is open.",
-              "drillDown={true} auto-generates a detail view using AutoDrillTable — summary KPIs + a searchable DataTable filtered to the clicked value.",
-              "The drillDown prop takes priority over crossFilter for the click action when both are set.",
-              "Content can be a static ReactNode or a render function (() => ReactNode) for reactive/live content.",
-              "renderContent on DrillDown.Root is called on every render — use it for real-time dashboards where drill content should reflect live data.",
-              "useDrillDown() returns null if no DrillDown.Root is present — always null-check in shared components.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -781,30 +673,16 @@ function MyComponent() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI Insights analysis. See the <a href="/docs/ai-insights" className="font-medium text-[var(--accent)] hover:underline">AI Insights guide</a> for details.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="space-y-2">
-            {[
-              { name: "BarChart", desc: "Supports drillDown, drillDownMode, and tooltipHint props for click-to-drill." },
-              { name: "AreaChart", desc: "Supports drillDown on point click." },
-              { name: "DonutChart", desc: "Supports drillDown on slice click." },
-              { name: "DataTable", desc: "Often used inside drill content to show detail rows." },
-              { name: "KpiCard", desc: "Commonly placed in drill content for summary metrics." },
-              { name: "MetricGrid", desc: "Layout wrapper for organizing drill content." },
-              { name: "FilterProvider", desc: "Cross-filtering system. drillDown takes priority over crossFilter when both are set." },
-            ].map((item) => (
-              <li key={item.name} className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>
-                  <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">{item.name}</code>
-                  {" \u2014 "}{item.desc}
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

@@ -1,12 +1,16 @@
 "use client";
 
 import { Calendar } from "@/components/charts/Calendar";
+import { getComponent } from "@/lib/docs/component-data";
+import { ComponentHero } from "@/components/docs/ComponentHero";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
-import { CodeBlock } from "@/components/docs/CodeBlock";
+import { PropsTable } from "@/components/docs/PropsTable";
+import { RelatedComponents } from "@/components/docs/RelatedComponents";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
-import { DataTable } from "@/components/tables/DataTable";
+
+const component = getComponent("calendar")!;
 
 const tocItems: TocItem[] = [
   { id: "basic-example", title: "Basic Example", level: 2 },
@@ -14,7 +18,7 @@ const tocItems: TocItem[] = [
   { id: "vertical", title: "Vertical Direction", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
-  { id: "related", title: "Related", level: 2 },
+  { id: "related", title: "Related Components", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -85,18 +89,7 @@ export default function CalendarDocs() {
   return (
     <div className="flex">
       <div className="min-w-0 flex-1 px-8 py-8">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-xs text-[var(--muted)] mb-2">
-            <a href="/docs" className="hover:text-[var(--foreground)]">Docs</a>
-            <span>/</span>
-            <span>Calendar</span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Calendar</h1>
-          <p className="mt-2 text-[14px] text-[var(--muted)]">
-            A calendar heatmap that shows daily values over time. Each cell represents one day,
-            colored by intensity. Ideal for spotting patterns in daily activity data.
-          </p>
-        </div>
+        <ComponentHero component={component} />
 
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
           Use Calendar for daily time-series data — commit activity, daily revenue, support tickets,
@@ -201,44 +194,13 @@ export default function CalendarDocs() {
 
         {/* Props */}
         <DocSection id="props" title="Props">
-          <DataTable
-            data={[
-              { prop: "data", type: "CalendarDatum[] | DataRow[]", default: "[]", description: "Array of { day, value } or flat rows with dateField + valueField." },
-              { prop: "dateField", type: "string", default: "—", description: "Column name for the date when using flat rows." },
-              { prop: "valueField", type: "string", default: "—", description: "Column name for the value when using flat rows." },
-              { prop: "from", type: "string", default: "auto", description: "Start date (YYYY-MM-DD). Auto-derived from data if omitted." },
-              { prop: "to", type: "string", default: "auto", description: "End date (YYYY-MM-DD). Auto-derived from data if omitted." },
-              { prop: "title", type: "string", default: "—", description: "Card title." },
-              { prop: "height", type: "number", default: "200", description: "Chart height in px." },
-              { prop: "colors", type: "string[]", default: "theme palette", description: "Sequential color scale for cells." },
-              { prop: "emptyColor", type: "string", default: "theme default", description: "Color for days with no data." },
-              { prop: "format", type: "FormatOption", default: "—", description: "Value format for tooltips." },
-              { prop: "direction", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Calendar layout direction." },
-              { prop: "animate", type: "boolean", default: "true", description: "Enable/disable animation." },
-              { prop: "crossFilter", type: "boolean | { field? }", default: "—", description: "Enable cross-filtering on day click." },
-              { prop: "drillDown", type: "true | function", default: "—", description: "true for auto table, or custom render function." },
-            ]}
-            columns={[
-              { key: "prop", header: "Prop", render: (v) => <code className="font-[family-name:var(--font-mono)] font-semibold text-[var(--accent)]">{String(v)}</code> },
-              { key: "type", header: "Type", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "default", header: "Default", render: (v) => <code className="font-[family-name:var(--font-mono)] text-[var(--muted)]">{String(v)}</code> },
-              { key: "description", header: "Description" },
-            ]}
-            dense
-            variant="ghost"
-          />
+          <PropsTable props={component.props} />
         </DocSection>
 
         {/* Notes */}
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
-            {[
-              "Data must include { day: 'YYYY-MM-DD', value: number } entries. Missing days render with emptyColor.",
-              "The from/to range controls which months are rendered. Auto-derived from data if omitted.",
-              "Horizontal direction (default) flows left-to-right with months as columns. Vertical flows top-to-bottom.",
-              "Colors are applied as a sequential scale — provide 3-5 color stops for best results.",
-              "Built on @nivo/calendar — all Nivo theming and tooltip conventions apply.",
-            ].map((note, i) => (
+            {component.notes.map((note, i) => (
               <li
                 key={i}
                 className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
@@ -247,23 +209,16 @@ export default function CalendarDocs() {
                 {note}
               </li>
             ))}
+            <li className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]">
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+              The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">aiContext</code> prop (inherited from BaseComponentProps) adds business context for AI-powered insights. Pass a string describing what this component shows.
+            </li>
           </ul>
         </DocSection>
 
-        {/* Related */}
-        <DocSection id="related" title="Related">
-          <ul className="flex flex-wrap gap-2">
-            {["HeatMap", "AreaChart", "LineChart", "BarChart"].map((name) => (
-              <li key={name}>
-                <a
-                  href={`/docs/${name.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/^-/, "")}`}
-                  className="inline-block rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
-                >
-                  {name}
-                </a>
-              </li>
-            ))}
-          </ul>
+        {/* Related Components */}
+        <DocSection id="related" title="Related Components">
+          <RelatedComponents names={component.relatedComponents} />
         </DocSection>
       </div>
 

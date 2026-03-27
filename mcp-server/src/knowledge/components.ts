@@ -27,6 +27,8 @@ export interface ComponentExample {
 export interface ComponentDef {
   name: string;
   importName: string;
+  /** Optional slug override. When omitted, slug is auto-generated from importName. */
+  slug?: string;
   category: "chart" | "card" | "table" | "ui";
   tier: "free";
   description: string;
@@ -3174,6 +3176,1025 @@ interface LinkedHoverState {
       "The badge prop renders inline in the top-right of the filter bar. Great for showing filtered result counts.",
       "Active filter count and clear-all are automatically shown when filters are active.",
       "Uses forwardRef. Passes through id, data-testid, className, and classNames.",
+    ],
+  },
+  // =========================================================================
+  // DashboardNav
+  // =========================================================================
+  {
+    name: "DashboardNav",
+    importName: "DashboardNav",
+    category: "ui" as const,
+    tier: "free",
+    description: "Tabbed navigation for switching dashboard views or smooth-scrolling to page sections. Supports controlled and uncontrolled modes, URL sync, live badges, keyboard navigation, and nests inside FilterBar via FilterBar.Nav.",
+    longDescription:
+      "DashboardNav renders a horizontal tab strip with a sliding underline indicator. In 'tabs' mode (default), use value/onChange to control which content panel is visible. In 'scroll' mode, clicking a tab smooth-scrolls to the matching section ID and an IntersectionObserver keeps the active tab in sync. Supports live badges (numeric formatted through the format engine, or string), URL sync via syncUrl param, sticky mode with frosted-glass backdrop, full ARIA tablist keyboard navigation, and three size variants. Nest inside FilterBar.Nav to combine navigation and filtering in one bar.",
+    props: [
+      { name: "tabs", type: "DashboardNavTab[]", required: true, description: "Array of tab definitions. Each: { value, label, icon?, badge?, badgeFormat? }." },
+      { name: "value", type: "string", required: false, description: "Controlled active tab value." },
+      { name: "defaultValue", type: "string", required: false, default: "First tab", description: "Default active tab for uncontrolled usage." },
+      { name: "onChange", type: "(value: string) => void", required: false, description: "Callback fired when the active tab changes." },
+      { name: "mode", type: '"tabs" | "scroll"', required: false, default: '"tabs"', description: 'Navigation mode. "tabs" swaps content via value/onChange. "scroll" smooth-scrolls to section IDs matching tab values.' },
+      { name: "syncUrl", type: "string", required: false, description: "URL search param name. Persists the active tab in the URL for deep-linking." },
+      { name: "sticky", type: "boolean", required: false, default: "false", description: "Stick to viewport top with frosted-glass backdrop blur." },
+      { name: "size", type: '"sm" | "md" | "lg"', required: false, default: '"md"', description: "Size variant controlling text, padding, and icon sizing." },
+      { name: "dense", type: "boolean", required: false, default: "false", description: "Compact layout. Falls back to MetricProvider config." },
+      { name: "variant", type: "CardVariant", required: false, description: "Visual variant. Falls back to MetricProvider config." },
+      { name: "className", type: "string", required: false, description: "Additional CSS classes." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id." },
+    ],
+    dataShape: `interface DashboardNavTab {
+  value: string;
+  label: string;
+  icon?: ReactNode;
+  badge?: number | string;
+  badgeFormat?: FormatOption;
+}`,
+    minimalExample: `<DashboardNav
+  tabs={[
+    { value: "overview", label: "Overview" },
+    { value: "revenue", label: "Revenue" },
+    { value: "customers", label: "Customers" },
+  ]}
+  value={activeTab}
+  onChange={setActiveTab}
+/>`,
+    examples: [
+      {
+        title: "Tab mode with controlled value",
+        description: "Switch content panels based on active tab.",
+        code: `const [activeTab, setActiveTab] = useState("overview");
+
+<DashboardNav
+  tabs={[
+    { value: "overview", label: "Overview" },
+    { value: "revenue", label: "Revenue" },
+  ]}
+  value={activeTab}
+  onChange={setActiveTab}
+/>
+{activeTab === "overview" && <KpiCard title="Revenue" value={142800} format="currency" />}`,
+      },
+      {
+        title: "Scroll mode with sticky nav",
+        description: "Smooth-scroll to page sections. IntersectionObserver keeps active tab in sync.",
+        code: `<DashboardNav
+  tabs={[
+    { value: "metrics", label: "Metrics" },
+    { value: "charts", label: "Charts" },
+  ]}
+  mode="scroll"
+  sticky
+/>
+<div id="metrics">...</div>
+<div id="charts">...</div>`,
+      },
+      {
+        title: "Inside FilterBar.Nav",
+        description: "Combine navigation and filtering in one cohesive bar.",
+        code: `<FilterBar>
+  <FilterBar.Nav>
+    <DashboardNav tabs={tabs} value={activeTab} onChange={setActiveTab} />
+  </FilterBar.Nav>
+  <FilterBar.Primary>
+    <PeriodSelector presets={["7d", "30d"]} />
+  </FilterBar.Primary>
+</FilterBar>`,
+      },
+    ],
+    relatedComponents: ["Dashboard", "FilterBar", "MetricGrid", "DashboardHeader"],
+    configFields: ["dense", "variant"],
+    notes: [
+      "Uses forwardRef. Passes through id, data-testid, and className.",
+      "In scroll mode, an IntersectionObserver highlights the section currently in view. A 1-second lock prevents the observer from overriding the active tab immediately after a click-to-scroll.",
+      "The sliding underline indicator animates with a 200ms cubic-bezier transition.",
+      "Sticky mode applies frosted-glass styling (backdrop-blur-xl, 80% card-bg opacity) and sticks to the viewport top with z-index 31.",
+      "When dense is true and size is 'md', the component automatically downsizes to 'sm'.",
+      "Badge formatting uses the same format engine as KpiCard.",
+      "Full ARIA tablist semantics: role='tablist' on the container, role='tab' and aria-selected on each button.",
+      "Works both standalone and inside FilterBar.Nav. When inside FilterBar, omit the sticky prop.",
+    ],
+  },
+  // =========================================================================
+  // ExportButton
+  // =========================================================================
+  {
+    name: "Export",
+    importName: "ExportButton",
+    slug: "export",
+    category: "ui" as const,
+    tier: "free",
+    description: "One-click image, CSV, and clipboard export for every component. Enable globally via MetricProvider or per-component with the exportable prop.",
+    longDescription:
+      "The Export system adds a small download icon to any card or chart. Clicking it opens a dropdown with Save as image (4x DPI PNG via modern-screenshot), Download CSV (with filter metadata header), and Copy to clipboard (image for charts, formatted value for KPI cards). Enable globally with MetricProvider exportable prop, or per-component. CardShell auto-renders ExportButton — you rarely need to import it directly. Override CSV data with exportable={{ data: rows }}.",
+    props: [
+      { name: "title", type: "string", required: false, default: '"Chart"', description: "Title used in the exported filename." },
+      { name: "targetRef", type: "RefObject<HTMLElement>", required: true, description: "Ref to the DOM element to capture for PNG export." },
+      { name: "data", type: "Record<string, unknown>[]", required: false, description: "Raw data for CSV export. If not provided, the CSV option is hidden." },
+      { name: "columns", type: "{ key: string; header?: string }[]", required: false, description: "Column definitions for CSV export. Auto-inferred from data keys if omitted." },
+      { name: "copyValue", type: "string", required: false, description: "Formatted value for clipboard copy (used by KPI cards instead of image)." },
+      { name: "dense", type: "boolean", required: false, default: "false", description: "Compact mode for smaller cards." },
+      { name: "className", type: "string", required: false, description: "Additional CSS classes on the wrapper." },
+    ],
+    minimalExample: `<MetricProvider theme="emerald" exportable>
+  <KpiCard title="Revenue" value={142800} format="currency" />
+</MetricProvider>`,
+    examples: [
+      {
+        title: "Global export via MetricProvider",
+        description: "Enable export on all components with a single prop.",
+        code: `<MetricProvider theme="emerald" exportable>
+  <KpiCard title="Revenue" value={142800} format="currency" />
+  <BarChart data={data} index="month" categories={["revenue"]} />
+</MetricProvider>`,
+      },
+      {
+        title: "Per-component override",
+        description: "Disable export on specific components or customize CSV data.",
+        code: `<KpiCard title="Internal Score" value={87} exportable={false} />
+
+<BarChart
+  data={chartData}
+  index="region"
+  categories={["sales"]}
+  exportable={{ data: customCsvRows }}
+/>`,
+      },
+    ],
+    relatedComponents: ["MetricProvider", "KpiCard", "DataTable", "BarChart", "AreaChart"],
+    configFields: ["dense"],
+    notes: [
+      "Export is disabled by default. Enable it globally via MetricProvider or per-component with the exportable prop.",
+      "CardShell auto-renders ExportButton when export is enabled — you rarely need to import it directly.",
+      "KPI cards export the raw numeric value by default. Override with exportable={{ data: rows }}.",
+      "Image capture uses modern-screenshot (handles oklch, color-mix, lab CSS), not html2canvas.",
+      "PNG exports render at 4x device pixel ratio for crisp retina screenshots.",
+      "CSV exports include a filter metadata header comment with period, dimensions, and cross-filter context.",
+      "The export dropdown renders via React portal to avoid clipping by overflow:hidden containers.",
+      "Copy to clipboard uses the Clipboard API. Charts copy PNG image; KPI cards copy formatted text.",
+      "Filenames are sanitized — special characters stripped for cross-platform compatibility.",
+      "The export button appears on hover with a smooth opacity transition. Always accessible via keyboard focus.",
+    ],
+  },
+  // =========================================================================
+  // DashboardInsight (AI Insights)
+  // =========================================================================
+  {
+    name: "AI Insights",
+    importName: "DashboardInsight",
+    slug: "ai-insights",
+    category: "ui" as const,
+    tier: "free",
+    description: "Bring-your-own-LLM dashboard intelligence. Ask questions about your live data, reference specific components with @ mentions, and get streaming answers grounded in what your dashboard actually shows.",
+    longDescription:
+      "AI Insights is a system spanning four layers: the Dashboard ai prop (LLM connection, company/dashboard context), AiContext provider (auto-wraps dashboard, manages registered metrics and chat state), CardShell auto-registration (every component registers its live data automatically), and DashboardInsight (floating chat UI with sidebar, quick prompts, @ mention picker, streaming responses). BYO LLM: you provide an analyze function that takes messages and returns text (or async iterable for streaming). MetricUI handles context assembly, UI, and streaming.",
+    props: [
+      { name: "quickPrompts", type: "QuickPrompt[] | false", required: false, default: "3 defaults", description: "Quick prompt buttons shown when chat is empty. Pass false to hide." },
+      { name: "placeholder", type: "string", required: false, default: '"Ask about your data..."', description: "Placeholder text for the chat input." },
+      { name: "position", type: '"bottom-right" | "bottom-left"', required: false, default: '"bottom-right"', description: "Position of the floating button." },
+      { name: "className", type: "string", required: false, description: "Additional CSS classes on the floating button." },
+    ],
+    minimalExample: `<Dashboard ai={{ analyze: (msgs) => fetch("/api/ai", { method: "POST", body: JSON.stringify(msgs) }).then(r => r.text()) }}>
+  <DashboardInsight />
+</Dashboard>`,
+    examples: [
+      {
+        title: "Full AI setup with context",
+        description: "Dashboard with company context, dashboard context, and per-component aiContext.",
+        code: `<Dashboard
+  theme="emerald"
+  ai={{
+    analyze,
+    company: "Acme Corp — B2B SaaS, Series B.",
+    context: "Weekly growth dashboard. Target: MRR > $500K.",
+    tone: "executive",
+  }}
+>
+  <KpiCard title="MRR" value={487000} format="currency" aiContext="Includes expansion, not one-time fees." />
+  <DashboardInsight />
+</Dashboard>`,
+      },
+      {
+        title: "Custom quick prompts",
+        description: "Replace default quick prompts with domain-specific ones.",
+        code: `<DashboardInsight
+  quickPrompts={[
+    { label: "Growth check", prompt: "How is our growth trending?" },
+    { label: "Churn risk", prompt: "Which segments show early churn signals?" },
+  ]}
+/>`,
+      },
+    ],
+    relatedComponents: ["Dashboard", "KpiCard", "BarChart", "DataTable", "MetricProvider"],
+    configFields: [],
+    notes: [
+      "BYO LLM — MetricUI never calls an API. Your analyze function is the only thing that talks to a model.",
+      "All data stays client-side until your analyze function sends it.",
+      "Works with any model: OpenAI, Anthropic, Google, Mistral, local models via Ollama.",
+      "The aiContext prop is available on every component. Use it to add business definitions and caveats.",
+      "The built-in system prompt instructs the AI to cite sources using [[Component Title]] syntax.",
+      "Active filters from FilterContext are automatically included in the system prompt.",
+      "The analyze function receives an AbortSignal via options.signal. Forward it to your fetch call.",
+      "If analyze returns an AsyncIterable<string>, tokens render incrementally (streaming mode).",
+      "Quick prompts appear when chat is empty. Pass false to hide them entirely.",
+    ],
+  },
+
+  // =========================================================================
+  // ScatterPlot
+  // =========================================================================
+  {
+    name: "ScatterPlot",
+    importName: "ScatterPlot",
+    category: "chart" as const,
+    tier: "free",
+    description: "A scatter plot for visualizing correlations between two numeric dimensions with multi-series support.",
+    longDescription:
+      "ScatterPlot renders data points on an X/Y plane to reveal correlations, clusters, and outliers. Accepts Nivo-native series data or flat DataRow[] with index/categories for automatic transformation. Supports reference lines, linked hover, cross-filtering, drill-down, interactive legends with toggle, configurable node size, and responsive axis formatting.",
+    props: [
+      { name: "data", type: "ScatterPlotDatumInput[] | DataRow[]", required: false, description: "Nivo-native scatter series or flat DataRow[] with index/categories." },
+      { name: "index", type: "string", required: false, description: "X-axis field name for flat-row mode." },
+      { name: "categories", type: "Category[]", required: false, description: "Y-axis field(s) — each becomes a series (flat-row mode)." },
+      { name: "xFormat", type: "FormatOption", required: false, description: "Format for x-axis values." },
+      { name: "yFormat", type: "FormatOption", required: false, description: "Format for y-axis values." },
+      { name: "title", type: "string", required: false, description: "Chart card title." },
+      { name: "subtitle", type: "string", required: false, description: "Chart card subtitle." },
+      { name: "description", type: "string | React.ReactNode", required: false, description: "Description popover content." },
+      { name: "footnote", type: "string", required: false, description: "Footnote below the chart." },
+      { name: "action", type: "React.ReactNode", required: false, description: "Action slot in the top-right corner." },
+      { name: "height", type: "number", required: false, default: "300", description: "Chart height in px." },
+      { name: "colors", type: "string[]", required: false, description: "Series colors. Default: theme series palette." },
+      { name: "nodeSize", type: "number", required: false, default: "8", description: "Node (dot) size in px." },
+      { name: "enableGridX", type: "boolean", required: false, default: "true", description: "Show X-axis grid lines." },
+      { name: "enableGridY", type: "boolean", required: false, default: "true", description: "Show Y-axis grid lines." },
+      { name: "referenceLines", type: "ReferenceLine[]", required: false, description: "Horizontal or vertical reference lines for targets/benchmarks." },
+      { name: "animate", type: "boolean", required: false, default: "true", description: "Enable/disable chart animation." },
+      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend configuration. Default: shown for multi-series data." },
+      { name: "crossFilter", type: "boolean | { field?: string }", required: false, description: "Enable cross-filtering. true uses serieId as the field, or pass { field } to override." },
+      { name: "drillDown", type: "true | ((event: ScatterNodeClickEvent) => React.ReactNode)", required: false, description: "Drill-down. true = auto table, function = custom content." },
+      { name: "drillDownMode", type: '"slide-over" | "modal"', required: false, default: '"slide-over"', description: "Drill-down presentation mode." },
+      { name: "tooltipHint", type: "boolean | string", required: false, description: "Show action hint in tooltip." },
+      { name: "xAxisLabel", type: "string", required: false, description: "X-axis label." },
+      { name: "yAxisLabel", type: "string", required: false, description: "Y-axis label." },
+      { name: "onNodeClick", type: "(event: ScatterNodeClickEvent) => void", required: false, description: "Click handler for nodes." },
+      { name: "variant", type: "CardVariant", required: false, description: "Card variant." },
+      { name: "dense", type: "boolean", required: false, description: "Compact layout." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names." },
+      { name: "classNames", type: "{ root?: string; header?: string; chart?: string; body?: string; legend?: string }", required: false, description: "Sub-element class name overrides." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id." },
+      { name: "loading", type: "boolean", required: false, description: "Loading state." },
+      { name: "empty", type: "EmptyState", required: false, description: "Empty state configuration." },
+      { name: "error", type: "ErrorState", required: false, description: "Error state configuration." },
+      { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
+    ],
+    dataShape: `// Nivo-native format
+type ScatterPlotDatumInput = {
+  id: string;
+  data: { x: number; y: number }[];
+};
+
+// Flat-row format (converted via index + categories)
+type DataRow = { [key: string]: string | number };`,
+    minimalExample: `<ScatterPlot
+  data={[{
+    id: "Group A",
+    data: [
+      { x: 10, y: 20 }, { x: 30, y: 45 },
+      { x: 50, y: 35 }, { x: 70, y: 60 },
+    ],
+  }]}
+  title="Correlation"
+/>`,
+    examples: [
+      {
+        title: "Multi-series scatter with axis labels",
+        description: "Two series plotted with formatted axes and reference line.",
+        code: `<ScatterPlot
+  data={[
+    { id: "Product A", data: productAPoints },
+    { id: "Product B", data: productBPoints },
+  ]}
+  xFormat="compact"
+  yFormat="currency"
+  xAxisLabel="Units Sold"
+  yAxisLabel="Revenue"
+  referenceLines={[{ axis: "y", value: 50000, label: "Target", style: "dashed" }]}
+  title="Sales vs Revenue"
+  legend
+/>`,
+      },
+      {
+        title: "Flat-row mode with categories",
+        description: "Using DataRow[] with index and categories props.",
+        code: `<ScatterPlot
+  data={rows}
+  index="weight"
+  categories={["height", "wingspan"]}
+  xAxisLabel="Weight (kg)"
+  yAxisLabel="Measurement (cm)"
+  title="Physical Attributes"
+  legend
+/>`,
+      },
+      {
+        title: "Scatter with drill-down",
+        description: "Click a node to open a drill-down detail panel.",
+        code: `<ScatterPlot
+  data={clusterData}
+  drillDown
+  title="Customer Segments"
+  nodeSize={10}
+/>`,
+      },
+    ],
+    relatedComponents: ["AreaChart", "LineChart", "HeatMap"],
+    configFields: ["animate", "variant", "dense", "colors", "motionConfig"],
+    notes: [
+      "Uses forwardRef.",
+      "Accepts two data modes: Nivo-native series ({ id, data: [{ x, y }] }) or flat DataRow[] with index + categories.",
+      "Reference lines support both x-axis (vertical) and y-axis (horizontal) with label, color, and style options.",
+      "Linked hover highlights matching series nodes when hovering in sibling charts.",
+      "X/Y axis ticks and labels auto-hide at narrow container widths (<300px).",
+    ],
+  },
+
+  // =========================================================================
+  // Treemap
+  // =========================================================================
+  {
+    name: "Treemap",
+    importName: "Treemap",
+    category: "chart" as const,
+    tier: "free",
+    description: "A space-filling treemap chart for visualizing hierarchical or categorical proportions.",
+    longDescription:
+      "Treemap renders nested rectangles sized by value for visualizing part-to-whole relationships and hierarchies. Accepts hierarchical TreemapDatum (name/value/children) or flat DataRow[] with index/value for automatic conversion. Supports five tiling algorithms, configurable padding, label skip threshold, interactive legends with toggle, cross-filtering, and drill-down.",
+    props: [
+      { name: "data", type: "TreemapDatum | DataRow[]", required: false, description: "Hierarchical Nivo data (name/value/children) OR flat DataRow[] (aggregated via index + value)." },
+      { name: "index", type: "string", required: false, default: '"name"', description: "Category field name when using flat DataRow[] input." },
+      { name: "value", type: "string", required: false, default: '"value"', description: "Value field name when using flat DataRow[] input." },
+      { name: "title", type: "string", required: false, description: "Chart card title." },
+      { name: "subtitle", type: "string", required: false, description: "Chart card subtitle." },
+      { name: "description", type: "string | React.ReactNode", required: false, description: "Description popover content." },
+      { name: "footnote", type: "string", required: false, description: "Footnote." },
+      { name: "action", type: "React.ReactNode", required: false, description: "Action slot." },
+      { name: "height", type: "number", required: false, default: "300", description: "Chart height in px." },
+      { name: "colors", type: "string[]", required: false, description: "Tile colors. Default: theme series palette." },
+      { name: "format", type: "FormatOption", required: false, description: "Format for value labels and tooltips." },
+      { name: "tile", type: '"squarify" | "binary" | "slice" | "dice" | "sliceDice"', required: false, default: '"squarify"', description: "Tiling algorithm." },
+      { name: "innerPadding", type: "number", required: false, default: "2", description: "Padding between sibling tiles (px)." },
+      { name: "outerPadding", type: "number", required: false, default: "4", description: "Padding around the root (px)." },
+      { name: "labelSkipSize", type: "number", required: false, default: "24", description: "Skip labels on tiles smaller than this (px)." },
+      { name: "animate", type: "boolean", required: false, default: "true", description: "Enable/disable animation." },
+      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend configuration. Default: shown." },
+      { name: "crossFilter", type: "boolean | { field?: string }", required: false, description: "Enable cross-filtering. true uses index as the field." },
+      { name: "drillDown", type: "true | ((event: TreemapClickEvent) => React.ReactNode)", required: false, description: "Drill-down. true = auto table, function = custom content." },
+      { name: "drillDownMode", type: '"slide-over" | "modal"', required: false, default: '"slide-over"', description: "Drill-down presentation mode." },
+      { name: "tooltipHint", type: "boolean | string", required: false, description: "Tooltip action hint." },
+      { name: "variant", type: "CardVariant", required: false, description: "Card variant." },
+      { name: "dense", type: "boolean", required: false, description: "Compact layout." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names." },
+      { name: "classNames", type: "{ root?: string; header?: string; chart?: string; body?: string; legend?: string }", required: false, description: "Sub-element class name overrides." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id." },
+      { name: "loading", type: "boolean", required: false, description: "Loading state." },
+      { name: "empty", type: "EmptyState", required: false, description: "Empty state configuration." },
+      { name: "error", type: "ErrorState", required: false, description: "Error state configuration." },
+      { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
+    ],
+    dataShape: `// Hierarchical format
+interface TreemapDatum {
+  name: string;
+  value?: number;
+  children?: TreemapDatum[];
+}
+
+// Flat-row format (converted via index + value props)
+type DataRow = { name: string; value: number; [key: string]: unknown };`,
+    minimalExample: `<Treemap
+  data={[
+    { name: "Electronics", value: 42000 },
+    { name: "Clothing", value: 28000 },
+    { name: "Food", value: 18000 },
+    { name: "Books", value: 12000 },
+  ]}
+  index="name"
+  value="value"
+  title="Sales by Category"
+  format="currency"
+/>`,
+    examples: [
+      {
+        title: "Hierarchical treemap",
+        description: "Nested categories with children showing department breakdown.",
+        code: `<Treemap
+  data={{
+    name: "Company",
+    children: [
+      { name: "Engineering", value: 85000 },
+      { name: "Sales", children: [
+        { name: "Inside Sales", value: 42000 },
+        { name: "Field Sales", value: 38000 },
+      ]},
+      { name: "Marketing", value: 35000 },
+    ],
+  }}
+  title="Budget Allocation"
+  format="currency"
+/>`,
+      },
+      {
+        title: "Treemap with drill-down and tiling",
+        description: "Flat rows with binary tiling and drill-down enabled.",
+        code: `<Treemap
+  data={categoryRows}
+  index="category"
+  value="revenue"
+  tile="binary"
+  drillDown
+  format="compact"
+  title="Revenue by Category"
+/>`,
+      },
+    ],
+    relatedComponents: ["DonutChart", "BarChart", "Funnel"],
+    configFields: ["animate", "variant", "dense", "colors", "motionConfig"],
+    notes: [
+      "Uses forwardRef.",
+      "Accepts two data modes: hierarchical TreemapDatum (name/value/children) or flat DataRow[] with index + value props.",
+      "Only leaf nodes are rendered. The root node is used as a container.",
+      "The squarify algorithm (default) produces the most readable layouts. Use binary for more uniform shapes.",
+      "labelSkipSize prevents label clutter on small tiles — increase it for dense datasets.",
+    ],
+  },
+
+  // =========================================================================
+  // Calendar
+  // =========================================================================
+  {
+    name: "Calendar",
+    importName: "Calendar",
+    category: "chart" as const,
+    tier: "free",
+    description: "A GitHub-style calendar heatmap showing daily values over time.",
+    longDescription:
+      "Calendar renders a day-level heatmap over one or more years, similar to GitHub's contribution graph. Accepts Nivo CalendarDatum[] or flat DataRow[] with configurable date and value fields. Auto-derives the date range from data if not specified. Supports horizontal/vertical direction, custom color scales, drill-down, and cross-filtering.",
+    props: [
+      { name: "data", type: "CalendarDatum[] | DataRow[]", required: false, description: "Nivo CalendarDatum[] ({ day, value }) or flat DataRow[] with dateField/valueField columns." },
+      { name: "dateField", type: "string", required: false, default: '"day"', description: "Column name for the date when using flat rows." },
+      { name: "valueField", type: "string", required: false, default: '"value"', description: "Column name for the value when using flat rows." },
+      { name: "from", type: "string", required: false, description: "Start date (YYYY-MM-DD). Auto-derived from data if omitted." },
+      { name: "to", type: "string", required: false, description: "End date (YYYY-MM-DD). Auto-derived from data if omitted." },
+      { name: "title", type: "string", required: false, description: "Chart card title." },
+      { name: "subtitle", type: "string", required: false, description: "Chart card subtitle." },
+      { name: "description", type: "string | React.ReactNode", required: false, description: "Description popover content." },
+      { name: "footnote", type: "string", required: false, description: "Footnote." },
+      { name: "action", type: "React.ReactNode", required: false, description: "Action slot." },
+      { name: "height", type: "number", required: false, default: "200", description: "Chart height in px." },
+      { name: "colors", type: "string[]", required: false, description: "Sequential color scale for the heatmap cells." },
+      { name: "emptyColor", type: "string", required: false, description: "Color for days with no data. Default: theme-aware transparent." },
+      { name: "format", type: "FormatOption", required: false, description: "Value format for tooltips." },
+      { name: "direction", type: '"horizontal" | "vertical"', required: false, default: '"horizontal"', description: "Calendar direction." },
+      { name: "animate", type: "boolean", required: false, default: "true", description: "Enable/disable animation." },
+      { name: "onDayClick", type: "(event: CalendarClickEvent) => void", required: false, description: "Click handler for a day cell." },
+      { name: "drillDown", type: "true | ((event: CalendarClickEvent) => React.ReactNode)", required: false, description: "Drill-down. true = auto table, function = custom content." },
+      { name: "drillDownMode", type: '"slide-over" | "modal"', required: false, default: '"slide-over"', description: "Drill-down presentation mode." },
+      { name: "crossFilter", type: "boolean | { field?: string }", required: false, description: "Enable cross-filtering. true uses dateField as the field." },
+      { name: "tooltipHint", type: "boolean | string", required: false, description: "Tooltip action hint." },
+      { name: "variant", type: "CardVariant", required: false, description: "Card variant." },
+      { name: "dense", type: "boolean", required: false, description: "Compact layout." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names." },
+      { name: "classNames", type: "{ root?: string; header?: string; chart?: string; body?: string; footnote?: string }", required: false, description: "Sub-element class name overrides." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id." },
+      { name: "loading", type: "boolean", required: false, description: "Loading state." },
+      { name: "empty", type: "EmptyState", required: false, description: "Empty state configuration." },
+      { name: "error", type: "ErrorState", required: false, description: "Error state configuration." },
+      { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
+    ],
+    dataShape: `// Nivo-native format
+interface CalendarDatum {
+  day: string;   // "YYYY-MM-DD"
+  value: number;
+}
+
+// Flat-row format (converted via dateField + valueField)
+type DataRow = { day: string; value: number; [key: string]: unknown };`,
+    minimalExample: `<Calendar
+  data={[
+    { day: "2024-01-01", value: 3 },
+    { day: "2024-01-02", value: 7 },
+    { day: "2024-01-03", value: 1 },
+    { day: "2024-03-15", value: 12 },
+  ]}
+  title="Daily Activity"
+/>`,
+    examples: [
+      {
+        title: "Full-year calendar with custom colors",
+        description: "One year of data with explicit date range and green color scale.",
+        code: `<Calendar
+  data={dailyCommits}
+  from="2024-01-01"
+  to="2024-12-31"
+  colors={["#d8f3dc", "#b7e4c7", "#95d5b2", "#52b788", "#2d6a4f"]}
+  title="Commit Activity"
+  height={200}
+/>`,
+      },
+      {
+        title: "Calendar with drill-down",
+        description: "Click a day to see detail data in a slide-over panel.",
+        code: `<Calendar
+  data={dailyRevenue}
+  dateField="date"
+  valueField="revenue"
+  format="currency"
+  drillDown
+  title="Daily Revenue"
+/>`,
+      },
+    ],
+    relatedComponents: ["HeatMap", "AreaChart"],
+    configFields: ["animate", "variant", "dense", "colors"],
+    notes: [
+      "Uses forwardRef.",
+      "Date range (from/to) is auto-derived from data if not explicitly set.",
+      "Default height is 200px (not 300) since calendar charts are wider than tall.",
+      "Color scale is sequential (not categorical) — provide 4-6 gradient stops for best results.",
+      "Install @nivo/calendar as a peer dependency.",
+    ],
+  },
+
+  // =========================================================================
+  // Radar
+  // =========================================================================
+  {
+    name: "Radar",
+    importName: "Radar",
+    category: "chart" as const,
+    tier: "free",
+    description: "A radar/spider chart for comparing multiple metrics across categories on a radial grid.",
+    longDescription:
+      "Radar renders data on a radial grid with one spoke per dimension, useful for comparing multiple metrics or profiles. Uses the unified flat-row data format with index (dimension labels) and categories (metric columns). Supports configurable fill opacity, border width, dot size, grid levels, interactive legends with toggle, linked hover, cross-filtering, and drill-down.",
+    props: [
+      { name: "data", type: "DataRow[]", required: false, description: "Flat rows with an index dimension + numeric category columns." },
+      { name: "index", type: "string", required: false, description: "Column name for the dimension labels (spokes). Auto-inferred if omitted." },
+      { name: "categories", type: "Category[]", required: false, description: "Metric columns to compare on the radar. Auto-inferred if omitted." },
+      { name: "title", type: "string", required: false, description: "Chart card title." },
+      { name: "subtitle", type: "string", required: false, description: "Chart card subtitle." },
+      { name: "description", type: "string | React.ReactNode", required: false, description: "Description popover content." },
+      { name: "footnote", type: "string", required: false, description: "Footnote." },
+      { name: "action", type: "React.ReactNode", required: false, description: "Action slot." },
+      { name: "format", type: "FormatOption", required: false, description: "Format for value labels and tooltips." },
+      { name: "height", type: "number", required: false, default: "300", description: "Chart height in px." },
+      { name: "colors", type: "string[]", required: false, description: "Series colors." },
+      { name: "animate", type: "boolean", required: false, default: "true", description: "Enable/disable animation." },
+      { name: "fillOpacity", type: "number", required: false, default: "0.25", description: "Fill opacity for each series area." },
+      { name: "borderWidth", type: "number", required: false, default: "2", description: "Border width for each series." },
+      { name: "dotSize", type: "number", required: false, default: "6", description: "Dot size at each vertex." },
+      { name: "gridLevels", type: "number", required: false, default: "5", description: "Number of concentric grid levels." },
+      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend configuration. Default: shown for multi-series." },
+      { name: "crossFilter", type: "boolean | { field?: string }", required: false, description: "Enable cross-filtering. true uses index as the field." },
+      { name: "drillDown", type: 'true | ((event: { id: string; index: string }) => React.ReactNode)', required: false, description: "Drill-down. true = auto table, function = custom content." },
+      { name: "drillDownMode", type: '"slide-over" | "modal"', required: false, default: '"slide-over"', description: "Drill-down presentation mode." },
+      { name: "tooltipHint", type: "boolean | string", required: false, description: "Tooltip action hint." },
+      { name: "variant", type: "CardVariant", required: false, description: "Card variant." },
+      { name: "dense", type: "boolean", required: false, description: "Compact layout." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names." },
+      { name: "classNames", type: "{ root?: string; header?: string; chart?: string; body?: string; legend?: string }", required: false, description: "Sub-element class name overrides." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id." },
+      { name: "loading", type: "boolean", required: false, description: "Loading state." },
+      { name: "empty", type: "EmptyState", required: false, description: "Empty state configuration." },
+      { name: "error", type: "ErrorState", required: false, description: "Error state configuration." },
+      { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
+    ],
+    dataShape: `// Flat-row format — same as BarChart/AreaChart unified format
+// index = dimension labels (spokes), categories = metric columns
+const data = [
+  { skill: "JavaScript", "Dev A": 90, "Dev B": 70 },
+  { skill: "TypeScript",  "Dev A": 85, "Dev B": 80 },
+  { skill: "React",       "Dev A": 95, "Dev B": 60 },
+  { skill: "Node.js",     "Dev A": 70, "Dev B": 90 },
+  { skill: "CSS",          "Dev A": 60, "Dev B": 85 },
+];
+// index="skill" categories={["Dev A", "Dev B"]}`,
+    minimalExample: `<Radar
+  data={[
+    { skill: "Speed", value: 80 },
+    { skill: "Power", value: 65 },
+    { skill: "Accuracy", value: 90 },
+    { skill: "Defense", value: 70 },
+    { skill: "Stamina", value: 75 },
+  ]}
+  index="skill"
+  categories={["value"]}
+  title="Player Stats"
+/>`,
+    examples: [
+      {
+        title: "Multi-series radar comparison",
+        description: "Compare two profiles across multiple dimensions.",
+        code: `<Radar
+  data={[
+    { metric: "Speed", "Team A": 80, "Team B": 65 },
+    { metric: "Power", "Team A": 70, "Team B": 85 },
+    { metric: "Accuracy", "Team A": 90, "Team B": 75 },
+    { metric: "Defense", "Team A": 60, "Team B": 80 },
+    { metric: "Stamina", "Team A": 75, "Team B": 70 },
+  ]}
+  index="metric"
+  categories={["Team A", "Team B"]}
+  title="Team Comparison"
+  legend
+  fillOpacity={0.2}
+/>`,
+      },
+      {
+        title: "Radar with formatting and grid",
+        description: "Formatted values with custom grid levels.",
+        code: `<Radar
+  data={performanceData}
+  index="kpi"
+  categories={["actual", "target"]}
+  format="percent"
+  gridLevels={4}
+  dotSize={8}
+  title="KPI Performance"
+  legend
+/>`,
+      },
+    ],
+    relatedComponents: ["BarChart", "HeatMap", "ScatterPlot"],
+    configFields: ["animate", "variant", "dense", "colors", "motionConfig"],
+    notes: [
+      "Uses forwardRef.",
+      "Uses the unified flat-row data format (same as BarChart, AreaChart). Auto-infers index and categories if omitted.",
+      "Each category becomes a filled polygon on the radar. Multiple categories overlay for comparison.",
+      "gridLevels controls the number of concentric circles — reduce for cleaner look, increase for precision.",
+      "Radar works best with 4-8 dimensions. More than 10 spokes becomes hard to read.",
+    ],
+  },
+
+  // =========================================================================
+  // Sankey
+  // =========================================================================
+  {
+    name: "Sankey",
+    importName: "Sankey",
+    category: "chart" as const,
+    tier: "free",
+    description: "A Sankey flow diagram showing weighted directional relationships between nodes.",
+    longDescription:
+      "Sankey visualizes flows between nodes as weighted links, great for showing how values move through stages or between categories (e.g. traffic sources to pages to conversions). Accepts Nivo-native { nodes, links } format or flat DataRow[] with source/target/value fields. Supports configurable node thickness, padding, link opacity, gradient links, interactive legends, cross-filtering, and drill-down on node click.",
+    props: [
+      { name: "data", type: "SankeyData | DataRow[]", required: false, description: "Native { nodes, links } format or flat DataRow[] with source/target/value columns." },
+      { name: "sourceField", type: "string", required: false, default: '"source"', description: "Column name for the source node (flat format)." },
+      { name: "targetField", type: "string", required: false, default: '"target"', description: "Column name for the target node (flat format)." },
+      { name: "valueField", type: "string", required: false, default: '"value"', description: "Column name for the link value (flat format)." },
+      { name: "title", type: "string", required: false, description: "Chart card title." },
+      { name: "subtitle", type: "string", required: false, description: "Chart card subtitle." },
+      { name: "description", type: "string | React.ReactNode", required: false, description: "Description popover content." },
+      { name: "footnote", type: "string", required: false, description: "Footnote." },
+      { name: "action", type: "React.ReactNode", required: false, description: "Action slot." },
+      { name: "format", type: "FormatOption", required: false, description: "Format for value labels and tooltips." },
+      { name: "height", type: "number", required: false, default: "300", description: "Chart height in px." },
+      { name: "colors", type: "string[]", required: false, description: "Node colors." },
+      { name: "animate", type: "boolean", required: false, default: "true", description: "Enable/disable animation." },
+      { name: "nodeThickness", type: "number", required: false, default: "18", description: "Thickness of each node rect." },
+      { name: "nodePadding", type: "number", required: false, default: "12", description: "Vertical padding between nodes." },
+      { name: "linkOpacity", type: "number", required: false, default: "0.4", description: "Opacity of the links." },
+      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend configuration." },
+      { name: "crossFilter", type: "boolean | { field?: string }", required: false, description: "Enable cross-filtering. true uses source as the field." },
+      { name: "drillDown", type: 'true | ((event: { id: string; source?: string; target?: string; value?: number }) => React.ReactNode)', required: false, description: "Drill-down on node click. true = auto table, function = custom content." },
+      { name: "drillDownMode", type: '"slide-over" | "modal"', required: false, default: '"slide-over"', description: "Drill-down presentation mode." },
+      { name: "tooltipHint", type: "boolean | string", required: false, description: "Tooltip action hint." },
+      { name: "variant", type: "CardVariant", required: false, description: "Card variant." },
+      { name: "dense", type: "boolean", required: false, description: "Compact layout." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names." },
+      { name: "classNames", type: "{ root?: string; header?: string; chart?: string; body?: string; legend?: string }", required: false, description: "Sub-element class name overrides." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id." },
+      { name: "loading", type: "boolean", required: false, description: "Loading state." },
+      { name: "empty", type: "EmptyState", required: false, description: "Empty state configuration." },
+      { name: "error", type: "ErrorState", required: false, description: "Error state configuration." },
+      { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
+    ],
+    dataShape: `// Nivo-native format
+interface SankeyData {
+  nodes: { id: string }[];
+  links: { source: string; target: string; value: number }[];
+}
+
+// Flat-row format (converted via sourceField + targetField + valueField)
+const rows = [
+  { source: "Google",  target: "Landing Page", value: 5000 },
+  { source: "Direct",  target: "Landing Page", value: 3000 },
+  { source: "Landing Page", target: "Signup", value: 4200 },
+];`,
+    minimalExample: `<Sankey
+  data={{
+    nodes: [{ id: "A" }, { id: "B" }, { id: "C" }],
+    links: [
+      { source: "A", target: "B", value: 50 },
+      { source: "A", target: "C", value: 30 },
+    ],
+  }}
+  title="Flow"
+/>`,
+    examples: [
+      {
+        title: "Traffic flow with flat rows",
+        description: "Flat DataRow[] converted to Sankey nodes and links automatically.",
+        code: `<Sankey
+  data={[
+    { source: "Google",  target: "Home",     value: 5000 },
+    { source: "Google",  target: "Products", value: 3000 },
+    { source: "Direct",  target: "Home",     value: 2000 },
+    { source: "Home",    target: "Checkout",  value: 4000 },
+    { source: "Products", target: "Checkout", value: 2500 },
+  ]}
+  format="compact"
+  title="User Flow"
+  height={400}
+/>`,
+      },
+      {
+        title: "Sankey with drill-down and legend",
+        description: "Click a node to drill down into detail data.",
+        code: `<Sankey
+  data={budgetFlows}
+  drillDown
+  legend
+  format="currency"
+  title="Budget Allocation"
+  nodeThickness={24}
+  linkOpacity={0.3}
+/>`,
+      },
+    ],
+    relatedComponents: ["Funnel", "BarChart", "Treemap"],
+    configFields: ["animate", "variant", "dense", "colors", "motionConfig"],
+    notes: [
+      "Uses forwardRef.",
+      "Accepts two data modes: Nivo-native { nodes, links } or flat DataRow[] with source/target/value fields.",
+      "Node labels are positioned outside the node with horizontal orientation. At narrow widths (<500px), margins shrink automatically.",
+      "Link gradient is enabled by default — links blend from source to target color.",
+      "Install @nivo/sankey as a peer dependency.",
+    ],
+  },
+
+  // =========================================================================
+  // Choropleth
+  // =========================================================================
+  {
+    name: "Choropleth",
+    importName: "Choropleth",
+    category: "chart" as const,
+    tier: "free",
+    description: "A geographic choropleth map with color-scaled regions for spatial data visualization.",
+    longDescription:
+      "Choropleth renders a geographic map with regions colored by value, ideal for visualizing spatial distributions (population, revenue by country, etc.). Requires a GeoJSON FeatureCollection for map geometry — use worldFeatures for world maps or usStatesFeatures for US state maps. Supports multiple projection types, configurable color scale with log/sqrt transforms for skewed distributions, auto-computed domains, drill-down, and cross-filtering.",
+    props: [
+      { name: "data", type: "ChoroplethDatum[] | DataRow[]", required: false, description: "Region data. ChoroplethDatum[] ({ id, value }) or flat DataRow[] with idField/valueField columns." },
+      { name: "idField", type: "string", required: false, default: '"id"', description: "Column name for region ISO code (flat format)." },
+      { name: "valueField", type: "string", required: false, default: '"value"', description: "Column name for region value (flat format)." },
+      { name: "features", type: "GeoJSON Feature[]", required: true, description: "GeoJSON FeatureCollection features. Each feature.id must match data id. Use worldFeatures or usStatesFeatures helpers." },
+      { name: "title", type: "string", required: false, description: "Chart card title." },
+      { name: "subtitle", type: "string", required: false, description: "Chart card subtitle." },
+      { name: "description", type: "string | React.ReactNode", required: false, description: "Description popover content." },
+      { name: "footnote", type: "string", required: false, description: "Footnote." },
+      { name: "action", type: "React.ReactNode", required: false, description: "Action slot." },
+      { name: "format", type: "FormatOption", required: false, description: "Format for value labels and tooltips." },
+      { name: "height", type: "number", required: false, default: "400", description: "Chart height in px. Default is taller (400) for maps." },
+      { name: "colors", type: "string[]", required: false, description: "Color scheme for the sequential scale. Provide an array of color stops." },
+      { name: "animate", type: "boolean", required: false, default: "true", description: "Enable/disable animation." },
+      { name: "projectionType", type: '"mercator" | "naturalEarth1" | "equalEarth" | "orthographic"', required: false, default: '"mercator"', description: "Map projection type." },
+      { name: "projectionScale", type: "number", required: false, default: "100", description: "Projection scale." },
+      { name: "projectionTranslation", type: "[number, number]", required: false, default: "[0.5, 0.5]", description: "Projection translation [x, y]." },
+      { name: "borderWidth", type: "number", required: false, default: "0.5", description: "Border width on features." },
+      { name: "borderColor", type: "string", required: false, description: "Border color. Default: theme-aware." },
+      { name: "domain", type: "[number, number]", required: false, description: "Domain for the color scale [min, max]. Auto-computed if omitted." },
+      { name: "scaleType", type: '"linear" | "log" | "sqrt"', required: false, default: '"linear"', description: 'Color scale type. "log" and "sqrt" compress skewed distributions (e.g. population).' },
+      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend configuration." },
+      { name: "crossFilter", type: "boolean | { field?: string }", required: false, description: "Enable cross-filtering. true uses id as the field." },
+      { name: "drillDown", type: 'true | ((event: { id: string; value: number; label: string }) => React.ReactNode)', required: false, description: "Drill-down. true = auto table, function = custom content." },
+      { name: "drillDownMode", type: '"slide-over" | "modal"', required: false, default: '"slide-over"', description: "Drill-down presentation mode." },
+      { name: "tooltipLabel", type: "string", required: false, description: 'Label shown in the tooltip for the value (e.g. "Population", "Revenue"). Defaults to valueField name.' },
+      { name: "tooltipHint", type: "boolean | string", required: false, description: "Tooltip action hint." },
+      { name: "variant", type: "CardVariant", required: false, description: "Card variant." },
+      { name: "dense", type: "boolean", required: false, description: "Compact layout." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names." },
+      { name: "classNames", type: "{ root?: string; header?: string; chart?: string; body?: string }", required: false, description: "Sub-element class name overrides." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id." },
+      { name: "loading", type: "boolean", required: false, description: "Loading state." },
+      { name: "empty", type: "EmptyState", required: false, description: "Empty state configuration." },
+      { name: "error", type: "ErrorState", required: false, description: "Error state configuration." },
+      { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
+    ],
+    dataShape: `// Nivo-native format
+interface ChoroplethDatum {
+  id: string;    // ISO 3166-1 alpha-3 code (e.g. "USA", "GBR")
+  value: number;
+}
+
+// Flat-row format (converted via idField + valueField)
+const rows = [
+  { country: "USA", population: 331000000 },
+  { country: "GBR", population: 67000000 },
+];
+// idField="country" valueField="population"`,
+    minimalExample: `<Choropleth
+  data={[
+    { id: "USA", value: 331000000 },
+    { id: "GBR", value: 67000000 },
+    { id: "DEU", value: 83000000 },
+  ]}
+  features={worldFeatures}
+  format="compact"
+  title="Population by Country"
+/>`,
+    examples: [
+      {
+        title: "World map with log scale",
+        description: "Population data with log scale to handle extreme value ranges.",
+        code: `<Choropleth
+  data={populationData}
+  features={worldFeatures}
+  scaleType="log"
+  projectionType="naturalEarth1"
+  projectionScale={120}
+  format="compact"
+  tooltipLabel="Population"
+  title="World Population"
+  height={500}
+/>`,
+      },
+      {
+        title: "US states with drill-down",
+        description: "Revenue by state with sqrt scale and drill-down.",
+        code: `<Choropleth
+  data={stateRevenue}
+  features={usStatesFeatures}
+  idField="state"
+  valueField="revenue"
+  scaleType="sqrt"
+  projectionType="mercator"
+  projectionScale={600}
+  projectionTranslation={[0.5, 1.2]}
+  format="currency"
+  tooltipLabel="Revenue"
+  drillDown
+  title="Revenue by State"
+/>`,
+      },
+      {
+        title: "Custom color scale",
+        description: "Blue sequential palette with explicit domain.",
+        code: `<Choropleth
+  data={gdpData}
+  features={worldFeatures}
+  colors={["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08306b"]}
+  domain={[0, 20000000000000]}
+  format={{ style: "currency", compact: true }}
+  title="GDP by Country"
+/>`,
+      },
+    ],
+    relatedComponents: ["HeatMap", "Treemap"],
+    configFields: ["animate", "variant", "dense", "colors"],
+    notes: [
+      "Uses forwardRef.",
+      "The features prop is **required** — you must provide GeoJSON geometry. Use worldFeatures for world maps or usStatesFeatures for US state maps.",
+      "worldFeatures and usStatesFeatures are helper exports that load TopoJSON and convert to GeoJSON features. Import them from metricui/geo.",
+      "scaleType controls how values map to colors. Use 'log' for data with extreme ranges (e.g. population) and 'sqrt' for moderate skew. 'linear' works for uniform distributions.",
+      "tooltipLabel customizes what the value is called in the tooltip (e.g. 'Population' instead of 'value'). Defaults to the valueField name.",
+      "Feature ids must match data ids. For world maps, use ISO 3166-1 alpha-3 codes (USA, GBR, DEU). For US states, use FIPS codes or state abbreviations depending on your GeoJSON.",
+    ],
+  },
+
+  // =========================================================================
+  // Bump
+  // =========================================================================
+  {
+    name: "Bump",
+    importName: "Bump",
+    category: "chart" as const,
+    tier: "free",
+    description: "A bump chart showing ranking changes over time with smooth connecting lines.",
+    longDescription:
+      "Bump renders ranking trajectories as smooth curves connecting positions across time steps. Ideal for showing how items change rank over time (e.g. top products by month, team standings by week). Accepts Nivo-native BumpSeries[] or flat DataRow[] with index + categories — flat rows are auto-ranked by descending value at each position. Supports configurable line width, point size, interactive legends, start/end labels, linked hover, cross-filtering, and drill-down.",
+    props: [
+      { name: "data", type: "BumpSeries[] | DataRow[]", required: false, description: "Nivo-native BumpSeries[] ({ id, data: [{ x, y }] }) or flat DataRow[] with index + categories (values auto-ranked)." },
+      { name: "index", type: "string", required: false, description: "Column for x-axis labels (flat format). Auto-inferred if omitted." },
+      { name: "categories", type: "Category[]", required: false, description: "Category columns — each becomes a ranked series (flat format). Auto-inferred if omitted." },
+      { name: "title", type: "string", required: false, description: "Chart card title." },
+      { name: "subtitle", type: "string", required: false, description: "Chart card subtitle." },
+      { name: "description", type: "string | React.ReactNode", required: false, description: "Description popover content." },
+      { name: "footnote", type: "string", required: false, description: "Footnote." },
+      { name: "action", type: "React.ReactNode", required: false, description: "Action slot." },
+      { name: "format", type: "FormatOption", required: false, description: "Format for value labels and tooltips." },
+      { name: "height", type: "number", required: false, default: "300", description: "Chart height in px." },
+      { name: "colors", type: "string[]", required: false, description: "Series colors." },
+      { name: "animate", type: "boolean", required: false, default: "true", description: "Enable/disable animation." },
+      { name: "lineWidth", type: "number", required: false, default: "3", description: "Line width." },
+      { name: "pointSize", type: "number", required: false, default: "8", description: "Point size at each position." },
+      { name: "pointBorderWidth", type: "number", required: false, default: "2", description: "Point border width." },
+      { name: "legend", type: "boolean | LegendConfig", required: false, description: "Legend configuration. Default: shown for multi-series." },
+      { name: "crossFilter", type: "boolean | { field?: string }", required: false, description: "Enable cross-filtering. true uses series id as the field." },
+      { name: "drillDown", type: 'true | ((event: { id: string; x: string | number; y: number }) => React.ReactNode)', required: false, description: "Drill-down. true = auto table, function = custom content." },
+      { name: "drillDownMode", type: '"slide-over" | "modal"', required: false, default: '"slide-over"', description: "Drill-down presentation mode." },
+      { name: "tooltipHint", type: "boolean | string", required: false, description: "Tooltip action hint." },
+      { name: "variant", type: "CardVariant", required: false, description: "Card variant." },
+      { name: "dense", type: "boolean", required: false, description: "Compact layout." },
+      { name: "className", type: "string", required: false, description: "Additional CSS class names." },
+      { name: "classNames", type: "{ root?: string; header?: string; chart?: string; body?: string; legend?: string }", required: false, description: "Sub-element class name overrides." },
+      { name: "id", type: "string", required: false, description: "HTML id attribute." },
+      { name: "data-testid", type: "string", required: false, description: "Test id." },
+      { name: "loading", type: "boolean", required: false, description: "Loading state." },
+      { name: "empty", type: "EmptyState", required: false, description: "Empty state configuration." },
+      { name: "error", type: "ErrorState", required: false, description: "Error state configuration." },
+      { name: "stale", type: "StaleState", required: false, description: "Stale data indicator." },
+    ],
+    dataShape: `// Nivo-native format
+interface BumpSeries {
+  id: string;
+  data: { x: string | number; y: number | null }[];
+}
+
+// Flat-row format (auto-ranked by descending value at each x-position)
+const rows = [
+  { month: "Jan", "Product A": 500, "Product B": 800, "Product C": 300 },
+  { month: "Feb", "Product A": 700, "Product B": 600, "Product C": 400 },
+  { month: "Mar", "Product A": 900, "Product B": 750, "Product C": 850 },
+];
+// index="month" categories={["Product A", "Product B", "Product C"]}
+// Ranks: Jan: B=#1, A=#2, C=#3; Feb: A=#1, B=#2, C=#3; Mar: A=#1, C=#2, B=#3`,
+    minimalExample: `<Bump
+  data={[
+    { id: "A", data: [{ x: "Q1", y: 1 }, { x: "Q2", y: 3 }, { x: "Q3", y: 2 }] },
+    { id: "B", data: [{ x: "Q1", y: 2 }, { x: "Q2", y: 1 }, { x: "Q3", y: 3 }] },
+    { id: "C", data: [{ x: "Q1", y: 3 }, { x: "Q2", y: 2 }, { x: "Q3", y: 1 }] },
+  ]}
+  title="Rankings"
+/>`,
+    examples: [
+      {
+        title: "Auto-ranked from flat rows",
+        description: "Pass raw values — ranks are computed automatically by descending value.",
+        code: `<Bump
+  data={[
+    { month: "Jan", "Apple": 500, "Google": 800, "Amazon": 300 },
+    { month: "Feb", "Apple": 700, "Google": 600, "Amazon": 400 },
+    { month: "Mar", "Apple": 900, "Google": 750, "Amazon": 850 },
+  ]}
+  index="month"
+  categories={["Apple", "Google", "Amazon"]}
+  title="Market Cap Rankings"
+  legend
+/>`,
+      },
+      {
+        title: "Bump with drill-down",
+        description: "Click a series to drill down into detail data.",
+        code: `<Bump
+  data={rankingData}
+  drillDown
+  lineWidth={4}
+  pointSize={10}
+  title="Product Rankings Over Time"
+  height={400}
+/>`,
+      },
+      {
+        title: "Nivo-native series with styling",
+        description: "Pre-computed ranks with custom line width and point size.",
+        code: `<Bump
+  data={[
+    { id: "Team Alpha", data: quarters.map(q => ({ x: q.label, y: q.alphaRank })) },
+    { id: "Team Beta",  data: quarters.map(q => ({ x: q.label, y: q.betaRank })) },
+    { id: "Team Gamma", data: quarters.map(q => ({ x: q.label, y: q.gammaRank })) },
+  ]}
+  lineWidth={4}
+  pointSize={12}
+  pointBorderWidth={3}
+  title="Team Standings"
+  legend
+/>`,
+      },
+    ],
+    relatedComponents: ["LineChart", "AreaChart", "BarChart"],
+    configFields: ["animate", "variant", "dense", "colors", "motionConfig"],
+    notes: [
+      "Uses forwardRef.",
+      "Flat DataRow[] mode auto-ranks values by descending order at each x-position. Rank 1 = highest value.",
+      "Start and end labels are shown by default, positioned outside the chart area with padding.",
+      "Bump charts need generous left/right margins for labels — the component auto-adjusts margins based on container width.",
+      "Install @nivo/bump as a peer dependency.",
     ],
   },
 ];
