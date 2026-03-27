@@ -55,7 +55,7 @@ Everything listed here is built, tested, and published.
 
 ---
 
-## 0.3.0 — "Dashboards That React"
+## 0.3.0 — "Dashboards That React" (Shipped)
 
 **Headline: Cross-filtering.** Click a bar in one chart, every other component on the page responds. No dashboard framework does this out of the box with zero config.
 
@@ -67,7 +67,6 @@ Everything listed here is built, tested, and published.
 
 ### Supporting Work
 
-- **Time series annotations** — `annotations` prop on line/area/bar charts. Event markers (deploys, campaigns, incidents) render as vertical dashed lines with labels and tooltips. Hover to expand. Multiple annotation layers.
 - **DashboardHeader** — top-level identity bar with title, status dot (live/stale with pulse), "Updated Xm ago" that auto-ticks, breadcrumbs, and action slots.
 - **StatusIndicator** — rule-based health indicator. Pass a value + threshold rules → renders colored dot/icon with optional label. Pulse animation for critical states. Five sizes (dot → full card). The simplest possible "is this thing OK?" component.
 - **Auto-format inference** — if your key is "revenue" or "price", MetricUI defaults to currency. If it's "rate" or "percentage", defaults to percent. If the value is > 9999, defaults to compact. Smart defaults that eliminate 80% of `format` props. Override with explicit format, never surprising.
@@ -77,36 +76,6 @@ Everything listed here is built, tested, and published.
 |---|---|
 | StatusIndicator | Value → colored icon via threshold rules. Health checks, SLA compliance. Pulse, 5 sizes. |
 | DashboardHeader | Page identity bar. Title, live/stale status, auto-ticking timestamp, breadcrumbs, action slots. |
-
----
-
-## 0.5.0 — "The DX Release" (Shipped)
-
-**Headline: Developer experience.** Everything that makes MetricUI faster to use, less boilerplate, fewer casts, smarter defaults.
-
-### The Wow
-
-- **`<Dashboard>` wrapper** — 5 providers → 1 component. `<Dashboard theme="emerald" filters={{ defaultPreset: "30d" }} exportable>` replaces MetricProvider + FilterProvider + CrossFilterProvider + LinkedHoverProvider + DrillDown.Root.
-- **Zero `as never[]` casts** — `DataRow` type across the entire library. Typed interfaces just work with `<DataTable data={accounts} />`.
-- **Smart column inference** — omit `columns` on DataTable and it auto-detects numbers, dates, booleans, badges, sparklines from the actual values.
-- **DashboardNav** — tab and scroll navigation inside FilterBar. Multi-view dashboards with persistent filters. Sliding indicator, keyboard nav, URL sync.
-
-### Supporting Work
-
-- **Filter convenience hooks** — `useFilterValue("region")`, `useHasComparison()`, `useActiveFilterCount()`. No null-coalescing.
-- **FilterBar.Nav slot** — embed DashboardNav inside FilterBar for one unified sticky bar.
-- **MetricGrid fragment flattening** — auto-layout works through `<>` wrappers.
-- **Analytics demo** — GA-style dashboard with tab mode, 4 views, per-device filtering, cross-filter, comparisons.
-
-### New Components / Exports
-| Component | Description |
-|---|---|
-| Dashboard | All-in-one wrapper replacing 5 nested providers. |
-| DashboardNav | Tab/scroll navigation with sliding indicator and keyboard support. |
-| FilterBar.Nav | Slot for embedding DashboardNav inside FilterBar. |
-| useFilterValue | Read a dimension filter as string[] — no null checks. |
-| useHasComparison | Boolean: is comparison mode active? |
-| useActiveFilterCount | Number of active filters. |
 
 ---
 
@@ -146,141 +115,121 @@ Everything listed here is built, tested, and published.
 
 ---
 
-## 0.5.0 — "Kill the Boilerplate"
+## 0.5.0 — "The DX Release" (Shipped)
 
-**Headline: `useMetricQuery` and the wiring layer.** MetricUI doesn't touch your data — but it eliminates every line of code between your data and your components.
-
-### The Philosophy
-
-MetricUI will never be a data layer. We don't fetch, don't cache, don't manage state. Your API, your database, your WebSocket, your SSE stream — that's yours. But the wiring between "I have data" and "my dashboard renders it beautifully with loading states, error handling, stale indicators, polling, and smooth transitions" is identical boilerplate every single time. That's what we kill.
+**Headline: Developer experience.** Everything that makes MetricUI faster to use, less boilerplate, fewer casts, smarter defaults.
 
 ### The Wow
 
-- **`useMetricQuery`** — you provide a fetcher function, MetricUI handles everything else. Returns `{ data, loading, error, stale, refresh }` that spreads directly onto any component. Polling, stale detection, error retry, and graceful degradation — all built in. The key insight: every MetricUI component already has `loading`, `error`, `stale`, and `empty` props. This hook maps to them automatically. You write the fetch, we wire the rest.
-  ```tsx
-  // Before: 40 lines of useState, useEffect, try/catch, setTimeout, cleanup — per component
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  // ... fetch, poll, try/catch, setTimeout, stale timer, cleanup ...
-  <AreaChart data={data} loading={loading} error={error} stale={stale} />
-
-  // After: you bring the fetcher, we handle everything else
-  const revenue = useMetricQuery(() => api.getRevenue(filters), {
-    poll: 30000,       // re-fetch every 30s
-    staleAfter: 60000, // mark stale after 60s without update
-    deps: [filters],   // re-fetch when filters change
-  });
-  <AreaChart {...revenue} />
-  ```
-- **Live mode** — `<MetricProvider live>` tells every component "data is updating frequently." KpiCards animate smoothly between values (the useCountUp behavior the Wikipedia demo wires manually). Charts use spring transitions instead of hard cuts. StatusIndicators pulse on state change. It's not a data feature — it's a presentation hint. "Render like a live dashboard, not a static report." The Wikipedia demo already does all of this; `live` makes it the default for every component without per-component wiring.
-- **Snapshot comparison** — `<SnapshotDiff before={lastWeekData} after={currentData}>`. Renders any chart with a visual diff overlay: green fills where values increased, red where decreased. Ghost bars/lines show the "before" state. The "git diff for your metrics." You provide both datasets; MetricUI handles the visual math.
+- **`<Dashboard>` wrapper** — 5 providers → 1 component. `<Dashboard theme="emerald" filters={{ defaultPreset: "30d" }} exportable>` replaces MetricProvider + FilterProvider + CrossFilterProvider + LinkedHoverProvider + DrillDown.Root.
+- **Zero `as never[]` casts** — `DataRow` type across the entire library. Typed interfaces just work with `<DataTable data={accounts} />`.
+- **Smart column inference** — omit `columns` on DataTable and it auto-detects numbers, dates, booleans, badges, sparklines from the actual values.
+- **DashboardNav** — tab and scroll navigation inside FilterBar. Multi-view dashboards with persistent filters. Sliding indicator, keyboard nav, URL sync.
 
 ### Supporting Work
 
-- **Export system** — `exportable` prop on any chart or table. Renders a subtle download icon in the card chrome. Supports PNG (canvas capture), SVG (raw), CSV (raw values via format engine), and clipboard (formatted). Batch export: `<MetricGrid exportable>` exports the entire dashboard as a single PNG or multi-sheet CSV.
-- **Print/PDF mode** — `<MetricProvider printMode>` or CSS media query. Strips hover effects, forces light mode, removes interactive elements, optimizes spacing for A4/Letter. Optional `exportDashboard("pdf")` that captures the full dashboard.
-- **RefreshToggle** — "Refresh every 30s" with countdown ring indicator. Manual refresh button. Integrates with useMetricQuery's polling.
-- **DataFreshness** — subtle "Last synced 2m ago" with source health dot. Persistent trust signal. Built into DashboardHeader or standalone.
+- **Filter convenience hooks** — `useFilterValue("region")`, `useHasComparison()`, `useActiveFilterCount()`. No null-coalescing.
+- **FilterBar.Nav slot** — embed DashboardNav inside FilterBar for one unified sticky bar.
+- **MetricGrid fragment flattening** — auto-layout works through `<>` wrappers.
+- **Analytics demo** — GA-style dashboard with tab mode, 4 views, per-device filtering, cross-filter, comparisons.
 
-### New Components
+### New Components / Exports
 | Component | Description |
 |---|---|
-| SnapshotDiff | Visual before/after overlay on any chart. Green fills for increases, red for decreases. |
-| RefreshToggle | Auto-refresh interval control with countdown ring. |
-| DataFreshness | Source health + last sync timestamp. Trust indicator. |
+| Dashboard | All-in-one wrapper replacing 5 nested providers. |
+| DashboardNav | Tab/scroll navigation with sliding indicator and keyboard support. |
+| FilterBar.Nav | Slot for embedding DashboardNav inside FilterBar. |
+| useFilterValue | Read a dimension filter as string[] — no null checks. |
+| useHasComparison | Boolean: is comparison mode active? |
+| useActiveFilterCount | Number of active filters. |
 
 ---
 
-## 0.6.0 — "The Intelligence Layer"
+## 0.6.0 — "The AI Layer" (Shipped)
 
-**Headline: Anomaly detection.** MetricUI scans your data and highlights what's unusual — no ML pipeline, no backend, just a prop.
+**Headline: Bring-your-own-LLM dashboard intelligence.** Every dashboard becomes conversational — ask questions about your data, get insights with citations, all powered by whatever model you choose.
 
 ### The Wow
 
-- **Anomaly highlights** — `anomalyDetection` prop on any time series chart. MetricUI computes a rolling mean + standard deviation band (configurable sensitivity). Points outside the band get a pulsing dot and optional Callout. Works entirely client-side — no AI, no API calls, just math. But the visual effect is dramatic: the chart quietly tells you "this data point is unusual" without anyone having to configure alert thresholds. On KpiCard, anomalous values get a subtle ring highlight with a "Unusual" badge.
-- **Insight generation** — `<InsightCard data={data} metrics={["revenue", "churn"]}>`. A component that generates a plain-English summary of what the data shows. "Revenue increased 23% MoM, driven by Enterprise segment. Churn hit a 6-month low." Uses template-based rules (not AI) — pattern matching on trends, comparisons, and anomalies. Developers can add custom insight rules. The editorial companion to every chart, generated from the same data.
-- **Metric narratives** — `<MetricText>` component with template syntax. `"Revenue hit {revenue|currency} this month, {revenue|change} from last month."` Inline values get formatted via the format engine, styled with mono font and conditional color. The body copy of a data story, without manual string concatenation.
+- **DashboardInsight** — chat panel that lives inside the dashboard. End users ask questions about the data they're looking at, get streaming answers with citations that link back to specific cards and metrics. Per-card sparkle button for "explain this" on any component. `@` mentions to reference specific metrics in questions.
+- **Auto data collection** — `AiContext` system automatically gathers dashboard state (filters, visible metrics, card values, trends) into structured context that feeds the LLM. Three-level context hierarchy: dashboard-level, section-level, card-level. The model always knows what the user is looking at.
+- **BYO LLM** — no vendor lock-in. Pass your own API key and endpoint. Works with Claude, GPT, Gemini, local models — anything that speaks the standard chat API. The dashboard provides the context; you choose the brain.
+- **Streaming responses** — answers stream in token-by-token with a typing indicator. Citations render inline as clickable badges that highlight the referenced card on the dashboard. Sidebar and modal display modes.
 
 ### Supporting Work
 
-- **Histogram** — auto-binning from raw values. Response times, age distributions. Component determines the buckets, not the developer.
-- **Leaderboard** — ordered list with rank numbers, values, and bar fill showing relative magnitude. Optional rank change indicators (up/down arrows). Top customers, top salespeople, top anything.
-- **QuotaBar** — consumption against a limit. "4,521 / 10,000 API calls" with segmented fill and conditional coloring as you approach the limit.
-- **SummaryBanner** — full-width strip with 3-5 key metrics inline. The at-a-glance bar above the dashboard. Responsive: collapses to a scrollable row on mobile.
-- **Grouped DataTable** — expandable row groups with subtotals. Hierarchical data model, expand/collapse with animation, aggregate functions per column.
+- **Prompt framework** — structured system prompts that give the LLM dashboard context, formatting rules, and citation instructions. Developers can extend with custom instructions.
+- **Citation system** — LLM responses include structured citations (`@card-id`) that resolve to visual highlights on the dashboard. Click a citation → the referenced card scrolls into view and pulses.
+- **Per-card AI actions** — sparkle icon on any data component opens DashboardInsight pre-filled with "Explain this [card title]" including that card's data as context.
 
-### New Components
+### New Components / Exports
 | Component | Description |
 |---|---|
-| InsightCard | Template-based plain-English data summary. Trends, comparisons, anomalies in prose. |
-| MetricText | Inline formatted values in body copy. Template syntax + format engine. |
-| Histogram | Auto-binned distribution chart. Component chooses the buckets. |
-| Leaderboard | Ranked list with values, bar fills, and rank change indicators. |
-| QuotaBar | Consumption vs limit with segmented fill and conditional coloring. |
-| SummaryBanner | Full-width at-a-glance metrics strip. |
-| Grouped DataTable | Expandable row groups with subtotals and aggregate functions. |
+| DashboardInsight | Chat panel with streaming LLM answers, citations, and @ mentions. |
+| AiContext | Auto-collects dashboard state into structured LLM context. Three-level hierarchy. |
+| useAiContext | Hook to read/extend the AI context from any component. |
 
 ---
 
-## 0.7.0 — "See the Shape"
+## 0.7.0 — "The Chart Expansion" (Shipped)
 
-**Headline: Small multiples and sparkline tables.** One line of code renders 20 mini-charts that share scales and let you spot the outlier in a wall of data.
+**Headline: Seven new chart types, from scatter plots to choropleths.** The visual vocabulary doubles — every chart Nivo-backed, fully integrated with MetricUI's format engine, tooltips, data states, and cross-filtering.
 
 ### The Wow
 
-- **Small Multiples** — `<SmallMultiples data={data} splitBy="product" chart="area">`. Takes a dataset, splits it by a dimension, renders a grid of identical mini-charts with shared axes and scales. Hover one → all show a synced crosshair (linked hover). Click one → it expands to full size with cross-filter applied. The "sparkline wall" that makes monitoring dashboards and portfolio views instantly scannable. Responsive grid, auto-sizing, consistent styling.
-- **Sparkline Table** — DataTable columns that are inline sparklines, progress bars, micro-gauges, and conditional badges. Stock watchlist, server monitoring, SaaS health dashboard. Define a column as `{ key: "trend", type: "sparkline" }` and the cell renders a mini chart from the row's data. Sparklines share the column's y-scale so they're comparable across rows.
-- **Chart annotation layer** — click any data point on any chart → a popover lets you (or your users) pin a note. "Revenue dipped because of March 3 outage." Annotations persist via a simple `annotations` state array. Render as small dots on the chart, expand on hover. Collaborative context on top of raw data.
-
-### Supporting Work
-
-- **Scatter Plot** — two-variable correlation with optional bubble size encoding. Segments, quadrant labels, trend line. Nivo-backed.
+- **ScatterPlot** — two-variable correlation with optional bubble size encoding. Segments, quadrant labels, trend line. Nivo-backed.
 - **Treemap** — hierarchical part-of-whole. Click to zoom into a segment (animated). Nivo-backed.
-- **Radar / Spider** — multi-axis comparison with overlay support. Product scores, competitive analysis.
 - **Calendar Heatmap** — GitHub-style contribution grid. Activity frequency over months/years. Click a cell to filter.
-- **Metric Comparison Card** — side-by-side comparison of two entities across multiple metrics with proportion bars.
-- **Deviation Chart** — bars extending left/right from zero. NPS scores, budget variance, performance vs target.
-
-### New Components
-| Component | Description |
-|---|---|
-| SmallMultiples | Grid of mini-charts split by dimension. Shared scales, synced hover, click-to-expand. |
-| Sparkline Table | DataTable with inline sparklines, progress bars, and micro-charts per cell. |
-| Scatter Plot | Two-variable correlation with bubble size, segments, and trend line. |
-| Treemap | Hierarchical part-of-whole with click-to-zoom. |
-| Radar | Multi-axis comparison with overlay support. |
-| CalendarHeatmap | GitHub-style activity grid with click-to-filter. |
-| MetricComparison | Side-by-side entity comparison with proportion bars. |
-| DeviationChart | Bars extending left/right from zero line. |
-
----
-
-## 0.8.0 — "Flows and Stories"
-
-**Headline: Sankey diagrams and guided data stories.** Show where things flow, then walk someone through what it means.
-
-### The Wow
-
-- **Sankey** — flow visualization with proportional-width links between stages. User journeys, cost allocation, pipeline flows. Click a node to highlight its upstream/downstream paths (everything else fades). Nivo-backed, but with MetricUI's format engine, tooltips, and data states. The chart that makes stakeholders lean in.
-- **Data stories** — `<DataStory steps={[...]}>`. A guided walkthrough mode for any dashboard. Each step highlights a component, dims everything else, and shows a narrative card. "Step 1: Revenue grew 23% — here's why. Step 2: But churn is creeping up in the SMB segment." Arrow keys or autoplay. Built for quarterly reviews, onboarding tours, and async Loom-replacement reports. Developers define the narrative; MetricUI handles the choreography.
-- **Dashboard state serialization** — `useDashboardState()` returns the entire dashboard state (filters, selections, drill-downs, toggles, sort order) as a JSON blob. Save it, share it as a URL, restore it. "Saved views" for end users. "Shareable links" for stakeholders. The state is small (just selections, not data), so it encodes into a URL hash.
+- **Radar / Spider** — multi-axis comparison with overlay support. Product scores, competitive analysis.
+- **Sankey** — flow visualization with proportional-width links between stages. User journeys, cost allocation, pipeline flows. Click a node to highlight upstream/downstream paths.
+- **Choropleth** — geographic data colored by value. Bundled `worldFeatures` (ISO alpha-3 codes) and `usStatesFeatures` (2-letter abbreviations). `tooltipLabel` prop with country/state name resolution. No external GeoJSON required for common use cases.
+- **Bump Chart** — ranking changes over multiple periods. Who's rising, who's falling. Nivo-backed.
 
 ### Supporting Work
 
-- **Inline drill-down** — click a data point → detail panel slides open below the chart with developer-controlled content. Animated expand/collapse.
-- **Multi-level drill** — stack-based navigation within a chart. Quarter → Month → Week → Day. Breadcrumb trail with back navigation.
-- **Activity Feed** — timestamped list of events with icons and color coding. Audit trails, deployment history, notification center.
-- **Diff / Change Summary** — before/after values with delta and color. "Active Users: 1,234 → 1,456 (+222)".
-- **Embed mode** — `<MetricProvider embed>` strips chrome, respects host theme, posts resize events via postMessage. For iframing dashboards into other apps.
+- **Bundled map features** — `worldFeatures` and `usStatesFeatures` ship with the library. Import and pass directly to Choropleth — no downloading shapefiles or wrangling TopoJSON.
+- **Tick collision fix** — auto label width estimation prevents overlapping axis labels on dense charts.
+- **Granularity toggle cookbook recipe** — documented pattern for switching between daily/weekly/monthly views with the same data.
+- **Full documentation** — every new chart has a dedicated doc page with live interactive demos, props table, and usage examples.
 
 ### New Components
 | Component | Description |
 |---|---|
+| ScatterPlot | Two-variable correlation with bubble size, segments, and trend line. |
+| Treemap | Hierarchical part-of-whole with click-to-zoom. |
+| CalendarHeatmap | GitHub-style activity grid with click-to-filter. |
+| Radar | Multi-axis comparison with overlay support. |
 | Sankey | Flow visualization with click-to-highlight paths. User journeys, cost flows. |
+| Choropleth | Geographic map colored by value. Bundled world + US features. |
+| Bump | Ranking changes over multiple periods. |
+
+---
+
+## 0.8.0 — "Interactive Dashboards"
+
+**Headline: Action buttons, inline edits, form inputs, and role-based visibility.** Dashboards stop being read-only reports and become operational tools where users take action on the data they see.
+
+### The Wow
+
+- **Action buttons** — attach actions to any card, table row, or chart element. "Approve", "Flag", "Assign" buttons that fire callbacks or POST to webhooks. The dashboard becomes a control plane, not just a display.
+- **Inline edits** — editable cells in DataTable, editable KPI targets, editable thresholds. Click a value, type a new one, save. Optimistic updates with rollback on error. Turns static reports into live operational tools.
+- **Form inputs** — date pickers, text inputs, number steppers, and toggles that live inside the dashboard and feed into filter context or action payloads. The missing link between "viewing data" and "doing something about it."
+- **Webhook actions** — `onAction` prop that POSTs structured payloads to an endpoint. Card ID, row data, user action, current filters — everything the backend needs to process the action. Built-in confirmation dialogs and success/error toasts.
+
+### Supporting Work
+
+- **Role-based visibility** — `minRole` prop on components, columns, export buttons, and drill-down triggers. Pass `role` via Dashboard context. Components below the user's role render as disabled, hidden, or redacted. No more building separate dashboards for admins vs viewers.
+- **Dashboard identity context** — `identity` prop on Dashboard for user ID, role, and custom claims. Flows through to all components for RLS-aware rendering and audit trails on actions.
+- **DataStory** — `<DataStory steps={[...]}>`. Guided walkthrough mode for any dashboard. Each step highlights a component, dims everything else, and shows a narrative card. Built for quarterly reviews, onboarding tours, and async reports.
+- **Dashboard state serialization** — `useDashboardState()` returns the entire dashboard state (filters, selections, drill-downs, toggles, sort order) as a JSON blob. Save it, share it as a URL, restore it. "Saved views" for end users.
+
+### New Components
+| Component | Description |
+|---|---|
+| ActionButton | Contextual action on cards/rows/chart elements. Webhook integration. |
+| InlineEdit | Click-to-edit values in tables, cards, and thresholds. Optimistic updates. |
+| FormInput | Date pickers, text inputs, number steppers for in-dashboard data entry. |
 | DataStory | Guided narrative walkthrough. Highlights components in sequence with story cards. |
-| ActivityFeed | Timestamped event list with icons and color coding. |
-| DiffSummary | Before/after value comparison with delta and conditional color. |
 
 ---
 
@@ -337,21 +286,44 @@ These are not blocked by 1.0, but they're where MetricUI goes next. Each could b
 | Step Chart | Right-angle line steps. Pricing tiers, inventory levels. |
 | Box Plot | Statistical distribution — median, quartiles, outliers. |
 | Slope Chart | Two time points connected by lines. Before/after ranking shifts. |
-| Bump Chart | Ranking changes over multiple periods. |
-| Map / Choropleth | Geographic data colored by value. Revenue by country/state. |
 | Sunburst | Nested donut rings for hierarchies. |
 | Stream / ThemeRiver | Flowing stacked areas. Organic trend visualization. |
 | Waffle Chart | Grid of squares by category. Precise small-percentage display. |
 | Network / Force Graph | Nodes and edges. Org charts, dependency graphs. |
+| Histogram | Auto-binning from raw values. Response times, age distributions. |
+
+### More Components
+| Component | Description |
+|---|---|
+| SmallMultiples | Grid of mini-charts split by dimension. Shared scales, synced hover, click-to-expand. |
+| SparklineTable | DataTable with inline sparklines, progress bars, and micro-charts per cell. |
+| InsightCard | Template-based plain-English data summary. Trends, comparisons, anomalies in prose. |
+| MetricText | Inline formatted values in body copy. Template syntax + format engine. |
+| Leaderboard | Ranked list with values, bar fills, and rank change indicators. |
+| QuotaBar | Consumption vs limit with segmented fill and conditional coloring. |
+| SummaryBanner | Full-width at-a-glance metrics strip. |
+| Grouped DataTable | Expandable row groups with subtotals and aggregate functions. |
+| MetricComparison | Side-by-side entity comparison with proportion bars. |
+| DeviationChart | Bars extending left/right from zero line. |
+| ActivityFeed | Timestamped event list with icons and color coding. |
+| DiffSummary | Before/after value comparison with delta and conditional color. |
+| SnapshotDiff | Visual before/after overlay on any chart. Green fills for increases, red for decreases. |
+| RefreshToggle | Auto-refresh interval control with countdown ring. |
+| DataFreshness | Source health + last sync timestamp. Trust indicator. |
 
 ### Advanced Features
 | Feature | Description |
 |---|---|
+| useMetricQuery | Fetcher → { data, loading, error, stale, refresh } that spreads onto any component. Polling, retry, stale detection. |
+| Live mode | `<MetricProvider live>` — spring transitions, auto count-up, pulse on change. Presentation hint for real-time dashboards. |
+| Anomaly detection | `anomalyDetection` prop — rolling mean + std dev bands, pulsing dots on outliers. Client-side, no ML. |
+| Chart annotation layer | Click any data point → pin a note. Collaborative context on data. |
 | Pivot Table | Rows x columns with aggregated values, drag-to-rearrange. |
 | Cascading Filters | Filters that narrow subsequent filter options dynamically. |
 | Saved Views | Persist and share filter/dashboard state configurations. |
 | Numeric Range Filter | Slider or dual-input for range filtering. |
 | Cross-component drill | Click in one component → another elsewhere responds. |
 | VS Code Extension | Snippets, hover docs, invalid prop diagnostics. |
-| AI-powered insights | Optional integration with LLMs for narrative generation from data. |
 | Collaborative annotations | Real-time multi-user commenting on data points. |
+| Embed mode | `<MetricProvider embed>` — strips chrome, respects host theme, postMessage resize. For iframing. |
+| Print/PDF mode | `<MetricProvider printMode>` — strips hover effects, forces light, optimizes for A4/Letter. |

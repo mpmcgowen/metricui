@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { OnThisPage } from "@/components/docs/OnThisPage";
@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
 import { CrossFilterProvider } from "@/lib/CrossFilterContext";
+import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DollarSign, Users, TrendingDown, Zap, Activity, Check, Minus, X, Building2, Calendar, Mail, Phone, CheckCircle2, Loader, Wrench, ShieldCheck, Database, Globe, Server, Wifi, AlertTriangle } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -116,6 +117,56 @@ const sandwichProducts = [
 ];
 
 // ---------------------------------------------------------------------------
+// Granularity toggle data — daily rows that get "rolled up" client-side
+// ---------------------------------------------------------------------------
+
+// Deterministic pseudo-random to avoid hydration mismatch
+function seededRandom(seed: number) {
+  const x = Math.sin(seed * 9301 + 49297) * 233280;
+  return x - Math.floor(x);
+}
+
+const dailyPageviews = Array.from({ length: 90 }, (_, i) => {
+  const d = new Date(2026, 0, 1);
+  d.setDate(d.getDate() + i);
+  const base = 1200 + Math.sin(i / 7) * 400 + (d.getDay() === 0 || d.getDay() === 6 ? -300 : 200);
+  return {
+    date: d.toISOString().slice(0, 10),
+    pageviews: Math.round(base + seededRandom(i) * 200),
+    sessions: Math.round((base + seededRandom(i + 1000) * 200) * 0.6),
+  };
+});
+
+function simpleRollUp(
+  data: { date: string; pageviews: number; sessions: number }[],
+  granularity: string,
+) {
+  if (granularity === "day") return data;
+  const buckets = new Map<string, { pageviews: number; sessions: number; count: number }>();
+  for (const row of data) {
+    const d = new Date(row.date);
+    let key: string;
+    if (granularity === "week") {
+      const weekStart = new Date(d);
+      weekStart.setDate(d.getDate() - d.getDay());
+      key = weekStart.toISOString().slice(0, 10);
+    } else {
+      key = row.date.slice(0, 7); // YYYY-MM
+    }
+    const b = buckets.get(key) ?? { pageviews: 0, sessions: 0, count: 0 };
+    b.pageviews += row.pageviews;
+    b.sessions += row.sessions;
+    b.count += 1;
+    buckets.set(key, b);
+  }
+  return [...buckets.entries()].map(([date, b]) => ({
+    date,
+    pageviews: b.pageviews,
+    sessions: b.sessions,
+  }));
+}
+
+// ---------------------------------------------------------------------------
 // TOC
 // ---------------------------------------------------------------------------
 
@@ -148,6 +199,7 @@ const tocItems: TocItem[] = [
   { id: "everything-table", title: "The Everything Table", level: 2 },
   { id: "ops-war-room", title: "Ops War Room", level: 2 },
   { id: "metric-sandwich", title: "The Metric Sandwich", level: 2 },
+  { id: "granularity", title: "Granularity Toggle", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1460,8 +1512,88 @@ const modules = ["Scheduling", "Billing", "Retention", "Reports", "API"];
           </ComponentExample>
         </DocSection>
 
+        {/* Granularity Toggle */}
+        <DocSection id="granularity" title="Granularity Toggle">
+          <p className="mb-2 text-[14px] leading-relaxed text-[var(--muted)]">
+            Let users switch between day, week, and month views using a SegmentToggle.
+            The toggle is pure signal — your code reads the value and provides the right data.
+            Aggregate client-side for small datasets, or pass the granularity to your API for large ones.
+          </p>
+          <GranularityDemo />
+        </DocSection>
+
       </div>
       <OnThisPage items={tocItems} />
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Granularity demo (isolated so it can manage its own state)
+// ---------------------------------------------------------------------------
+
+function GranularityDemo() {
+  const [granularity, setGranularity] = useState("day");
+
+  const chartData = useMemo(
+    () => simpleRollUp(dailyPageviews, granularity),
+    [granularity],
+  );
+
+  return (
+    <ComponentExample
+      code={`import { SegmentToggle, AreaChart, useMetricFilters } from "metricui";
+
+// In your FilterBar or header:
+<SegmentToggle
+  field="granularity"
+  options={[
+    { value: "day", label: "Day" },
+    { value: "week", label: "Week" },
+    { value: "month", label: "Month" },
+  ]}
+/>
+
+// In your data layer:
+const { dimensions } = useMetricFilters();
+const granularity = dimensions.granularity?.[0] ?? "day";
+
+// Option A: client-side rollup (small datasets)
+const chartData = useMemo(
+  () => rollUp(dailyData, granularity),
+  [dailyData, granularity],
+);
+
+// Option B: pass to your API (large datasets)
+const { data } = useQuery(
+  ["pageviews", granularity],
+  () => api.getPageviews({ granularity }),
+);
+
+<AreaChart data={chartData} index="date" categories={["pageviews", "sessions"]} />`}
+    >
+      <div className="w-full space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-medium text-[var(--muted)]">Granularity</span>
+          <SegmentToggle
+            value={granularity}
+            onChange={(v) => setGranularity(String(v))}
+            options={[
+              { value: "day", label: "Day" },
+              { value: "week", label: "Week" },
+              { value: "month", label: "Month" },
+            ]}
+          />
+        </div>
+        <AreaChart
+          data={chartData}
+          index="date"
+          categories={["pageviews", "sessions"]}
+          title="Site Traffic"
+          format="compact"
+          height={300}
+        />
+      </div>
+    </ComponentExample>
   );
 }

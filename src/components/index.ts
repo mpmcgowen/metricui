@@ -27,6 +27,7 @@ export { Sankey } from "./charts/Sankey";
 export type { SankeyProps, SankeyData, SankeyNode, SankeyLink } from "./charts/Sankey";
 export { Choropleth } from "./charts/Choropleth";
 export type { ChoroplethProps, ChoroplethDatum } from "./charts/Choropleth";
+export { worldFeatures, usStatesFeatures } from "@/lib/geoFeatures";
 export { Bump } from "./charts/Bump";
 export type { BumpProps, BumpSeries, BumpSeriesDatum } from "./charts/Bump";
 export { Calendar } from "./charts/Calendar";

@@ -1,22 +1,93 @@
 "use client";
 
+import { useMemo } from "react";
+import { Choropleth } from "@/components/charts/Choropleth";
+import { worldFeatures } from "@/lib/geoFeatures";
+import { countries } from "@/data/world";
 import { DocSection } from "@/components/docs/DocSection";
+import { ComponentExample } from "@/components/docs/ComponentExample";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import { OnThisPage } from "@/components/docs/OnThisPage";
 import type { TocItem } from "@/components/docs/OnThisPage";
 import { DataTable } from "@/components/tables/DataTable";
+import countries_lib from "i18n-iso-countries";
+import enLocale from "i18n-iso-countries/langs/en.json";
+countries_lib.registerLocale(enLocale);
 
 const tocItems: TocItem[] = [
   { id: "overview", title: "Overview", level: 2 },
-  { id: "data-format", title: "Data Format", level: 2 },
   { id: "basic-example", title: "Basic Example", level: 2 },
   { id: "projections", title: "Projections", level: 2 },
+  { id: "custom-colors", title: "Custom Colors", level: 2 },
+  { id: "data-format", title: "Data Format", level: 2 },
+  { id: "bundled-features", title: "Bundled Features", level: 2 },
   { id: "props", title: "Props", level: 2 },
   { id: "notes", title: "Notes", level: 2 },
   { id: "related", title: "Related", level: 2 },
 ];
 
+// ---------------------------------------------------------------------------
+// Build choropleth data from the world countries dataset
+// ---------------------------------------------------------------------------
+
+/** Common short names → alpha-3 for names i18n-iso-countries doesn't recognize */
+const NAME_ALIASES: Record<string, string> = {
+  "DR Congo": "COD",
+  "Laos": "LAO",
+  "Syria": "SYR",
+  "Brunei": "BRN",
+  "East Timor": "TLS",
+  "Timor-Leste": "TLS",
+  "Macau": "MAC",
+  "Moldova": "MDA",
+  "Réunion": "REU",
+  "Curaçao": "CUW",
+  "São Tomé and Príncipe": "STP",
+  "Sint Maarten": "SXM",
+  "Saint Martin": "MAF",
+  "Micronesia": "FSM",
+  "Falkland Islands": "FLK",
+  "Vatican City": "VAT",
+  "British Virgin Islands": "VGB",
+  "United States Virgin Islands": "VIR",
+  "Saint Helena, Ascension and Tristan da Cunha": "SHN",
+  "Caribbean Netherlands": "BES",
+  "French Southern and Antarctic Lands": "ATF",
+};
+
+/** Resolve country name → alpha-3 code */
+function nameToAlpha3(name: string): string | undefined {
+  return NAME_ALIASES[name] ?? countries_lib.getAlpha3Code(name, "en") ?? undefined;
+}
+
+// Set of alpha-3 codes that exist in worldFeatures (so we don't show data for features not on the map)
+const WORLD_FEATURE_IDS = new Set(worldFeatures.map((f: any) => String(f.id)));
+
 export default function ChoroplethDocs() {
+  // Derive population data from the real world dataset
+  const populationData = useMemo(
+    () =>
+      countries
+        .map((c) => {
+          const alpha3 = nameToAlpha3(c.name);
+          return alpha3 && WORLD_FEATURE_IDS.has(alpha3) ? { id: alpha3, value: c.population } : null;
+        })
+        .filter(Boolean) as { id: string; value: number }[],
+    [],
+  );
+
+  // Area data for second example
+  const areaData = useMemo(
+    () =>
+      countries
+        .map((c) => {
+          const alpha3 = nameToAlpha3(c.name);
+          return alpha3 && WORLD_FEATURE_IDS.has(alpha3) ? { id: alpha3, value: c.area } : null;
+        })
+        .filter(Boolean) as { id: string; value: number }[],
+    [],
+  );
+
   return (
     <div className="flex">
       {/* Main content */}
@@ -38,9 +109,10 @@ export default function ChoroplethDocs() {
 
         <p className="mt-6 text-[14px] leading-relaxed text-[var(--muted)]">
           Use Choropleth for geographic data — revenue by country, user density by state,
-          support tickets by region. The developer provides their own GeoJSON features,
-          giving full control over which map to render (world, US states, EU countries, etc.).
-          For non-geographic heatmaps use{" "}
+          support tickets by region. Pass GeoJSON features to control which map renders
+          (world, US states, EU countries, etc.). MetricUI bundles{" "}
+          <code className="font-[family-name:var(--font-mono)] text-[12px]">worldFeatures</code> out
+          of the box, or bring your own. For non-geographic heatmaps use{" "}
           <a href="/docs/heatmap" className="font-medium text-[var(--accent)] hover:underline">
             HeatMap
           </a>
@@ -49,17 +121,6 @@ export default function ChoroplethDocs() {
             Treemap
           </a>.
         </p>
-
-        <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-          <p className="text-[13px] leading-relaxed text-[var(--muted)]">
-            <strong className="text-amber-500">Note:</strong> Choropleth requires a GeoJSON FeatureCollection
-            passed via the <code className="font-[family-name:var(--font-mono)] text-[13px]">features</code> prop.
-            GeoJSON is not bundled with MetricUI — you provide your own (e.g.{" "}
-            <code className="font-[family-name:var(--font-mono)] text-[12px]">world-atlas</code> from npm,
-            or a custom shape file). The examples below show code-only usage patterns since live
-            rendering requires map geometry.
-          </p>
-        </div>
 
         {/* Overview */}
         <DocSection id="overview" title="Overview">
@@ -71,73 +132,54 @@ export default function ChoroplethDocs() {
           </p>
         </DocSection>
 
-        {/* Data Format */}
-        <DocSection id="data-format" title="Data Format">
-          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Each entry maps a region ISO code to a numeric value. Use{" "}
-            <a
-              href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-[var(--accent)] hover:underline"
-            >
-              ISO 3166-1 alpha-3
-            </a>{" "}
-            codes that match the <code className="font-[family-name:var(--font-mono)] text-[12px]">feature.id</code> values
-            in your GeoJSON.
-          </p>
-          <CodeBlock
-            code={`const populationData = [
-  { id: "USA", value: 328000000 },
-  { id: "GBR", value: 67000000 },
-  { id: "DEU", value: 83000000 },
-  { id: "FRA", value: 67000000 },
-  { id: "JPN", value: 126000000 },
-  { id: "BRA", value: 213000000 },
-  { id: "IND", value: 1380000000 },
-  { id: "AUS", value: 26000000 },
-];`}
-            language="tsx"
-          />
-        </DocSection>
-
         {/* Basic Example */}
         <DocSection id="basic-example" title="Basic Example">
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            Install a GeoJSON source, then pass the features alongside your region data.
+            Import <code className="font-[family-name:var(--font-mono)] text-[12px]">worldFeatures</code> from
+            MetricUI and pass it alongside your region data. Feature IDs are standard ISO 3166-1
+            alpha-3 codes (e.g. <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;USA&quot;</code>,{" "}
+            <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;GBR&quot;</code>,{" "}
+            <code className="font-[family-name:var(--font-mono)] text-[12px]">&quot;HND&quot;</code>).
           </p>
-          <CodeBlock
-            code={`import { Choropleth } from "metricui";
-import { feature } from "topojson-client";
-import worldTopo from "world-atlas/countries-110m.json";
-
-// Extract GeoJSON features from TopoJSON
-const worldFeatures = feature(worldTopo, worldTopo.objects.countries).features;
+          <ComponentExample
+            code={`import { Choropleth, worldFeatures } from "metricui";
 
 const populationData = [
-  { id: "USA", value: 328000000 },
-  { id: "GBR", value: 67000000 },
-  { id: "DEU", value: 83000000 },
-  { id: "FRA", value: 67000000 },
-  { id: "JPN", value: 126000000 },
-  { id: "BRA", value: 213000000 },
-  { id: "IND", value: 1380000000 },
-  { id: "AUS", value: 26000000 },
+  { id: "USA", value: 340_000_000 },
+  { id: "GBR", value: 67_000_000 },
+  { id: "DEU", value: 83_000_000 },
+  { id: "IND", value: 1_417_000_000 },
+  { id: "CHN", value: 1_408_000_000 },
+  { id: "BRA", value: 213_000_000 },
+  // ...
 ];
 
 <Choropleth
   data={populationData}
   features={worldFeatures}
-  title="Population by Country"
+  title="Population"
+  tooltipLabel="Population"
   format="compact"
-  colors={["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08306b"]}
-  domain={[0, 1400000000]}
+  scaleType="sqrt"
   projectionType="naturalEarth1"
   projectionScale={120}
   height={450}
 />`}
-            language="tsx"
-          />
+          >
+            <div className="w-full">
+              <Choropleth
+                data={populationData}
+                features={worldFeatures}
+                title="Population by Country"
+                tooltipLabel="Population"
+                format="compact"
+                scaleType="sqrt"
+                projectionType="naturalEarth1"
+                projectionScale={120}
+                height={450}
+              />
+            </div>
+          </ComponentExample>
         </DocSection>
 
         {/* Projections */}
@@ -150,31 +192,143 @@ const populationData = [
             <code className="font-[family-name:var(--font-mono)] text-[12px]">equalEarth</code>,{" "}
             <code className="font-[family-name:var(--font-mono)] text-[12px]">orthographic</code>.
           </p>
-          <CodeBlock
-            code={`// Natural Earth projection — less distortion at poles
-<Choropleth
+          <ComponentExample
+            code={`<Choropleth
+  data={areaData}
+  features={worldFeatures}
+  title="Land Area (km²)"
+  tooltipLabel="Area"
+  format={{ style: "number", suffix: " km²", compact: true }}
+  projectionType="equalEarth"
+  projectionScale={130}
+  colors={["#fef3c7", "#f59e0b", "#b45309", "#78350f"]}
+  height={400}
+/>`}
+          >
+            <div className="w-full">
+              <Choropleth
+                data={areaData}
+                features={worldFeatures}
+                title="Land Area (km²)"
+                tooltipLabel="Area"
+                format={{ style: "number", suffix: " km²", compact: true }}
+                projectionType="equalEarth"
+                projectionScale={130}
+                colors={["#fef3c7", "#f59e0b", "#b45309", "#78350f"]}
+                height={400}
+              />
+            </div>
+          </ComponentExample>
+        </DocSection>
+
+        {/* Custom Colors */}
+        <DocSection id="custom-colors" title="Custom Colors">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Pass a <code className="font-[family-name:var(--font-mono)] text-[12px]">colors</code> array to
+            define the sequential color scale. Colors are interpolated between stops based on the data domain.
+          </p>
+          <ComponentExample
+            code={`<Choropleth
   data={populationData}
   features={worldFeatures}
-  title="Global Population (Natural Earth)"
+  title="Population — Cool Palette"
+  format="compact"
+  scaleType="sqrt"
   projectionType="naturalEarth1"
   projectionScale={120}
-  format="compact"
+  colors={["#ecfdf5", "#6ee7b7", "#059669", "#064e3b"]}
   height={400}
-/>
+/>`}
+          >
+            <div className="w-full">
+              <Choropleth
+                data={populationData}
+                features={worldFeatures}
+                title="Population — Cool Palette"
+                format="compact"
+                scaleType="sqrt"
+                projectionType="naturalEarth1"
+                projectionScale={120}
+                colors={["#ecfdf5", "#6ee7b7", "#059669", "#064e3b"]}
+                height={400}
+              />
+            </div>
+          </ComponentExample>
+        </DocSection>
 
-// Orthographic (globe) projection
+        {/* Data Format */}
+        <DocSection id="data-format" title="Data Format">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Choropleth accepts two data formats. The native format uses{" "}
+            <code className="font-[family-name:var(--font-mono)] text-[12px]">{`{ id, value }`}</code> objects.
+            For flat DataRow arrays, specify <code className="font-[family-name:var(--font-mono)] text-[12px]">idField</code> and{" "}
+            <code className="font-[family-name:var(--font-mono)] text-[12px]">valueField</code> to map columns.
+          </p>
+          <CodeBlock
+            code={`// Native format — id is an ISO 3166-1 alpha-3 code
+const data = [
+  { id: "USA", value: 340_000_000 },
+  { id: "GBR", value: 67_000_000 },
+];
+
+// Flat DataRow format
+const rows = [
+  { country_code: "USA", population: 340_000_000 },
+  { country_code: "GBR", population: 67_000_000 },
+];
+
 <Choropleth
-  data={populationData}
+  data={rows}
   features={worldFeatures}
-  title="Population Globe"
-  projectionType="orthographic"
-  projectionScale={200}
-  projectionTranslation={[0.5, 0.5]}
-  format="compact"
-  height={400}
+  idField="country_code"
+  valueField="population"
 />`}
             language="tsx"
           />
+        </DocSection>
+
+        {/* Bundled Features */}
+        <DocSection id="bundled-features" title="Bundled Features">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            MetricUI bundles <code className="font-[family-name:var(--font-mono)] text-[12px]">worldFeatures</code> — world
+            country boundaries at 110m resolution (~105KB). Feature IDs are standard ISO 3166-1 alpha-3 codes
+            (USA, GBR, DEU, etc.).
+          </p>
+          <CodeBlock
+            code={`import { Choropleth, worldFeatures } from "metricui";
+
+// worldFeatures is ready to use — no extra packages needed
+<Choropleth data={myData} features={worldFeatures} />`}
+            language="tsx"
+          />
+
+          <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            For other maps (US states, EU countries, custom regions), provide your own GeoJSON.
+            Recommended sources:
+          </p>
+          <ul className="mt-2 space-y-1">
+            {[
+              { label: "world-atlas", desc: "World and US TopoJSON (npm)" },
+              { label: "natural-earth-vector", desc: "High-res country/state/province shapefiles" },
+              { label: "us-atlas", desc: "US states and counties TopoJSON (npm)" },
+            ].map(({ label, desc }) => (
+              <li
+                key={label}
+                className="flex gap-2 text-[14px] leading-relaxed text-[var(--muted)]"
+              >
+                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+                <span>
+                  <code className="font-[family-name:var(--font-mono)] text-[12px] font-semibold">{label}</code> — {desc}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-4 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3">
+            <p className="text-[13px] leading-relaxed text-[var(--muted)]">
+              <strong>Common codes:</strong> USA, GBR, DEU, FRA, JPN, CHN, IND, BRA, AUS, CAN, RUS, KOR, MEX, ARG, ZAF, NGA, IDN, ITA, ESP, TUR
+            </p>
+          </div>
         </DocSection>
 
         {/* Props */}
@@ -182,8 +336,8 @@ const populationData = [
           <DataTable
             data={[
               { prop: "data", type: "ChoroplethDatum[] | DataRow[]", default: "[]", description: "Region data: { id, value } or flat rows with idField + valueField." },
-              { prop: "features", type: "GeoJSON Feature[]", default: "(required)", description: "GeoJSON FeatureCollection features. Each feature.id must match data id." },
-              { prop: "idField", type: "string", default: '"id"', description: "Column name for region ISO code (flat format)." },
+              { prop: "features", type: "GeoJSON Feature[]", default: "(required)", description: "GeoJSON features array. Use worldFeatures from MetricUI or your own." },
+              { prop: "idField", type: "string", default: '"id"', description: "Column name for region code (flat format)." },
               { prop: "valueField", type: "string", default: '"value"', description: "Column name for region value (flat format)." },
               { prop: "title", type: "string", default: "\u2014", description: "Card title." },
               { prop: "subtitle", type: "string", default: "\u2014", description: "Card subtitle." },
@@ -196,8 +350,10 @@ const populationData = [
               { prop: "borderWidth", type: "number", default: "0.5", description: "Border width on features." },
               { prop: "borderColor", type: "string", default: "theme-aware", description: "Border color." },
               { prop: "domain", type: "[number, number]", default: "auto", description: "Domain for the color scale [min, max]." },
+              { prop: "scaleType", type: '"linear" | "log" | "sqrt"', default: '"linear"', description: "Color scale distribution. Use \"sqrt\" or \"log\" for skewed data like population." },
               { prop: "animate", type: "boolean", default: "true", description: "Enable/disable animation." },
               { prop: "legend", type: "boolean | LegendConfig", default: "auto", description: "Legend configuration." },
+              { prop: "tooltipLabel", type: "string", default: "valueField name", description: "Label for the value in tooltips (e.g. \"Population\", \"Revenue\")." },
               { prop: "crossFilter", type: "boolean | { field? }", default: "\u2014", description: "Enable cross-filtering on region click." },
               { prop: "drillDown", type: "true | function", default: "\u2014", description: "true for auto table, or custom render function." },
               { prop: "drillDownMode", type: '"slide-over" | "modal"', default: '"slide-over"', description: "Drill-down panel mode." },
@@ -217,12 +373,12 @@ const populationData = [
         <DocSection id="notes" title="Notes">
           <ul className="space-y-2">
             {[
-              "The features prop is required. MetricUI does not bundle any map geometry \u2014 you provide GeoJSON from world-atlas, natural-earth-vector, or your own source.",
-              "Each GeoJSON feature must have a feature.id that matches the id field in your data array.",
+              "MetricUI bundles worldFeatures (110m world countries). Import it directly: import { worldFeatures } from \"metricui\".",
+              "Feature IDs are ISO 3166-1 alpha-3 codes (\"USA\", \"GBR\", \"HND\", etc.) — the standard 3-letter country codes.",
+              "For US state maps or other regions, provide your own GeoJSON from world-atlas, us-atlas, or natural-earth-vector.",
               "Use the domain prop to set explicit color scale boundaries. Auto-computed from data min/max if omitted.",
-              "For US state maps, use a US-specific TopoJSON source and set projectionType to \u2018naturalEarth1\u2019 with appropriate scale/translation.",
               "Flat DataRow[] format uses idField and valueField to extract region codes and values.",
-              "Built on @nivo/geo \u2014 all Nivo theming and tooltip conventions apply.",
+              "Built on @nivo/geo — all Nivo theming and tooltip conventions apply.",
             ].map((note, i) => (
               <li
                 key={i}

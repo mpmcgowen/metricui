@@ -50,7 +50,7 @@ export function OnThisPage({ items, className }: OnThisPageProps) {
           key={item.id}
           href={`#${item.id}`}
           className={cn(
-            "block text-[13px] leading-relaxed transition-colors hover:text-[var(--foreground)]",
+            "block text-[12px] leading-snug transition-colors hover:text-[var(--foreground)]",
             item.level === 3 && "pl-3",
             activeId === item.id
               ? "font-medium text-[var(--accent)]"

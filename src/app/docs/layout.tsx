@@ -49,6 +49,7 @@ import {
   Milestone,
   Download,
   Sparkles,
+  Scale,
 } from "lucide-react";
 
 interface NavItem {
@@ -155,6 +156,16 @@ const nav: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
+    label: "Compare",
+    items: [
+      { title: "vs Recharts", href: "/docs/compare/recharts", icon: Scale },
+      { title: "vs Tremor", href: "/docs/compare/tremor", icon: Scale },
+      { title: "vs shadcn/ui", href: "/docs/compare/shadcn", icon: Scale },
+      { title: "vs Chart.js", href: "/docs/compare/chartjs", icon: Scale },
+      { title: "vs Grafana", href: "/docs/compare/grafana", icon: Scale },
+    ],
+  },
+  {
     label: "More",
     items: [
       { title: "Roadmap", href: "/roadmap", icon: Milestone },
@@ -231,9 +242,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       {/* Logo */}
       <div className="flex items-center justify-between border-b border-[var(--card-border)] px-4 py-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--foreground)] text-[10px] font-bold text-[var(--background)]">
-            M
-          </div>
+          <img src="/logo.svg" alt="MetricUI" className="h-6 w-6 rounded-md" />
           <span className="text-sm font-bold">MetricUI</span>
         </Link>
         <div className="flex items-center gap-2">
@@ -398,9 +407,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="flex h-5 w-5 items-center justify-center rounded bg-[var(--foreground)] text-[9px] font-bold text-[var(--background)]">
-            M
-          </div>
+          <img src="/logo.svg" alt="MetricUI" className="h-5 w-5 rounded" />
           <span className="text-sm font-bold">MetricUI</span>
         </div>
       </div>

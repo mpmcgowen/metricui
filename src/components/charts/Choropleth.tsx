@@ -72,6 +72,8 @@ export interface ChoroplethProps extends DataComponentProps {
   borderColor?: string;
   /** Domain for the color scale [min, max]. Auto-computed if omitted. */
   domain?: [number, number];
+  /** Color scale type. "log" and "sqrt" compress skewed distributions (e.g. population). Default: "linear" */
+  scaleType?: "linear" | "log" | "sqrt";
   /** Legend configuration. */
   legend?: boolean | LegendConfig;
   /** Enable cross-filtering. `true` uses id as field, or pass `{ field }`. */
@@ -80,6 +82,8 @@ export interface ChoroplethProps extends DataComponentProps {
   drillDown?: true | ((event: { id: string; value: number; label: string }) => React.ReactNode);
   /** Drill-down mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
+  /** Label shown in the tooltip for the value (e.g. "Population", "Revenue"). Defaults to valueField name. */
+  tooltipLabel?: string;
   /** Tooltip action hint. */
   tooltipHint?: boolean | string;
   /** Sub-element class name overrides. */
@@ -121,10 +125,12 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
     borderWidth = 0.5,
     borderColor: borderColorProp,
     domain: domainProp,
+    scaleType = "linear",
     legend: legendProp,
     crossFilter: crossFilterProp,
     drillDown,
     drillDownMode,
+    tooltipLabel: tooltipLabelProp,
     tooltipHint,
     dense,
     variant,
@@ -171,13 +177,39 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
     }));
   }, [rawData, idField, valueField]);
 
-  // --- Auto-compute domain ---
+  // --- Scale transform for non-linear color mapping ---
+  const transformValue = useCallback(
+    (v: number): number => {
+      if (scaleType === "log") return v > 0 ? Math.log10(v) : 0;
+      if (scaleType === "sqrt") return v >= 0 ? Math.sqrt(v) : 0;
+      return v;
+    },
+    [scaleType],
+  );
+
+  // Original values lookup for tooltips (keyed by id)
+  const originalValues = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const d of choroplethData) map.set(d.id, d.value);
+    return map;
+  }, [choroplethData]);
+
+  // Transformed data for Nivo color mapping
+  const nivoData = useMemo<ChoroplethDatum[]>(
+    () =>
+      scaleType === "linear"
+        ? choroplethData
+        : choroplethData.map((d) => ({ id: d.id, value: transformValue(d.value) })),
+    [choroplethData, scaleType, transformValue],
+  );
+
+  // --- Auto-compute domain (from transformed values) ---
   const domain = useMemo<[number, number]>(() => {
-    if (domainProp) return domainProp;
-    if (choroplethData.length === 0) return [0, 100];
-    const values = choroplethData.map((d) => d.value);
+    if (domainProp && scaleType === "linear") return domainProp;
+    if (nivoData.length === 0) return [0, 100];
+    const values = nivoData.map((d) => d.value);
     return [Math.min(...values), Math.max(...values)];
-  }, [domainProp, choroplethData]);
+  }, [domainProp, nivoData, scaleType]);
 
   // --- Colors ---
   const resolvedColors = chartColors ?? (isDark
@@ -185,6 +217,19 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
     : ["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08306b"]);
 
   const borderColor = borderColorProp ?? (isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)");
+
+  // --- Feature name lookup (GeoJSON properties.name → human-readable labels) ---
+  const featureNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (features) {
+      for (const f of features) {
+        const id = String((f as any).id ?? "");
+        const name = (f as any).properties?.name;
+        if (id && name) map.set(id, name);
+      }
+    }
+    return map;
+  }, [features]);
 
   // --- Export data ---
   const exportData = useMemo<DataRow[]>(
@@ -202,8 +247,9 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
   const handleFeatureClick = useCallback(
     (feature: { id: string; value?: number; label?: string }) => {
       const featureId = String(feature.id);
+      const regionName = featureNameMap.get(featureId) ?? feature.label ?? featureId;
       if (drillDown) {
-        const event = { id: featureId, value: feature.value ?? 0, label: feature.label ?? featureId };
+        const event = { id: featureId, value: feature.value ?? 0, label: regionName };
         const content =
           drillDown === true ? (
             <AutoDrillTable data={exportData} field={idField} value={featureId} />
@@ -211,14 +257,14 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
             drillDown(event)
           );
         openDrill(
-          { title: featureId, field: crossFilterField ?? idField, value: featureId, mode: drillDownMode },
+          { title: regionName, field: crossFilterField ?? idField, value: featureId, mode: drillDownMode },
           content,
         );
       } else if (crossFilterProp && crossFilter && crossFilterField) {
         crossFilter.select({ field: crossFilterField, value: featureId });
       }
     },
-    [drillDown, crossFilterProp, crossFilter, crossFilterField, idField, exportData, openDrill, drillDownMode],
+    [drillDown, crossFilterProp, crossFilter, crossFilterField, idField, exportData, openDrill, drillDownMode, featureNameMap],
   );
 
   // --- Nivo legend ---
@@ -268,11 +314,12 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
           exportData={exportData}
         >
           <ResponsiveChoropleth
-            data={choroplethData}
+            data={nivoData}
             features={features}
             theme={nivoTheme}
             colors={resolvedColors}
             domain={domain}
+            valueFormat={(v: number) => formatFn(v)}
             margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
             unknownColor={isDark ? "#1a1a2e" : "#f0f0f0"}
             projectionType={projectionType}
@@ -286,15 +333,18 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
               if (linkedHover) {
                 setTimeout(() => linkedHover.setHoveredIndex(feature.id, linkedHoverId), 0);
               }
-              const val = feature.value;
+              // Use original value for tooltip (not the transformed one)
+              const realVal = originalValues.get(String(feature.id)) ?? feature.value;
+              const regionName = featureNameMap.get(String(feature.id)) ?? feature.label ?? String(feature.id);
+              const metricLabel = tooltipLabelProp ?? (valueField !== "value" ? valueField : "Value");
               return (
                 <ChartTooltip
-                  header={feature.label ?? String(feature.id)}
+                  header={regionName}
                   items={[
                     {
                       color: feature.color ?? "var(--muted)",
-                      label: "Value",
-                      value: val != null ? formatFn(val) : "\u2014",
+                      label: metricLabel,
+                      value: realVal != null ? formatFn(realVal) : "\u2014",
                     },
                   ]}
                   actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}

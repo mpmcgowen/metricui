@@ -5,6 +5,7 @@ import { KpiCard } from "@/components/cards/KpiCard";
 import { StatGroup } from "@/components/cards/StatGroup";
 import { BarChart } from "@/components/charts/BarChart";
 import { BarLineChart } from "@/components/charts/BarLineChart";
+import { Choropleth } from "@/components/charts/Choropleth";
 import { DonutChart } from "@/components/charts/DonutChart";
 import { DataTable } from "@/components/tables/DataTable";
 import { Callout } from "@/components/ui/Callout";
@@ -19,8 +20,11 @@ import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { FilterBar } from "@/components/filters/FilterBar";
 import { useDrillDownAction } from "@/components/ui/DrillDown";
 import { formatValue } from "@/lib/format";
+import { worldFeatures } from "@/lib/geoFeatures";
 import { countries } from "@/data/world";
 import type { Country } from "@/data/world";
+import countries_lib from "i18n-iso-countries";
+import enLocale from "i18n-iso-countries/langs/en.json";
 import {
   Globe,
   Users,
@@ -28,6 +32,17 @@ import {
   Coins,
   Landmark,
 } from "lucide-react";
+
+countries_lib.registerLocale(enLocale);
+
+// ---------------------------------------------------------------------------
+// Country name → ISO alpha-3 aliases for names i18n-iso-countries doesn't match
+// ---------------------------------------------------------------------------
+
+const NAME_ALIASES: Record<string, string> = {
+  "DR Congo": "COD", "Laos": "LAO", "Syria": "SYR", "Brunei": "BRN",
+  "East Timor": "TLS", "Timor-Leste": "TLS", "Macau": "MAC", "Moldova": "MDA",
+};
 
 // ---------------------------------------------------------------------------
 // Derived Data
@@ -151,6 +166,15 @@ function deriveData(allCountries: Country[]) {
       };
     });
 
+  // --- Choropleth data (country → alpha-3 → population) ---
+  const choroplethData = allCountries
+    .map((c) => {
+      const alpha3 = NAME_ALIASES[c.name] ?? countries_lib.getAlpha3Code(c.name, "en");
+      if (!alpha3) return null;
+      return { id: alpha3, value: c.population };
+    })
+    .filter((d): d is { id: string; value: number } => d !== null);
+
   // --- Top 10 most populous ---
   const top10 = allCountries.slice(0, 10);
   const populationSparkline = top10.map((c) => c.population);
@@ -189,6 +213,7 @@ function deriveData(allCountries: Country[]) {
     languageData,
     currencyData,
     densityBySubregionAndMetric,
+    choroplethData,
     top10,
     populationSparkline,
     regionAreaData,
@@ -726,6 +751,21 @@ function DashboardContent() {
               title="Population Distribution"
               description="Regional population breakdown — click a bar to cross-filter the entire dashboard"
               border
+            />
+
+            <Choropleth
+              data={data.choroplethData}
+              features={worldFeatures}
+              title="World Population"
+              subtitle="Hover over a country to see its population"
+              format="compact"
+              scaleType="sqrt"
+              projectionType="naturalEarth1"
+              projectionScale={120}
+              tooltipLabel="Population"
+              height={420}
+              legend
+              aiContext="Choropleth reveals population concentration in South/East Asia and Nigeria. Most of Africa and the Americas have moderate populations relative to land area. Small island nations are invisible at this scale."
             />
 
             <BarChart

@@ -1,6 +1,6 @@
 {
   "name": "metricui",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "A React component library for building data dashboards — KPI cards, charts, tables, and more with built-in formatting, theming, and data states.",
   "keywords": [
     "react",
@@ -82,9 +82,13 @@
     "@nivo/scatterplot": "^0.99.0",
     "@nivo/treemap": "^0.99.0",
     "clsx": "^2.1.1",
+    "i18n-iso-countries": "^7.14.0",
     "lucide-react": "^0.577.0",
     "modern-screenshot": "^4.6.8",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "topojson-client": "^3.1.0",
+    "us-atlas": "^3.0.1",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@nivo/bar": "^0.99.0",
@@ -97,10 +101,14 @@
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@tremor/react": "^3.18.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/topojson-client": "^3.1.5",
+    "@types/topojson-specification": "^1.0.5",
     "@vitejs/plugin-react": "^6.0.1",
+    "chart.js": "^4.5.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
     "jsdom": "^29.0.1",
@@ -108,7 +116,9 @@
     "postcss": "^8.5.8",
     "postcss-cli": "^11.0.1",
     "react": "19.2.4",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.4",
+    "recharts": "^3.8.1",
     "shiki": "^4.0.2",
     "tailwindcss": "^4",
     "tsup": "^8.5.1",

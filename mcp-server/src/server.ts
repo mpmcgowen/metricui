@@ -42,6 +42,10 @@ Dashboard, DashboardInsight, DashboardNav, KpiCard, StatGroup, AreaChart, LineCh
 
 Hooks: useCrossFilter, useCrossFilteredData, useFilteredData, useLinkedHover, useValueFlash, useMetricFilters, useFilterValue, useHasComparison, useActiveFilterCount, useMetricConfig, useDrillDown, useDrillDownAction.
 
+Geo data (import from "metricui"):
+worldFeatures — bundled world country GeoJSON (alpha-3 IDs: "USA", "GBR", "IND"). Use with Choropleth.
+usStatesFeatures — bundled US state GeoJSON (2-letter abbreviations: "CA", "NY", "TX"). Use with Choropleth.
+
 ## Data format
 
 Charts support a unified data format: pass flat rows with \`index\` and \`categories\` props. Same data works across AreaChart, LineChart, BarChart, BarLineChart, DonutChart, and HeatMap. Zero-config mode auto-infers index (first string column) and categories (all number columns). Categories accept plain strings or CategoryConfig objects with { key, label?, format?, color?, axis? }.

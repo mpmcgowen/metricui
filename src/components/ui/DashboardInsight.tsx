@@ -29,7 +29,23 @@ function renderMarkdown(text: string): ReactNode[] {
   return text.split(/\n\n+/).map((block, bi) => {
     const trimmed = block.trim();
     if (!trimmed) return null;
+    // Headings
+    const h3Match = trimmed.match(/^###\s+(.+)$/);
+    if (h3Match) return <p key={bi} className={cn("text-[13px] font-semibold text-[var(--foreground)]", bi > 0 && "mt-4")}>{renderInline(h3Match[1])}</p>;
+    const h2Match = trimmed.match(/^##\s+(.+)$/);
+    if (h2Match) return <p key={bi} className={cn("text-[14px] font-bold text-[var(--foreground)]", bi > 0 && "mt-4")}>{renderInline(h2Match[1])}</p>;
+
     const lines = trimmed.split("\n");
+    // Numbered lists
+    if (lines.every((l) => /^\d+[.)]\s/.test(l.trim()))) {
+      return (
+        <ol key={bi} className={cn("space-y-1 list-decimal list-inside", bi > 0 && "mt-3")}>
+          {lines.map((line, li) => (
+            <li key={li}>{renderInline(line.replace(/^\d+[.)]\s/, ""))}</li>
+          ))}
+        </ol>
+      );
+    }
     if (lines.every((l) => /^[-•*]\s/.test(l.trim()))) {
       return (
         <ul key={bi} className={cn("space-y-1", bi > 0 && "mt-3")}>

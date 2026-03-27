@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://metricui.com/og.png" alt="MetricUI" width="600" />
+  <img src="public/logo.svg" alt="MetricUI" width="200" />
 </p>
 
 <h1 align="center">MetricUI</h1>
@@ -276,6 +276,13 @@ One chart crashes? The rest keep running. Dev mode shows component name + action
 | [**Funnel**](https://metricui.com/docs/funnel) | Conversion pipeline with auto-computed rates | [Docs](https://metricui.com/docs/funnel) |
 | [**Waterfall**](https://metricui.com/docs/waterfall) | Sequential +/- changes with auto running totals, connectors | [Docs](https://metricui.com/docs/waterfall) |
 | [**BulletChart**](https://metricui.com/docs/bullet-chart) | Actual vs target with qualitative range bands | [Docs](https://metricui.com/docs/bullet-chart) |
+| [**ScatterPlot**](https://metricui.com/docs/scatter-plot) | Two-variable correlation with bubble size, reference lines, linked hover | [Docs](https://metricui.com/docs/scatter-plot) |
+| [**Treemap**](https://metricui.com/docs/treemap) | Hierarchical part-of-whole with flat or nested data | [Docs](https://metricui.com/docs/treemap) |
+| [**Calendar**](https://metricui.com/docs/calendar) | GitHub-style heatmap with auto date range detection | [Docs](https://metricui.com/docs/calendar) |
+| [**Radar**](https://metricui.com/docs/radar) | Multi-axis comparison with overlay support | [Docs](https://metricui.com/docs/radar) |
+| [**Sankey**](https://metricui.com/docs/sankey) | Flow visualization with gradient links, flat or native data | [Docs](https://metricui.com/docs/sankey) |
+| [**Choropleth**](https://metricui.com/docs/choropleth) | Geographic heatmap with bundled world + US state maps, sqrt/log scale | [Docs](https://metricui.com/docs/choropleth) |
+| [**Bump**](https://metricui.com/docs/bump) | Ranking chart with auto-ranking from flat data | [Docs](https://metricui.com/docs/bump) |
 | [**Sparkline**](https://metricui.com/docs/sparkline) | Inline micro-chart with reference lines, bands, trend coloring | [Docs](https://metricui.com/docs/sparkline) |
 
 ### Data
@@ -288,7 +295,9 @@ One chart crashes? The rest keep running. Dev mode shows component name + action
 
 | Component | What it does | Docs |
 |-----------|-------------|------|
+| [**Dashboard**](https://metricui.com/docs/dashboard) | All-in-one wrapper — replaces 5 nested providers in one component | [Docs](https://metricui.com/docs/dashboard) |
 | [**DashboardHeader**](https://metricui.com/docs/dashboard-header) | Live/stale status, auto-ticking "Updated Xm ago", breadcrumbs, action slots | [Docs](https://metricui.com/docs/dashboard-header) |
+| [**DashboardNav**](https://metricui.com/docs/dashboard-nav) | Tab/scroll navigation with sliding indicator, keyboard nav, URL sync | [Docs](https://metricui.com/docs/dashboard-nav) |
 | [**MetricGrid**](https://metricui.com/docs/metric-grid) | Smart auto-layout grid with staggered reveal animations | [Docs](https://metricui.com/docs/metric-grid) |
 | [**SectionHeader**](https://metricui.com/docs/section-header) | Labeled divider with description popover, badge, action slot | [Docs](https://metricui.com/docs/section-header) |
 | [**Divider**](https://metricui.com/docs/divider) | Horizontal/vertical separator with label, icon, accent | [Docs](https://metricui.com/docs/divider) |

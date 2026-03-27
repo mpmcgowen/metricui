@@ -1639,10 +1639,12 @@ Flow visualization. Show how quantities move between nodes (sources → destinat
 
 ### Choropleth
 
-Geographic data visualization on a map. Dev provides GeoJSON features.
+Geographic data visualization on a map.
 
-- `data`: { id: string, value: number }[]. Or DataRow[] with `idField` + `valueField`. Country ISO codes.
-- `features`: GeoJSON feature array (required — dev provides their map data)
+- `data`: { id: string, value: number }[]. Or DataRow[] with `idField` + `valueField`. IDs are standard alpha-3 codes for `worldFeatures` ("USA", "GBR", "IND") or 2-letter abbreviations for `usStatesFeatures` ("CA", "NY", "TX").
+- `features`: GeoJSON feature array (required). MetricUI bundles two maps: `worldFeatures` (world countries, alpha-3 IDs) and `usStatesFeatures` (US states, 2-letter abbreviations). Import directly: `import { Choropleth, worldFeatures, usStatesFeatures } from "metricui"`. For other maps, use `world-atlas`, `us-atlas`, or `natural-earth-vector` from npm.
+- `tooltipLabel`: string — label for the value in tooltips (e.g. "Population", "Revenue"). Defaults to valueField name.
+- `scaleType`: "linear" | "log" | "sqrt" — color scale distribution. Use "sqrt" or "log" for skewed data like population. Default: "linear".
 - `projectionType`: "mercator" | "equalEarth" | "naturalEarth1" | "orthographic"
 - `projectionScale`: number
 - `borderWidth`, `borderColor`: number, string

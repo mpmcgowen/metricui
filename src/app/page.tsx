@@ -225,12 +225,13 @@ export default function Home() {
         {/* Nav */}
         <nav className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--foreground)] text-xs font-bold text-[var(--background)]">M</div>
+            <img src="/logo.svg" alt="MetricUI" className="h-7 w-7 rounded-lg" />
             <span className="text-base font-bold tracking-tight">MetricUI</span>
           </div>
           <div className="flex items-center gap-6">
             <a href="/docs" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Docs</a>
             <a href="#demos" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Demos</a>
+            <a href="#compare" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Compare</a>
             <a href="/roadmap" className="text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Roadmap</a>
             <a href="https://github.com/mpmcgowen/metricui" className="text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"><Github className="h-4 w-4" /></a>
             <ThemeToggle />
@@ -494,6 +495,47 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  COMPARE                                                           */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section id="compare" className="border-y border-[var(--card-border)] bg-[var(--card-bg)] py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Compare</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--foreground)]">
+              How MetricUI stacks up
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-sm text-[var(--muted)]">
+              Honest, detailed comparisons against the libraries you already know.
+              We call out the good in every tool — then show where MetricUI goes further.
+            </p>
+          </div>
+          <div className="mx-auto mt-14 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { title: "vs Recharts", desc: "The most popular React charting library. Great charts — but you still need everything else.", href: "/docs/compare/recharts" },
+              { title: "vs Tremor", desc: "Beautiful Tailwind components, now part of Vercel. See how the two dashboard libraries compare.", href: "/docs/compare/tremor" },
+              { title: "vs shadcn/ui Charts", desc: "Own-the-code philosophy meets ship-the-dashboard. The lines-of-code difference is striking.", href: "/docs/compare/shadcn" },
+              { title: "vs Chart.js", desc: "The OG charting library. Canvas rendering meets SVG — and the trade-offs matter more than you think.", href: "/docs/compare/chartjs" },
+              { title: "vs Grafana", desc: "Best-in-class for infrastructure monitoring. But if you're building product dashboards, read this.", href: "/docs/compare/grafana" },
+            ].map((c) => (
+              <a
+                key={c.href}
+                href={c.href}
+                className="group rounded-xl border border-[var(--card-border)] bg-[var(--background)] p-6 transition-all hover:border-[var(--accent)]/30 hover:shadow-lg hover:shadow-[var(--accent)]/5 hover:-translate-y-0.5"
+              >
+                <h3 className="text-[15px] font-bold text-[var(--foreground)] transition-colors group-hover:text-[var(--accent)]">
+                  {c.title}
+                </h3>
+                <p className="mt-2 text-[13px] leading-relaxed text-[var(--muted)]">{c.desc}</p>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1">
+                  Read comparison <ArrowRight className="h-3 w-3" />
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/*  CTA                                                               */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="border-t border-[var(--card-border)] bg-[var(--card-bg)]">
@@ -521,6 +563,7 @@ export default function Home() {
           <p className="text-sm text-[var(--muted)]">&copy; {new Date().getFullYear()} MetricUI. MIT License.</p>
           <div className="flex items-center gap-4">
             <a href="/docs" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Docs</a>
+            <a href="#compare" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Compare</a>
             <a href="/roadmap" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">Roadmap</a>
             <a href="https://github.com/mpmcgowen/metricui" className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]">GitHub</a>
           </div>
