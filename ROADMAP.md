@@ -205,31 +205,24 @@ Everything listed here is built, tested, and published.
 
 ---
 
-## 0.8.0 — "Interactive Dashboards"
+## 0.8.0 — "The Polish" (Shipped)
 
-**Headline: Action buttons, inline edits, form inputs, and role-based visibility.** Dashboards stop being read-only reports and become operational tools where users take action on the data they see.
+**Headline: Saved views, DRY architecture, accessibility, and doc site infrastructure.** The release that turned a feature-complete library into a well-engineered one.
 
 ### The Wow
 
-- **Action buttons** — attach actions to any card, table row, or chart element. "Approve", "Flag", "Assign" buttons that fire callbacks or POST to webhooks. The dashboard becomes a control plane, not just a display.
-- **Inline edits** — editable cells in DataTable, editable KPI targets, editable thresholds. Click a value, type a new one, save. Optimistic updates with rollback on error. Turns static reports into live operational tools.
-- **Form inputs** — date pickers, text inputs, number steppers, and toggles that live inside the dashboard and feed into filter context or action payloads. The missing link between "viewing data" and "doing something about it."
-- **Webhook actions** — `onAction` prop that POSTs structured payloads to an endpoint. Card ID, row data, user action, current filters — everything the backend needs to process the action. Built-in confirmation dialogs and success/error toasts.
+- **Saved views & shareable links** — `useDashboardState()` captures the entire dashboard state (filters, period, dimensions, cross-filter) as a JSON-safe snapshot. `toSearchParam()` / `fromSearchParam()` for URL-based sharing. Save to localStorage, database, or URL — developer's choice.
+- **Centralized chart interaction** — `useChartInteraction` hook replaces 6 separate hook calls duplicated across 14 chart components. DrillDown-vs-crossFilter priority, auto drill table, tooltip hints — all defined once.
+- **Doc site infrastructure** — 6 shared doc components (DocPageLayout, ComponentDocFooter, NotesList, GuideHero, PlaygroundSection, Code) eliminate 1,400+ lines of boilerplate. Every doc page uses the same system. Add a new page = write only unique content.
+- **Fixed-position TOC** — OnThisPage redesigned as a dbt-style right-rail nav with accent bar active indicator. Floats in the margin, never steals content width.
 
 ### Supporting Work
 
-- **Role-based visibility** — `minRole` prop on components, columns, export buttons, and drill-down triggers. Pass `role` via Dashboard context. Components below the user's role render as disabled, hidden, or redacted. No more building separate dashboards for admins vs viewers.
-- **Dashboard identity context** — `identity` prop on Dashboard for user ID, role, and custom claims. Flows through to all components for RLS-aware rendering and audit trails on actions.
-- **DataStory** — `<DataStory steps={[...]}>`. Guided walkthrough mode for any dashboard. Each step highlights a component, dims everything else, and shows a narrative card. Built for quarterly reviews, onboarding tours, and async reports.
-- **Dashboard state serialization** — `useDashboardState()` returns the entire dashboard state (filters, selections, drill-downs, toggles, sort order) as a JSON blob. Save it, share it as a URL, restore it. "Saved views" for end users.
-
-### New Components
-| Component | Description |
-|---|---|
-| ActionButton | Contextual action on cards/rows/chart elements. Webhook integration. |
-| InlineEdit | Click-to-edit values in tables, cards, and thresholds. Optimistic updates. |
-| FormInput | Date pickers, text inputs, number steppers for in-dashboard data entry. |
-| DataStory | Guided narrative walkthrough. Highlights components in sequence with story cards. |
+- **Accessibility** — SegmentToggle gains `role="radiogroup"` + `aria-checked`. DataStateWrapper announces loading/error/empty to screen readers via `aria-live`. FilterBar gains `aria-expanded`. DashboardInsight icon buttons gain `aria-label`.
+- **API consistency** — Sparkline gains `aiContext` prop. Gauge gains `action` prop. Full API audit documented remaining gaps.
+- **useDropdown hook** — shared dropdown behavior with keyboard nav + ARIA, ready to wire into DropdownFilter, PeriodSelector, ExportButton.
+- **Component-data expansion** — 11 new entries (7 charts + DashboardNav, ExportButton, DashboardInsight, DrillDown). 42 total components in the MCP knowledge base.
+- **All 38 component doc pages** standardized to shared system (ComponentHero → demos → PropsTable → Notes → RelatedComponents).
 
 ---
 
@@ -237,19 +230,36 @@ Everything listed here is built, tested, and published.
 
 **Headline: Nothing new, everything better.** This is the release where MetricUI earns the "production-ready" label.
 
-### The Wow (yes, polish can be "wow")
+### Accessibility (finish the job)
 
-- **Full keyboard navigation** — tab through charts, arrow keys between data points, Enter to drill down, Escape to close. Screen reader announcements for data changes, chart summaries, and filter state. Every interactive element properly labeled. Not a checkbox — a first-class experience for keyboard-only users. The kind of a11y work that makes the React accessibility community blog about you.
-- **Color-blind safe mode** — `<MetricProvider colorBlindSafe>`. Swaps the entire palette to one distinguishable for all common types of color vision deficiency. Optional pattern fills (stripes, dots, crosshatch) for charts when color alone isn't enough. Automatic — not a separate palette the developer has to remember to configure.
-- **Performance benchmarks** — published benchmarks for rendering 50 charts, 1000-row tables, 100 KpiCards. Bundle size budget enforced in CI. Tree-shaking verified (import just KpiCard → only KpiCard code ships). Lighthouse dashboard score.
-- **Test coverage expansion** — every component has render tests, prop validation tests, accessibility tests (axe-core), and interaction tests. Coverage target: 90%+.
+- **Wire `useDropdown`** into DropdownFilter, PeriodSelector, ExportButton — full keyboard navigation (arrow keys, Escape, Home/End) + ARIA roles
+- **DashboardInsight focus trap** — `role="dialog"`, `aria-modal="true"`, Tab key stays inside the sidebar
+- **DashboardNav roving tabindex** — only active tab gets `tabIndex={0}`, inactive tabs get `tabIndex={-1}`
+- **Chart aria-labels** — every chart gets `role="img"` with an auto-generated `aria-label` summarizing the data
+- **DrillDownPanel focus trap** — local Escape handler, keep Tab within the dialog
+- **Opacity/contrast fixes** — audit all `opacity-40` through `opacity-70` on text, ensure WCAG AA compliance
+
+### API Consistency (finish the job)
+
+- **Gauge** — add modern `drillDown` (true | function), `drillDownMode`, `crossFilter`, `tooltipHint`
+- **BulletChart** — add `drillDown`, `drillDownMode`, `crossFilter`, `tooltipHint`
+- **StatGroup** — wire up `empty`, `error`, `stale` data states (currently inherited but ignored)
+- **DataTable** — add `drillDown={true}` auto-drill shorthand
+
+### Testing & Performance
+
+- **Edge case tests** — 0 data points, 10,000 data points, negative values, null values, extremely long strings, emoji in labels
+- **Interaction tests** — click bar → drill-down opens → correct data renders. Full user flow coverage.
+- **Accessibility tests** — axe-core on every component, every state
+- **Performance benchmarks** — 50 charts on one page, 1000-row tables, measure FPS and memory
+- **DX smoke test** — fresh Next.js project, `npm install metricui`, build a dashboard from scratch, document every friction point
 
 ### Supporting Work
 
-- **i18n** — RTL layout support, translated data state messages ("No data" / "Error" / "Loading" in 10+ languages), non-Latin numeral systems.
-- **Migration guide** — comprehensive guide covering every breaking change from 0.2 → 0.9. Codemods where possible.
-- **Docs audit** — every component page reviewed, every example tested, every prop documented. Search works. MCP knowledge base updated to match.
-- **Micro-interactions polish** — subtle highlight flash on value changes, spring bounce on bar animation endpoints, smooth donut slice expansion on hover. The 1% details that make the library feel premium.
+- **i18n** — translatable data state messages ("No data" / "Error" / "Loading"), RTL layout support
+- **Color-blind safe mode** — `<MetricProvider colorBlindSafe>` swaps to distinguishable palette with optional pattern fills
+- **Migration guide** — comprehensive guide covering every breaking change from 0.2 → 0.9
+- **Micro-interactions polish** — the 1% details that make the library feel premium
 
 ---
 
