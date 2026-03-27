@@ -27,7 +27,8 @@ import { assertPeer } from "@/lib/peerCheck";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { ChartContainer } from "./ChartContainer";
-import { TrendingUp, TrendingDown, Minus, ArrowUpRight as DrillIcon } from "lucide-react";
+import { useChartInteraction } from "@/lib/useChartInteraction";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -61,8 +62,14 @@ export interface GaugeProps extends DataComponentProps {
   height?: number;
   /** Action slot rendered in the card header. */
   action?: React.ReactNode;
-  /** Drill-down config. When set, the gauge card becomes clickable and opens the drill-down panel. */
-  drillDown?: DrillDownConfig;
+  /** Drill-down. `true` = auto table, function = custom content, or legacy `{ onClick }`. */
+  drillDown?: true | ((event: { value: number | null; title: string }) => React.ReactNode) | DrillDownConfig;
+  /** Drill-down panel mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
+  /** Enable cross-filtering. `true` uses title as field, or pass `{ field }`. */
+  crossFilter?: boolean | { field?: string };
+  /** Tooltip action hint. */
+  tooltipHint?: boolean | string;
 
   // Standard MetricUI props
   animate?: boolean | AnimationConfig;
@@ -255,6 +262,9 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   height,
   action,
   drillDown,
+  drillDownMode,
+  crossFilter: crossFilterProp,
+  tooltipHint,
   variant,
   dense,
   animate,
@@ -284,6 +294,27 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   const denseValues = useDenseValues();
   const resolvedDense = dense ?? config.dense;
   const resolvedHeight = height ?? denseValues.chartHeight;
+
+  // --- Interaction (modern drillDown / crossFilter) ---
+  // Support legacy DrillDownConfig alongside modern pattern
+  const isLegacyDrill = drillDown && typeof drillDown === "object" && "onClick" in drillDown;
+  const modernDrillDown = isLegacyDrill ? undefined : (drillDown as true | ((event: any) => React.ReactNode) | undefined);
+  const interaction = useChartInteraction({
+    drillDown: modernDrillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: title ?? "gauge",
+    tooltipHint,
+    data: [],
+  });
+
+  const handleGaugeClick = useCallback(() => {
+    if (isLegacyDrill) {
+      (drillDown as DrillDownConfig).onClick?.();
+    } else if (interaction.isInteractive) {
+      interaction.handleClick({ title: title ?? "Gauge", value: rawValue ?? 0 });
+    }
+  }, [isLegacyDrill, drillDown, interaction, title, rawValue]);
 
   const animConfig: AnimationConfig | undefined =
     resolvedAnimate === true ? { countUp: true }
@@ -396,8 +427,8 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
       id={id}
       data-testid={dataTestId}
       style={{ minWidth: 120, height: "100%" }}
-      className={cn(drillDown && "group relative cursor-pointer", className)}
-      onClick={drillDown ? drillDown.onClick : undefined}
+      className={cn((drillDown || interaction.isInteractive) && "group relative cursor-pointer", className)}
+      onClick={(drillDown || interaction.isInteractive) ? handleGaugeClick : undefined}
     >
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="Gauge"
@@ -465,11 +496,6 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
           />
         </div>
       </ChartContainer>
-      {drillDown && (
-        <span className="absolute bottom-2 right-2 text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-60" aria-hidden>
-          <DrillIcon className="h-3 w-3" />
-        </span>
-      )}
     </div>
     </div>
   );

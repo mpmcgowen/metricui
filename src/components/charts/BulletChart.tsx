@@ -4,6 +4,7 @@ import { forwardRef, useMemo } from "react";
 import { ResponsiveBullet } from "@nivo/bullet";
 import type { Datum as NivoBulletDatum, BulletTooltipProps } from "@nivo/bullet";
 import { ChartContainer } from "./ChartContainer";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 import { ChartTooltip } from "./ChartTooltip";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
@@ -84,6 +85,14 @@ export interface BulletChartProps extends DataComponentProps {
   showAxis?: boolean;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
+  /** Drill-down. `true` = auto table, function = custom content. */
+  drillDown?: true | ((event: { title: string; value: string | number }) => React.ReactNode);
+  /** Drill-down panel mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
+  /** Enable cross-filtering. */
+  crossFilter?: boolean | { field?: string };
+  /** Tooltip action hint. */
+  tooltipHint?: boolean | string;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string; /** Alias for `chart` */ body?: string };
 }
@@ -132,6 +141,10 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
   showAxis = true,
   dense: denseProp,
   animate: animateProp,
+  drillDown,
+  drillDownMode,
+  crossFilter: crossFilterProp,
+  tooltipHint,
   variant,
   className,
   classNames,
@@ -151,6 +164,15 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
 
   const resolvedAnimate = animateProp ?? config.animate;
   const resolvedVariant = variant ?? config.variant;
+
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: title ?? "bullet",
+    tooltipHint,
+    data: [],
+  });
   const denseValues = useDenseValues();
   const resolvedDense = denseProp ?? config.dense;
 

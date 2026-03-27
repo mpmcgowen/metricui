@@ -4,7 +4,9 @@ import { forwardRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { FormatOption, ComparisonMode } from "@/lib/format";
 import type { CardVariant, DataComponentProps, DrillDownConfig } from "@/lib/types";
+import type { EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { useMetricConfig } from "@/lib/MetricProvider";
+import { DataStateWrapper } from "@/components/ui/DataStateWrapper";
 import { KpiCard } from "./KpiCard";
 
 // ---------------------------------------------------------------------------
@@ -132,6 +134,8 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
   columns,
   format: groupFormat,
   loading = false,
+  empty: emptyProp,
+  error: errorProp,
   className,
   classNames,
   id,
@@ -160,6 +164,9 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
     );
   }
 
+  // Auto-detect empty when no stats provided
+  const resolvedEmpty = emptyProp || (stats.length === 0 ? { message: "No data available" } : undefined);
+
   return (
     <div ref={ref} id={id} data-testid={dataTestId} className={cn(className, classNames?.root)}>
       {/* Group header */}
@@ -176,20 +183,22 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
         </div>
       )}
 
-      {/* Grid of bare KpiCards */}
-      <div
-        data-variant={resolvedVariant}
-        data-dense={resolvedDense ? "true" : undefined}
-        data-stat-count={stats.length}
-        className={cn(
-          "mu-stat-grid grid gap-px overflow-hidden border",
-          "rounded-[var(--mu-card-radius)] border-[length:var(--mu-card-border-w)] border-[color:var(--mu-card-border)]",
-          "bg-[var(--mu-card-border)] shadow-[var(--mu-card-shadow)]",
-          getGridCols(stats.length, columns),
-          classNames?.grid,
-        )}
-      >
-        {stats.map((stat, idx) => {
+      {/* Data states — shared with all other components */}
+      <DataStateWrapper error={errorProp} empty={resolvedEmpty}>
+        {/* Grid of bare KpiCards */}
+        <div
+          data-variant={resolvedVariant}
+          data-dense={resolvedDense ? "true" : undefined}
+          data-stat-count={stats.length}
+          className={cn(
+            "mu-stat-grid grid gap-px overflow-hidden border",
+            "rounded-[var(--mu-card-radius)] border-[length:var(--mu-card-border-w)] border-[color:var(--mu-card-border)]",
+            "bg-[var(--mu-card-border)] shadow-[var(--mu-card-shadow)]",
+            getGridCols(stats.length, columns),
+            classNames?.grid,
+          )}
+        >
+          {stats.map((stat, idx) => {
           // Map StatItem to KpiCard props
           const statFormat = stat.format ?? groupFormat;
 
@@ -234,8 +243,9 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
               />
             </div>
           );
-        })}
-      </div>
+          })}
+        </div>
+      </DataStateWrapper>
     </div>
   );
 });
