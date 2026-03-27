@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef, type ReactNode } from "react";
+import { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDrillDown, type DrillDownTrigger, type DrillDownContent } from "@/lib/DrillDownContext";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 // ---------------------------------------------------------------------------
 // DrillDownOverlay — portal-rendered slide-over panel
@@ -23,6 +24,7 @@ export function DrillDownOverlay(props?: DrillDownOverlayProps) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const focusTrap = useFocusTrap(!!drill?.isOpen);
 
   useEffect(() => setMounted(true), []);
 
@@ -67,7 +69,11 @@ export function DrillDownOverlay(props?: DrillDownOverlayProps) {
 
       {/* Panel */}
       <div
-        ref={panelRef}
+        ref={(el) => {
+          (panelRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+          (focusTrap.containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        }}
+        onKeyDown={focusTrap.onKeyDown}
         role="dialog"
         aria-modal="true"
         aria-label={drill.activeTrigger?.title ?? "Detail view"}

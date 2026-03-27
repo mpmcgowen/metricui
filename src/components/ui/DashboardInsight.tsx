@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { useAi, type AiMessage, type AiMetric } from "@/lib/AiContext";
 import { Sparkles, Send, X, RotateCcw, Loader2, MessageSquare } from "lucide-react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 // ---------------------------------------------------------------------------
 // Quick prompts
@@ -223,6 +224,7 @@ export function DashboardInsight({
 }: DashboardInsightProps) {
   const ai = useAi();
   const [open, setOpen] = useState(false);
+  const focusTrap = useFocusTrap(open);
   const [input, setInput] = useState("");
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -331,6 +333,8 @@ export function DashboardInsight({
   const button = (
     <button
       onClick={() => setOpen(true)}
+      aria-expanded={open}
+      aria-label="Open AI Insights"
       className={cn(
         "fixed z-[9998] flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-white shadow-lg shadow-[var(--accent)]/25 transition-all hover:shadow-xl hover:shadow-[var(--accent)]/30 hover:scale-105",
         position === "bottom-right" ? "bottom-6 right-6" : "bottom-6 left-6",
@@ -358,13 +362,20 @@ export function DashboardInsight({
       />
 
       {/* Panel */}
-      <div className={cn(
-        "absolute top-0 bottom-0 flex w-full max-w-md flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-out",
-        position === "bottom-right" ? "right-0" : "left-0",
-        visible
-          ? "translate-x-0"
-          : position === "bottom-right" ? "translate-x-full" : "-translate-x-full",
-      )}>
+      <div
+        ref={focusTrap.containerRef}
+        onKeyDown={focusTrap.onKeyDown}
+        role="dialog"
+        aria-modal="true"
+        aria-label="AI Insights"
+        className={cn(
+          "absolute top-0 bottom-0 flex w-full max-w-md flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-out",
+          position === "bottom-right" ? "right-0" : "left-0",
+          visible
+            ? "translate-x-0"
+            : position === "bottom-right" ? "translate-x-full" : "-translate-x-full",
+        )}
+      >
         {/* Header */}
         <div className="flex-shrink-0 border-b border-[var(--card-border)] px-5 py-4">
           <div className="flex items-center justify-between">

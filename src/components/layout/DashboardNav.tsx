@@ -303,6 +303,7 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
                 role="tab"
                 aria-selected={isActive}
                 aria-controls={mode === "tabs" ? `panel-${tab.value}` : undefined}
+                tabIndex={isActive ? 0 : -1}
                 onClick={() => handleTabClick(tab.value)}
                 className={cn(
                   "relative inline-flex items-center justify-center font-medium transition-colors",
