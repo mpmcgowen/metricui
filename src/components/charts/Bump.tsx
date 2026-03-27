@@ -3,13 +3,10 @@
 import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveBump } from "@nivo/bump";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
@@ -164,7 +161,6 @@ const BumpInner = forwardRef<HTMLDivElement, BumpProps>(function Bump(props, ref
   } = props;
 
   assertPeer(ResponsiveBump, "@nivo/bump", "Bump");
-  const openDrill = useDrillDownAction();
 
   // --- Resolve data format ---
   const inferred = useMemo(
@@ -186,12 +182,6 @@ const BumpInner = forwardRef<HTMLDivElement, BumpProps>(function Bump(props, ref
   const resolvedVariant = variant ?? config.variant;
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? denseValues.chartHeight;
-  const linkedHover = useLinkedHover();
-  const linkedHoverId = useLinkedHoverId();
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "id"
-    : undefined;
 
   const { ref: containerRef, width: containerWidth } = useContainerSize();
   const nivoTheme = useChartTheme(containerWidth);
@@ -253,6 +243,15 @@ const BumpInner = forwardRef<HTMLDivElement, BumpProps>(function Bump(props, ref
     return rawData as DataRow[];
   }, [rawData]);
 
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: "id",
+    tooltipHint,
+    data: exportData,
+  });
+
   // --- Format callback ---
   const formatFn = useCallback(
     (value: number) => formatValue(value, format, localeDefaults),
@@ -291,7 +290,7 @@ const BumpInner = forwardRef<HTMLDivElement, BumpProps>(function Bump(props, ref
                 hidden={hiddenKeys}
                 onToggle={toggleKey}
                 toggleable={legendConfig.toggleable !== false}
-                onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
+                onHover={interaction.linkedHover ? (id) => interaction.linkedHover!.setHoveredSeries(id, interaction.linkedHoverId) : undefined}
               />
             ) : undefined
           }
@@ -336,8 +335,8 @@ const BumpInner = forwardRef<HTMLDivElement, BumpProps>(function Bump(props, ref
             motionConfig={resolvedAnimate ? config.motionConfig : undefined}
             lineTooltip={({ serie }: { serie: any }) => {
               // Emit linked hover
-              if (linkedHover) {
-                setTimeout(() => linkedHover.setHoveredSeries(serie.id, linkedHoverId), 0);
+              if (interaction.linkedHover) {
+                setTimeout(() => interaction.linkedHover!.setHoveredSeries(serie.id, interaction.linkedHoverId), 0);
               }
               const datums: BumpSeriesDatum[] = serie.data?.data ?? serie.points?.map((p: any) => p.data) ?? [];
               return (
@@ -350,28 +349,12 @@ const BumpInner = forwardRef<HTMLDivElement, BumpProps>(function Bump(props, ref
                       label: String(d.x),
                       value: `#${d.y}`,
                     }))}
-                  actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+                  actionHint={interaction.actionHint}
                 />
               );
             }}
             onClick={(serie: any) => {
-              if (drillDown) {
-                const datums: BumpSeriesDatum[] = serie.data?.data ?? [];
-                const first = datums[0];
-                const event = { id: serie.id, x: first?.x ?? "", y: first?.y ?? 0 };
-                const content =
-                  drillDown === true ? (
-                    <AutoDrillTable data={exportData} field="series" value={serie.id} />
-                  ) : (
-                    drillDown(event)
-                  );
-                openDrill(
-                  { title: serie.id, field: crossFilterField ?? "id", value: serie.id, mode: drillDownMode },
-                  content,
-                );
-              } else if (crossFilterProp && crossFilter && crossFilterField) {
-                crossFilter.select({ field: crossFilterField, value: serie.id });
-              }
+              interaction.handleClick({ title: serie.id, value: serie.id, field: "series" });
             }}
           />
         </ChartContainer>

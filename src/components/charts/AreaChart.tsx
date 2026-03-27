@@ -9,7 +9,7 @@ import type {
   Point,
 } from "@nivo/line";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
@@ -20,10 +20,7 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import { withOpacity } from "@/lib/utils";
 import { devWarn } from "@/lib/devWarnings";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 
 import type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
@@ -535,7 +532,6 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   stale,
 }, ref) {
   assertPeer(ResponsiveLine, "@nivo/line", "AreaChart");
-  const openDrill = useDrillDownAction();
   const localeDefaults = useLocale();
   const config = useMetricConfig();
 
@@ -545,16 +541,15 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   const resolvedHeight = height ?? denseValues.chartHeight;
   const resolvedChartNullMode = chartNullMode ?? config.chartNullMode;
 
-  // --- Linked hover ---
-  const linkedHover = useLinkedHover();
-  const linkedHoverId = useLinkedHoverId();
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: "x",
+    tooltipHint,
+    data: dataProp as DataRow[],
+  });
   const sliceIndexRef = useRef<string | number | null>(null);
-
-  // --- Cross-filter ---
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "x"
-    : undefined;
 
   // --- Resolve stacked from stackMode ---
   const isPercentStack = stackMode === "percent";
@@ -927,15 +922,15 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
     }
 
     // Linked hover crosshair from sibling charts
-    if (linkedHover) {
-      layers.push(createLinkedCrosshairLayer(linkedHover.hoveredIndex, linkedHover.sourceId, linkedHoverId) as LineSvgLayer<SeriesData>);
+    if (interaction.linkedHover) {
+      layers.push(createLinkedCrosshairLayer(interaction.linkedHover.hoveredIndex, interaction.linkedHover.sourceId, interaction.linkedHoverId) as LineSvgLayer<SeriesData>);
     }
 
     layers.push("slices" as LineLayerId);
     layers.push("mesh" as LineLayerId);
     layers.push("legends" as LineLayerId);
     return layers;
-  }, [thresholds, referenceLines, comparisonSeriesIds, needsCustomLines, needsCustomPoints, lineWidth, lineStyle, pointSize, pointColor, pointBorderWidth, seriesStyles, rightAxisLayer, linkedHover?.hoveredIndex, linkedHover?.sourceId, linkedHoverId]);
+  }, [thresholds, referenceLines, comparisonSeriesIds, needsCustomLines, needsCustomPoints, lineWidth, lineStyle, pointSize, pointColor, pointBorderWidth, seriesStyles, rightAxisLayer, interaction.linkedHover?.hoveredIndex, interaction.linkedHover?.sourceId, interaction.linkedHoverId]);
 
   // --- Y-axis formatter ---
   const formatYAxis = useCallback(
@@ -977,9 +972,9 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
       data-testid={dataTestId}
       style={{ minWidth: 120, height: "100%" }}
       onMouseLeave={() => {
-        if (linkedHover) {
+        if (interaction.linkedHover) {
           sliceIndexRef.current = null;
-          linkedHover.setHoveredIndex(null, linkedHoverId);
+          interaction.linkedHover.setHoveredIndex(null, interaction.linkedHoverId);
         }
       }}
     >
@@ -1009,7 +1004,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
             onToggle={toggleSeries}
             toggleable={legendConfig.toggleable !== false}
             className={classNames?.legend}
-            onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
+            onHover={interaction.linkedHover ? (id) => interaction.linkedHover!.setHoveredSeries(id, interaction.linkedHoverId) : undefined}
           />
         )}
         {comparisonData && comparisonData.length > 0 && (
@@ -1082,7 +1077,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
           // from Nivo's TooltipWrapper useLayoutEffect.
           if (sliceIndexRef.current !== xVal) {
             sliceIndexRef.current = xVal as string | number;
-            setTimeout(() => linkedHover?.setHoveredIndex(xVal as string | number, linkedHoverId), 0);
+            setTimeout(() => interaction.linkedHover?.setHoveredIndex(xVal as string | number, interaction.linkedHoverId), 0);
           }
 
           // Split current vs comparison series
@@ -1134,7 +1129,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
                 label: String(p.seriesId).slice(COMPARISON_PREFIX.length),
                 value: p.data.y !== null ? formatValue(p.data.y as number, format, localeDefaults) : "\u2014",
               })) : undefined}
-              actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+              actionHint={interaction.actionHint}
             />
           );
         }}
@@ -1145,7 +1140,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
         defs={gradientDefs}
         fill={gradientFills}
         onClick={
-          (onPointClick || drillDown || (crossFilterProp && crossFilter))
+          (onPointClick || interaction.isInteractive)
             ? (rawPoint) => {
                 const point = rawPoint as unknown as Point<SeriesData>;
                 if (point.seriesId !== undefined) {
@@ -1159,17 +1154,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
                     y: point.data.y as number,
                   };
                   onPointClick?.(event);
-                  if (drillDown) {
-                    const content = drillDown === true
-                      ? <AutoDrillTable data={dataProp as DataRow[]} field={indexProp ?? "x"} value={String(point.data.x)} />
-                      : drillDown(event);
-                    openDrill(
-                      { title: String(point.data.x), field: crossFilterField ?? "x", value: point.data.x as string | number, mode: drillDownMode },
-                      content,
-                    );
-                  } else if (crossFilterProp && crossFilter && crossFilterField) {
-                    crossFilter.select({ field: crossFilterField, value: point.data.x as string | number });
-                  }
+                  interaction.handleClick({ title: String(point.data.x), value: point.data.x as string | number, field: indexProp ?? "x", seriesId: sid });
                 }
               }
             : undefined

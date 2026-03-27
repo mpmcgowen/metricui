@@ -4,11 +4,9 @@ import { forwardRef, useMemo } from "react";
 import { ResponsiveCalendar } from "@nivo/calendar";
 import type { CalendarDatum, CalendarTooltipProps } from "@nivo/calendar";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
@@ -145,7 +143,6 @@ const CalendarInner = forwardRef<HTMLDivElement, CalendarProps>(function Calenda
   } = props;
 
   assertPeer(ResponsiveCalendar, "@nivo/calendar", "Calendar");
-  const openDrill = useDrillDownAction();
 
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -156,10 +153,14 @@ const CalendarInner = forwardRef<HTMLDivElement, CalendarProps>(function Calenda
   const resolvedVariant = variant ?? config.variant;
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? 200;
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? dateField
-    : undefined;
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: dateField,
+    tooltipHint,
+    data: rawData as DataRow[],
+  });
 
   // --- Data transform ---
   const calendarData = useMemo(
@@ -245,7 +246,7 @@ const CalendarInner = forwardRef<HTMLDivElement, CalendarProps>(function Calenda
                         : "\u2014",
                     },
                   ]}
-                  actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+                  actionHint={interaction.actionHint}
                 />
               );
             }}
@@ -255,17 +256,7 @@ const CalendarInner = forwardRef<HTMLDivElement, CalendarProps>(function Calenda
                 value: Number("value" in datum ? datum.value : 0) || 0,
               };
               onDayClick?.(event);
-              if (drillDown) {
-                const content = drillDown === true
-                  ? <AutoDrillTable data={rawData as DataRow[]} field={dateField} value={datum.day} />
-                  : drillDown(event);
-                openDrill(
-                  { title: datum.day, field: crossFilterField ?? dateField, value: datum.day, mode: drillDownMode },
-                  content,
-                );
-              } else if (crossFilterProp && crossFilter && crossFilterField) {
-                crossFilter.select({ field: crossFilterField, value: datum.day });
-              }
+              interaction.handleClick({ title: datum.day, value: datum.day, field: dateField });
             }}
           />
         </ChartContainer>

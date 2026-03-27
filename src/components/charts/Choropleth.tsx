@@ -3,12 +3,9 @@
 import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveChoropleth } from "@nivo/geo";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
@@ -146,7 +143,6 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
   } = props;
 
   assertPeer(ResponsiveChoropleth, "@nivo/geo", "Choropleth");
-  const openDrill = useDrillDownAction();
 
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -156,12 +152,6 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
   const resolvedVariant = variant ?? config.variant;
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? Math.max(denseValues.chartHeight, 400);
-  const linkedHover = useLinkedHover();
-  const linkedHoverId = useLinkedHoverId();
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? idField
-    : undefined;
 
   const { ref: containerRef, width: containerWidth } = useContainerSize();
   const nivoTheme = useChartTheme(containerWidth);
@@ -237,6 +227,15 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
     [choroplethData, idField, valueField],
   );
 
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: idField,
+    tooltipHint,
+    data: exportData,
+  });
+
   // --- Format callback ---
   const formatFn = useCallback(
     (value: number) => formatValue(value, format, localeDefaults),
@@ -248,23 +247,9 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
     (feature: { id: string; value?: number; label?: string }) => {
       const featureId = String(feature.id);
       const regionName = featureNameMap.get(featureId) ?? feature.label ?? featureId;
-      if (drillDown) {
-        const event = { id: featureId, value: feature.value ?? 0, label: regionName };
-        const content =
-          drillDown === true ? (
-            <AutoDrillTable data={exportData} field={idField} value={featureId} />
-          ) : (
-            drillDown(event)
-          );
-        openDrill(
-          { title: regionName, field: crossFilterField ?? idField, value: featureId, mode: drillDownMode },
-          content,
-        );
-      } else if (crossFilterProp && crossFilter && crossFilterField) {
-        crossFilter.select({ field: crossFilterField, value: featureId });
-      }
+      interaction.handleClick({ title: regionName, value: featureId, field: idField });
     },
-    [drillDown, crossFilterProp, crossFilter, crossFilterField, idField, exportData, openDrill, drillDownMode, featureNameMap],
+    [interaction, idField, featureNameMap],
   );
 
   // --- Nivo legend ---
@@ -330,8 +315,8 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
             legends={nivoLegends}
             tooltip={({ feature }: { feature: any }) => {
               // Emit linked hover
-              if (linkedHover) {
-                setTimeout(() => linkedHover.setHoveredIndex(feature.id, linkedHoverId), 0);
+              if (interaction.linkedHover) {
+                setTimeout(() => interaction.linkedHover!.setHoveredIndex(feature.id, interaction.linkedHoverId), 0);
               }
               // Use original value for tooltip (not the transformed one)
               const realVal = originalValues.get(String(feature.id)) ?? feature.value;
@@ -347,12 +332,12 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
                       value: realVal != null ? formatFn(realVal) : "\u2014",
                     },
                   ]}
-                  actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+                  actionHint={interaction.actionHint}
                 />
               );
             }}
             onClick={(feature: any) => {
-              if (drillDown || (crossFilterProp && crossFilter)) {
+              if (interaction.isInteractive) {
                 handleFeatureClick({
                   id: String(feature.id),
                   value: feature.value ?? undefined,

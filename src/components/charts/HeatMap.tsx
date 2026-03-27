@@ -4,7 +4,7 @@ import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveHeatMap } from "@nivo/heatmap";
 import type { HeatMapDatum, ComputedCell, CustomLayerProps as HeatMapCustomLayerProps } from "@nivo/heatmap";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -13,10 +13,7 @@ import { useContainerSize } from "@/lib/useContainerSize";
 import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { CellClickEvent } from "@/lib/chartTypes";
 import { toHeatMapSeries, inferSchema, categoryKeys, type Category } from "@/lib/dataTransform";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -195,9 +192,6 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   stale,
 }, ref) {
   assertPeer(ResponsiveHeatMap, "@nivo/heatmap", "HeatMap");
-  const openDrill = useDrillDownAction();
-  const linkedHover = useLinkedHover();
-  const linkedHoverId = useLinkedHoverId();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const localeDefaults = useLocale();
@@ -212,11 +206,14 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   const resolvedDense = dense ?? config.dense;
   const resolvedHeight = height ?? denseValues.chartHeight;
 
-  // --- Cross-filter ---
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "x"
-    : undefined;
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: "x",
+    tooltipHint,
+    data: dataProp as DataRow[],
+  });
 
   // --- Resolve data: unified format → HeatMap series ---
   const data = useMemo(() => {
@@ -326,7 +323,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
             }}
             hoverTarget={hoverTarget}
             tooltip={({ cell }) => (
-              <HeatMapTooltipWrapper cell={cell} format={format} actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)} />
+              <HeatMapTooltipWrapper cell={cell} format={format} actionHint={interaction.actionHint} />
             )}
             axisTop={{
               tickSize: 0,
@@ -349,7 +346,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
               "annotations",
             ] as any}
             onClick={
-              (onCellClick || drillDown || (crossFilterProp && crossFilter))
+              (onCellClick || interaction.isInteractive)
                 ? (cell) => {
                     const event: CellClickEvent = {
                       id: `${cell.serieId}-${String(cell.data.x)}`,
@@ -359,17 +356,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
                       x: String(cell.data.x),
                     };
                     onCellClick?.(event);
-                    if (drillDown) {
-                      const content = drillDown === true
-                        ? <AutoDrillTable data={dataProp as DataRow[]} field={indexProp ?? "x"} value={String(cell.data.x)} />
-                        : drillDown(event);
-                      openDrill(
-                        { title: String(cell.data.x), field: crossFilterField ?? "x", value: String(cell.data.x), mode: drillDownMode },
-                        content,
-                      );
-                    } else if (crossFilterProp && crossFilter && crossFilterField) {
-                      crossFilter.select({ field: crossFilterField, value: String(cell.data.x) });
-                    }
+                    interaction.handleClick({ title: String(cell.data.x), value: String(cell.data.x), field: indexProp ?? "x", seriesId: cell.serieId });
                   }
                 : undefined
             }

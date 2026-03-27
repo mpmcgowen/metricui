@@ -10,13 +10,10 @@ import type {
   BarTooltipProps,
 } from "@nivo/bar";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -623,7 +620,6 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   } = props;
 
   assertPeer(ResponsiveBar, "@nivo/bar", "BarChart");
-  const openDrill = useDrillDownAction();
 
   // --- Deprecation warnings for legacy Nivo props ---
   if (process.env.NODE_ENV !== "production") {
@@ -659,13 +655,15 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? denseValues.chartHeight;
   const resolvedChartNullMode = chartNullMode ?? config.chartNullMode;
-  const linkedHover = useLinkedHover();
-  const linkedHoverId = useLinkedHoverId();
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: indexBy,
+    tooltipHint,
+    data: rawData as DataRow[],
+  });
   const barHoverRef = useRef<string | number | null>(null);
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? indexBy
-    : undefined;
 
   // --- Deprecation warnings ---
   if (process.env.NODE_ENV !== "production") {
@@ -834,8 +832,8 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
     }
 
     // Linked hover highlight from sibling charts
-    if (linkedHover) {
-      layers.push(createLinkedHoverBarLayer(linkedHover.hoveredIndex, linkedHover.sourceId, linkedHoverId) as BarLayer<BarDatum>);
+    if (interaction.linkedHover) {
+      layers.push(createLinkedHoverBarLayer(interaction.linkedHover.hoveredIndex, interaction.linkedHover.sourceId, interaction.linkedHoverId) as BarLayer<BarDatum>);
     }
 
     layers.push("bars", "markers");
@@ -852,9 +850,9 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
     visibleKeys,
     targetColor,
     comparisonColor,
-    linkedHover?.hoveredIndex,
-    linkedHover?.sourceId,
-    linkedHoverId,
+    interaction.linkedHover?.hoveredIndex,
+    interaction.linkedHover?.sourceId,
+    interaction.linkedHoverId,
   ]);
 
   // --- Responsive margins ---
@@ -989,9 +987,9 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
       data-testid={dataTestId}
       style={{ minWidth: 120, height: "100%" }}
       onMouseLeave={() => {
-        if (linkedHover) {
+        if (interaction.linkedHover) {
           barHoverRef.current = null;
-          linkedHover.setHoveredIndex(null, linkedHoverId);
+          interaction.linkedHover.setHoveredIndex(null, interaction.linkedHoverId);
         }
       }}
     >
@@ -1019,7 +1017,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
             hidden={hiddenKeys}
             onToggle={toggleKey}
             toggleable={legendConfig.toggleable !== false}
-            onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
+            onHover={interaction.linkedHover ? (id) => interaction.linkedHover!.setHoveredSeries(id, interaction.linkedHoverId) : undefined}
           />
         ) : undefined}
       >
@@ -1058,9 +1056,9 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
           axisLeft={axisLeft}
           tooltip={({ indexValue }: BarTooltipProps<BarDatum>) => {
             // Emit to linked hover context
-            if (linkedHover && barHoverRef.current !== indexValue) {
+            if (interaction.linkedHover && barHoverRef.current !== indexValue) {
               barHoverRef.current = indexValue;
-              setTimeout(() => linkedHover.setHoveredIndex(indexValue, linkedHoverId), 0);
+              setTimeout(() => interaction.linkedHover!.setHoveredIndex(indexValue, interaction.linkedHoverId), 0);
             }
             const row = chartData.find((d) => String(d[indexBy]) === String(indexValue));
             const tooltipFormat = isPercent ? ("percent" as FormatOption) : format;
@@ -1074,7 +1072,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
                     ? formatValue(Number(row[key]), tooltipFormat, localeDefaults)
                     : "\u2014",
                 }))}
-                actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+                actionHint={interaction.actionHint}
               />
             );
           }}
@@ -1082,7 +1080,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
           motionConfig={resolvedAnimate ? config.motionConfig : undefined}
           layers={customLayers}
           onClick={
-            (onBarClick || drillDown || (crossFilterProp && crossFilter))
+            (onBarClick || interaction.isInteractive)
               ? (datum: ComputedDatum<BarDatum> & { color: string }) => {
                   const event: BarClickEvent = {
                     id: datum.id,
@@ -1092,17 +1090,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
                     indexValue: datum.indexValue,
                   };
                   onBarClick?.(event);
-                  if (drillDown) {
-                    const content = drillDown === true
-                      ? <AutoDrillTable data={rawData as DataRow[]} field={indexBy} value={String(datum.indexValue)} />
-                      : drillDown(event);
-                    openDrill(
-                      { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue, mode: drillDownMode },
-                      content,
-                    );
-                  } else if (crossFilterProp && crossFilter && crossFilterField) {
-                    crossFilter.select({ field: crossFilterField, value: datum.indexValue });
-                  }
+                  interaction.handleClick({ title: String(datum.indexValue), value: datum.indexValue, key: String(datum.id), indexValue: datum.indexValue });
                 }
               : undefined
           }

@@ -15,8 +15,12 @@ import React from "react";
 // ---------------------------------------------------------------------------
 
 export interface ChartInteractionOptions {
-  /** DrillDown prop from the chart component */
-  drillDown?: true | ((event: ChartClickEvent) => React.ReactNode);
+  /** DrillDown prop from the chart component.
+   *  Accepts `true` for auto drill, or a render function.
+   *  The function type is widened to `(event: any)` so each chart can pass
+   *  its own specific click-event type without casting. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  drillDown?: true | ((event: any) => React.ReactNode);
   /** DrillDown panel mode */
   drillDownMode?: "slide-over" | "modal";
   /** CrossFilter prop from the chart component */

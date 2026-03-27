@@ -9,7 +9,7 @@ import type {
   PieLayer,
 } from "@nivo/pie";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
@@ -20,10 +20,7 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig, SliceClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toDonutData, type Category } from "@/lib/dataTransform";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 import { devWarn } from "@/lib/devWarnings";
@@ -306,9 +303,6 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   stale,
 }, ref) {
   assertPeer(ResponsivePie, "@nivo/pie", "DonutChart");
-  const openDrill = useDrillDownAction();
-  const linkedHover = useLinkedHover();
-  const linkedHoverId = useLinkedHoverId();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const localeDefaults = useLocale();
@@ -323,11 +317,14 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   void _resolvedChartNullMode;
   const activeOuterRadiusOffset = activeOuterRadiusOffsetProp ?? (resolvedDense ? 2 : 4);
 
-  // --- Cross-filter ---
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? indexProp ?? "id"
-    : undefined;
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: indexProp ?? "id",
+    tooltipHint,
+    data: dataProp as DataRow[],
+  });
 
   // --- Resolve data: unified format → DonutDatum[] ---
   const data = useMemo((): DonutDatum[] => {
@@ -524,7 +521,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
             hidden={hiddenSlices}
             onToggle={toggleSlice}
             toggleable={legendConfig.toggleable !== false}
-            onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
+            onHover={interaction.linkedHover ? (id) => interaction.linkedHover!.setHoveredSeries(id, interaction.linkedHoverId) : undefined}
             className={classNames?.legend}
           />
         ) : undefined}
@@ -568,11 +565,11 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
               format={format}
               showPercentage={showPercentage}
               total={total}
-              actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+              actionHint={interaction.actionHint}
             />
           )}
           onClick={
-            (onSliceClick || drillDown || (crossFilterProp && crossFilter))
+            (onSliceClick || interaction.isInteractive)
               ? (datum) => {
                   const pct = total > 0 ? (datum.value / total) * 100 : 0;
                   const event: SliceClickEvent = {
@@ -582,17 +579,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
                     percentage: pct,
                   };
                   onSliceClick?.(event);
-                  if (drillDown) {
-                    const content = drillDown === true
-                      ? <AutoDrillTable data={dataProp as DataRow[]} field={indexProp ?? "id"} value={String(datum.id)} />
-                      : drillDown(event);
-                    openDrill(
-                      { title: String(datum.label), field: crossFilterField ?? "id", value: datum.id, mode: drillDownMode },
-                      content,
-                    );
-                  } else if (crossFilterProp && crossFilter && crossFilterField) {
-                    crossFilter.select({ field: crossFilterField, value: datum.id });
-                  }
+                  interaction.handleClick({ title: String(datum.label), value: datum.id, field: indexProp ?? "id", percentage: pct });
                 }
               : undefined
           }

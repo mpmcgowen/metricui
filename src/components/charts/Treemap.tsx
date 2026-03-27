@@ -8,12 +8,10 @@ import type {
   TooltipProps,
 } from "@nivo/treemap";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -173,7 +171,6 @@ const TreemapInner = forwardRef<HTMLDivElement, TreemapProps>(function Treemap(p
   } = props;
 
   assertPeer(ResponsiveTreeMap, "@nivo/treemap", "Treemap");
-  const openDrill = useDrillDownAction();
 
   const config = useMetricConfig();
   const localeDefaults = useLocale();
@@ -183,10 +180,6 @@ const TreemapInner = forwardRef<HTMLDivElement, TreemapProps>(function Treemap(p
   const resolvedVariant = variant ?? config.variant;
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? denseValues.chartHeight;
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? indexProp
-    : undefined;
 
   // --- Container size ---
   const { ref: containerRef, width: containerWidth } = useContainerSize();
@@ -242,6 +235,15 @@ const TreemapInner = forwardRef<HTMLDivElement, TreemapProps>(function Treemap(p
     return extractLeaves(rawData);
   }, [rawData]);
 
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: indexProp,
+    tooltipHint,
+    data: exportData,
+  });
+
   // --- Color function ---
   const colorFn = useCallback(
     (node: { id: string }) => {
@@ -270,7 +272,7 @@ const TreemapInner = forwardRef<HTMLDivElement, TreemapProps>(function Treemap(p
   // --- Tooltip ---
   const renderTooltip = useCallback(
     ({ node }: TooltipProps<DefaultTreeMapDatum>) => {
-      const actionHint = resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp);
+      const actionHint = interaction.actionHint;
       const idx = leafIds.indexOf(node.id);
       const color = seriesColors[(idx >= 0 ? idx : 0) % seriesColors.length];
 
@@ -288,42 +290,16 @@ const TreemapInner = forwardRef<HTMLDivElement, TreemapProps>(function Treemap(p
         />
       );
     },
-    [tooltipHint, config.tooltipHint, drillDown, crossFilterProp, leafIds, seriesColors, format, localeDefaults],
+    [interaction.actionHint, leafIds, seriesColors, format, localeDefaults],
   );
 
   // --- Click handler ---
   const handleClick = useCallback(
     (node: ComputedNode<DefaultTreeMapDatum>) => {
       if (!node.isLeaf) return;
-
-      const event: TreemapClickEvent = {
-        id: node.id,
-        value: node.value,
-        label: node.id,
-        path: node.pathComponents,
-      };
-
-      if (drillDown) {
-        const content =
-          drillDown === true ? (
-            <AutoDrillTable data={exportData} field={indexProp} value={node.id} />
-          ) : (
-            drillDown(event)
-          );
-        openDrill(
-          {
-            title: node.id,
-            field: crossFilterField ?? indexProp,
-            value: node.id,
-            mode: drillDownMode,
-          },
-          content,
-        );
-      } else if (crossFilterProp && crossFilter && crossFilterField) {
-        crossFilter.select({ field: crossFilterField, value: node.id });
-      }
+      interaction.handleClick({ title: node.id, value: node.id, field: indexProp, path: node.pathComponents });
     },
-    [drillDown, crossFilterProp, crossFilter, crossFilterField, indexProp, drillDownMode, openDrill, exportData],
+    [interaction, indexProp],
   );
 
   // --- Margins ---
@@ -409,7 +385,7 @@ const TreemapInner = forwardRef<HTMLDivElement, TreemapProps>(function Treemap(p
             animate={resolvedAnimate}
             motionConfig={resolvedAnimate ? config.motionConfig : undefined}
             onClick={
-              drillDown || (crossFilterProp && crossFilter)
+              interaction.isInteractive
                 ? handleClick
                 : undefined
             }

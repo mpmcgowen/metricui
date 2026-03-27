@@ -8,13 +8,10 @@ import { ChartContainer } from "./ChartContainer";
 // Resolve generic types with defaults
 type SankeyNodeDatumResolved = SankeyNodeDatumGeneric<DefaultNode, DefaultLink>;
 type SankeyLinkDatumResolved = SankeyLinkDatumGeneric<DefaultNode, DefaultLink>;
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
@@ -164,7 +161,6 @@ const SankeyInner = forwardRef<HTMLDivElement, SankeyProps>(function Sankey(prop
   } = props;
 
   assertPeer(ResponsiveSankey, "@nivo/sankey", "Sankey");
-  const openDrill = useDrillDownAction();
 
   const { theme } = useTheme();
   const localeDefaults = useLocale();
@@ -173,12 +169,6 @@ const SankeyInner = forwardRef<HTMLDivElement, SankeyProps>(function Sankey(prop
   const resolvedVariant = variant ?? config.variant;
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? denseValues.chartHeight;
-  const linkedHover = useLinkedHover();
-  const linkedHoverId = useLinkedHoverId();
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? sourceField
-    : undefined;
 
   const { ref: containerRef, width: containerWidth } = useContainerSize();
   const nivoTheme = useChartTheme(containerWidth);
@@ -199,6 +189,15 @@ const SankeyInner = forwardRef<HTMLDivElement, SankeyProps>(function Sankey(prop
       [valueField]: l.value,
     }));
   }, [sankeyData, sourceField, targetField, valueField]);
+
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: sourceField,
+    tooltipHint,
+    data: exportData,
+  });
 
   // --- Legend ---
   const nodeIds = useMemo(() => sankeyData.nodes.map((n) => n.id), [sankeyData.nodes]);
@@ -249,23 +248,9 @@ const SankeyInner = forwardRef<HTMLDivElement, SankeyProps>(function Sankey(prop
   const handleNodeClick = useCallback(
     (node: SankeyNodeDatumResolved) => {
       const nodeId = String(node.id);
-      if (drillDown) {
-        const event = { id: nodeId };
-        const content =
-          drillDown === true ? (
-            <AutoDrillTable data={exportData} field={sourceField} value={nodeId} />
-          ) : (
-            drillDown(event)
-          );
-        openDrill(
-          { title: nodeId, field: crossFilterField ?? sourceField, value: nodeId, mode: drillDownMode },
-          content,
-        );
-      } else if (crossFilterProp && crossFilter && crossFilterField) {
-        crossFilter.select({ field: crossFilterField, value: nodeId });
-      }
+      interaction.handleClick({ title: nodeId, value: nodeId, field: sourceField });
     },
-    [drillDown, crossFilterProp, crossFilter, crossFilterField, sourceField, exportData, openDrill, drillDownMode],
+    [interaction, sourceField],
   );
 
   return (
@@ -300,7 +285,7 @@ const SankeyInner = forwardRef<HTMLDivElement, SankeyProps>(function Sankey(prop
                 hidden={hiddenKeys}
                 onToggle={toggleKey}
                 toggleable={legendConfig.toggleable !== false}
-                onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
+                onHover={interaction.linkedHover ? (id) => interaction.linkedHover!.setHoveredSeries(id, interaction.linkedHoverId) : undefined}
               />
             ) : undefined
           }
@@ -333,7 +318,7 @@ const SankeyInner = forwardRef<HTMLDivElement, SankeyProps>(function Sankey(prop
                     value: formatFn(node.value),
                   },
                 ]}
-                actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+                actionHint={interaction.actionHint}
               />
             )}
             linkTooltip={({ link }) => (

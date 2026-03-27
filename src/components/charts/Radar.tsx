@@ -3,13 +3,10 @@
 import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveRadar } from "@nivo/radar";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
@@ -109,7 +106,6 @@ const RadarInner = forwardRef<HTMLDivElement, RadarProps>(function Radar(props, 
   } = props;
 
   assertPeer(ResponsiveRadar, "@nivo/radar", "Radar");
-  const openDrill = useDrillDownAction();
 
   // --- Resolve unified data props ---
   const inferred = useMemo(
@@ -131,12 +127,14 @@ const RadarInner = forwardRef<HTMLDivElement, RadarProps>(function Radar(props, 
   const resolvedVariant = variant ?? config.variant;
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? denseValues.chartHeight;
-  const linkedHover = useLinkedHover();
-  const linkedHoverId = useLinkedHoverId();
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? indexBy
-    : undefined;
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: indexBy,
+    tooltipHint,
+    data: rawData as DataRow[],
+  });
 
   const { ref: containerRef, width: containerWidth } = useContainerSize();
   const nivoTheme = useChartTheme(containerWidth);
@@ -190,24 +188,10 @@ const RadarInner = forwardRef<HTMLDivElement, RadarProps>(function Radar(props, 
 
   // --- Click handler ---
   const handleSliceClick = useCallback(
-    (data: DataRow[], sliceIndex: string) => {
-      if (drillDown) {
-        const event = { id: sliceIndex, index: sliceIndex };
-        const content =
-          drillDown === true ? (
-            <AutoDrillTable data={rawData as DataRow[]} field={indexBy} value={sliceIndex} />
-          ) : (
-            drillDown(event)
-          );
-        openDrill(
-          { title: sliceIndex, field: crossFilterField ?? indexBy, value: sliceIndex, mode: drillDownMode },
-          content,
-        );
-      } else if (crossFilterProp && crossFilter && crossFilterField) {
-        crossFilter.select({ field: crossFilterField, value: sliceIndex });
-      }
+    (_data: DataRow[], sliceIndex: string) => {
+      interaction.handleClick({ title: sliceIndex, value: sliceIndex, field: indexBy });
     },
-    [drillDown, crossFilterProp, crossFilter, crossFilterField, indexBy, rawData, openDrill, drillDownMode],
+    [interaction, indexBy],
   );
 
   return (
@@ -242,7 +226,7 @@ const RadarInner = forwardRef<HTMLDivElement, RadarProps>(function Radar(props, 
                 hidden={hiddenKeys}
                 onToggle={toggleKey}
                 toggleable={legendConfig.toggleable !== false}
-                onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
+                onHover={interaction.linkedHover ? (id) => interaction.linkedHover!.setHoveredSeries(id, interaction.linkedHoverId) : undefined}
               />
             ) : undefined
           }
@@ -268,8 +252,8 @@ const RadarInner = forwardRef<HTMLDivElement, RadarProps>(function Radar(props, 
             valueFormat={(v: number) => formatFn(v)}
             sliceTooltip={({ index, data: sliceData }) => {
               // Emit linked hover
-              if (linkedHover) {
-                setTimeout(() => linkedHover.setHoveredIndex(index, linkedHoverId), 0);
+              if (interaction.linkedHover) {
+                setTimeout(() => interaction.linkedHover!.setHoveredIndex(index, interaction.linkedHoverId), 0);
               }
               return (
                 <ChartTooltip
@@ -279,12 +263,12 @@ const RadarInner = forwardRef<HTMLDivElement, RadarProps>(function Radar(props, 
                     label: String(d.id),
                     value: d.formattedValue ?? formatFn(d.value),
                   }))}
-                  actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+                  actionHint={interaction.actionHint}
                 />
               );
             }}
             onClick={(datum) => {
-              if (drillDown || (crossFilterProp && crossFilter)) {
+              if (interaction.isInteractive) {
                 handleSliceClick(rawData, String(datum.index));
               }
             }}

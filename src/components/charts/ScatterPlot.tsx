@@ -11,13 +11,10 @@ import type {
   ScatterPlotLayerProps,
 } from "@nivo/scatterplot";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -281,7 +278,6 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
     } = props;
 
     assertPeer(ResponsiveScatterPlot, "@nivo/scatterplot", "ScatterPlot");
-    const openDrill = useDrillDownAction();
 
     // --- Theme / config hooks ---
     const { theme } = useTheme();
@@ -291,16 +287,15 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
     const resolvedVariant = (variant ?? config.variant) as CardVariant;
     const denseValues = useDenseValues();
     const resolvedHeight = height ?? denseValues.chartHeight;
-    const linkedHover = useLinkedHover();
-    const linkedHoverId = useLinkedHoverId();
+    const interaction = useChartInteraction({
+      drillDown,
+      drillDownMode,
+      crossFilter: crossFilterProp,
+      defaultField: indexProp ?? "serieId",
+      tooltipHint,
+      data: rawData as DataRow[],
+    });
     const hoverRef = useRef<string | number | null>(null);
-    const crossFilter = useCrossFilter();
-
-    const crossFilterField = crossFilterProp
-      ? (typeof crossFilterProp === "object"
-          ? crossFilterProp.field
-          : undefined) ?? "serieId"
-      : undefined;
 
     // --- Category-level color overrides ---
     const categoryColorMap = useMemo(
@@ -459,12 +454,12 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
         );
       }
 
-      if (linkedHover) {
+      if (interaction.linkedHover) {
         layers.push(
           createLinkedHoverLayer(
-            linkedHover.hoveredIndex,
-            linkedHover.sourceId,
-            linkedHoverId,
+            interaction.linkedHover.hoveredIndex,
+            interaction.linkedHover.sourceId,
+            interaction.linkedHoverId,
           ) as ScatterPlotCustomSvgLayer<ScatterPlotDatum>,
         );
       }
@@ -473,9 +468,9 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
       return layers;
     }, [
       referenceLines,
-      linkedHover?.hoveredIndex,
-      linkedHover?.sourceId,
-      linkedHoverId,
+      interaction.linkedHover?.hoveredIndex,
+      interaction.linkedHover?.sourceId,
+      interaction.linkedHoverId,
     ]);
 
     // --- Click handler ---
@@ -490,45 +485,14 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
         };
 
         onNodeClick?.(event);
-
-        if (drillDown) {
-          const content =
-            drillDown === true ? (
-              <AutoDrillTable
-                data={rawData as DataRow[]}
-                field={indexProp ?? "x"}
-                value={String(node.xValue)}
-              />
-            ) : (
-              drillDown(event)
-            );
-          openDrill(
-            {
-              title: String(node.serieId),
-              field: crossFilterField ?? indexProp ?? "serieId",
-              value: node.xValue instanceof Date ? node.xValue.toISOString() : node.xValue,
-              mode: drillDownMode,
-            },
-            content,
-          );
-        } else if (crossFilterProp && crossFilter && crossFilterField) {
-          crossFilter.select({
-            field: crossFilterField,
-            value: String(node.serieId),
-          });
-        }
+        interaction.handleClick({
+          title: String(node.serieId),
+          value: node.xValue instanceof Date ? node.xValue.toISOString() : node.xValue,
+          field: indexProp ?? "serieId",
+          serieId: String(node.serieId),
+        });
       },
-      [
-        onNodeClick,
-        drillDown,
-        drillDownMode,
-        crossFilterProp,
-        crossFilter,
-        crossFilterField,
-        rawData,
-        indexProp,
-        openDrill,
-      ],
+      [onNodeClick, interaction, indexProp],
     );
 
     return (
@@ -538,9 +502,9 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
         data-testid={dataTestId}
         style={{ minWidth: 120, height: "100%" }}
         onMouseLeave={() => {
-          if (linkedHover) {
+          if (interaction.linkedHover) {
             hoverRef.current = null;
-            linkedHover.setHoveredIndex(null, linkedHoverId);
+            interaction.linkedHover.setHoveredIndex(null, interaction.linkedHoverId);
           }
         }}
       >
@@ -577,9 +541,9 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
                   onToggle={toggleSeries}
                   toggleable={legendConfig.toggleable !== false}
                   onHover={
-                    linkedHover
+                    interaction.linkedHover
                       ? (id) =>
-                          linkedHover.setHoveredSeries(id, linkedHoverId)
+                          interaction.linkedHover!.setHoveredSeries(id, interaction.linkedHoverId)
                       : undefined
                   }
                 />
@@ -609,15 +573,15 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
               }) => {
                 // Emit to linked hover context
                 if (
-                  linkedHover &&
+                  interaction.linkedHover &&
                   hoverRef.current !== node.serieId
                 ) {
                   hoverRef.current = node.serieId;
                   setTimeout(
                     () =>
-                      linkedHover.setHoveredIndex(
+                      interaction.linkedHover!.setHoveredIndex(
                         node.serieId,
-                        linkedHoverId,
+                        interaction.linkedHoverId,
                       ),
                     0,
                   );
@@ -657,17 +621,12 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
                         value: yVal,
                       },
                     ]}
-                    actionHint={resolveActionHint(
-                      tooltipHint,
-                      config.tooltipHint,
-                      !!drillDown,
-                      !!crossFilterProp,
-                    )}
+                    actionHint={interaction.actionHint}
                   />
                 );
               }}
               onClick={
-                onNodeClick || drillDown || (crossFilterProp && crossFilter)
+                onNodeClick || interaction.isInteractive
                   ? handleClick
                   : undefined
               }

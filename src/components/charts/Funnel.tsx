@@ -4,7 +4,7 @@ import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveFunnel } from "@nivo/funnel";
 import type { FunnelDatum, FunnelPart, FunnelSvgProps } from "@nivo/funnel";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
@@ -13,9 +13,7 @@ import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { SERIES_COLORS } from "@/lib/chartColors";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
@@ -148,11 +146,14 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   stale,
 }, ref) {
   assertPeer(ResponsiveFunnel, "@nivo/funnel", "Funnel");
-  const openDrill = useDrillDownAction();
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "id"
-    : undefined;
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: "id",
+    tooltipHint,
+    data: dataProp as unknown as DataRow[],
+  });
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const localeDefaults = useLocale();
@@ -394,12 +395,12 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
                       secondary: `${pct}% of total`,
                     },
                   ]}
-                  actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+                  actionHint={interaction.actionHint}
                 />
               );
             }}
             onClick={
-              (onPartClick || drillDown || (crossFilterProp && crossFilter))
+              (onPartClick || interaction.isInteractive)
                 ? (part) => {
                     const partLabel = String(part.data.label ?? part.data.id);
                     if (onPartClick) {
@@ -413,17 +414,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
                         percentage: pct,
                       });
                     }
-                    if (drillDown) {
-                      const content = drillDown === true
-                        ? <AutoDrillTable data={data as unknown as DataRow[]} field="id" value={String(part.data.id)} />
-                        : drillDown({ id: String(part.data.id), value: part.data.value, label: partLabel });
-                      openDrill(
-                        { title: partLabel, field: crossFilterField ?? "id", value: String(part.data.id), mode: drillDownMode },
-                        content,
-                      );
-                    } else if (crossFilterProp && crossFilter && crossFilterField) {
-                      crossFilter.select({ field: crossFilterField, value: String(part.data.id) });
-                    }
+                    interaction.handleClick({ title: partLabel, value: String(part.data.id), id: String(part.data.id) });
                   }
                 : undefined
             }

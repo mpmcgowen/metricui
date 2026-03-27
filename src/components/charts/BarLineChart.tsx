@@ -9,7 +9,7 @@ import type {
   BarTooltipProps,
 } from "@nivo/bar";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import type { ChartLegendItem } from "./ChartLegend";
 import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
@@ -22,10 +22,7 @@ import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { LegendConfig, BarClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toBarLineData, categoryKeys, resolveCategory, type Category } from "@/lib/dataTransform";
-import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -392,13 +389,15 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
   aiContext,
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "BarLineChart");
-  const openDrill = useDrillDownAction();
-  const linkedHover = useLinkedHover();
-  const linkedHoverId = useLinkedHoverId();
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? indexByProp ?? indexProp ?? "index"
-    : undefined;
+  const defaultField = indexByProp ?? indexProp ?? "index";
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField,
+    tooltipHint,
+    data: barDataProp as DataRow[] ?? [],
+  });
 
   // --- Resolve unified data → bar + line split ---
   const resolved = useMemo(() => {
@@ -611,7 +610,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
             hidden={hiddenKeys}
             onToggle={toggleKey}
             toggleable={legendConfig.toggleable !== false}
-            onHover={linkedHover ? (id) => linkedHover.setHoveredSeries(id, linkedHoverId) : undefined}
+            onHover={interaction.linkedHover ? (id) => interaction.linkedHover!.setHoveredSeries(id, interaction.linkedHoverId) : undefined}
           />
         ) : undefined}
       >
@@ -676,31 +675,14 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
                     };
                   }),
                 ]}
-                actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+                actionHint={interaction.actionHint}
               />
             );
           }}
           onClick={
-            (drillDown || (crossFilterProp && crossFilter))
+            interaction.isInteractive
               ? (datum) => {
-                  if (drillDown) {
-                    const event: BarClickEvent = {
-                      id: datum.id,
-                      value: datum.value,
-                      label: String(datum.indexValue),
-                      key: String(datum.id),
-                      indexValue: datum.indexValue,
-                    };
-                    const content = drillDown === true
-                      ? <AutoDrillTable data={barData as DataRow[]} field={indexBy} value={String(datum.indexValue)} />
-                      : drillDown(event);
-                    openDrill(
-                      { title: String(datum.indexValue), field: crossFilterField ?? indexBy, value: datum.indexValue, mode: drillDownMode },
-                      content,
-                    );
-                  } else if (crossFilterProp && crossFilter && crossFilterField) {
-                    crossFilter.select({ field: crossFilterField, value: datum.indexValue as string | number });
-                  }
+                  interaction.handleClick({ title: String(datum.indexValue), value: datum.indexValue, key: String(datum.id), indexValue: datum.indexValue });
                 }
               : undefined
           }

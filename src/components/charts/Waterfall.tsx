@@ -4,7 +4,7 @@ import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import type { BarDatum, BarCustomLayerProps, BarTooltipProps } from "@nivo/bar";
 import { ChartContainer } from "./ChartContainer";
-import { ChartTooltip, resolveActionHint } from "./ChartTooltip";
+import { ChartTooltip } from "./ChartTooltip";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -13,9 +13,7 @@ import { useContainerSize } from "@/lib/useContainerSize";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { BarClickEvent } from "@/lib/chartTypes";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
-import { AutoDrillTable } from "@/components/ui/AutoDrillTable";
+import { useChartInteraction } from "@/lib/useChartInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -268,11 +266,14 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   stale,
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "Waterfall");
-  const openDrill = useDrillDownAction();
-  const crossFilter = useCrossFilter();
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? "label"
-    : undefined;
+  const interaction = useChartInteraction({
+    drillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: "label",
+    tooltipHint,
+    data: rawData as unknown as DataRow[],
+  });
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const localeDefaults = useLocale();
@@ -489,31 +490,14 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
                       ? undefined
                       : `Running total: ${formatValue(computed._runningTotal, format, localeDefaults)}`,
                   }]}
-                  actionHint={resolveActionHint(tooltipHint, config.tooltipHint, !!drillDown, !!crossFilterProp)}
+                  actionHint={interaction.actionHint}
                 />
               );
             }}
             onClick={
-              (drillDown || (crossFilterProp && crossFilter))
+              interaction.isInteractive
                 ? (datum) => {
-                    if (drillDown) {
-                      const event: BarClickEvent = {
-                        id: datum.id,
-                        value: datum.value,
-                        label: String(datum.indexValue),
-                        key: String(datum.id),
-                        indexValue: datum.indexValue,
-                      };
-                      const content = drillDown === true
-                        ? <AutoDrillTable data={rawData as unknown as DataRow[]} field="label" value={String(datum.indexValue)} />
-                        : drillDown(event);
-                      openDrill(
-                        { title: String(datum.indexValue), field: crossFilterField ?? "label", value: datum.indexValue, mode: drillDownMode },
-                        content,
-                      );
-                    } else if (crossFilterProp && crossFilter && crossFilterField) {
-                      crossFilter.select({ field: crossFilterField, value: datum.indexValue as string | number });
-                    }
+                    interaction.handleClick({ title: String(datum.indexValue), value: datum.indexValue, key: String(datum.id), indexValue: datum.indexValue });
                   }
                 : undefined
             }
