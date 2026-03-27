@@ -111,8 +111,8 @@ export interface DataTableProps<T extends DataRow = DataRow> extends DataCompone
   striped?: boolean;
   dense?: boolean;
   onRowClick?: (row: T, index: number) => void;
-  /** Drill-down content renderer. When set, clicking a row opens the drill-down panel. Takes priority over crossFilter for the click action. */
-  drillDown?: (row: DataRow, index: number) => React.ReactNode;
+  /** Drill-down. `true` for auto-generated detail view, or a function for custom content. Clicking a row opens the drill-down panel. Takes priority over crossFilter. */
+  drillDown?: true | ((row: DataRow, index: number) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   nullDisplay?: NullDisplay;
@@ -698,9 +698,21 @@ function DataTableInner<T extends DataRow = DataRow>(
                       const rowRecord = row as DataRow;
                       const firstCol = columns[0]?.key;
                       const titleVal = firstCol ? String(rowRecord[firstCol] ?? "") : `Row ${gi + 1}`;
+                      const content = drillDown === true
+                        ? (
+                          <div className="space-y-2 p-4">
+                            {Object.entries(rowRecord).map(([k, v]) => (
+                              <div key={k} className="flex justify-between border-b border-[var(--card-border)] pb-2 text-sm">
+                                <span className="font-medium text-[var(--muted)]">{k}</span>
+                                <span className="text-[var(--foreground)]">{String(v ?? "—")}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                        : drillDown(rowRecord, gi);
                       openDrill(
                         { title: titleVal, field: crossFilterField, value: crossFilterField ? rowRecord[crossFilterField] as string | number : undefined, mode: drillDownMode },
-                        drillDown(rowRecord, gi),
+                        content,
                       );
                     } else if (crossFilterProp && crossFilter && crossFilterField) {
                       crossFilter.select({ field: crossFilterField, value: (row as DataRow)[crossFilterField] as string | number });
