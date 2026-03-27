@@ -52,10 +52,19 @@ export const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(fu
   const resolvedError = error ?? state?.error;
   const resolvedStale = stale ?? state?.stale;
 
+  // Auto-generate aria-label for chart accessibility
+  const ariaLabel = props.title
+    ? `${props.title} ${props.componentName ?? "chart"}`
+    : props.componentName
+      ? `${props.componentName} chart`
+      : "Chart";
+
   return (
     <CardShell
       ref={ref as React.Ref<HTMLElement>}
       {...props}
+      aria-label={ariaLabel}
+      role="img"
       loading={resolvedLoading}
       empty={resolvedEmpty}
       error={resolvedError}

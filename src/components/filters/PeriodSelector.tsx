@@ -173,6 +173,16 @@ export const PeriodSelector = forwardRef<HTMLDivElement, PeriodSelectorProps>(
         <div ref={dropdownRef} className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
+            onKeyDown={(e) => {
+              if ((e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") && !dropdownOpen) {
+                e.preventDefault(); setDropdownOpen(true);
+              } else if (e.key === "Escape" && dropdownOpen) {
+                e.preventDefault(); setDropdownOpen(false);
+              }
+            }}
+            aria-expanded={dropdownOpen}
+            aria-haspopup="listbox"
+            aria-label="Select time period"
             className={cn(
               "inline-flex items-center gap-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] font-medium text-[var(--foreground)] transition-colors",
               "hover:border-gray-300 dark:hover:border-gray-600",
@@ -192,6 +202,9 @@ export const PeriodSelector = forwardRef<HTMLDivElement, PeriodSelectorProps>(
           {/* Dropdown */}
           {dropdownOpen && (
             <div
+              role="listbox"
+              aria-label="Time period presets"
+              onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); setDropdownOpen(false); } }}
               className={cn(
                 "absolute left-0 top-full z-50 mt-1.5 min-w-[220px] rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] p-1.5 shadow-xl shadow-black/[0.08] dark:shadow-black/40",
               )}

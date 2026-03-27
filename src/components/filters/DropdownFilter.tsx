@@ -239,6 +239,16 @@ export const DropdownFilter = forwardRef<HTMLDivElement, DropdownFilterProps>(
             setOpen(!open);
             if (!open) setSearch("");
           }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+              if (!open) { e.preventDefault(); setOpen(true); setSearch(""); }
+            } else if (e.key === "Escape" && open) {
+              e.preventDefault(); setOpen(false);
+            }
+          }}
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          aria-label={label}
           className={cn(
             "inline-flex items-center gap-2 rounded-lg border font-medium transition-colors",
             "focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2",
@@ -277,6 +287,12 @@ export const DropdownFilter = forwardRef<HTMLDivElement, DropdownFilterProps>(
         {open && (
           <div
             ref={dropdownRef}
+            role="listbox"
+            aria-label={label}
+            aria-multiselectable={multiple || undefined}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") { e.preventDefault(); setOpen(false); }
+            }}
             className={cn(
               "absolute left-0 top-full z-50 mt-1.5 min-w-[200px] rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] shadow-xl shadow-black/[0.08] dark:shadow-black/40",
               classNames?.dropdown,
@@ -302,6 +318,7 @@ export const DropdownFilter = forwardRef<HTMLDivElement, DropdownFilterProps>(
                   {search && (
                     <button
                       onClick={() => setSearch("")}
+                      aria-label="Clear search"
                       className="text-[var(--muted)] hover:text-[var(--foreground)]"
                     >
                       <X className="h-3 w-3" />
@@ -355,6 +372,8 @@ export const DropdownFilter = forwardRef<HTMLDivElement, DropdownFilterProps>(
                     return (
                       <button
                         key={option.value}
+                        role="option"
+                        aria-selected={isActive}
                         onClick={() => handleSelect(option.value)}
                         className={cn(
                           "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors",

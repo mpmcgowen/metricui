@@ -20,7 +20,7 @@ describe("PeriodSelector", () => {
   it("renders with default presets", () => {
     renderWithProviders(<PeriodSelector />);
     // The trigger button should be visible
-    const trigger = screen.getByRole("button", { name: /select period/i });
+    const trigger = screen.getByRole("button", { name: /select time period/i });
     expect(trigger).toBeInTheDocument();
   });
 

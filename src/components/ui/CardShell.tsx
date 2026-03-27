@@ -90,6 +90,10 @@ export interface CardShellProps {
   };
   id?: string;
   "data-testid"?: string;
+  /** ARIA role for accessibility (e.g., "img" for charts) */
+  role?: string;
+  /** ARIA label for accessibility */
+  "aria-label"?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -133,6 +137,8 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     classNames,
     id,
     "data-testid": dataTestId,
+    role: roleProp,
+    "aria-label": ariaLabel,
   },
   ref,
 ) {
@@ -303,6 +309,8 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
       ref={setRef as never}
       id={id}
       data-testid={dataTestId}
+      role={roleProp}
+      aria-label={ariaLabel}
       data-component={componentName}
       data-ai-title={typeof title === "string" ? title : undefined}
       data-metric-card=""
