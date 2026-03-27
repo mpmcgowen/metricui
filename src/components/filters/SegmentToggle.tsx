@@ -243,6 +243,8 @@ export const SegmentToggle = forwardRef<HTMLDivElement, SegmentToggleProps>(
       >
         <div
           ref={containerRef}
+          role={multiple ? "group" : "radiogroup"}
+          aria-label={field ?? "Options"}
           className={cn(
             "relative inline-flex rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-0.5",
             orientation === "vertical" ? "flex-col" : "",
@@ -277,6 +279,9 @@ export const SegmentToggle = forwardRef<HTMLDivElement, SegmentToggleProps>(
               <button
                 key={option.value}
                 data-segment-option
+                role={multiple ? undefined : "radio"}
+                aria-checked={isActive}
+                aria-pressed={multiple ? isActive : undefined}
                 onClick={() => handleClick(option.value)}
                 className={cn(
                   "relative z-10 inline-flex items-center justify-center font-medium transition-colors",

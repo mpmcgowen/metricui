@@ -149,6 +149,7 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
       <div
         role="button"
         tabIndex={collapsible ? 0 : undefined}
+        aria-expanded={collapsible ? !collapsed : undefined}
         onClick={() => collapsible && setCollapsed((c) => !c)}
         onKeyDown={(e) => { if (collapsible && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setCollapsed((c) => !c); } }}
         className={cn(

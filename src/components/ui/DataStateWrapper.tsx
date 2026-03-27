@@ -71,7 +71,7 @@ export function ChartSkeleton({ height = 300 }: { height?: number }) {
 
 function EmptyDisplay({ config, globalDefaults }: { config: EmptyState; globalDefaults?: { message?: string; icon?: React.ReactNode } }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
+    <div role="status" className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-3 text-[var(--muted)] opacity-40">
         {config.icon ?? globalDefaults?.icon ?? <Inbox className="h-10 w-10" />}
       </div>
@@ -85,7 +85,7 @@ function EmptyDisplay({ config, globalDefaults }: { config: EmptyState; globalDe
 
 function ErrorDisplay({ config, globalDefaults }: { config: ErrorState; globalDefaults?: { message?: string } }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
+    <div role="alert" className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-3 text-[var(--mu-color-negative)]">
         <AlertCircle className="h-10 w-10" />
       </div>
@@ -157,14 +157,16 @@ export function DataStateWrapper({
   }
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", className)} aria-live="polite" aria-busy={loading}>
       {stale && (
         <div className="absolute right-4 top-4 z-10">
           <StaleIndicator config={stale} />
         </div>
       )}
       {loading ? (
-        <KpiSkeleton />
+        <div role="status" aria-label="Loading">
+          <KpiSkeleton />
+        </div>
       ) : empty ? (
         <EmptyDisplay config={empty} globalDefaults={config.emptyState} />
       ) : (

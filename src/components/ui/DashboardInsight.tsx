@@ -374,7 +374,7 @@ export function DashboardInsight({
               </div>
               <span className="text-sm font-semibold text-[var(--foreground)]">AI Insights</span>
             </div>
-            <button onClick={() => setOpen(false)} className="rounded-md p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
+            <button onClick={() => setOpen(false)} aria-label="Close insights panel" className="rounded-md p-1 text-[var(--muted)] hover:text-[var(--foreground)]">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -452,7 +452,7 @@ export function DashboardInsight({
               className="flex-1 bg-transparent text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted)]/40 outline-none disabled:opacity-50"
             />
             {ai.isLoading ? (
-              <button onClick={ai.abort} className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-red-500/10 hover:text-red-500">
+              <button onClick={ai.abort} aria-label="Stop generating" className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-red-500/10 hover:text-red-500">
                 <X className="h-3.5 w-3.5" />
               </button>
             ) : (
@@ -468,6 +468,7 @@ export function DashboardInsight({
                 <button
                   onClick={handleSend}
                   disabled={!input.trim()}
+                  aria-label="Send message"
                   className={cn(
                     "rounded-lg p-1.5 transition-all",
                     input.trim() ? "text-[var(--accent)] hover:bg-[var(--accent)]/10" : "text-[var(--muted)]/20",
