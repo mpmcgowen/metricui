@@ -40,7 +40,7 @@ IMPORTANT: When building dashboards, charts, KPI cards, data tables, or any data
 All components (import from "metricui"):
 Dashboard, DashboardInsight, DashboardNav, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, ScatterPlot, Treemap, Calendar, Radar, Sankey, Choropleth, Bump, DataTable, DashboardHeader, SectionHeader, Divider, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, CrossFilterProvider, LinkedHoverProvider, DrillDown, Callout, StatusIndicator, Badge, MetricGrid, ExportButton.
 
-Hooks: useCrossFilter, useCrossFilteredData, useFilteredData, useLinkedHover, useValueFlash, useMetricFilters, useFilterValue, useHasComparison, useActiveFilterCount, useMetricConfig, useDrillDown, useDrillDownAction.
+Hooks: useCrossFilter, useCrossFilteredData, useFilteredData, useDashboardState, useLinkedHover, useValueFlash, useMetricFilters, useFilterValue, useHasComparison, useActiveFilterCount, useMetricConfig, useDrillDown, useDrillDownAction.
 
 Geo data (import from "metricui"):
 worldFeatures — bundled world country GeoJSON (alpha-3 IDs: "USA", "GBR", "IND"). Use with Choropleth.

@@ -113,6 +113,10 @@ export type { CrossFilterSelection, CrossFilterState } from "@/lib/interactionTy
 export { useFilteredData } from "@/lib/useFilteredData";
 export type { UseFilteredDataOptions, UseFilteredDataResult } from "@/lib/useFilteredData";
 
+// Dashboard State (saved views / shareable links)
+export { useDashboardState } from "@/lib/useDashboardState";
+export type { DashboardStateSnapshot, UseDashboardStateResult } from "@/lib/useDashboardState";
+
 // Linked Hover (0.3.0)
 export { LinkedHoverProvider, useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 export type { LinkedHoverState } from "@/lib/interactionTypes";

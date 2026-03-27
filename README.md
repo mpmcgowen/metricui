@@ -239,6 +239,10 @@ Complete filter context — wire [PeriodSelector](https://metricui.com/docs/peri
 </FilterProvider>
 ```
 
+### Saved Views & Shareable Links
+
+`useDashboardState()` captures the entire dashboard state (filters, period, dimensions, cross-filter) as a JSON-safe snapshot. Serialize to URL params for shareable links or persist to localStorage / your backend. [Cookbook recipe &rarr;](https://metricui.com/docs/guides/cookbook#saved-views)
+
 ### Data States
 
 Every component handles loading, empty, error, and stale states out of the box. [Docs &rarr;](https://metricui.com/docs/guides/data-states)

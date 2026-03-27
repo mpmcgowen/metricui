@@ -15,6 +15,7 @@ const tocItems: TocItem[] = [
   { id: "comparisons", title: "Comparison Periods", level: 2 },
   { id: "dimensions", title: "Dimension Filters", level: 2 },
   { id: "without-provider", title: "Without a Provider", level: 2 },
+  { id: "saved-views", title: "Saved Views & Shareable Links", level: 2 },
   { id: "cross-filtering", title: "Cross-Filtering", level: 2 },
   { id: "cross-filter-setup", title: "Setup", level: 3 },
   { id: "cross-filter-reading", title: "Reading State", level: 3 },
@@ -259,6 +260,37 @@ filters?.clearAll();`}
           <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
             Use FilterProvider when multiple components need to read the same filter state.
             Use onChange when you just need a date picker in one spot.
+          </p>
+        </DocSection>
+
+        {/* ── Saved Views ───────────────────────────────────────────── */}
+
+        <DocSection id="saved-views" title="Saved Views & Shareable Links">
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            The <code className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]">useDashboardState()</code> hook
+            captures the entire filter state — period, preset, comparison mode, dimensions, and cross-filter
+            selection — as a JSON-safe snapshot. Use it to build saved views, shareable dashboard links,
+            or persist user preferences to localStorage or your backend.
+          </p>
+          <CodeBlock
+            code={`import { useDashboardState } from "metricui";
+
+const { snapshot, restore, toSearchParam, fromSearchParam } = useDashboardState();
+
+// Shareable URL
+const url = \`\${location.pathname}?view=\${toSearchParam()}\`;
+
+// Restore from URL on load
+const params = new URLSearchParams(location.search);
+if (params.has("view")) fromSearchParam(params.get("view")!);
+
+// Save / restore with localStorage
+localStorage.setItem("cfo-view", JSON.stringify(snapshot()));
+restore(JSON.parse(localStorage.getItem("cfo-view")!));`}
+          />
+          <p className="mt-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            See the <a href="/docs/guides/cookbook#saved-views" className="font-medium text-[var(--accent)] hover:underline">Cookbook</a> for
+            a live interactive example.
           </p>
         </DocSection>
 

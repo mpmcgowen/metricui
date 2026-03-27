@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { DocSection } from "@/components/docs/DocSection";
 import { ComponentExample } from "@/components/docs/ComponentExample";
 import { OnThisPage } from "@/components/docs/OnThisPage";
@@ -21,8 +21,10 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { LinkedHoverProvider } from "@/lib/LinkedHoverContext";
 import { CrossFilterProvider } from "@/lib/CrossFilterContext";
+import { FilterProvider } from "@/lib/FilterContext";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
-import { DollarSign, Users, TrendingDown, Zap, Activity, Check, Minus, X, Building2, Calendar, Mail, Phone, CheckCircle2, Loader, Wrench, ShieldCheck, Database, Globe, Server, Wifi, AlertTriangle } from "lucide-react";
+import { useDashboardState } from "@/lib/useDashboardState";
+import { DollarSign, Users, TrendingDown, Zap, Activity, Check, Minus, X, Building2, Calendar, Mail, Phone, CheckCircle2, Loader, Wrench, ShieldCheck, Database, Globe, Server, Wifi, AlertTriangle, Link, Save } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Sample data
@@ -200,6 +202,7 @@ const tocItems: TocItem[] = [
   { id: "ops-war-room", title: "Ops War Room", level: 2 },
   { id: "metric-sandwich", title: "The Metric Sandwich", level: 2 },
   { id: "granularity", title: "Granularity Toggle", level: 2 },
+  { id: "saved-views", title: "Saved Views", level: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1522,6 +1525,16 @@ const modules = ["Scheduling", "Billing", "Retention", "Reports", "API"];
           <GranularityDemo />
         </DocSection>
 
+        {/* Saved Views */}
+        <DocSection id="saved-views" title="Saved Views">
+          <p className="mb-2 text-[14px] leading-relaxed text-[var(--muted)]">
+            Capture the entire dashboard state — filters, period, comparison mode, dimensions,
+            and cross-filter selection — into a JSON-safe snapshot. Share it as a URL, save it
+            to localStorage, or persist it to your backend. One hook, four methods.
+          </p>
+          <SavedViewsDemo />
+        </DocSection>
+
       </div>
       <OnThisPage items={tocItems} />
     </div>
@@ -1594,6 +1607,100 @@ const { data } = useQuery(
           height={300}
         />
       </div>
+    </ComponentExample>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Saved Views demo (isolated so it can manage its own state)
+// ---------------------------------------------------------------------------
+
+function SavedViewsInner() {
+  const { snapshot, restore, toSearchParam, fromSearchParam } = useDashboardState();
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [savedLabel, setSavedLabel] = useState<string | null>(null);
+
+  const handleCopyLink = useCallback(() => {
+    const param = toSearchParam();
+    const url = `${window.location.pathname}?view=${param}`;
+    setShareUrl(url);
+    navigator.clipboard?.writeText(url);
+    setTimeout(() => setShareUrl(null), 3000);
+  }, [toSearchParam]);
+
+  const handleSave = useCallback(() => {
+    const state = snapshot();
+    localStorage.setItem("cookbook-saved-view", JSON.stringify(state));
+    setSavedLabel("Saved!");
+    setTimeout(() => setSavedLabel(null), 2000);
+  }, [snapshot]);
+
+  const handleRestore = useCallback(() => {
+    const raw = localStorage.getItem("cookbook-saved-view");
+    if (raw) {
+      restore(JSON.parse(raw));
+      setSavedLabel("Restored!");
+      setTimeout(() => setSavedLabel(null), 2000);
+    }
+  }, [restore]);
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        onClick={handleCopyLink}
+        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)]/10"
+      >
+        <Link className="h-3.5 w-3.5" />
+        {shareUrl ? "Copied!" : "Copy shareable link"}
+      </button>
+      <button
+        onClick={handleSave}
+        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)]/10"
+      >
+        <Save className="h-3.5 w-3.5" />
+        {savedLabel ?? "Save to localStorage"}
+      </button>
+      <button
+        onClick={handleRestore}
+        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--accent)]/10"
+      >
+        Restore from localStorage
+      </button>
+      {shareUrl && (
+        <span className="text-[11px] text-[var(--muted)] truncate max-w-xs">{shareUrl}</span>
+      )}
+    </div>
+  );
+}
+
+function SavedViewsDemo() {
+  return (
+    <ComponentExample
+      code={`import { useDashboardState } from "metricui";
+
+const { snapshot, restore, toSearchParam, fromSearchParam } = useDashboardState();
+
+// Share as URL
+const url = \`\${location.pathname}?view=\${toSearchParam()}\`;
+
+// Restore from URL on load
+const params = new URLSearchParams(location.search);
+if (params.has("view")) fromSearchParam(params.get("view")!);
+
+// Save to localStorage
+localStorage.setItem("cfo-view", JSON.stringify(snapshot()));
+
+// Restore from localStorage
+restore(JSON.parse(localStorage.getItem("cfo-view")!));`}
+    >
+      <FilterProvider defaultPreset="30d">
+        <div className="w-full space-y-3">
+          <p className="text-xs text-[var(--muted)]">
+            Change filters above, then capture or restore the state:
+          </p>
+          <SavedViewsInner />
+        </div>
+      </FilterProvider>
     </ComponentExample>
   );
 }

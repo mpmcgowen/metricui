@@ -14,7 +14,7 @@ npx metricui init
 ## Import
 
 ```tsx
-import { Dashboard, DashboardInsight, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, ScatterPlot, Treemap, Calendar, Radar, Sankey, Choropleth, Bump, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, useCrossFilteredData, useFilteredData, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction, ExportButton } from "metricui";
+import { Dashboard, DashboardInsight, KpiCard, StatGroup, AreaChart, LineChart, BarChart, BarLineChart, DonutChart, Sparkline, Gauge, HeatMap, Funnel, Waterfall, BulletChart, ScatterPlot, Treemap, Calendar, Radar, Sankey, Choropleth, Bump, DataTable, Badge, StatusIndicator, Callout, SectionHeader, Divider, MetricGrid, PeriodSelector, SegmentToggle, DropdownFilter, FilterTags, FilterBar, FilterProvider, useMetricFilters, CrossFilterProvider, useCrossFilter, useCrossFilteredData, useFilteredData, useDashboardState, LinkedHoverProvider, useLinkedHover, useValueFlash, DrillDown, useDrillDown, useDrillDownAction, ExportButton } from "metricui";
 import "metricui/styles.css";
 ```
 
@@ -4089,6 +4089,58 @@ function LiveMetric({ value }) {
 - Respects `MetricProvider.animate` and `prefers-reduced-motion`
 - Options: `useValueFlash(value, { duration: 800, disabled: false })`
 - Works with any data type (uses deep comparison for objects/arrays)
+
+---
+
+## Dashboard State (Saved Views & Shareable Links)
+
+`useDashboardState()` captures and restores the entire dashboard interaction state — filters, period, comparison mode, dimensions, and cross-filter selection. Use it for saved views, shareable URLs, and localStorage persistence.
+
+```tsx
+import { useDashboardState } from "metricui";
+
+const { snapshot, restore, toSearchParam, fromSearchParam } = useDashboardState();
+
+// Share as URL
+const url = `${location.pathname}?view=${toSearchParam()}`;
+
+// Restore from URL on load
+const params = new URLSearchParams(location.search);
+if (params.has("view")) fromSearchParam(params.get("view")!);
+
+// Save to localStorage
+localStorage.setItem("cfo-view", JSON.stringify(snapshot()));
+
+// Restore from localStorage
+restore(JSON.parse(localStorage.getItem("cfo-view")!));
+```
+
+### Return Values
+
+- `snapshot()` — returns a `DashboardStateSnapshot` capturing current filter + cross-filter state as a JSON-safe object
+- `restore(state)` — applies a previously captured `DashboardStateSnapshot`
+- `toSearchParam()` — serializes current state to a compact URL-safe base64 string
+- `fromSearchParam(param)` — decodes a URL search param string and restores state
+
+### DashboardStateSnapshot Shape
+
+```ts
+interface DashboardStateSnapshot {
+  filter: {
+    preset: PeriodPreset | null;
+    period: { start: string; end: string } | null; // ISO strings
+    comparisonMode: ComparisonMode;
+    dimensions: Record<string, string[]>;
+  };
+  crossFilter: CrossFilterSelection | null;
+  activeTab?: string | null;
+  custom?: Record<string, unknown>;
+}
+```
+
+- Must be called inside a `FilterProvider` (or `Dashboard`) and optionally a `CrossFilterProvider`
+- Snapshots are JSON-safe — store them anywhere (localStorage, database, URL params)
+- `toSearchParam()` / `fromSearchParam()` use base64url encoding (no padding, URL-safe)
 
 ---
 
