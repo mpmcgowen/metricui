@@ -22,13 +22,19 @@ export const metadata: Metadata = {
     "See what's shipped, what's next, and where MetricUI is headed. From cross-filtering to anomaly detection to 1.0 stability.",
 };
 
+interface Highlight {
+  text: string;
+  /** If set, the text before the first " — " becomes a link */
+  href?: string;
+}
+
 interface Milestone {
   version: string;
   title: string;
   tagline: string;
   status: "shipped" | "next" | "planned";
   icon: React.ComponentType<{ className?: string }>;
-  highlights: string[];
+  highlights: (string | Highlight)[];
   newComponents?: string[];
 }
 
@@ -41,14 +47,14 @@ const milestones: Milestone[] = [
     status: "shipped",
     icon: CheckCircle2,
     highlights: [
-      "KPI cards with sparklines, goal tracking, conditional coloring, and drill-downs",
-      "11 chart types — Area, Line, Bar, Donut, Gauge, HeatMap, Funnel, Waterfall, Bullet, Bar+Line, Sparkline",
-      "Smart format engine — currency, percent, duration, compact — with locale support",
-      "Complete filter system — PeriodSelector, DropdownFilter, SegmentToggle, FilterTags",
-      "MetricGrid auto-layout — drop components in, zero CSS needed",
-      "Loading skeletons, empty states, error boundaries, stale indicators on every component",
-      "8 theme presets, dark mode, dense mode, CSS variable theming",
-      "MCP server with 13 tools so AI builds correct dashboards on the first try",
+      { text: "KPI cards — sparklines, goal tracking, conditional coloring, and drill-downs", href: "/docs/kpi-card" },
+      { text: "11 chart types — Area, Line, Bar, Donut, Gauge, HeatMap, Funnel, Waterfall, Bullet, Bar+Line, Sparkline", href: "/docs/area-chart" },
+      { text: "Format engine — currency, percent, duration, compact — with locale support", href: "/docs/guides/format-engine" },
+      { text: "Filter system — PeriodSelector, DropdownFilter, SegmentToggle, FilterTags", href: "/docs/guides/filtering" },
+      { text: "MetricGrid — auto-layout, drop components in, zero CSS needed", href: "/docs/metric-grid" },
+      { text: "Data states — loading skeletons, empty states, error boundaries, stale indicators", href: "/docs/guides/data-states" },
+      { text: "Theming — 8 presets, dark mode, dense mode, CSS variable theming", href: "/docs/guides/theming" },
+      { text: "MCP server — 13 tools so AI builds correct dashboards on the first try", href: "/docs/guides/mcp-server" },
       "185+ tests, interactive docs, llms.txt for AI tools",
     ],
   },
@@ -60,13 +66,13 @@ const milestones: Milestone[] = [
     status: "shipped",
     icon: Zap,
     highlights: [
-      "CrossFilterProvider — signal-only click filtering with useCrossFilter and useCrossFilteredData hooks",
-      "LinkedHoverProvider — synced crosshairs and tooltips across charts, zero config",
+      { text: "CrossFilterProvider — signal-only click filtering with useCrossFilter and useCrossFilteredData hooks", href: "/docs/guides/interactions" },
+      { text: "LinkedHoverProvider — synced crosshairs and tooltips across charts, zero config", href: "/docs/guides/interactions" },
       "useValueFlash — opt-in highlight animation when data changes in real time",
-      "npx metricui init — detects framework, configures AI tools, scaffolds a starter dashboard",
+      { text: "npx metricui init — detects framework, configures AI tools, scaffolds a starter dashboard", href: "/docs/guides/getting-started" },
       "crossFilter prop on all categorical charts — BarChart, DonutChart, AreaChart, HeatMap, Funnel, Waterfall, BarLineChart, DataTable",
       "Stable donut colors — filtering won't change a slice's color",
-      "Fully interactive demos — every filter on every demo page actually works",
+      { text: "Fully interactive demos — every filter on every demo page actually works", href: "/demos/analytics" },
     ],
     newComponents: ["CrossFilterProvider", "LinkedHoverProvider", "useValueFlash", "useCrossFilteredData"],
   },
@@ -78,23 +84,15 @@ const milestones: Milestone[] = [
     status: "shipped",
     icon: Wand2,
     highlights: [
-      "DrillDown system — slide-over and modal panels with nested breadcrumbs, up to 4 levels deep",
-      "FilterBar — collapsible container with auto-tags, badge count, sticky frosted-glass mode",
-      "Export — PNG (4x DPI), CSV with filter metadata, clipboard copy via ExportButton",
+      { text: "DrillDown — slide-over and modal panels with nested breadcrumbs, up to 4 levels deep", href: "/docs/drill-down" },
+      { text: "FilterBar — collapsible container with auto-tags, badge count, sticky frosted-glass mode", href: "/docs/filter-bar" },
+      { text: "Export — PNG (4x DPI), CSV with filter metadata, clipboard copy via ExportButton", href: "/docs/export" },
       "CardShell — unified card wrapper for all components (KPI, charts, tables, status)",
       "Tooltip action hints — auto 'Click to drill down' / 'Click to filter' on interactive charts",
       "Auto empty states — components detect empty data and show filter-aware messages",
       "Reactive drill content — live-updating drill panels for streaming data dashboards",
     ],
-    newComponents: [
-      "FilterBar",
-      "DrillDown.Root",
-      "DrillDownOverlay",
-      "ExportButton",
-      "CardShell",
-      "AutoDrillTable",
-      "useDrillDownAction",
-    ],
+    newComponents: ["FilterBar", "DrillDown.Root", "ExportButton", "CardShell", "AutoDrillTable", "useDrillDownAction"],
   },
   {
     version: "0.5",
@@ -104,13 +102,12 @@ const milestones: Milestone[] = [
     status: "shipped",
     icon: Terminal,
     highlights: [
-      "Dashboard wrapper — 5 nested providers replaced by one <Dashboard> component with flat props",
-      "DataRow type — zero as-never casts, typed interfaces just work with DataTable and all charts",
-      "Smart column inference — omit columns prop, DataTable auto-detects numbers, dates, booleans, badges",
-      "DashboardNav — tab and scroll navigation with FilterBar.Nav slot for unified sticky bar",
-      "Filter convenience hooks — useFilterValue, useHasComparison, useActiveFilterCount",
+      { text: "Dashboard — 5 nested providers replaced by one component with flat props", href: "/docs/dashboard" },
+      { text: "DataTable — zero type casts, smart column inference, auto-detect numbers/dates/badges", href: "/docs/data-table" },
+      { text: "DashboardNav — tab and scroll navigation with FilterBar.Nav slot", href: "/docs/dashboard-nav" },
+      { text: "Filter convenience hooks — useFilterValue, useHasComparison, useActiveFilterCount", href: "/docs/guides/filtering" },
       "MetricGrid fragment flattening — auto-layout works through React fragment wrappers",
-      "Analytics demo — GA-style dashboard with 4 tab views and per-device filtering",
+      { text: "Analytics demo — GA-style dashboard with 4 tab views and per-device filtering", href: "/demos/analytics" },
     ],
     newComponents: ["Dashboard", "DashboardNav", "FilterBar.Nav", "useFilterValue", "useHasComparison", "useActiveFilterCount"],
   },
@@ -122,7 +119,7 @@ const milestones: Milestone[] = [
     status: "shipped",
     icon: Brain,
     highlights: [
-      "DashboardInsight — floating chat button + slide-over sidebar with streaming AI responses",
+      { text: "DashboardInsight — floating chat button + slide-over sidebar with streaming AI responses", href: "/docs/ai-insights" },
       "Auto data collection — every component registers live data, updates when filters change",
       "Three-level context — company, dashboard, and per-component aiContext for smarter analysis",
       "@ mentions — reference specific charts in questions, keyboard navigation, multiple mentions",
@@ -144,15 +141,15 @@ const milestones: Milestone[] = [
     status: "shipped",
     icon: Eye,
     highlights: [
-      "ScatterPlot — correlation analysis with reference lines, linked hover, and bubble sizing",
-      "Treemap — hierarchical breakdowns with flat or nested data, 5 tiling algorithms",
-      "Calendar — GitHub-style contribution heatmap with auto date range detection",
-      "Radar — multi-dimensional comparison with overlay support",
-      "Sankey — flow visualization with gradient links, flat row or native format",
-      "Choropleth — geographic heatmap with sqrt/log scale, tooltipLabel, country name resolution",
-      "Bump — ranking chart with auto-ranking from flat data",
+      { text: "ScatterPlot — correlation analysis with reference lines, linked hover, and bubble sizing", href: "/docs/scatter-plot" },
+      { text: "Treemap — hierarchical breakdowns with flat or nested data, 5 tiling algorithms", href: "/docs/treemap" },
+      { text: "Calendar — GitHub-style contribution heatmap with auto date range detection", href: "/docs/calendar" },
+      { text: "Radar — multi-dimensional comparison with overlay support", href: "/docs/radar" },
+      { text: "Sankey — flow visualization with gradient links, flat row or native format", href: "/docs/sankey" },
+      { text: "Choropleth — geographic heatmap with sqrt/log scale, tooltipLabel, country name resolution", href: "/docs/choropleth" },
+      { text: "Bump — ranking chart with auto-ranking from flat data", href: "/docs/bump" },
       "Bundled worldFeatures (alpha-3 codes) and usStatesFeatures (2-letter abbreviations)",
-      "199 new tests (635 total), tick collision fix, granularity toggle cookbook recipe",
+      { text: "Granularity toggle cookbook recipe", href: "/docs/guides/cookbook#granularity" },
     ],
     newComponents: [
       "ScatterPlot",
@@ -174,10 +171,10 @@ const milestones: Milestone[] = [
     status: "shipped",
     icon: Workflow,
     highlights: [
-      "useDashboardState — serialize/restore entire dashboard state for shareable links and saved views",
+      { text: "useDashboardState — serialize/restore dashboard state for shareable links and saved views", href: "/docs/guides/cookbook#saved-views" },
       "useChartInteraction — centralized drill-down/cross-filter/linked-hover logic across all 14 charts",
       "6 shared doc components — eliminated 1,400+ lines of boilerplate across 46+ pages",
-      "Accessibility — ARIA roles on SegmentToggle, screen reader announcements, icon button labels",
+      { text: "Accessibility — ARIA roles on SegmentToggle, screen reader announcements, icon button labels", href: "/docs/guides/accessibility" },
       "useDropdown hook — shared keyboard navigation + ARIA for all dropdown components",
       "42 components in MCP knowledge base, all doc pages standardized",
       "Fixed-position TOC with accent bar active indicator",
@@ -341,23 +338,39 @@ export default function RoadmapPage() {
 
                     {/* Highlights */}
                     <ul className="mt-4 space-y-2">
-                      {milestone.highlights.map((highlight) => (
-                        <li
-                          key={highlight}
-                          className="flex gap-3 text-[14px] leading-relaxed text-zinc-600 dark:text-zinc-300"
-                        >
-                          <span
-                            className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${
-                              milestone.status === "shipped"
-                                ? "bg-emerald-500"
-                                : milestone.status === "next"
-                                  ? "bg-amber-500"
-                                  : "bg-zinc-300 dark:bg-zinc-600"
-                            }`}
-                          />
-                          {highlight}
-                        </li>
-                      ))}
+                      {milestone.highlights.map((highlight) => {
+                        const isObj = typeof highlight === "object";
+                        const text = isObj ? highlight.text : highlight;
+                        const href = isObj ? highlight.href : undefined;
+                        const dashIdx = text.indexOf(" — ");
+                        const label = dashIdx > 0 ? text.slice(0, dashIdx) : text;
+                        const rest = dashIdx > 0 ? text.slice(dashIdx) : "";
+
+                        return (
+                          <li
+                            key={text}
+                            className="flex gap-3 text-[14px] leading-relaxed text-zinc-600 dark:text-zinc-300"
+                          >
+                            <span
+                              className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${
+                                milestone.status === "shipped"
+                                  ? "bg-emerald-500"
+                                  : milestone.status === "next"
+                                    ? "bg-amber-500"
+                                    : "bg-zinc-300 dark:bg-zinc-600"
+                              }`}
+                            />
+                            <span>
+                              {href ? (
+                                <Link href={href} className="font-medium text-zinc-900 underline decoration-zinc-300 underline-offset-2 transition-colors hover:decoration-zinc-500 dark:text-zinc-100 dark:decoration-zinc-600 dark:hover:decoration-zinc-400">{label}</Link>
+                              ) : (
+                                label
+                              )}
+                              {rest}
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
 
                     {/* New components */}
