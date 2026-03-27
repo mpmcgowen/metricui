@@ -307,7 +307,7 @@ function renderHeader(title?: string, subtitle?: string, description?: string | 
           {title && <span className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">{title}</span>}
           {description && <DescriptionPopover content={typeof description === "string" ? description : description} />}
         </div>
-        {subtitle && <p className="mt-0.5 text-[11px] text-[var(--muted)] opacity-70">{subtitle}</p>}
+        {subtitle && <p className="mt-0.5 text-[11px] text-[var(--muted)]">{subtitle}</p>}
       </div>
       {action && <div className="flex-shrink-0">{action}</div>}
     </div>
@@ -845,7 +845,7 @@ function DataTableInner<T extends DataRow = DataRow>(
       )}
 
       {footnote && (
-        <div className="border-t border-[var(--card-border)] px-5 py-3 text-[10px] leading-snug text-[var(--muted)] opacity-75">
+        <div className="border-t border-[var(--card-border)] px-5 py-3 text-[10px] leading-snug text-[var(--muted)]">
           {footnote}
         </div>
       )}

@@ -413,7 +413,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
 
       {/* Footnote */}
       {footnote && (
-        <p className={cn("mt-3 text-[10px] leading-snug text-[var(--muted)] opacity-75", classNames?.footnote)}>
+        <p className={cn("mt-3 text-[10px] leading-snug text-[var(--muted)]", classNames?.footnote)}>
           {footnote}
         </p>
       )}
