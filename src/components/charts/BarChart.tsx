@@ -618,7 +618,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
 
   assertPeer(ResponsiveBar, "@nivo/bar", "BarChart");
 
-  // --- Deprecation warnings for legacy Nivo props ---
+  // --- Deprecation warnings for old Nivo prop names ---
   if (process.env.NODE_ENV !== "production") {
     if (keysProp) devWarnDeprecated("BarChart", "keys", "categories");
     if (indexByProp) devWarnDeprecated("BarChart", "indexBy", "index");
@@ -660,7 +660,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
     if (grouped !== undefined) devWarnDeprecated("BarChart", "grouped", 'groupMode="grouped"');
   }
 
-  // --- Resolve groupMode with legacy "grouped" fallback ---
+  // --- Resolve groupMode ---
   const groupMode = groupModeProp ?? (grouped ? "grouped" : "stacked");
   const isPercent = groupMode === "percent";
   const nivoGroupMode = groupMode === "grouped" ? "grouped" : "stacked";

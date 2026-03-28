@@ -3,7 +3,7 @@
 import { forwardRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { FormatOption, ComparisonMode } from "@/lib/format";
-import type { CardVariant, DataComponentProps, DrillDownConfig } from "@/lib/types";
+import type { CardVariant, DataComponentProps } from "@/lib/types";
 import type { EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { DataStateWrapper } from "@/components/ui/DataStateWrapper";
@@ -18,7 +18,7 @@ export interface StatItem {
   label: string;
   /** Display value — number for auto-formatting, string for pre-formatted */
   value: string | number;
-  /** Change percentage (legacy — kept for backward compat) */
+  /** Change percentage — displayed as a formatted comparison label */
   change?: number;
   /** Previous value for comparison computation */
   previousValue?: number;
@@ -31,7 +31,7 @@ export interface StatItem {
   /** Optional icon (any ReactNode) */
   icon?: React.ReactNode;
   /** Drill-down config. When set, the stat item becomes clickable and opens the drill-down panel. */
-  drillDown?: DrillDownConfig;
+  drillDown?: true | ((context: { value: number | string | null | undefined; formattedValue: string; title: string }) => React.ReactNode);
 }
 
 export interface StatGroupProps extends DataComponentProps {
@@ -202,7 +202,7 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
           // Map StatItem to KpiCard props
           const statFormat = stat.format ?? groupFormat;
 
-          // Build comparison prop from previousValue or legacy change
+          // Build comparison prop from previousValue
           const comparison = stat.previousValue !== undefined && typeof stat.value === "number"
             ? {
                 value: stat.previousValue,
@@ -211,8 +211,8 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
               }
             : undefined;
 
-          // Legacy change → comparisonLabel (pre-computed percentage)
-          const legacyLabel = stat.change !== undefined
+          // Change percentage → comparisonLabel (pre-computed percentage)
+          const changeLabel = stat.change !== undefined
             ? `${stat.change >= 0 ? "+" : ""}${stat.change.toFixed(1)}%`
             : undefined;
 
@@ -236,7 +236,7 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
                 format={typeof stat.value === "number" ? statFormat : undefined}
                 icon={stat.icon}
                 comparison={comparison}
-                comparisonLabel={legacyLabel}
+                comparisonLabel={changeLabel}
                 nullDisplay={resolvedNullDisplay}
                 animate={animate}
                 drillDown={stat.drillDown}

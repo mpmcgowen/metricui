@@ -275,10 +275,7 @@ export function KpiCardPlayground() {
     codeLines.push(`  goal={{ ${goalParts.join(", ")} }}`);
   }
   if (showSparkline) {
-    codeLines.push(`  sparklineData={[42, 45, 48, 51, 49, 55, 58, 62, 59, 65, 71, 78]}`);
-    if (showPreviousPeriod) codeLines.push(`  sparklinePreviousPeriod={[38, 40, 42, ...]}`);
-    if (sparklineType !== "line") codeLines.push(`  sparklineType="${sparklineType}"`);
-    if (sparklineInteractive) codeLines.push(`  sparklineInteractive`);
+    codeLines.push(`  sparkline={{ data: [42, 45, 48, 51, 49, 55, 58, 62, 59, 65, 71, 78]${showPreviousPeriod ? ", previousPeriod: [38, 40, 42, ...]" : ""}${sparklineType !== "line" ? `, type: "${sparklineType}"` : ""}${sparklineInteractive ? ", interactive: true" : ""} }}`);
   }
   if (simulateNull) {
     codeLines.push(`  nullDisplay="${nullDisplay}"`);
@@ -302,7 +299,7 @@ export function KpiCardPlayground() {
   if (animate) codeLines.push(`  animate={{ countUp: true }}`);
   if (highlight && highlightColor) codeLines.push(`  highlight="${highlightColor}"`);
   else if (highlight) codeLines.push(`  highlight`);
-  if (showDrillDown) codeLines.push(`  drillDown={{ label: "View details", onClick: () => {} }}`);
+  if (showDrillDown) codeLines.push(`  drillDown={true}`);
   if (titlePosition !== "top") codeLines.push(`  titlePosition="${titlePosition}"`);
   if (titleAlign !== "left") codeLines.push(`  titleAlign="${titleAlign}"`);
   if (variant !== "default") codeLines.push(`  variant="${variant}"`);
@@ -340,10 +337,12 @@ export function KpiCardPlayground() {
                     }
                   : undefined
               }
-              sparklineData={sparklineData}
-              sparklinePreviousPeriod={sparklinePrevious}
-              sparklineType={sparklineType as "line" | "bar"}
-              sparklineInteractive={sparklineInteractive}
+              sparkline={sparklineData ? {
+                data: sparklineData,
+                previousPeriod: sparklinePrevious,
+                type: sparklineType as "line" | "bar",
+                interactive: sparklineInteractive,
+              } : undefined}
               nullDisplay={nullDisplay as "zero" | "dash" | "blank" | "N/A"}
               titlePosition={titlePosition as "top" | "bottom" | "hidden"}
               titleAlign={titleAlign as "left" | "center" | "right"}
@@ -364,7 +363,7 @@ export function KpiCardPlayground() {
               copyable={copyable}
               animate={animate ? { countUp: true } : undefined}
               highlight={highlight ? (highlightColor || true) : false}
-              drillDown={showDrillDown ? { label: "View details", onClick: () => {} } : undefined}
+              drillDown={showDrillDown ? () => null : undefined}
               variant={variant as "default" | "outlined" | "ghost" | "elevated"}
             />
           </div>

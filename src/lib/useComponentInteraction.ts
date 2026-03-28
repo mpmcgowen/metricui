@@ -7,7 +7,7 @@ import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { resolveActionHint } from "@/components/charts/ChartTooltip";
 import { useMetricConfig } from "@/lib/MetricProvider";
-import type { DataRow, DrillDownConfig } from "@/lib/types";
+import type { DataRow } from "@/lib/types";
 import React from "react";
 
 // ---------------------------------------------------------------------------
@@ -16,13 +16,12 @@ import React from "react";
 
 export interface ComponentInteractionOptions {
   /**
-   * DrillDown prop — accepts:
+   * DrillDown prop:
    * - `true` for auto-generated drill content
    * - A render function `(event) => ReactNode` for custom content
-   * - Legacy `DrillDownConfig` ({ onClick }) for backwards compatibility
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  drillDown?: true | ((event: any) => React.ReactNode) | DrillDownConfig;
+  drillDown?: true | ((event: any) => React.ReactNode);
   /** DrillDown panel mode */
   drillDownMode?: "slide-over" | "modal";
   /** CrossFilter prop from the component */
@@ -49,7 +48,7 @@ export interface ComponentClickEvent {
 }
 
 export interface ComponentInteractionResult {
-  /** Call this when a component element is clicked. Handles drill-down > crossFilter priority, including legacy DrillDownConfig. */
+  /** Call this when a component element is clicked. Handles drill-down > crossFilter priority. */
   handleClick: (event: ComponentClickEvent) => void;
   /** Resolved action hint string for tooltips (or undefined if no hint) */
   actionHint: string | undefined;
@@ -70,14 +69,6 @@ export interface ComponentInteractionResult {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function isLegacyDrillDown(d: unknown): d is DrillDownConfig {
-  return typeof d === "object" && d !== null && "onClick" in d;
-}
-
-// ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
@@ -90,7 +81,7 @@ function isLegacyDrillDown(d: unknown): d is DrillDownConfig {
  *
  * Handles:
  * - DrillDown priority: drillDown > crossFilter > onClick
- * - Legacy DrillDownConfig ({ onClick }) backwards compatibility
+ * - Auto drill table generation for drillDown={true}
  * - Auto drill table generation for `drillDown={true}`
  * - Cross-filter field resolution
  * - Cross-filter dimming (isCrossFilterDimmed)
@@ -113,10 +104,6 @@ export function useComponentInteraction(opts: ComponentInteractionOptions): Comp
   const linkedHover = useLinkedHover();
   const linkedHoverId = useLinkedHoverId();
   const config = useMetricConfig();
-
-  // Is this a legacy { onClick } pattern?
-  const legacy = isLegacyDrillDown(drillDown);
-  const modernDrillDown = legacy ? undefined : (drillDown as true | ((event: ComponentClickEvent) => React.ReactNode) | undefined);
 
   // Resolve cross-filter field
   const crossFilterField = useMemo(
@@ -145,27 +132,21 @@ export function useComponentInteraction(opts: ComponentInteractionOptions): Comp
     return true;
   }, [crossFilter, crossFilterField, crossFilterValue]);
 
-  // Unified click handler: legacy > modern drillDown > crossFilter
+  // Unified click handler: drillDown > crossFilter
   const handleClick = useCallback(
     (event: ComponentClickEvent) => {
-      // Legacy imperative pattern
-      if (legacy && isLegacyDrillDown(drillDown)) {
-        drillDown.onClick();
-        return;
-      }
-
       const field = event.field ?? defaultField;
       const value = event.value;
 
-      if (modernDrillDown) {
+      if (drillDown) {
         const content =
-          modernDrillDown === true
+          drillDown === true
             ? React.createElement(AutoDrillTable, {
                 data: data ?? [],
                 field,
                 value: String(value),
               })
-            : modernDrillDown(event);
+            : drillDown(event);
         openDrill(
           { title: event.title, field: crossFilterField ?? field, value, mode: drillDownMode },
           content,
@@ -174,7 +155,7 @@ export function useComponentInteraction(opts: ComponentInteractionOptions): Comp
         crossFilter.select({ field: crossFilterField, value });
       }
     },
-    [legacy, drillDown, modernDrillDown, drillDownMode, crossFilterProp, crossFilter, crossFilterField, defaultField, data, openDrill],
+    [drillDown, drillDownMode, crossFilterProp, crossFilter, crossFilterField, defaultField, data, openDrill],
   );
 
   return {

@@ -5,7 +5,7 @@ import { CardShell } from "@/components/ui/CardShell";
 import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState, ExportableConfig, DataComponentProps } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
-// Props — thin wrapper over CardShell for backward compatibility
+// Props — thin wrapper over CardShell
 // ---------------------------------------------------------------------------
 
 interface ChartContainerProps {

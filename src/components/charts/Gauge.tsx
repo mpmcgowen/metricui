@@ -12,7 +12,6 @@ import {
 import type {
   ComparisonConfig,
   AnimationConfig,
-  DrillDownConfig,
   CardVariant,
   DataComponentProps,
   EmptyState,
@@ -59,8 +58,8 @@ export interface GaugeProps extends DataComponentProps {
   height?: number;
   /** Action slot rendered in the card header. */
   action?: React.ReactNode;
-  /** Drill-down. `true` = auto table, function = custom content, or legacy `{ onClick }`. */
-  drillDown?: true | ((event: { value: number | null; title: string }) => React.ReactNode) | DrillDownConfig;
+  /** Drill-down. `true` = auto table, function = custom content,  */
+  drillDown?: true | ((event: { value: number | null; title: string }) => React.ReactNode);
   /** Drill-down panel mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filtering. `true` uses title as field, or pass `{ field }`. */

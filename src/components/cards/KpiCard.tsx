@@ -15,7 +15,6 @@ import {
 import type {
   ComparisonConfig,
   TooltipConfig,
-  DrillDownConfig,
   ExportableConfig,
   AnimationConfig,
   CardVariant,
@@ -68,15 +67,7 @@ export interface KpiCardProps extends DataComponentProps {
   comparison?: ComparisonConfig | ComparisonConfig[];
   goal?: GoalConfig;
   conditions?: Condition[];
-  /** @deprecated Use `sparkline` config instead */
-  sparklineData?: number[];
-  /** @deprecated Use `sparkline` config instead */
-  sparklinePreviousPeriod?: number[];
-  /** @deprecated Use `sparkline` config instead */
-  sparklineType?: SparklineType;
-  /** @deprecated Use `sparkline` config instead */
-  sparklineInteractive?: boolean;
-  /** Sparkline configuration — alternative to individual sparkline* props */
+  /** Sparkline configuration */
   sparkline?: {
     data: number[];
     previousPeriod?: number[];
@@ -92,23 +83,16 @@ export interface KpiCardProps extends DataComponentProps {
   onClick?: () => void;
   href?: string;
   /** Drill-down on card click.
-   *  - `true`: auto-generates detail panel with value and comparisons
-   *  - `(context) => ReactNode`: custom drill content
-   *  - `DrillDownConfig`: legacy imperative pattern (deprecated) */
-  drillDown?: true | ((context: { value: number | string | null | undefined; formattedValue: string; title: string }) => React.ReactNode) | DrillDownConfig;
+   *  - `true`: auto-generates detail panel
+   *  - `(context) => ReactNode`: custom drill content */
+  drillDown?: true | ((context: { value: number | string | null | undefined; formattedValue: string; title: string }) => React.ReactNode);
   copyable?: boolean;
   animate?: boolean | AnimationConfig;
   /** Attention ring. `true` uses accent color, or pass a CSS color. */
   highlight?: boolean | string;
   /** X-axis value this KPI represents — when linked hover matches, card highlights. */
   linkedIndex?: string | number;
-  /** Cross-filter field this KPI represents — dims when a non-matching selection is active.
-   *  @deprecated Use `crossFilter` instead. */
-  crossFilterField?: string;
-  /** Cross-filter value this KPI represents — matches against active selection.
-   *  @deprecated Use `crossFilter` instead. */
-  crossFilterValue?: string | number;
-  /** Cross-filter config — unified shape (same as charts). Takes precedence over legacy crossFilterField/crossFilterValue. */
+  /** Cross-filter config — same shape as all other components. `value` is the specific value this card represents for dimming. */
   crossFilter?: boolean | { field?: string; value?: string | number };
   /** Custom trend icons for comparison badges */
   trendIcon?: TrendIconConfig;
@@ -220,10 +204,6 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   comparison,
   goal,
   conditions,
-  sparklineData: sparklineDataProp,
-  sparklinePreviousPeriod: sparklinePreviousPeriodProp,
-  sparklineType: sparklineTypeProp,
-  sparklineInteractive: sparklineInteractiveProp,
   sparkline: sparklineConfig,
   icon,
   description,
@@ -239,8 +219,6 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   animate,
   highlight,
   linkedIndex,
-  crossFilterField: crossFilterFieldLegacy,
-  crossFilterValue: crossFilterValueLegacy,
   crossFilter: crossFilterProp,
   trendIcon,
   nullDisplay,
@@ -270,30 +248,17 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   const resolvedDense = cc.resolvedDense;
   const exportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
 
-  // --- Merge config groupings with flat props (configs take precedence) ---
-  const sparklineData = sparklineConfig?.data ?? sparklineDataProp;
-  const sparklinePreviousPeriod = sparklineConfig?.previousPeriod ?? sparklinePreviousPeriodProp;
-  const sparklineType = sparklineConfig?.type ?? sparklineTypeProp;
-  const sparklineInteractive = sparklineConfig?.interactive ?? sparklineInteractiveProp;
+  const sparklineData = sparklineConfig?.data;
+  const sparklinePreviousPeriod = sparklineConfig?.previousPeriod;
+  const sparklineType = sparklineConfig?.type;
+  const sparklineInteractive = sparklineConfig?.interactive;
   const loading = stateConfig?.loading ?? loadingProp ?? cc.config.loading;
   const empty = stateConfig?.empty ?? emptyProp;
   const error = stateConfig?.error ?? errorProp;
   const stale = stateConfig?.stale ?? staleProp;
 
-  // --- Resolve unified crossFilter prop (takes precedence over legacy) ---
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" && crossFilterProp.field ? crossFilterProp.field : crossFilterFieldLegacy)
-    : crossFilterFieldLegacy;
-  const crossFilterValue = crossFilterProp
-    ? (typeof crossFilterProp === "object" && crossFilterProp.value !== undefined ? crossFilterProp.value : crossFilterValueLegacy)
-    : crossFilterValueLegacy;
-
-  // --- Deprecation warnings ---
-  if (process.env.NODE_ENV !== "production") {
-    if (sparklineDataProp !== undefined) devWarnDeprecated("KpiCard", "sparklineData", "sparkline={{ data: [...] }}");
-    if (crossFilterFieldLegacy !== undefined) devWarnDeprecated("KpiCard", "crossFilterField", "crossFilter={{ field: '...' }}");
-    if (crossFilterValueLegacy !== undefined) devWarnDeprecated("KpiCard", "crossFilterValue", "crossFilter={{ value: '...' }}");
-  }
+  // --- Resolve crossFilter value for dimming ---
+  const crossFilterValue = typeof crossFilterProp === "object" ? crossFilterProp.value : undefined;
 
   // --- String value passthrough ---
   const valueIsString = typeof rawInputValue === "string";
