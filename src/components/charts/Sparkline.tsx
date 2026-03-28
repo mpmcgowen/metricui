@@ -10,9 +10,8 @@ import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveBar } from "@nivo/bar";
 import type { SparklineType } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -139,14 +138,11 @@ const SparklineInner = forwardRef<HTMLDivElement, SparklineProps>(function Spark
 }, ref) {
   assertPeer(ResponsiveLine, "@nivo/line", "Sparkline");
   assertPeer(ResponsiveBar, "@nivo/bar", "Sparkline");
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-  const nivoTheme = useChartTheme(); // Sparkline has no axes, no need for responsive font scaling
+  const ctx = useComponentConfig({ animate });
+  const { isDark, theme } = ctx;
   const uid = useId().replace(/:/g, "");
 
-  const resolvedAnimate = animate ?? config.animate;
+  const resolvedAnimate = ctx.resolvedAnimate;
   const sw = strokeWidthProp ?? 1.5;
 
   // Resolve color
@@ -165,10 +161,10 @@ const SparklineInner = forwardRef<HTMLDivElement, SparklineProps>(function Spark
   const formatFn = useCallback(
     (v: number): string => {
       if (formatTooltip) return formatTooltip(v);
-      if (format) return formatValue(v, format, localeDefaults);
+      if (format) return formatValue(v, format, ctx.localeDefaults);
       return String(v);
     },
-    [formatTooltip, format, localeDefaults],
+    [formatTooltip, format, ctx.localeDefaults],
   );
 
   // Container style
@@ -201,8 +197,8 @@ const SparklineInner = forwardRef<HTMLDivElement, SparklineProps>(function Spark
           keys={["value"]}
           indexBy="index"
           theme={{
-            ...nivoTheme,
-            axis: { ...nivoTheme.axis, ticks: { line: { stroke: "transparent" }, text: { fill: "transparent" } } },
+            ...ctx.nivoTheme,
+            axis: { ...ctx.nivoTheme.axis, ticks: { line: { stroke: "transparent" }, text: { fill: "transparent" } } },
           }}
           colors={[resolvedColor]}
           margin={{ top: 2, right: 0, bottom: 0, left: 0 }}
@@ -232,7 +228,7 @@ const SparklineInner = forwardRef<HTMLDivElement, SparklineProps>(function Spark
             </div>
           ) : undefined}
           animate={!!resolvedAnimate}
-          motionConfig={resolvedAnimate ? config.motionConfig : undefined}
+          motionConfig={resolvedAnimate ? ctx.config.motionConfig : undefined}
         />
       </div>
     );
@@ -271,8 +267,8 @@ const SparklineInner = forwardRef<HTMLDivElement, SparklineProps>(function Spark
       <ResponsiveLine
         data={lineData}
         theme={{
-          ...nivoTheme,
-          axis: { ...nivoTheme.axis, ticks: { line: { stroke: "transparent" }, text: { fill: "transparent" } } },
+          ...ctx.nivoTheme,
+          axis: { ...ctx.nivoTheme.axis, ticks: { line: { stroke: "transparent" }, text: { fill: "transparent" } } },
           grid: { line: { stroke: "transparent" } },
         }}
         colors={[resolvedColor]}
@@ -315,7 +311,7 @@ const SparklineInner = forwardRef<HTMLDivElement, SparklineProps>(function Spark
         } : undefined}
         crosshairType="bottom-left"
         animate={!!resolvedAnimate}
-        motionConfig={resolvedAnimate ? config.motionConfig : undefined}
+        motionConfig={resolvedAnimate ? ctx.config.motionConfig : undefined}
         defs={defs}
         fill={fillConfig}
         legends={[]}

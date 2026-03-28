@@ -26,8 +26,8 @@ export interface ComponentConfigOptions {
 }
 
 export interface ComponentConfigResult {
-  /** Current theme ("light" | "dark") */
-  theme: string;
+  /** Current theme */
+  theme: "light" | "dark";
   /** Whether dark mode is active */
   isDark: boolean;
   /** Locale defaults for formatting */
