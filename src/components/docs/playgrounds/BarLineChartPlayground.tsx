@@ -126,7 +126,7 @@ export function BarLineChartPlayground() {
     `<BarLineChart`,
     `  barData={[{ month: "Jan", revenue: 42000 }, ...]}`,
     `  barKeys={${JSON.stringify(ds.barKeys)}}`,
-    `  indexBy="${ds.indexBy}"`,
+    `  index="${ds.indexBy}"`,
     `  lineData={[{ id: "Growth Rate", data: [{ x: "Jan", y: 8.2 }, ...] }]}`,
     `  title="${title}"`,
   ];
@@ -153,7 +153,7 @@ export function BarLineChartPlayground() {
             <BarLineChart
               barData={ds.barData}
               barKeys={ds.barKeys}
-              indexBy={ds.indexBy}
+              index={ds.indexBy}
               lineData={ds.lineData}
               title={title}
               subtitle={subtitle || undefined}

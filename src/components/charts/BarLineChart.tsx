@@ -52,8 +52,6 @@ export interface BarLineChartProps extends DataComponentProps {
   barData?: Record<string, string | number>[];
   /** Keys for bars */
   barKeys?: string[];
-  /** Index field name */
-  indexBy?: string;
   /** Line data — same shape as AreaChart/LineChart */
   lineData?: LineSeriesData[];
 
@@ -343,7 +341,6 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
   categories: categoriesProp,
   barData: barDataProp,
   barKeys: barKeysProp,
-  indexBy: indexByProp,
   lineData: lineDataProp,
   title,
   subtitle,
@@ -386,7 +383,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
   aiContext,
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "BarLineChart");
-  const defaultField = indexByProp ?? indexProp ?? "index";
+  const defaultField = indexProp ?? "index";
   const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
@@ -406,7 +403,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
 
   const barData = barDataProp ?? resolved?.barData ?? [];
   const barKeys = barKeysProp ?? resolved?.barKeys ?? [];
-  const indexBy = indexByProp ?? resolved?.indexBy ?? "";
+  const indexBy = indexProp ?? resolved?.indexBy ?? "";
   const lineData = lineDataProp ?? resolved?.lineData ?? [];
 
   const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
