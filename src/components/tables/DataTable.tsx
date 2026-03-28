@@ -12,7 +12,7 @@ import { StatusIndicator } from "@/components/ui/StatusIndicator";
 import type { StatusRule, StatusSize } from "@/components/ui/StatusIndicator";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useScrollIndicators } from "@/lib/useScrollIndicators";
-import { devWarn, devWarnDeprecated } from "@/lib/devWarnings";
+import { devWarn } from "@/lib/devWarnings";
 import type { CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig, DataRow } from "@/lib/types";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
@@ -58,8 +58,6 @@ const BADGE_VARIANT_MAP: Record<string, "success" | "danger" | "warning" | "defa
 export interface Column<T = DataRow> {
   key: string;
   header?: string;
-  /** @deprecated Use `header` instead */
-  label?: string;
   type?: ColumnType;
   format?: FormatOption;
   align?: "left" | "center" | "right";
@@ -145,7 +143,7 @@ export interface DataTableProps<T extends DataRow = DataRow> extends DataCompone
 type SortDirection = "asc" | "desc" | null;
 
 function resolveHeader<T>(col: Column<T>): string {
-  return col.header ?? col.label ?? String(col.key);
+  return col.header ?? String(col.key);
 }
 
 function getNestedValue(obj: DataRow, key: string): unknown {
@@ -363,13 +361,6 @@ function DataTableInner<T extends DataRow = DataRow>(
 
   // Dev warnings
   if (process.env.NODE_ENV !== "production") {
-    for (const col of resolvedColumns) {
-      if (col.label && !col.header) {
-        devWarnDeprecated("DataTable", "column.label", "column.header");
-        break; // warn once
-      }
-    }
-
     if (data.length > 0 && columns.length > 0) {
       const firstRow = data[0] as DataRow;
       for (const col of columns) {

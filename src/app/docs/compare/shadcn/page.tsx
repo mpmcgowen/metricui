@@ -293,7 +293,7 @@ export function RevenueChart() {
     <BarChart
       data={data}
       index="month"
-      keys={["revenue"]}
+      categories={["revenue"]}
     />
   )
 }`}</code>

@@ -103,8 +103,8 @@ export default function BarChartDocs() {
     { month: "May", revenue: 49200 },
     { month: "Jun", revenue: 55400 },
   ]}
-  keys={["revenue"]}
-  indexBy="month"
+  categories={["revenue"]}
+  index="month"
   title="Monthly Revenue"
   format={{ style: "currency" }}
 />`}
@@ -112,8 +112,8 @@ export default function BarChartDocs() {
           <div className="w-full max-w-2xl">
             <BarChart
               data={revenueData}
-              keys={["revenue"]}
-              indexBy="month"
+              categories={["revenue"]}
+              index="month"
               title="Monthly Revenue"
               format={{ style: "currency" }}
             />
@@ -134,8 +134,8 @@ export default function BarChartDocs() {
           code={`<BarChart
   preset="grouped"
   data={multiKeyData}
-  keys={["visitors", "conversions"]}
-  indexBy="channel"
+  categories={["visitors", "conversions"]}
+  index="channel"
   title="Visitors vs Conversions"
   format={{ style: "number" }}
 />`}
@@ -144,8 +144,8 @@ export default function BarChartDocs() {
             <BarChart
               preset="grouped"
               data={multiKeyData}
-              keys={["visitors", "conversions"]}
-              indexBy="channel"
+              categories={["visitors", "conversions"]}
+              index="channel"
               title="Visitors vs Conversions"
               format={{ style: "number" }}
             />
@@ -156,8 +156,8 @@ export default function BarChartDocs() {
             code={`<BarChart
   preset="percent"
   data={threeKeyData}
-  keys={["organic", "paid", "referral"]}
-  indexBy="quarter"
+  categories={["organic", "paid", "referral"]}
+  index="quarter"
   title="Channel Mix"
 />`}
           >
@@ -165,8 +165,8 @@ export default function BarChartDocs() {
               <BarChart
                 preset="percent"
                 data={threeKeyData}
-                keys={["organic", "paid", "referral"]}
-                indexBy="quarter"
+                categories={["organic", "paid", "referral"]}
+                index="quarter"
                 title="Channel Mix"
               />
             </div>
@@ -185,8 +185,8 @@ export default function BarChartDocs() {
           code={`<BarChart
   preset="horizontal"
   data={horizontalData}
-  keys={["signups"]}
-  indexBy="category"
+  categories={["signups"]}
+  index="category"
   title="Signups by Plan"
   sort="desc"
   format={{ style: "number" }}
@@ -196,8 +196,8 @@ export default function BarChartDocs() {
             <BarChart
               preset="horizontal"
               data={horizontalData}
-              keys={["signups"]}
-              indexBy="category"
+              categories={["signups"]}
+              index="category"
               title="Signups by Plan"
               sort="desc"
               format={{ style: "number" }}
@@ -216,8 +216,8 @@ export default function BarChartDocs() {
         <ComponentExample
           code={`<BarChart
   data={currentData}
-  keys={["revenue"]}
-  indexBy="month"
+  categories={["revenue"]}
+  index="month"
   comparisonData={previousPeriodData}
   title="Revenue: Current vs Previous"
   format={{ style: "currency" }}
@@ -226,8 +226,8 @@ export default function BarChartDocs() {
           <div className="w-full max-w-2xl">
             <BarChart
               data={revenueData}
-              keys={["revenue"]}
-              indexBy="month"
+              categories={["revenue"]}
+              index="month"
               comparisonData={comparisonData}
               title="Revenue: Current vs Previous"
               format={{ style: "currency" }}
@@ -246,8 +246,8 @@ export default function BarChartDocs() {
         <ComponentExample
           code={`<BarChart
   data={revenueData}
-  keys={["revenue"]}
-  indexBy="month"
+  categories={["revenue"]}
+  index="month"
   title="Revenue vs Target"
   format={{ style: "currency" }}
   referenceLines={[{
@@ -268,8 +268,8 @@ export default function BarChartDocs() {
           <div className="w-full max-w-2xl">
             <BarChart
               data={revenueData}
-              keys={["revenue"]}
-              indexBy="month"
+              categories={["revenue"]}
+              index="month"
               title="Revenue vs Target"
               format={{ style: "currency" }}
               referenceLines={[{
@@ -301,8 +301,8 @@ export default function BarChartDocs() {
             <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Loading</p>
             <BarChart
               data={[]}
-              keys={["revenue"]}
-              indexBy="month"
+              categories={["revenue"]}
+              index="month"
               title="Revenue"
               loading
             />
@@ -311,8 +311,8 @@ export default function BarChartDocs() {
             <p className="mb-2 text-[12px] font-medium text-[var(--muted)]">Error</p>
             <BarChart
               data={[]}
-              keys={["revenue"]}
-              indexBy="month"
+              categories={["revenue"]}
+              index="month"
               title="Revenue"
               error={{ message: "Failed to load data" }}
             />
@@ -320,10 +320,10 @@ export default function BarChartDocs() {
         </div>
         <CodeBlock
           code={`// Loading state
-<BarChart data={[]} keys={["revenue"]} indexBy="month" loading />
+<BarChart data={[]} categories={["revenue"]} index="month" loading />
 
 // Error state
-<BarChart data={[]} keys={["revenue"]} indexBy="month" error={{ message: "Failed to load" }} />`}
+<BarChart data={[]} categories={["revenue"]} index="month" error={{ message: "Failed to load" }} />`}
           className="mt-4"
         />
       </DocSection>

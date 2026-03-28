@@ -65,7 +65,7 @@ function ZeroConfigDemo() {
       <div className="w-full max-w-xl">
         <BarChart
           data={revenueByRegion}
-          indexBy="region"
+          index="region"
           categories={["revenue"]}
           title="Revenue by Region"
           height={240}
@@ -87,7 +87,7 @@ function CustomContentDemo() {
       <div className="w-full max-w-xl">
         <BarChart
           data={revenueByRegion}
-          indexBy="region"
+          index="region"
           categories={["revenue", "accounts"]}
           title="Revenue by Region"
           height={240}
@@ -138,7 +138,7 @@ function ModalModeDemo() {
       <div className="w-full max-w-xl">
         <BarChart
           data={revenueByRegion}
-          indexBy="region"
+          index="region"
           categories={["revenue"]}
           title="Revenue by Region"
           height={240}
@@ -162,7 +162,7 @@ function NestedDrillDemo() {
     <div className="w-full max-w-xl">
       <BarChart
         data={revenueByRegion}
-        indexBy="region"
+        index="region"
         categories={["revenue"]}
         title="Revenue by Region"
         height={240}
@@ -238,7 +238,7 @@ function RenderContentDemo() {
       <div className="w-full max-w-xl space-y-3">
         <BarChart
           data={liveData}
-          indexBy="region"
+          index="region"
           categories={["revenue"]}
           title="Revenue by Region (Live)"
           height={240}
@@ -333,7 +333,7 @@ function TooltipHintDemo() {
       <div className="w-full max-w-xl space-y-6">
         <BarChart
           data={revenueByRegion}
-          indexBy="region"
+          index="region"
           categories={["revenue"]}
           title="Default hint (tooltipHint={true})"
           height={200}
@@ -342,7 +342,7 @@ function TooltipHintDemo() {
         />
         <BarChart
           data={revenueByRegion}
-          indexBy="region"
+          index="region"
           categories={["revenue"]}
           title="Custom hint string"
           height={200}
@@ -383,7 +383,7 @@ function Dashboard() {
     <DrillDown.Root>
       <BarChart
         data={data}
-        indexBy="region"
+        index="region"
         categories={["revenue"]}
         drillDown          // true = auto-table
         tooltipHint        // "Click to drill down"
@@ -406,7 +406,7 @@ function Dashboard() {
           code={`<DrillDown.Root>
   <BarChart
     data={revenueByRegion}
-    indexBy="region"
+    index="region"
     categories={["revenue"]}
     title="Revenue by Region"
     drillDown
@@ -430,7 +430,7 @@ function Dashboard() {
           code={`<DrillDown.Root>
   <BarChart
     data={revenueByRegion}
-    indexBy="region"
+    index="region"
     categories={["revenue", "accounts"]}
     title="Revenue by Region"
     drillDown={(event) => {
@@ -476,7 +476,7 @@ function Dashboard() {
           code={`<DrillDown.Root>
   <BarChart
     data={revenueByRegion}
-    indexBy="region"
+    index="region"
     categories={["revenue"]}
     drillDown
     drillDownMode="modal"
@@ -502,7 +502,7 @@ function Dashboard() {
   return (
     <BarChart
       data={revenueByRegion}
-      indexBy="region"
+      index="region"
       categories={["revenue"]}
       drillDown={(event) => {
         const regionAccounts = accounts.filter(
@@ -562,7 +562,7 @@ function Dashboard() {
 >
   <BarChart
     data={liveData}
-    indexBy="region"
+    index="region"
     categories={["revenue"]}
     drillDown
     tooltipHint

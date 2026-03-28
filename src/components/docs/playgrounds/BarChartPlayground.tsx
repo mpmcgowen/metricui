@@ -237,8 +237,8 @@ export function BarChartPlayground() {
   if (preset) codeLines.push(`  preset="${preset}"`);
   codeLines.push(
     `  data={${datasetKey === "revenue" ? '[{ month: "Jan", revenue: 42000 }, ...]' : datasetKey === "multiKey" ? '[{ channel: "Organic", visitors: 14200, conversions: 1420 }, ...]' : "..."}}`,
-    `  keys={${JSON.stringify(dataset.keys)}}`,
-    `  indexBy="${dataset.indexBy}"`,
+    `  categories={${JSON.stringify(dataset.keys)}}`,
+    `  index="${dataset.indexBy}"`,
     `  title="${title}"`,
   );
   if (subtitle) codeLines.push(`  subtitle="${subtitle}"`);
@@ -280,8 +280,8 @@ export function BarChartPlayground() {
               <BarChart
                 preset={preset ? preset as "default" | "grouped" | "stacked" | "percent" | "horizontal" | "horizontal-grouped" : undefined}
                 data={dataset.data}
-                keys={dataset.keys}
-                indexBy={dataset.indexBy}
+                categories={dataset.keys}
+                index={dataset.indexBy}
                 comparisonData={comparisonData}
                 title={title}
                 subtitle={subtitle || undefined}

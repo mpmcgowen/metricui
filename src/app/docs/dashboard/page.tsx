@@ -72,7 +72,7 @@ export default function DashboardDocs() {
           <DashboardHeader title="Sales" />
           <MetricGrid>
             <KpiCard title="Revenue" value={142800} format="currency" />
-            <BarChart data={data} keys={["revenue"]} indexBy="month" />
+            <BarChart data={data} categories={["revenue"]} index="month" />
           </MetricGrid>
           <DrillDown.Overlay />
         </DrillDown.Root>
@@ -91,7 +91,7 @@ export default function DashboardDocs() {
   <DashboardHeader title="Sales" />
   <MetricGrid>
     <KpiCard title="Revenue" value={142800} format="currency" />
-    <BarChart data={data} keys={["revenue"]} indexBy="month" />
+    <BarChart data={data} categories={["revenue"]} index="month" />
   </MetricGrid>
 </Dashboard>`}
             />
@@ -172,8 +172,8 @@ export default function DashboardDocs() {
     <KpiCard title="AOV" value={111.21} format="currency" />
     <BarChart
       data={revenueData}
-      keys={["revenue"]}
-      indexBy="month"
+      categories={["revenue"]}
+      index="month"
       title="Monthly Revenue"
       format={{ style: "currency" }}
     />
@@ -193,8 +193,8 @@ export default function DashboardDocs() {
                 <KpiCard title="AOV" value={111.21} format="currency" />
                 <BarChart
                   data={revenueData}
-                  keys={["revenue"]}
-                  indexBy="month"
+                  categories={["revenue"]}
+                  index="month"
                   title="Monthly Revenue"
                   format={{ style: "currency" }}
                   height={280}

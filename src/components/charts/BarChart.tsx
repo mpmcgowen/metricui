@@ -18,7 +18,7 @@ import { formatValue, type FormatOption } from "@/lib/format";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
-import { devWarn, devWarnDeprecated } from "@/lib/devWarnings";
+import { devWarn } from "@/lib/devWarnings";
 import type { LegendConfig, ReferenceLine, ThresholdBand, BarClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { inferSchema, categoryKeys, categoryColors, type Category } from "@/lib/dataTransform";
@@ -59,13 +59,10 @@ export interface BarChartProps extends DataComponentProps {
    *  Individual props override preset values. */
   preset?: BarChartPreset;
   data?: DataRow[];
-  /** Column name to use as the X-axis (index). Alias for `indexBy`. */
+  /** Column name to use as the X-axis. */
   index?: string;
-  /** Value columns to chart. Can be plain strings or rich config objects.
-   *  Alias for `keys` — when provided, `keys` and `indexBy` are derived automatically. */
+  /** Value columns to chart. Can be plain strings or rich config objects. */
   categories?: Category[];
-  keys?: string[];
-  indexBy?: string;
   /** Previous period data rendered as outline bars */
   comparisonData?: Record<string, string | number>[];
   title?: string;
@@ -130,8 +127,6 @@ export interface BarChartProps extends DataComponentProps {
   chartNullMode?: ChartNullMode;
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
-  /** @deprecated Use groupMode="grouped" instead */
-  grouped?: boolean;
   /** Sub-element class name overrides */
   classNames?: { root?: string; header?: string; chart?: string; /** Alias for `chart` */ body?: string; legend?: string };
 }
@@ -565,8 +560,6 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   data: rawData = [],
   index: indexProp,
   categories: categoriesProp,
-  keys: keysProp,
-  indexBy: indexByProp,
   comparisonData,
   title,
   subtitle,
@@ -608,8 +601,6 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   empty,
   error,
   stale,
-  // Legacy compat
-  grouped,
   classNames,
   id,
   "data-testid": dataTestId,
@@ -618,22 +609,16 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
 
   assertPeer(ResponsiveBar, "@nivo/bar", "BarChart");
 
-  // --- Deprecation warnings for old Nivo prop names ---
-  if (process.env.NODE_ENV !== "production") {
-    if (keysProp) devWarnDeprecated("BarChart", "keys", "categories");
-    if (indexByProp) devWarnDeprecated("BarChart", "indexBy", "index");
-  }
-
-  // --- Resolve unified data props (index/categories → keys/indexBy) ---
+  // --- Resolve data schema ---
   const inferred = useMemo(
-    () => (!keysProp && !indexByProp ? inferSchema(rawData) : null),
-    [rawData, keysProp, indexByProp]
+    () => (!categoriesProp && !indexProp ? inferSchema(rawData) : null),
+    [rawData, categoriesProp, indexProp]
   );
-  const keys = keysProp ?? (categoriesProp ? categoryKeys(categoriesProp) : inferred?.categories ?? []);
-  const indexBy = indexByProp ?? indexProp ?? inferred?.index ?? "";
+  const keys = categoriesProp ? categoryKeys(categoriesProp) : inferred?.categories ?? [];
+  const indexBy = indexProp ?? inferred?.index ?? "";
 
   if (rawData.length > 0 && (keys.length === 0 || !indexBy)) {
-    devWarn("BarChart.data", "BarChart received data but could not determine keys or indexBy. Pass `index` and `categories` props, or `keys` and `indexBy`.");
+    devWarn("BarChart.data", "BarChart received data but could not determine categories or index. Pass `index` and `categories` props.");
   }
 
   // Merge category-level color overrides into seriesStyles
@@ -655,13 +640,8 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   });
   const barHoverRef = useRef<string | number | null>(null);
 
-  // --- Deprecation warnings ---
-  if (process.env.NODE_ENV !== "production") {
-    if (grouped !== undefined) devWarnDeprecated("BarChart", "grouped", 'groupMode="grouped"');
-  }
-
   // --- Resolve groupMode ---
-  const groupMode = groupModeProp ?? (grouped ? "grouped" : "stacked");
+  const groupMode = groupModeProp ?? "stacked";
   const isPercent = groupMode === "percent";
   const nivoGroupMode = groupMode === "grouped" ? "grouped" : "stacked";
 

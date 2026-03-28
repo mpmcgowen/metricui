@@ -136,21 +136,21 @@ describe("BarChart", () => {
 
   it("renders without crashing with minimal valid data", () => {
     const { container } = renderWithProvider(
-      <BarChart data={barData} keys={["value"]} indexBy="month" />
+      <BarChart data={barData} categories={["value"]} index="month" />
     );
     expect(container.firstChild).toBeTruthy();
   });
 
   it("shows title when provided", () => {
     renderWithProvider(
-      <BarChart data={barData} keys={["value"]} indexBy="month" title="Sales" />
+      <BarChart data={barData} categories={["value"]} index="month" title="Sales" />
     );
     expect(screen.getByText("Sales")).toBeInTheDocument();
   });
 
   it("shows loading state when loading=true", () => {
     const { container } = renderWithProvider(
-      <BarChart data={barData} keys={["value"]} indexBy="month" loading={true} />
+      <BarChart data={barData} categories={["value"]} index="month" loading={true} />
     );
     const pulseElements = container.querySelectorAll(".mu-shimmer");
     expect(pulseElements.length).toBeGreaterThan(0);

@@ -97,7 +97,7 @@ export default function BarLineChartDocs() {
           code={`<BarLineChart
   barData={[{ month: "Jan", revenue: 42000 }, ...]}
   barKeys={["revenue"]}
-  indexBy="month"
+  index="month"
   lineData={[{ id: "Growth Rate", data: [{ x: "Jan", y: 8.2 }, ...] }]}
   title="Revenue & Growth"
   format={{ style: "currency", compact: true }}
@@ -108,7 +108,7 @@ export default function BarLineChartDocs() {
             <BarLineChart
               barData={basicBarData}
               barKeys={["revenue"]}
-              indexBy="month"
+              index="month"
               lineData={basicLineData}
               title="Revenue & Growth"
               format={{ style: "currency", compact: true }}
@@ -128,7 +128,7 @@ export default function BarLineChartDocs() {
           code={`<BarLineChart
   barData={monthlyData}
   barKeys={["revenue", "costs"]}
-  indexBy="month"
+  index="month"
   lineData={[{ id: "Profit Margin", data: marginData }]}
   title="Revenue, Costs & Margin"
   format={{ style: "currency", compact: true }}
@@ -141,7 +141,7 @@ export default function BarLineChartDocs() {
             <BarLineChart
               barData={stackedBarData}
               barKeys={["revenue", "costs"]}
-              indexBy="month"
+              index="month"
               lineData={marginLineData}
               title="Revenue, Costs & Margin"
               format={{ style: "currency", compact: true }}
@@ -164,7 +164,7 @@ export default function BarLineChartDocs() {
           code={`<BarLineChart
   barData={data}
   barKeys={["revenue"]}
-  indexBy="month"
+  index="month"
   lineData={lineData}
   yAxisLabel="Revenue ($)"
   rightAxisLabel="Growth (%)"
@@ -185,7 +185,7 @@ export default function BarLineChartDocs() {
             <BarLineChart
               barData={[]}
               barKeys={["revenue"]}
-              indexBy="month"
+              index="month"
               lineData={[]}
               title="Revenue"
               loading
@@ -196,7 +196,7 @@ export default function BarLineChartDocs() {
             <BarLineChart
               barData={[]}
               barKeys={["revenue"]}
-              indexBy="month"
+              index="month"
               lineData={[]}
               title="Revenue"
               error={{ message: "Failed to load data" }}
@@ -205,10 +205,10 @@ export default function BarLineChartDocs() {
         </div>
         <CodeBlock
           code={`// Loading state
-<BarLineChart barData={[]} barKeys={["revenue"]} indexBy="month" lineData={[]} loading />
+<BarLineChart barData={[]} barKeys={["revenue"]} index="month" lineData={[]} loading />
 
 // Error state
-<BarLineChart barData={[]} barKeys={["revenue"]} indexBy="month" lineData={[]} error={{ message: "Failed" }} />`}
+<BarLineChart barData={[]} barKeys={["revenue"]} index="month" lineData={[]} error={{ message: "Failed" }} />`}
           className="mt-4"
         />
       </DocSection>
