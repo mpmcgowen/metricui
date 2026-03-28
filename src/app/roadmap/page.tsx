@@ -186,7 +186,7 @@ const milestones: Milestone[] = [
     title: "Rock Solid",
     tagline:
       "Nothing new, everything better. Full keyboard navigation, color-blind safe mode, performance benchmarks, API consistency, edge case testing. This is when MetricUI earns \"production-ready.\"",
-    status: "next",
+    status: "shipped",
     icon: Shield,
     highlights: [
       "Wire useDropdown into DropdownFilter, PeriodSelector, ExportButton — full keyboard nav",
@@ -203,15 +203,18 @@ const milestones: Milestone[] = [
     version: "1.0",
     title: "The Standard",
     tagline:
-      "API freeze. Semantic versioning contract. 18-month LTS commitment. Premium templates. MetricUI 1.0 is a promise: build on it with confidence.",
-    status: "planned",
+      "API frozen. 21 components, unified architecture, 675 tests. Every visual token is a CSS variable. Every interaction flows through shared hooks. Zero deprecated props. Build on it with confidence.",
+    status: "shipped",
     icon: Flag,
     highlights: [
-      "Stable API — no breaking changes without a major version bump",
-      "create-metric-app CLI — scaffold a working dashboard in 30 seconds",
-      "Starter templates for SaaS, ecommerce, DevOps, and finance",
-      "Premium dashboard templates available for teams that want production-ready designs",
-      "Complete documentation — every component, every prop, every pattern",
+      { text: "Unified architecture — useComponentConfig + useComponentInteraction on every component", href: "/docs/guides/interactions" },
+      { text: "DrillDownEvent — one callback type across all 21 components", href: "/docs/drill-down" },
+      "Design tokens — z-index, type scale, transitions, neutral surfaces all via CSS variables",
+      { text: "Translatable strings — config.messages for i18n", href: "/docs/guides/theming" },
+      "Edge case hardening — error > loading priority, null/NaN/Infinity handling",
+      { text: "675 tests — edge cases, accessibility, interaction, render", href: "/docs/guides/getting-started" },
+      "API name review — consistent prop names across every component",
+      "Zero deprecated props, zero legacy shims, zero MetricCore artifacts",
     ],
   },
 ];

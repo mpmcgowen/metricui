@@ -1,6 +1,6 @@
 {
   "name": "@metricui/mcp-server",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "MCP server for the MetricUI dashboard component library — exposes full API surface to AI coding tools",
   "type": "module",
   "bin": {
