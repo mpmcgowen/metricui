@@ -4,7 +4,7 @@ import { forwardRef, useMemo } from "react";
 import { ResponsiveBullet } from "@nivo/bullet";
 import type { Datum as NivoBulletDatum, BulletTooltipProps } from "@nivo/bullet";
 import { ChartContainer } from "./ChartContainer";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import { ChartTooltip } from "./ChartTooltip";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useDenseValues } from "@/lib/useDenseValues";
@@ -165,7 +165,7 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
   const resolvedAnimate = animateProp ?? config.animate;
   const resolvedVariant = variant ?? config.variant;
 
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

@@ -6,7 +6,7 @@ import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
@@ -127,7 +127,7 @@ const RadarInner = forwardRef<HTMLDivElement, RadarProps>(function Radar(props, 
   const resolvedVariant = variant ?? config.variant;
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? denseValues.chartHeight;
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

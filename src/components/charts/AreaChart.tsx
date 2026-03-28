@@ -20,7 +20,7 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import { withOpacity } from "@/lib/utils";
 import { devWarn } from "@/lib/devWarnings";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
@@ -541,7 +541,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   const resolvedHeight = height ?? denseValues.chartHeight;
   const resolvedChartNullMode = chartNullMode ?? config.chartNullMode;
 
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

@@ -172,14 +172,14 @@ const milestones: Milestone[] = [
     icon: Workflow,
     highlights: [
       { text: "useDashboardState — serialize/restore dashboard state for shareable links and saved views", href: "/docs/guides/cookbook#saved-views" },
-      "useChartInteraction — centralized drill-down/cross-filter/linked-hover logic across all 14 charts",
+      "useComponentInteraction — centralized drill-down/cross-filter/linked-hover logic across all 14 charts",
       "6 shared doc components — eliminated 1,400+ lines of boilerplate across 46+ pages",
       { text: "Accessibility — ARIA roles on SegmentToggle, screen reader announcements, icon button labels", href: "/docs/guides/accessibility" },
       "useDropdown hook — shared keyboard navigation + ARIA for all dropdown components",
       "42 components in MCP knowledge base, all doc pages standardized",
       "Fixed-position TOC with accent bar active indicator",
     ],
-    newComponents: ["useDashboardState", "useChartInteraction", "useDropdown"],
+    newComponents: ["useDashboardState", "useComponentInteraction", "useDropdown"],
   },
   {
     version: "0.9",

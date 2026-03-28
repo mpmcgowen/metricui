@@ -11,7 +11,7 @@ type SankeyLinkDatumResolved = SankeyLinkDatumGeneric<DefaultNode, DefaultLink>;
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useChartTheme } from "@/lib/useChartTheme";
@@ -190,7 +190,7 @@ const SankeyInner = forwardRef<HTMLDivElement, SankeyProps>(function Sankey(prop
     }));
   }, [sankeyData, sourceField, targetField, valueField]);
 
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

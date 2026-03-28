@@ -13,7 +13,7 @@ import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -655,7 +655,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
   const denseValues = useDenseValues();
   const resolvedHeight = height ?? denseValues.chartHeight;
   const resolvedChartNullMode = chartNullMode ?? config.chartNullMode;
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

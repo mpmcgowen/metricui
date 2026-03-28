@@ -14,9 +14,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useScrollIndicators } from "@/lib/useScrollIndicators";
 import { devWarn, devWarnDeprecated } from "@/lib/devWarnings";
 import type { CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig, DataRow } from "@/lib/types";
-import { useLinkedHover } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, ExternalLink } from "lucide-react";
 
@@ -333,8 +331,6 @@ function DataTableInner<T extends DataRow = DataRow>(
   ref: React.ForwardedRef<HTMLDivElement>,
 ) {
   useTheme();
-  const openDrill = useDrillDownAction();
-  const linkedHover = useLinkedHover();
   const localeDefaults = useLocale();
   const config = useMetricConfig();
   const resolvedDense = dense ?? config.dense;
@@ -345,12 +341,25 @@ function DataTableInner<T extends DataRow = DataRow>(
   const resolvedExportable = exportableProp !== undefined ? exportableProp : config.exportable;
   const overrideExportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
 
-  // --- Cross-filter ---
-  const crossFilter = useCrossFilter();
   const resolvedColumns = useMemo(() => columnsProp ?? inferColumns(data), [columnsProp, data]);
-  const crossFilterField = crossFilterProp
-    ? (typeof crossFilterProp === "object" ? crossFilterProp.field : undefined) ?? (resolvedColumns[0]?.key as string)
-    : undefined;
+
+  // --- Interaction (shared with all components) ---
+  // Wrap DataTable's (row, index) drillDown function to match the hook's (event) interface
+  const wrappedDrillDown = useMemo(() => {
+    if (!drillDown || drillDown === true) return drillDown;
+    // drillDown is (row, index) => ReactNode — wrap it
+    return (event: { title: string; value: string | number; row?: DataRow; index?: number }) =>
+      drillDown(event.row ?? ({} as DataRow), event.index ?? 0);
+  }, [drillDown]);
+
+  const interaction = useComponentInteraction({
+    drillDown: wrappedDrillDown,
+    drillDownMode,
+    crossFilter: crossFilterProp,
+    defaultField: (resolvedColumns[0]?.key as string) ?? "id",
+    tooltipHint: undefined,
+    data: data as DataRow[],
+  });
 
   const columns = resolvedColumns;
 
@@ -678,13 +687,13 @@ function DataTableInner<T extends DataRow = DataRow>(
                 const isParent = hasChildren;
                 const rcClasses = rowConditions?.filter((rc) => rc.when(row, gi)).map((rc) => rc.className).join(" ") ?? "";
                 const showExpandChevron = renderExpanded || isGrouped;
-                const isLinkedHighlight = linkedIndexField && linkedHover?.hoveredIndex != null && (row as DataRow)[linkedIndexField] === linkedHover.hoveredIndex;
+                const isLinkedHighlight = linkedIndexField && interaction.linkedHover?.hoveredIndex != null && (row as DataRow)[linkedIndexField] === interaction.linkedHover.hoveredIndex;
                 return (
                   <React.Fragment key={ri}>
                   <tr className={cn(
                     "group/row border-b border-[var(--card-border)]/50 transition-all hover:bg-[var(--card-glow)]",
                     striped && ri % 2 === 1 && "bg-[var(--card-glow)]/50",
-                    (onRowClick || drillDown || (crossFilterProp && crossFilter)) && "cursor-pointer",
+                    (onRowClick || interaction.isInteractive) && "cursor-pointer",
                     expanded.has(gi) && "bg-[var(--card-glow)]/30",
                     isParent && "font-medium",
                     isChild && "text-[var(--muted)]",
@@ -694,28 +703,11 @@ function DataTableInner<T extends DataRow = DataRow>(
                     transition: "all 200ms ease",
                   }} onClick={() => {
                     onRowClick?.(row, gi);
-                    if (drillDown) {
+                    if (interaction.isInteractive) {
                       const rowRecord = row as DataRow;
                       const firstCol = columns[0]?.key;
                       const titleVal = firstCol ? String(rowRecord[firstCol] ?? "") : `Row ${gi + 1}`;
-                      const content = drillDown === true
-                        ? (
-                          <div className="space-y-2 p-4">
-                            {Object.entries(rowRecord).map(([k, v]) => (
-                              <div key={k} className="flex justify-between border-b border-[var(--card-border)] pb-2 text-sm">
-                                <span className="font-medium text-[var(--muted)]">{k}</span>
-                                <span className="text-[var(--foreground)]">{String(v ?? "—")}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                        : drillDown(rowRecord, gi);
-                      openDrill(
-                        { title: titleVal, field: crossFilterField, value: crossFilterField ? rowRecord[crossFilterField] as string | number : undefined, mode: drillDownMode },
-                        content,
-                      );
-                    } else if (crossFilterProp && crossFilter && crossFilterField) {
-                      crossFilter.select({ field: crossFilterField, value: (row as DataRow)[crossFilterField] as string | number });
+                      interaction.handleClick({ title: titleVal, value: interaction.crossFilterField ? rowRecord[interaction.crossFilterField] as string | number : gi, row: rowRecord, index: gi });
                     }
                   }}>
                     {/* Expand/group chevron */}

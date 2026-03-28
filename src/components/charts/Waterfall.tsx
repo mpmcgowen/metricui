@@ -13,7 +13,7 @@ import { useContainerSize } from "@/lib/useContainerSize";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { BarClickEvent } from "@/lib/chartTypes";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -266,7 +266,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   stale,
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "Waterfall");
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

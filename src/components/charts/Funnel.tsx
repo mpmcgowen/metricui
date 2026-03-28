@@ -13,7 +13,7 @@ import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { SERIES_COLORS } from "@/lib/chartColors";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
@@ -146,7 +146,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   stale,
 }, ref) {
   assertPeer(ResponsiveFunnel, "@nivo/funnel", "Funnel");
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

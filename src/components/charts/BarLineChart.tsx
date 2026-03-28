@@ -22,7 +22,7 @@ import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { LegendConfig, BarClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toBarLineData, categoryKeys, resolveCategory, type Category } from "@/lib/dataTransform";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -390,7 +390,7 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
 }, ref) {
   assertPeer(ResponsiveBar, "@nivo/bar", "BarLineChart");
   const defaultField = indexByProp ?? indexProp ?? "index";
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

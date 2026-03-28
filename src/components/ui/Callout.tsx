@@ -6,6 +6,7 @@ import { useMetricConfig, useLocale } from "@/lib/MetricProvider";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { CARD_CLASSES } from "@/lib/styles";
 import type { DataComponentProps, DrillDownConfig } from "@/lib/types";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import {
   Info,
   AlertTriangle,
@@ -90,8 +91,10 @@ export interface CalloutProps extends DataComponentProps {
   detailOpen?: boolean;
 
   // --- Drill-down ---
-  /** Drill-down config. When set, the callout becomes clickable and opens the drill-down panel. */
-  drillDown?: DrillDownConfig;
+  /** Drill-down. `true` = auto, function = custom content, or legacy `{ onClick }`. */
+  drillDown?: true | ((event: { title: string; value: string | number }) => React.ReactNode) | DrillDownConfig;
+  /** Drill-down panel mode. Default: "slide-over". */
+  drillDownMode?: "slide-over" | "modal";
 
   // --- Standard MetricUI props ---
   /** Sub-element class overrides */
@@ -219,6 +222,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
       detail,
       detailOpen: detailOpenProp = false,
       drillDown,
+      drillDownMode,
       dense: denseProp,
       className,
       classNames,
@@ -231,6 +235,15 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
     const config = useMetricConfig();
     const localeDefaults = useLocale();
     const resolvedDense = denseProp ?? config.dense;
+
+    const interaction = useComponentInteraction({
+      drillDown,
+      drillDownMode,
+      crossFilter: undefined,
+      defaultField: titleProp ?? "callout",
+      tooltipHint: undefined,
+      data: [],
+    });
 
     const [dismissed, setDismissed] = useState(false);
     const [detailExpanded, setDetailExpanded] = useState(detailOpenProp);
@@ -294,7 +307,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
         data-variant={resolvedVariant}
         data-dense={resolvedDense ? "true" : undefined}
         role="alert"
-        onClick={drillDown ? drillDown.onClick : undefined}
+        onClick={interaction.isInteractive ? () => interaction.handleClick({ title: titleProp ?? "Callout", value: value ?? 0 }) : undefined}
         className={cn(
           "relative border transition-all duration-200",
           CARD_CLASSES,
@@ -302,7 +315,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
           styles.border,
           resolvedDense ? "px-3 py-2.5" : "px-4 py-3.5",
           fading && "opacity-0 scale-[0.98]",
-          drillDown && "group cursor-pointer",
+          interaction.isInteractive && "group cursor-pointer",
           className,
           classNames?.root
         )}

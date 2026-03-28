@@ -13,7 +13,7 @@ import { useContainerSize } from "@/lib/useContainerSize";
 import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { CellClickEvent } from "@/lib/chartTypes";
 import { toHeatMapSeries, inferSchema, categoryKeys, type Category } from "@/lib/dataTransform";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -206,7 +206,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   const resolvedDense = dense ?? config.dense;
   const resolvedHeight = height ?? denseValues.chartHeight;
 
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

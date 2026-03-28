@@ -7,33 +7,37 @@ import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useLinkedHover, useLinkedHoverId } from "@/lib/LinkedHoverContext";
 import { resolveActionHint } from "@/components/charts/ChartTooltip";
 import { useMetricConfig } from "@/lib/MetricProvider";
-import type { DataRow } from "@/lib/types";
+import type { DataRow, DrillDownConfig } from "@/lib/types";
 import React from "react";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export interface ChartInteractionOptions {
-  /** DrillDown prop from the chart component.
-   *  Accepts `true` for auto drill, or a render function.
-   *  The function type is widened to `(event: any)` so each chart can pass
-   *  its own specific click-event type without casting. */
+export interface ComponentInteractionOptions {
+  /**
+   * DrillDown prop — accepts:
+   * - `true` for auto-generated drill content
+   * - A render function `(event) => ReactNode` for custom content
+   * - Legacy `DrillDownConfig` ({ onClick }) for backwards compatibility
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  drillDown?: true | ((event: any) => React.ReactNode);
+  drillDown?: true | ((event: any) => React.ReactNode) | DrillDownConfig;
   /** DrillDown panel mode */
   drillDownMode?: "slide-over" | "modal";
-  /** CrossFilter prop from the chart component */
+  /** CrossFilter prop from the component */
   crossFilter?: boolean | { field?: string };
-  /** Default field name for cross-filter (usually the index/id field) */
+  /** Default field name for cross-filter and drill-down */
   defaultField: string;
-  /** Tooltip hint prop from the chart component */
+  /** Tooltip action hint */
   tooltipHint?: boolean | string;
-  /** Raw data for auto drill table */
+  /** Raw data for auto drill table (charts pass exportData, tables pass their data) */
   data?: DataRow[];
+  /** Specific cross-filter value this component represents (for KpiCards, single-value components) */
+  crossFilterValue?: string | number;
 }
 
-export interface ChartClickEvent {
+export interface ComponentClickEvent {
   /** Display title for the drill panel header */
   title: string;
   /** Field name for filtering */
@@ -44,15 +48,17 @@ export interface ChartClickEvent {
   [key: string]: unknown;
 }
 
-export interface ChartInteractionResult {
-  /** Call this when a chart element is clicked. Handles drill-down vs cross-filter priority. */
-  handleClick: (event: ChartClickEvent) => void;
+export interface ComponentInteractionResult {
+  /** Call this when a component element is clicked. Handles drill-down > crossFilter priority, including legacy DrillDownConfig. */
+  handleClick: (event: ComponentClickEvent) => void;
   /** Resolved action hint string for tooltips (or undefined if no hint) */
   actionHint: string | undefined;
-  /** Whether any click interaction is enabled */
+  /** Whether any click interaction is enabled (drillDown or crossFilter) */
   isInteractive: boolean;
   /** The resolved cross-filter field name (or undefined if cross-filter is off) */
   crossFilterField: string | undefined;
+  /** Whether this component should be visually dimmed (a cross-filter selection is active but doesn't match this component's value) */
+  isCrossFilterDimmed: boolean;
   /** The cross-filter context (for reading selection state) */
   crossFilter: ReturnType<typeof useCrossFilter>;
   /** Linked hover context */
@@ -64,29 +70,34 @@ export interface ChartInteractionResult {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function isLegacyDrillDown(d: unknown): d is DrillDownConfig {
+  return typeof d === "object" && d !== null && "onClick" in d;
+}
+
+// ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
 /**
- * Centralizes chart interaction logic: drill-down, cross-filter, linked hover,
- * and tooltip action hints. Replaces 6 separate hook calls and the click
- * handler priority logic that was duplicated across 14 chart components.
+ * Centralizes component interaction logic: drill-down, cross-filter,
+ * linked hover, and tooltip action hints.
  *
- * @example
- * ```tsx
- * const interaction = useChartInteraction({
- *   drillDown, drillDownMode, crossFilter: crossFilterProp,
- *   tooltipHint, defaultField: indexBy, data: exportData,
- * });
+ * Used by ALL visual dashboard components — charts, KPI cards, tables,
+ * callouts. One interaction path, one behavior, every component.
  *
- * // In click handler:
- * interaction.handleClick({ title: "January", value: "Jan" });
- *
- * // In tooltip:
- * <ChartTooltip actionHint={interaction.actionHint} ... />
- * ```
+ * Handles:
+ * - DrillDown priority: drillDown > crossFilter > onClick
+ * - Legacy DrillDownConfig ({ onClick }) backwards compatibility
+ * - Auto drill table generation for `drillDown={true}`
+ * - Cross-filter field resolution
+ * - Cross-filter dimming (isCrossFilterDimmed)
+ * - Tooltip action hint resolution
+ * - Linked hover context
  */
-export function useChartInteraction(opts: ChartInteractionOptions): ChartInteractionResult {
+export function useComponentInteraction(opts: ComponentInteractionOptions): ComponentInteractionResult {
   const {
     drillDown,
     drillDownMode,
@@ -94,6 +105,7 @@ export function useChartInteraction(opts: ChartInteractionOptions): ChartInterac
     defaultField,
     tooltipHint,
     data,
+    crossFilterValue,
   } = opts;
 
   const openDrill = useDrillDownAction();
@@ -101,6 +113,10 @@ export function useChartInteraction(opts: ChartInteractionOptions): ChartInterac
   const linkedHover = useLinkedHover();
   const linkedHoverId = useLinkedHoverId();
   const config = useMetricConfig();
+
+  // Is this a legacy { onClick } pattern?
+  const legacy = isLegacyDrillDown(drillDown);
+  const modernDrillDown = legacy ? undefined : (drillDown as true | ((event: ComponentClickEvent) => React.ReactNode) | undefined);
 
   // Resolve cross-filter field
   const crossFilterField = useMemo(
@@ -119,21 +135,37 @@ export function useChartInteraction(opts: ChartInteractionOptions): ChartInterac
 
   const isInteractive = !!drillDown || !!(crossFilterProp && crossFilter);
 
-  // Unified click handler with drillDown > crossFilter priority
+  // Cross-filter dimming — for components that represent a specific value
+  const isCrossFilterDimmed = useMemo(() => {
+    if (!crossFilter?.isActive || !crossFilterField) return false;
+    const sel = crossFilter.selection;
+    if (!sel) return false;
+    if (sel.field !== crossFilterField) return false;
+    if (crossFilterValue !== undefined && String(sel.value) === String(crossFilterValue)) return false;
+    return true;
+  }, [crossFilter, crossFilterField, crossFilterValue]);
+
+  // Unified click handler: legacy > modern drillDown > crossFilter
   const handleClick = useCallback(
-    (event: ChartClickEvent) => {
+    (event: ComponentClickEvent) => {
+      // Legacy imperative pattern
+      if (legacy && isLegacyDrillDown(drillDown)) {
+        drillDown.onClick();
+        return;
+      }
+
       const field = event.field ?? defaultField;
       const value = event.value;
 
-      if (drillDown) {
+      if (modernDrillDown) {
         const content =
-          drillDown === true
+          modernDrillDown === true
             ? React.createElement(AutoDrillTable, {
                 data: data ?? [],
                 field,
                 value: String(value),
               })
-            : drillDown(event);
+            : modernDrillDown(event);
         openDrill(
           { title: event.title, field: crossFilterField ?? field, value, mode: drillDownMode },
           content,
@@ -142,7 +174,7 @@ export function useChartInteraction(opts: ChartInteractionOptions): ChartInterac
         crossFilter.select({ field: crossFilterField, value });
       }
     },
-    [drillDown, drillDownMode, crossFilterProp, crossFilter, crossFilterField, defaultField, data, openDrill],
+    [legacy, drillDown, modernDrillDown, drillDownMode, crossFilterProp, crossFilter, crossFilterField, defaultField, data, openDrill],
   );
 
   return {
@@ -150,6 +182,7 @@ export function useChartInteraction(opts: ChartInteractionOptions): ChartInterac
     actionHint,
     isInteractive,
     crossFilterField,
+    isCrossFilterDimmed,
     crossFilter,
     linkedHover,
     linkedHoverId,

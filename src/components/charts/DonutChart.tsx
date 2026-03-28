@@ -20,7 +20,7 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig, SliceClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toDonutData, type Category } from "@/lib/dataTransform";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 import { devWarn } from "@/lib/devWarnings";
@@ -317,7 +317,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   void _resolvedChartNullMode;
   const activeOuterRadiusOffset = activeOuterRadiusOffsetProp ?? (resolvedDense ? 2 : 4);
 
-  const interaction = useChartInteraction({
+  const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,

@@ -27,7 +27,7 @@ import { assertPeer } from "@/lib/peerCheck";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import { ChartContainer } from "./ChartContainer";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -295,26 +295,15 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   const resolvedDense = dense ?? config.dense;
   const resolvedHeight = height ?? denseValues.chartHeight;
 
-  // --- Interaction (modern drillDown / crossFilter) ---
-  // Support legacy DrillDownConfig alongside modern pattern
-  const isLegacyDrill = drillDown && typeof drillDown === "object" && "onClick" in drillDown;
-  const modernDrillDown = isLegacyDrill ? undefined : (drillDown as true | ((event: any) => React.ReactNode) | undefined);
-  const interaction = useChartInteraction({
-    drillDown: modernDrillDown,
+  // --- Interaction ---
+  const interaction = useComponentInteraction({
+    drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,
     defaultField: title ?? "gauge",
     tooltipHint,
     data: [],
   });
-
-  const handleGaugeClick = useCallback(() => {
-    if (isLegacyDrill) {
-      (drillDown as DrillDownConfig).onClick?.();
-    } else if (interaction.isInteractive) {
-      interaction.handleClick({ title: title ?? "Gauge", value: rawValue ?? 0 });
-    }
-  }, [isLegacyDrill, drillDown, interaction, title, rawValue]);
 
   const animConfig: AnimationConfig | undefined =
     resolvedAnimate === true ? { countUp: true }
@@ -427,8 +416,8 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
       id={id}
       data-testid={dataTestId}
       style={{ minWidth: 120, height: "100%" }}
-      className={cn((drillDown || interaction.isInteractive) && "group relative cursor-pointer", className)}
-      onClick={(drillDown || interaction.isInteractive) ? handleGaugeClick : undefined}
+      className={cn(interaction.isInteractive && "group relative cursor-pointer", className)}
+      onClick={interaction.isInteractive ? () => interaction.handleClick({ title: title ?? "Gauge", value: rawValue ?? 0 }) : undefined}
     >
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="Gauge"

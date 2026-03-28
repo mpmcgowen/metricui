@@ -14,7 +14,7 @@ import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useChartInteraction } from "@/lib/useChartInteraction";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
@@ -287,7 +287,7 @@ const ScatterPlotInner = forwardRef<HTMLDivElement, ScatterPlotProps>(
     const resolvedVariant = (variant ?? config.variant) as CardVariant;
     const denseValues = useDenseValues();
     const resolvedHeight = height ?? denseValues.chartHeight;
-    const interaction = useChartInteraction({
+    const interaction = useComponentInteraction({
       drillDown,
       drillDownMode,
       crossFilter: crossFilterProp,

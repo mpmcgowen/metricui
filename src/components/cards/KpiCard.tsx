@@ -40,8 +40,6 @@ import { devWarnDeprecated } from "@/lib/devWarnings";
 import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useCountUp } from "@/lib/useCountUp";
 
-import { useLinkedHover } from "@/lib/LinkedHoverContext";
-import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useCopyToClipboard } from "@/lib/useCopyToClipboard";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
@@ -54,7 +52,7 @@ import {
   Check,
 } from "lucide-react";
 import { forwardRef, useState, useCallback } from "react";
-import { useDrillDownAction } from "@/components/ui/DrillDownPanel";
+import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -325,24 +323,19 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   });
   const displayValue = !valueIsString && !valueIsInert && animConfig?.countUp ? animatedValue : value;
 
-  // --- Linked hover highlight ---
-  const linkedHover = useLinkedHover();
-  const isLinkedHovered = linkedIndex != null && linkedHover?.hoveredIndex != null
-    && String(linkedHover.hoveredIndex) === String(linkedIndex);
+  // --- Interaction (shared with all components) ---
+  const interaction = useComponentInteraction({
+    drillDown,
+    crossFilter: crossFilterProp,
+    defaultField: typeof title === "string" ? title.toLowerCase().replace(/\s+/g, "_") : "kpi",
+    tooltipHint: undefined,
+    data: exportData,
+    crossFilterValue,
+  });
 
-  // --- Cross-filter (dims when non-matching selection is active, emits on click) ---
-  const crossFilter = useCrossFilter();
-  const isCrossFilterDimmed = (() => {
-    if (!crossFilter?.isActive || !crossFilterField) return false;
-    const sel = crossFilter.selection;
-    if (!sel) return false;
-    // If the selection is on a different field, don't dim
-    if (sel.field !== crossFilterField) return false;
-    // If this card's value matches the selection, don't dim
-    if (crossFilterValue !== undefined && String(sel.value) === String(crossFilterValue)) return false;
-    // Selection is active on our field but doesn't match — dim
-    return true;
-  })();
+  // --- Linked hover highlight ---
+  const isLinkedHovered = linkedIndex != null && interaction.linkedHover?.hoveredIndex != null
+    && String(interaction.linkedHover.hoveredIndex) === String(linkedIndex);
 
   // --- Formatting ---
   const formattedValue = valueIsString
@@ -475,38 +468,16 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
     </>
   );
 
-  // --- Drill-down handler ---
-  const openDrill = useDrillDownAction();
+  // --- Click handler (via shared interaction hook) ---
   const titleStr = typeof title === "string" ? title : "Detail";
 
-  const handleDrillClick = useCallback(() => {
-    if (!drillDown) return;
-
-    // Legacy imperative pattern: { onClick }
-    if (typeof drillDown === "object" && "onClick" in drillDown) {
-      drillDown.onClick();
-      return;
-    }
-
-    // Declarative pattern: true or function
-    const drillContext = { value: rawInputValue, formattedValue, title: titleStr };
-
-    if (drillDown === true) {
-      openDrill(
-        { title: `${titleStr}: ${formattedValue}`, field: titleStr.toLowerCase().replace(/\s+/g, "_") },
-        <div className="p-4 text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">{titleStr}</p>
-          <p className="mt-2 text-3xl font-bold text-[var(--foreground)]">{formattedValue}</p>
-        </div>,
-      );
-    } else if (typeof drillDown === "function") {
-      const content = drillDown(drillContext);
-      openDrill(
-        { title: `${titleStr}: ${formattedValue}`, field: titleStr.toLowerCase().replace(/\s+/g, "_") },
-        content,
-      );
-    }
-  }, [drillDown, rawInputValue, formattedValue, titleStr, openDrill]);
+  const handleComponentClick = useCallback(() => {
+    interaction.handleClick({
+      title: `${titleStr}: ${formattedValue}`,
+      value: rawInputValue ?? 0,
+      formattedValue,
+    });
+  }, [interaction, titleStr, formattedValue, rawInputValue]);
 
   return (
     <CardShell
@@ -516,9 +487,9 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       componentName="KpiCard"
       aiTitle={typeof title === "string" ? title : undefined}
       aiContext={aiContext}
-      onClick={onClick ?? (drillDown ? handleDrillClick : (crossFilterProp && crossFilter && crossFilterField && crossFilterValue !== undefined ? () => crossFilter.select({ field: crossFilterField!, value: crossFilterValue! }) : undefined))}
+      onClick={onClick ?? (interaction.isInteractive ? handleComponentClick : undefined)}
       href={href}
-      clickable={!!(onClick || href || drillDown || (crossFilterProp && crossFilter && crossFilterField && crossFilterValue !== undefined))}
+      clickable={!!(onClick || href || interaction.isInteractive)}
       variant={resolvedVariant}
       dense={resolvedDense}
       bare={bare}
@@ -545,7 +516,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
       style={{
         ...(conditionIsCustom && conditionColor ? { boxShadow: `0 10px 15px -3px ${withOpacity(conditionColor, 0.1)}` } : {}),
         ...(isLinkedHovered ? { boxShadow: "0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent)", outline: "2px solid color-mix(in srgb, var(--accent) 30%, transparent)", outlineOffset: "2px" } : {}),
-        ...(isCrossFilterDimmed ? { opacity: 0.35, transition: "opacity 200ms ease" } : {}),
+        ...(interaction.isCrossFilterDimmed ? { opacity: 0.35, transition: "opacity 200ms ease" } : {}),
       }}
       footnote={resolvedFootnote ?? undefined}
     >
