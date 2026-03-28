@@ -24,7 +24,7 @@ interface BadgeProps {
 
 const variantStyles: Record<BadgeVariant, string> = {
   default:
-    "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+    "bg-[var(--mu-neutral-bg)] text-[var(--mu-neutral-text)]",
   success:
     "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
   warning:
@@ -38,7 +38,7 @@ const variantStyles: Record<BadgeVariant, string> = {
 };
 
 const dotStyles: Record<BadgeVariant, string> = {
-  default: "bg-gray-400",
+  default: "bg-[var(--mu-neutral-dot)]",
   success: "bg-emerald-500",
   warning: "bg-amber-500",
   danger: "bg-red-500",

@@ -269,7 +269,7 @@ function TableSkeleton<T>({ columns, rows = 5 }: { columns: ColumnDef<T>[]; rows
           <tr className="border-b border-[var(--card-border)]">
             {columns.map((_, i) => (
               <th key={i} className={cn("whitespace-nowrap px-5 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]", py)}>
-                <div className="h-3 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
+                <div className="h-3 w-16 animate-pulse rounded bg-[var(--mu-skeleton-bg)]" />
               </th>
             ))}
           </tr>
@@ -279,7 +279,7 @@ function TableSkeleton<T>({ columns, rows = 5 }: { columns: ColumnDef<T>[]; rows
             <tr key={ri} className="border-b border-[var(--card-border)]/50">
               {columns.map((_, ci) => (
                 <td key={ci} className={cn("px-5", py)}>
-                  <div className="h-4 animate-pulse rounded bg-gray-200 dark:bg-gray-800" style={{ width: `${45 + ((ri * 7 + ci * 13) % 40)}%`, animationDelay: `${(ri * columns.length + ci) * 50}ms` }} />
+                  <div className="h-4 animate-pulse rounded bg-[var(--mu-skeleton-bg)]" style={{ width: `${45 + ((ri * 7 + ci * 13) % 40)}%`, animationDelay: `${(ri * columns.length + ci) * 50}ms` }} />
                 </td>
               ))}
             </tr>

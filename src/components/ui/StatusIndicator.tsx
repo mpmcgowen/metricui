@@ -98,7 +98,7 @@ const NAMED_COLORS: Record<string, { bg: string; text: string; dot: string; ring
     ring: "ring-[var(--mu-color-info)]/20",
   },
   gray: {
-    bg: "bg-gray-100 dark:bg-gray-800/40",
+    bg: "bg-[var(--mu-neutral-bg)]",
     text: "text-[var(--muted)]",
     dot: "bg-[var(--muted)]",
     ring: "ring-[var(--muted)]/20",

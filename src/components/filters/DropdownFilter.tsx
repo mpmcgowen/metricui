@@ -255,7 +255,7 @@ export const DropdownFilter = forwardRef<HTMLDivElement, DropdownFilterProps>(
             resolvedDense ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm",
             hasSelection
               ? "border-[var(--accent)]/30 bg-[var(--accent)]/[0.06] text-[var(--accent)]"
-              : "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] hover:border-gray-300 dark:hover:border-gray-600",
+              : "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] hover:border-[var(--mu-hover-border)]",
             classNames?.trigger,
           )}
         >

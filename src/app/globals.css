@@ -57,6 +57,15 @@
 
   /* ── Skeleton shimmer ── */
   --mu-shimmer-highlight: color-mix(in srgb, var(--card-border) 50%, var(--card-bg));
+
+  /* ── Neutral surface (badges, stale indicator, skeleton) ── */
+  --mu-neutral-bg: #f3f4f6;
+  --mu-neutral-text: #6b7280;
+  --mu-neutral-dot: #9ca3af;
+  --mu-skeleton-bg: #e5e7eb;
+
+  /* ── Standard transition ── */
+  --mu-transition-duration: 200ms;
 }
 
 .dark {
@@ -78,6 +87,10 @@
   --mu-color-pink: #f472b6;
   --mu-color-cyan: #22d3ee;
   --mu-shimmer-highlight: color-mix(in srgb, var(--card-border) 50%, var(--foreground) 4%);
+  --mu-neutral-bg: #1f2937;
+  --mu-neutral-text: #9ca3af;
+  --mu-neutral-dot: #6b7280;
+  --mu-skeleton-bg: #1f2937;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

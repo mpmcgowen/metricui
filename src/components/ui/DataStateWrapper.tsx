@@ -100,7 +100,7 @@ function ErrorDisplay({ config, globalDefaults }: { config: ErrorState; globalDe
       <div className="mb-3 text-[var(--mu-color-negative)]">
         <AlertCircle className="h-10 w-10" />
       </div>
-      <p className="text-sm text-red-600 dark:text-red-400">
+      <p className="text-sm text-[var(--mu-color-negative)]">
         {config.message ?? globalDefaults?.message ?? "Something went wrong"}
       </p>
       {config.retry && (
@@ -135,13 +135,13 @@ function StaleIndicator({ config }: { config: StaleState }) {
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
         isWarning
           ? "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-          : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+          : "bg-[var(--mu-neutral-bg)] text-[var(--mu-neutral-text)]"
       )}
     >
       <span
         className={cn(
           "h-1.5 w-1.5 rounded-full",
-          isWarning ? "bg-amber-500 animate-pulse" : "bg-gray-400"
+          isWarning ? "bg-amber-500 animate-pulse" : "bg-[var(--mu-neutral-dot)]"
         )}
       />
       Updated {label}

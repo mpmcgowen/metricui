@@ -185,7 +185,7 @@ export const PeriodSelector = forwardRef<HTMLDivElement, PeriodSelectorProps>(
             aria-label="Select time period"
             className={cn(
               "inline-flex items-center gap-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] font-medium text-[var(--foreground)] transition-colors",
-              "hover:border-gray-300 dark:hover:border-gray-600",
+              "hover:border-[var(--mu-hover-border)]",
               "focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2",
               resolvedDense ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm",
             )}
@@ -299,7 +299,7 @@ export const PeriodSelector = forwardRef<HTMLDivElement, PeriodSelectorProps>(
                 resolvedDense ? "px-2 py-1.5 text-[10px]" : "px-2.5 py-2 text-xs",
                 activeComparison !== "none"
                   ? "border-[var(--accent)]/30 bg-[var(--accent)]/[0.06] font-medium text-[var(--accent)]"
-                  : "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--muted)] hover:border-gray-300 dark:hover:border-gray-600",
+                  : "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--muted)] hover:border-[var(--mu-hover-border)]",
               )}
               title={COMPARISON_LABELS[activeComparison]}
             >
