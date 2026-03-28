@@ -70,6 +70,16 @@ export interface MetricConfig {
   printMode: boolean | { title?: string; subtitle?: string; logo?: string; footer?: string };
   /** Show action hints in chart tooltips ("Click to drill down", etc.). Default: true */
   tooltipHint: boolean;
+  /** Translatable UI strings. Override for i18n. */
+  messages: {
+    empty: string;
+    error: string;
+    loading: string;
+    noResults: string;
+    retry: string;
+    clearAll: string;
+    copySuccess: string;
+  };
 }
 
 /** Fully-resolved defaults — used when no provider is present. */
@@ -90,6 +100,15 @@ const DEFAULT_CONFIG: MetricConfig = {
   exportable: false,
   printMode: false,
   tooltipHint: true,
+  messages: {
+    empty: "No data available",
+    error: "Something went wrong",
+    loading: "Loading",
+    noResults: "Nothing to show — try adjusting your filters",
+    retry: "Retry",
+    clearAll: "Clear all",
+    copySuccess: "Copied!",
+  },
 };
 
 export { DEFAULT_CONFIG as DEFAULT_METRIC_CONFIG };

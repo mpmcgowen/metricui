@@ -269,7 +269,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
   if (exportData && Array.isArray(exportData) && exportData.length === 0) {
     const autoEmpty = config.emptyState?.message
       ? config.emptyState
-      : { message: "Nothing to show — try adjusting your filters" };
+      : { message: config.messages.noResults };
     return (
       <div
         data-variant={bare ? undefined : resolvedVariant}

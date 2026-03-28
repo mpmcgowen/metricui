@@ -80,28 +80,28 @@ export function ChartSkeleton({ height = 300 }: { height?: number }) {
   );
 }
 
-function EmptyDisplay({ config, globalDefaults }: { config: EmptyState; globalDefaults?: { message?: string; icon?: React.ReactNode } }) {
+function EmptyDisplay({ config, globalDefaults, fallbackMessage }: { config: EmptyState; globalDefaults?: { message?: string; icon?: React.ReactNode }; fallbackMessage: string }) {
   return (
     <div role="status" className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-3 text-[var(--muted)] opacity-40">
         {config.icon ?? globalDefaults?.icon ?? <Inbox className="h-10 w-10" />}
       </div>
       <p className="text-sm text-[var(--muted)]">
-        {config.message ?? globalDefaults?.message ?? "No data available"}
+        {config.message ?? globalDefaults?.message ?? fallbackMessage}
       </p>
       {config.action && <div className="mt-3">{config.action}</div>}
     </div>
   );
 }
 
-function ErrorDisplay({ config, globalDefaults }: { config: ErrorState; globalDefaults?: { message?: string } }) {
+function ErrorDisplay({ config, globalDefaults, fallbackMessage, retryLabel }: { config: ErrorState; globalDefaults?: { message?: string }; fallbackMessage: string; retryLabel: string }) {
   return (
     <div role="alert" className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-3 text-[var(--mu-color-negative)]">
         <AlertCircle className="h-10 w-10" />
       </div>
       <p className="text-sm text-[var(--mu-color-negative)]">
-        {config.message ?? globalDefaults?.message ?? "Something went wrong"}
+        {config.message ?? globalDefaults?.message ?? fallbackMessage}
       </p>
       {config.retry && (
         <button
@@ -109,7 +109,7 @@ function ErrorDisplay({ config, globalDefaults }: { config: ErrorState; globalDe
           className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
         >
           <RefreshCw className="h-3 w-3" />
-          Retry
+          {retryLabel}
         </button>
       )}
     </div>
@@ -164,7 +164,7 @@ export function DataStateWrapper({
   if (resolvedError) {
     return (
       <div className={className}>
-        <ErrorDisplay config={resolvedError} globalDefaults={config.errorState} />
+        <ErrorDisplay config={resolvedError} globalDefaults={config.errorState} fallbackMessage={config.messages.error} retryLabel={config.messages.retry} />
       </div>
     );
   }
@@ -177,11 +177,11 @@ export function DataStateWrapper({
         </div>
       )}
       {loading ? (
-        <div role="status" aria-label="Loading">
+        <div role="status" aria-label={config.messages.loading}>
           <KpiSkeleton />
         </div>
       ) : resolvedEmpty ? (
-        <EmptyDisplay config={resolvedEmpty} globalDefaults={config.emptyState} />
+        <EmptyDisplay config={resolvedEmpty} globalDefaults={config.emptyState} fallbackMessage={config.messages.empty} />
       ) : (
         children
       )}
