@@ -20,12 +20,9 @@ import type {
   StaleState,
   NullDisplay,
 } from "@/lib/types";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useDenseValues } from "@/lib/useDenseValues";
 import { useCountUp } from "@/lib/useCountUp";
 import { assertPeer } from "@/lib/peerCheck";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { ChartContainer } from "./ChartContainer";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -280,20 +277,12 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   aiContext,
 }, ref) {
   assertPeer(ResponsivePie, "@nivo/pie", "Gauge");
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const ctx = useComponentConfig({ animate: typeof animate === "boolean" ? animate : undefined, variant, height, dense });
+  const { isDark, localeDefaults, config, containerRef, containerWidth, nivoTheme, resolvedVariant, denseValues, resolvedDense, resolvedHeight } = ctx;
+  const resolvedAnimate = animate ?? config.animate;
 
   // --- Config resolution ---
   const resolvedNullDisplay = nullDisplay ?? config.nullDisplay;
-  const resolvedAnimate = animate ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedDense = dense ?? config.dense;
-  const resolvedHeight = height ?? denseValues.chartHeight;
 
   // --- Interaction ---
   const interaction = useComponentInteraction({

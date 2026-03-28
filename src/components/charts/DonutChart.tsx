@@ -11,11 +11,9 @@ import type {
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useDenseValues } from "@/lib/useDenseValues";
+import { useLocale } from "@/lib/MetricProvider";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig, SliceClickEvent } from "@/lib/chartTypes";
 import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
@@ -303,16 +301,8 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   stale,
 }, ref) {
   assertPeer(ResponsivePie, "@nivo/pie", "DonutChart");
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedDense = dense ?? config.dense;
-  const resolvedHeight = height ?? denseValues.chartHeight;
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
+  const { isDark, localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedDense, resolvedHeight } = ctx;
   const _resolvedChartNullMode = chartNullMode ?? config.chartNullMode; // API consistency; no behavioral change for donut
   void _resolvedChartNullMode;
   const activeOuterRadiusOffset = activeOuterRadiusOffsetProp ?? (resolvedDense ? 2 : 4);
@@ -367,8 +357,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   }, [dataProp, indexProp, categoriesProp, simpleData]);
 
   // --- Shared hooks ---
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const { containerRef, containerWidth, nivoTheme } = ctx;
   const allSliceIds = useMemo(() => data.map((d) => d.id), [data]);
   const { hidden: hiddenSlices, toggle: toggleSlice, legendConfig, allHidden } = useChartLegend(
     data.length,

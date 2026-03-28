@@ -10,12 +10,9 @@ type SankeyNodeDatumResolved = SankeyNodeDatumGeneric<DefaultNode, DefaultLink>;
 type SankeyLinkDatumResolved = SankeyLinkDatumGeneric<DefaultNode, DefaultLink>;
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
@@ -162,16 +159,8 @@ const SankeyInner = forwardRef<HTMLDivElement, SankeyProps>(function Sankey(prop
 
   assertPeer(ResponsiveSankey, "@nivo/sankey", "Sankey");
 
-  const { theme } = useTheme();
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedHeight = height ?? denseValues.chartHeight;
-
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
+  const { theme, localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedHeight, containerRef, containerWidth, nivoTheme } = ctx;
 
   // --- Resolve data ---
   const sankeyData = useMemo<SankeyData>(() => {

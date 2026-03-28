@@ -5,12 +5,9 @@ import { ResponsiveCalendar } from "@nivo/calendar";
 import type { CalendarDatum, CalendarTooltipProps } from "@nivo/calendar";
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
-import { useDenseValues } from "@/lib/useDenseValues";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { assertPeer } from "@/lib/peerCheck";
 import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 
@@ -144,15 +141,8 @@ const CalendarInner = forwardRef<HTMLDivElement, CalendarProps>(function Calenda
 
   assertPeer(ResponsiveCalendar, "@nivo/calendar", "Calendar");
 
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedHeight = height ?? 200;
+  const ctx = useComponentConfig({ animate: animateProp, variant, height: height ?? 200, dense });
+  const { isDark, localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedHeight } = ctx;
   const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
@@ -184,8 +174,7 @@ const CalendarInner = forwardRef<HTMLDivElement, CalendarProps>(function Calenda
   const emptyColor = emptyColorProp ?? (isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)");
 
   // --- Chart theme ---
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const { containerRef, containerWidth, nivoTheme } = ctx;
 
   // --- Margin ---
   const margin = useMemo(

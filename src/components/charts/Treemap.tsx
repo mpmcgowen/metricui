@@ -10,13 +10,10 @@ import type {
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig } from "@/lib/chartTypes";
 import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
@@ -172,18 +169,8 @@ const TreemapInner = forwardRef<HTMLDivElement, TreemapProps>(function Treemap(p
 
   assertPeer(ResponsiveTreeMap, "@nivo/treemap", "Treemap");
 
-  const config = useMetricConfig();
-  const localeDefaults = useLocale();
-  const { theme } = useTheme();
-
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedHeight = height ?? denseValues.chartHeight;
-
-  // --- Container size ---
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
+  const { config, localeDefaults, resolvedAnimate, resolvedVariant, denseValues, resolvedHeight, containerRef, containerWidth, nivoTheme } = ctx;
 
   // --- Transform data ---
   const nivoData = useMemo<DefaultTreeMapDatum>(() => {

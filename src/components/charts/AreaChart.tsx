@@ -11,11 +11,8 @@ import type {
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
-import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import { withOpacity } from "@/lib/utils";
@@ -532,13 +529,8 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   stale,
 }, ref) {
   assertPeer(ResponsiveLine, "@nivo/line", "AreaChart");
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedHeight = height ?? denseValues.chartHeight;
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
+  const { localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedHeight } = ctx;
   const resolvedChartNullMode = chartNullMode ?? config.chartNullMode;
 
   const interaction = useComponentInteraction({
@@ -610,8 +602,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
   }, [seriesStylesProp, categoryColorOverrides]);
 
   // --- Shared hooks ---
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const { containerRef, containerWidth, nivoTheme } = ctx;
   const allSeriesIds = useMemo(() => rawData.map((s) => s.id), [rawData]);
   const { hidden: hiddenSeries, toggle: toggleSeries, legendConfig, allHidden } = useChartLegend(
     rawData.length,

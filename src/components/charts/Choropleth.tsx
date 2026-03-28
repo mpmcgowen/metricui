@@ -4,12 +4,9 @@ import { forwardRef, useCallback, useMemo } from "react";
 import { ResponsiveChoropleth } from "@nivo/geo";
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
 import type { DataRow, DataComponentProps, EmptyState, ErrorState, StaleState, CardVariant } from "@/lib/types";
@@ -144,17 +141,8 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
 
   assertPeer(ResponsiveChoropleth, "@nivo/geo", "Choropleth");
 
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedHeight = height ?? Math.max(denseValues.chartHeight, 400);
-
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense, minHeight: 400 });
+  const { isDark, localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedHeight, containerRef, containerWidth, nivoTheme } = ctx;
 
   // --- Resolve data ---
   const choroplethData = useMemo<ChoroplethDatum[]>(() => {

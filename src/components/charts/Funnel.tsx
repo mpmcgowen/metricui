@@ -6,11 +6,8 @@ import type { FunnelDatum, FunnelPart, FunnelSvgProps } from "@nivo/funnel";
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { SERIES_COLORS } from "@/lib/chartColors";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
@@ -154,16 +151,8 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
     tooltipHint,
     data: dataProp as unknown as DataRow[],
   });
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedDense = dense ?? config.dense;
-  const resolvedHeight = height ?? denseValues.chartHeight;
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
+  const { isDark, localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedDense, resolvedHeight } = ctx;
 
   // --- Resolve simpleData → full datum array ---
   const data: FunnelDatumInput[] = useMemo(() => {
@@ -179,8 +168,7 @@ const FunnelChartInner = forwardRef<HTMLDivElement, FunnelChartProps>(function F
   }, [dataProp, simpleData]);
 
   // --- Shared hooks ---
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const { containerRef, containerWidth, nivoTheme } = ctx;
   const allPartIds = useMemo(() => data.map((d) => d.id), [data]);
   const { hidden: hiddenParts, toggle: togglePart, legendConfig, allHidden } = useChartLegend(
     data.length,

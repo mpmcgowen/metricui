@@ -5,11 +5,9 @@ import { ResponsiveHeatMap } from "@nivo/heatmap";
 import type { HeatMapDatum, ComputedCell, CustomLayerProps as HeatMapCustomLayerProps } from "@nivo/heatmap";
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useDenseValues } from "@/lib/useDenseValues";
+import { useLocale } from "@/lib/MetricProvider";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { CellClickEvent } from "@/lib/chartTypes";
 import { toHeatMapSeries, inferSchema, categoryKeys, type Category } from "@/lib/dataTransform";
@@ -192,19 +190,8 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   stale,
 }, ref) {
   assertPeer(ResponsiveHeatMap, "@nivo/heatmap", "HeatMap");
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
-
-  // --- Config resolution ---
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedDense = dense ?? config.dense;
-  const resolvedHeight = height ?? denseValues.chartHeight;
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
+  const { isDark, localeDefaults, config, containerRef, containerWidth, nivoTheme, resolvedAnimate, resolvedVariant, denseValues, resolvedDense, resolvedHeight } = ctx;
 
   const interaction = useComponentInteraction({
     drillDown,

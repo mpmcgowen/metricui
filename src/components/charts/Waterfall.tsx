@@ -5,11 +5,8 @@ import { ResponsiveBar } from "@nivo/bar";
 import type { BarDatum, BarCustomLayerProps, BarTooltipProps } from "@nivo/bar";
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { BarClickEvent } from "@/lib/chartTypes";
@@ -274,19 +271,8 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
     tooltipHint,
     data: rawData as unknown as DataRow[],
   });
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedDense = denseProp ?? config.dense;
-  const resolvedHeight = height ?? denseValues.chartHeight;
-
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense: denseProp });
+  const { isDark, localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedDense, resolvedHeight, containerRef, containerWidth, nivoTheme } = ctx;
 
   // --- Colors ---
   const positiveColor = positiveColorProp ?? (isDark ? "#34d399" : "#059669");

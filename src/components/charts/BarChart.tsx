@@ -12,13 +12,10 @@ import type {
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import { devWarn, devWarnDeprecated } from "@/lib/devWarnings";
@@ -645,15 +642,8 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
     [categoriesProp]
   );
 
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedHeight = height ?? denseValues.chartHeight;
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
+  const { isDark, localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedHeight } = ctx;
   const resolvedChartNullMode = chartNullMode ?? config.chartNullMode;
   const interaction = useComponentInteraction({
     drillDown,
@@ -681,8 +671,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
     innerPaddingProp ?? (groupMode === "grouped" ? 4 : -1);
 
   // --- Shared hooks ---
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const { containerRef, containerWidth, nivoTheme } = ctx;
   const { hidden: hiddenKeys, toggle: toggleKey, legendConfig, allHidden } = useChartLegend(
     keys.length,
     legendProp,

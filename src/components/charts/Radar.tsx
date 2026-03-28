@@ -5,12 +5,9 @@ import { ResponsiveRadar } from "@nivo/radar";
 import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
@@ -120,13 +117,8 @@ const RadarInner = forwardRef<HTMLDivElement, RadarProps>(function Radar(props, 
     [categoriesProp],
   );
 
-  const { theme } = useTheme();
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedHeight = height ?? denseValues.chartHeight;
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
+  const { localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedHeight } = ctx;
   const interaction = useComponentInteraction({
     drillDown,
     drillDownMode,
@@ -136,8 +128,7 @@ const RadarInner = forwardRef<HTMLDivElement, RadarProps>(function Radar(props, 
     data: rawData as DataRow[],
   });
 
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
+  const { containerRef, containerWidth, nivoTheme } = ctx;
   const { hidden: hiddenKeys, toggle: toggleKey, legendConfig, allHidden } = useChartLegend(
     keys.length,
     legendProp,

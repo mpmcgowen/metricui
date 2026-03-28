@@ -12,11 +12,8 @@ import { ChartContainer } from "./ChartContainer";
 import { ChartTooltip } from "./ChartTooltip";
 import { ChartLegend } from "./ChartLegend";
 import type { ChartLegendItem } from "./ChartLegend";
-import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import type { LegendConfig, BarClickEvent } from "@/lib/chartTypes";
@@ -412,15 +409,8 @@ const BarLineChartInner = forwardRef<HTMLDivElement, BarLineChartProps>(function
   const indexBy = indexByProp ?? resolved?.indexBy ?? "";
   const lineData = lineDataProp ?? resolved?.lineData ?? [];
 
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
-
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
-  const denseValues = useDenseValues();
-  const resolvedHeight = height ?? denseValues.chartHeight;
+  const ctx = useComponentConfig({ animate: animateProp, variant, height, dense });
+  const { localeDefaults, config, containerRef, containerWidth, nivoTheme, resolvedAnimate, resolvedVariant, denseValues, resolvedHeight } = ctx;
   const resolvedChartNullMode = chartNullMode ?? config.chartNullMode;
 
   // Total number of legend items = bar keys + line series

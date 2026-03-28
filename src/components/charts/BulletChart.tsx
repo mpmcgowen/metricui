@@ -6,11 +6,8 @@ import type { Datum as NivoBulletDatum, BulletTooltipProps } from "@nivo/bullet"
 import { ChartContainer } from "./ChartContainer";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import { ChartTooltip } from "./ChartTooltip";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
-import { useDenseValues } from "@/lib/useDenseValues";
 import { formatValue, type FormatOption } from "@/lib/format";
-import { useChartTheme } from "@/lib/useChartTheme";
-import { useContainerSize } from "@/lib/useContainerSize";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import type { CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -157,13 +154,8 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
   stale,
 }, ref) {
   assertPeer(ResponsiveBullet, "@nivo/bullet", "BulletChart");
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-
-  const resolvedAnimate = animateProp ?? config.animate;
-  const resolvedVariant = variant ?? config.variant;
+  const ctx = useComponentConfig({ animate: animateProp, variant, height: heightProp, dense: denseProp });
+  const { isDark, localeDefaults, config, resolvedAnimate, resolvedVariant, denseValues, resolvedDense, containerRef, containerWidth, nivoTheme } = ctx;
 
   const interaction = useComponentInteraction({
     drillDown,
@@ -173,11 +165,6 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
     tooltipHint,
     data: [],
   });
-  const denseValues = useDenseValues();
-  const resolvedDense = denseProp ?? config.dense;
-
-  const { ref: containerRef, width: containerWidth } = useContainerSize();
-  const nivoTheme = useChartTheme(containerWidth);
 
   // --- Resolve and normalize data for readable axis labels ---
   const { data, scaleSuffix } = useMemo(() => {
