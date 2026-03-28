@@ -8,7 +8,7 @@ import { ChartTooltip } from "./ChartTooltip";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
-import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import type { BarClickEvent } from "@/lib/chartTypes";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
@@ -66,7 +66,7 @@ export interface WaterfallProps extends DataComponentProps {
   animate?: boolean;
   /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action.
    *  Pass `true` for an auto-generated detail table, or a function for custom content. */
-  drillDown?: true | ((event: BarClickEvent) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Emit cross-filter selection on bar click. Defaults field to "label". */

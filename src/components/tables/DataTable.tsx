@@ -13,7 +13,7 @@ import type { StatusRule, StatusSize } from "@/components/ui/StatusIndicator";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useScrollIndicators } from "@/lib/useScrollIndicators";
 import { devWarn } from "@/lib/devWarnings";
-import type { CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig, DataRow } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState, NullDisplay, ExportableConfig, DataRow } from "@/lib/types";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, ExternalLink } from "lucide-react";
@@ -108,7 +108,7 @@ export interface DataTableProps<T extends DataRow = DataRow> extends DataCompone
   dense?: boolean;
   onRowClick?: (row: T, index: number) => void;
   /** Drill-down. `true` for auto-generated detail view, or a function for custom content. Clicking a row opens the drill-down panel. Takes priority over crossFilter. */
-  drillDown?: true | ((row: DataRow, index: number) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   nullDisplay?: NullDisplay;
@@ -340,16 +340,8 @@ function DataTableInner<T extends DataRow = DataRow>(
   const resolvedColumns = useMemo(() => columnsProp ?? inferColumns(data), [columnsProp, data]);
 
   // --- Interaction (shared with all components) ---
-  // Wrap DataTable's (row, index) drillDown function to match the hook's (event) interface
-  const wrappedDrillDown = useMemo(() => {
-    if (!drillDown || drillDown === true) return drillDown;
-    // drillDown is (row, index) => ReactNode — wrap it
-    return (event: { title: string; value: string | number; row?: DataRow; index?: number }) =>
-      drillDown(event.row ?? ({} as DataRow), event.index ?? 0);
-  }, [drillDown]);
-
   const interaction = useComponentInteraction({
-    drillDown: wrappedDrillDown,
+    drillDown,
     drillDownMode,
     crossFilter: crossFilterProp,
     defaultField: (resolvedColumns[0]?.key as string) ?? "id",

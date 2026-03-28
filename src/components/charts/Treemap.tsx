@@ -16,7 +16,7 @@ import { formatValue, type FormatOption } from "@/lib/format";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig } from "@/lib/chartTypes";
-import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { assertPeer } from "@/lib/peerCheck";
 
 // Re-export shared types
@@ -79,7 +79,7 @@ export interface TreemapProps extends DataComponentProps {
   /** Enable cross-filtering. `true` uses index as the field, or pass `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Drill-down content renderer. `true` for auto-generated detail table, or a function for custom content. */
-  drillDown?: true | ((event: TreemapClickEvent) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. Default: respect global config. */

@@ -20,7 +20,7 @@ import { useChartLegend } from "@/lib/useChartLegend";
 import { calculateResponsiveTicks } from "@/lib/calculateResponsiveTicks";
 import { devWarn } from "@/lib/devWarnings";
 import type { LegendConfig, ReferenceLine, ThresholdBand, BarClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { inferSchema, categoryKeys, categoryColors, type Category } from "@/lib/dataTransform";
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -116,7 +116,7 @@ export interface BarChartProps extends DataComponentProps {
   onBarClick?: (bar: BarClickEvent) => void;
   /** Drill-down content renderer. When set, clicking a bar opens the drill-down panel. Takes priority over crossFilter for the click action.
    *  Pass `true` for an auto-generated detail table, or a function for custom content. */
-  drillDown?: true | ((event: BarClickEvent) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filtering. `true` uses indexBy as the field, or pass `{ field }` to override. */

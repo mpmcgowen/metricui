@@ -10,6 +10,7 @@ import {
   type FormatOption,
 } from "@/lib/format";
 import type {
+  DrillDownEvent,
   ComparisonConfig,
   AnimationConfig,
   CardVariant,
@@ -59,7 +60,7 @@ export interface GaugeProps extends DataComponentProps {
   /** Action slot rendered in the card header. */
   action?: React.ReactNode;
   /** Drill-down. `true` = auto table, function = custom content,  */
-  drillDown?: true | ((event: { value: number | null; title: string }) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down panel mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filtering. `true` uses title as field, or pass `{ field }`. */

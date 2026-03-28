@@ -14,7 +14,7 @@ import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
-import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -89,7 +89,7 @@ export interface FunnelChartProps extends DataComponentProps {
   }) => void;
   /** Drill-down content renderer. When set, clicking a part opens the drill-down panel. Takes priority over crossFilter for the click action.
    *  Pass `true` for an auto-generated detail table, or a function for custom content. */
-  drillDown?: true | ((event: { id: string; value: number; label: string }) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable/disable chart animation. Default: true */

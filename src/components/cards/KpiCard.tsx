@@ -13,6 +13,7 @@ import {
   type GoalConfig,
 } from "@/lib/format";
 import type {
+  DrillDownEvent,
   ComparisonConfig,
   TooltipConfig,
   ExportableConfig,
@@ -85,7 +86,7 @@ export interface KpiCardProps extends DataComponentProps {
   /** Drill-down on card click.
    *  - `true`: auto-generates detail panel
    *  - `(context) => ReactNode`: custom drill content */
-  drillDown?: true | ((context: { value: number | string | null | undefined; formattedValue: string; title: string }) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   copyable?: boolean;
   animate?: boolean | AnimationConfig;
   /** Attention ring. `true` uses accent color, or pass a CSS color. */

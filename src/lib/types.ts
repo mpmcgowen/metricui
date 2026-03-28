@@ -205,6 +205,28 @@ export type ExportableConfig = boolean | { data: DataRow[] };
 // Click / drill-down
 // ---------------------------------------------------------------------------
 
+/**
+ * Unified drill-down event — passed to drillDown callbacks on every component.
+ *
+ * Base fields are always present. Components add their own specific extras
+ * (e.g., charts add `key`, `indexValue`; DataTable adds `row`, `index`).
+ */
+export interface DrillDownEvent {
+  /** Display title for the drill panel header */
+  title: string;
+  /** Primary value that was clicked */
+  value: string | number;
+  /** Formatted display value */
+  formattedValue?: string;
+  /** The full data row (DataTable, KpiCard, or the clicked chart datum) */
+  row?: DataRow;
+  /** Row index (DataTable) */
+  index?: number;
+  /** Component-specific extras (chart datum fields, series IDs, etc.) */
+  [key: string]: unknown;
+}
+
+/** @deprecated Removed — use `drillDown: true | ((event: DrillDownEvent) => ReactNode)` */
 export interface DrillDownConfig {
   label?: string;
   onClick: () => void;

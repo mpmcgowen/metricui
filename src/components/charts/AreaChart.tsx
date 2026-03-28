@@ -20,7 +20,7 @@ import { devWarn } from "@/lib/devWarnings";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
 import type { LegendConfig, ReferenceLine, ThresholdBand, PointClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toLineSeries, inferSchema, categoryKeys, categoryColors, rightAxisCategories, type Category } from "@/lib/dataTransform";
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -160,7 +160,7 @@ export interface AreaChartProps extends DataComponentProps {
   onPointClick?: (point: PointClickEvent) => void;
   /** Drill-down content renderer. When set, clicking a point opens the drill-down panel. Takes priority over crossFilter for the click action.
    *  Pass `true` for an auto-generated detail table, or a function for custom content. */
-  drillDown?: true | ((event: PointClickEvent) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "x" as the field, or `{ field }` to override. */

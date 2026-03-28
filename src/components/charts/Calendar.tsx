@@ -9,7 +9,7 @@ import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { assertPeer } from "@/lib/peerCheck";
-import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Click event payload
@@ -55,7 +55,7 @@ export interface CalendarProps extends DataComponentProps {
   /** Click handler for a day cell. */
   onDayClick?: (event: CalendarClickEvent) => void;
   /** Drill-down. `true` auto-generates a filtered table; function for custom content. */
-  drillDown?: true | ((event: CalendarClickEvent) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over" */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filtering. `true` uses dateField as the field, or pass `{ field }` to override. */

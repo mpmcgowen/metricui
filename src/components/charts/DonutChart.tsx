@@ -16,7 +16,7 @@ import { formatValue, type FormatOption } from "@/lib/format";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig, SliceClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, ChartNullMode, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { toDonutData, type Category } from "@/lib/dataTransform";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 
@@ -109,7 +109,7 @@ export interface DonutChartProps extends DataComponentProps {
   onSliceClick?: (slice: SliceClickEvent) => void;
   /** Drill-down content renderer. When set, clicking a slice opens the drill-down panel. Takes priority over crossFilter for the click action.
    *  Pass `true` for an auto-generated detail table, or a function for custom content. */
-  drillDown?: true | ((event: SliceClickEvent) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filter selection. Pass `true` to use "id" as the field, or `{ field }` to override. */

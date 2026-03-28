@@ -694,11 +694,11 @@ function DashboardContent() {
             height={220}
             aiContext="Tue-Thu concentration is normal for corporate engineering teams. Spikes correlate with release cycles."
             drillDown={(event) => {
-              const dayName = event.seriesId;
-              const weekLabel = event.x;
+              const dayName = String(event.seriesId ?? "");
+              const weekLabel = String(event.x ?? "");
               const weekIdx = weekLabels.indexOf(weekLabel);
               const weekData = weekIdx >= 0 ? recentWeeks[weekIdx] : null;
-              const dayCommits = event.value ?? 0;
+              const dayCommits = Number(event.value ?? 0);
               return (
                 <MetricGrid>
                   <KpiCard title="Commits" value={dayCommits} format="number" />
@@ -781,12 +781,12 @@ function DashboardContent() {
             innerRadius={0.65}
             aiContext="JavaScript dominance is expected. Growing TypeScript share reflects the ecosystem shift."
             drillDown={(event) => {
-              const lang = event.id;
+              const lang = String(event.id ?? event.value);
               const bytes = languages[lang as keyof typeof languages] ?? 0;
               const totalBytes = Object.values(languages).reduce((a, b) => a + b, 0);
               return (
                 <MetricGrid>
-                  <KpiCard title={lang} value={event.percentage} format="percent" />
+                  <KpiCard title={lang} value={Number(event.percentage ?? 0)} format="percent" />
                   <KpiCard title="Bytes" value={bytes} format="compact" />
                   <KpiCard title="Share of Codebase" value={totalBytes > 0 ? Math.round((bytes / totalBytes) * 1000) / 10 : 0} format="percent" />
                   <StatGroup

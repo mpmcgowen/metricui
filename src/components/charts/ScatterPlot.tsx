@@ -19,7 +19,7 @@ import { formatValue, type FormatOption } from "@/lib/format";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import type { LegendConfig, ReferenceLine, ScatterNodeClickEvent } from "@/lib/chartTypes";
-import type { CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { categoryKeys, categoryColors, type Category } from "@/lib/dataTransform";
 import { assertPeer } from "@/lib/peerCheck";
 
@@ -67,7 +67,7 @@ export interface ScatterPlotProps extends DataComponentProps {
   /** Enable cross-filtering. `true` uses serieId as the field, or pass `{ field }` to override. */
   crossFilter?: boolean | { field?: string };
   /** Drill-down content renderer. `true` for auto table, or a function for custom content. */
-  drillDown?: true | ((event: ScatterNodeClickEvent) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down presentation mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Show action hint in tooltip. `true` = auto, custom string = override, `false` = off. */

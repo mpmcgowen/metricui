@@ -11,7 +11,7 @@ import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
-import type { DataRow, DataComponentProps, EmptyState, ErrorState, StaleState, CardVariant } from "@/lib/types";
+import type { DrillDownEvent, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState, CardVariant } from "@/lib/types";
 import { inferSchema, categoryKeys, categoryColors, type Category } from "@/lib/dataTransform";
 
 export type { LegendConfig };
@@ -53,7 +53,7 @@ export interface RadarProps extends DataComponentProps {
   /** Enable cross-filtering. `true` uses index as the field, or pass `{ field }`. */
   crossFilter?: boolean | { field?: string };
   /** Drill-down. `true` = auto table, function = custom content. */
-  drillDown?: true | ((event: { id: string; index: string }) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Tooltip action hint. `true` = auto, string = custom, `false` = off. */

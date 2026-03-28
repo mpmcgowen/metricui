@@ -789,7 +789,7 @@ function DashboardContent() {
               centerLabel="Total"
               drillDownMode="modal"
               drillDown={(event) => {
-                const lang = event.id;
+                const lang = String(event.id ?? event.value);
                 const langCountries = filteredCountries.filter((c) => c.languages.includes(lang));
                 return (
                   <MetricGrid>

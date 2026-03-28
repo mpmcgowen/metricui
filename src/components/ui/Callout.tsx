@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { CARD_CLASSES } from "@/lib/styles";
-import type { DataComponentProps } from "@/lib/types";
+import type { DrillDownEvent, DataComponentProps } from "@/lib/types";
 import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import {
   Info,
@@ -92,7 +92,7 @@ export interface CalloutProps extends DataComponentProps {
 
   // --- Drill-down ---
   /** Drill-down. `true` = auto, function = custom content. */
-  drillDown?: true | ((event: { title: string; value: string | number }) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down panel mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
 

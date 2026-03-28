@@ -139,7 +139,7 @@ export type {
   ChartNullMode, CardVariant, NullDisplay,
   ComparisonConfig, TrendIconConfig,
   EmptyState, ErrorState, StaleState,
-  DrillDownConfig, ExportableConfig, AnimationConfig,
+  DrillDownEvent, DrillDownConfig, ExportableConfig, AnimationConfig,
   BaseComponentProps, DataComponentProps, DataRow,
   SparklineType, TitlePosition, TitleAlign, TooltipConfig,
 } from "@/lib/types";

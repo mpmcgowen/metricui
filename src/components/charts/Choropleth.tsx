@@ -9,7 +9,7 @@ import { formatValue, type FormatOption } from "@/lib/format";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
-import type { DataRow, DataComponentProps, EmptyState, ErrorState, StaleState, CardVariant } from "@/lib/types";
+import type { DrillDownEvent, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState, CardVariant } from "@/lib/types";
 
 export type { LegendConfig };
 
@@ -73,7 +73,7 @@ export interface ChoroplethProps extends DataComponentProps {
   /** Enable cross-filtering. `true` uses id as field, or pass `{ field }`. */
   crossFilter?: boolean | { field?: string };
   /** Drill-down. `true` = auto table, function = custom content. */
-  drillDown?: true | ((event: { id: string; value: number; label: string }) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Label shown in the tooltip for the value (e.g. "Population", "Revenue"). Defaults to valueField name. */

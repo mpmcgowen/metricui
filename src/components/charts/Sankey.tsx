@@ -16,7 +16,7 @@ import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useChartLegend } from "@/lib/useChartLegend";
 import { assertPeer } from "@/lib/peerCheck";
 import type { LegendConfig } from "@/lib/chartTypes";
-import type { DataRow, DataComponentProps, EmptyState, ErrorState, StaleState, CardVariant } from "@/lib/types";
+import type { DrillDownEvent, DataRow, DataComponentProps, EmptyState, ErrorState, StaleState, CardVariant } from "@/lib/types";
 
 export type { LegendConfig };
 
@@ -73,7 +73,7 @@ export interface SankeyProps extends DataComponentProps {
   /** Enable cross-filtering. `true` uses source as the field, or pass `{ field }`. */
   crossFilter?: boolean | { field?: string };
   /** Drill-down. `true` = auto table, function = custom content. */
-  drillDown?: true | ((event: { id: string; source?: string; target?: string; value?: number }) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Tooltip action hint. */

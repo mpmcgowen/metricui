@@ -8,7 +8,7 @@ import { useComponentInteraction } from "@/lib/useComponentInteraction";
 import { ChartTooltip } from "./ChartTooltip";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { useComponentConfig } from "@/lib/useComponentConfig";
-import type { CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { assertPeer } from "@/lib/peerCheck";
 
 // ---------------------------------------------------------------------------
@@ -83,7 +83,7 @@ export interface BulletChartProps extends DataComponentProps {
   /** Enable/disable chart animation. Default: true */
   animate?: boolean;
   /** Drill-down. `true` = auto table, function = custom content. */
-  drillDown?: true | ((event: { title: string; value: string | number }) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
   /** Drill-down panel mode. Default: "slide-over". */
   drillDownMode?: "slide-over" | "modal";
   /** Enable cross-filtering. */

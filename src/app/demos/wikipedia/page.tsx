@@ -674,7 +674,7 @@ function WikipediaDashboardInner({
               centerLabel="total"
               loading={editTypeData.length === 0}
               drillDown={(event) => {
-                const editType = event.id.toLowerCase();
+                const editType = String(event.id ?? event.value).toLowerCase();
                 const typeEdits = filteredEdits.filter((e) => e.type.toLowerCase() === editType);
                 const recentTypeEdits = typeEdits.slice(0, 30).map((e) => ({
                   title: e.title,
@@ -686,7 +686,7 @@ function WikipediaDashboardInner({
                 return (
                   <MetricGrid>
                     <KpiCard title={`${event.id} Edits`} value={typeEdits.length} format="number" />
-                    <KpiCard title="% of Total" value={event.percentage} format="percent" />
+                    <KpiCard title="% of Total" value={Number(event.percentage ?? 0)} format="percent" />
                     <KpiCard title="Unique Editors" value={new Set(typeEdits.map((e) => e.user)).size} format="number" />
                     <DataTable
                       data={recentTypeEdits}

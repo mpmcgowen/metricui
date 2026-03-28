@@ -3,8 +3,7 @@
 import { forwardRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { FormatOption, ComparisonMode } from "@/lib/format";
-import type { CardVariant, DataComponentProps } from "@/lib/types";
-import type { EmptyState, ErrorState, StaleState } from "@/lib/types";
+import type { DrillDownEvent, CardVariant, DataComponentProps, EmptyState, ErrorState, StaleState } from "@/lib/types";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { DataStateWrapper } from "@/components/ui/DataStateWrapper";
 import { KpiCard } from "./KpiCard";
@@ -31,7 +30,7 @@ export interface StatItem {
   /** Optional icon (any ReactNode) */
   icon?: React.ReactNode;
   /** Drill-down config. When set, the stat item becomes clickable and opens the drill-down panel. */
-  drillDown?: true | ((context: { value: number | string | null | undefined; formattedValue: string; title: string }) => React.ReactNode);
+  drillDown?: true | ((event: DrillDownEvent) => React.ReactNode);
 }
 
 export interface StatGroupProps extends DataComponentProps {
