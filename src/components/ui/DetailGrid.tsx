@@ -20,7 +20,7 @@ interface DetailGridItemProps {
 function DetailGridItem({ label, children, className }: DetailGridItemProps) {
   return (
     <div className={cn("min-w-0", className)}>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+      <p className="text-[length:var(--mu-text-2xs)] font-semibold uppercase tracking-wider text-[var(--muted)]">
         {label}
       </p>
       <div className="mt-1 text-sm text-[var(--foreground)]">

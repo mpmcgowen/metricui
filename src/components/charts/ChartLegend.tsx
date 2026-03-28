@@ -91,7 +91,7 @@ export function ChartLegend({
           return (
             <span
               key={item.id}
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium"
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[length:var(--mu-text-xs)] font-medium"
             >
               {indicator}
               {label}
@@ -108,7 +108,7 @@ export function ChartLegend({
             onMouseLeave={() => onHover?.(null)}
             aria-pressed={!isHidden}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium transition-all",
+              "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[length:var(--mu-text-xs)] font-medium transition-all",
               "hover:bg-[var(--card-glow)]",
               isHidden && "opacity-50",
             )}
@@ -123,7 +123,7 @@ export function ChartLegend({
 
       {/* All-hidden hint */}
       {allHidden && toggleable && (
-        <span className="rounded-md px-2 py-1 text-[10px] font-medium text-[var(--mu-color-warning)]">
+        <span className="rounded-md px-2 py-1 text-[length:var(--mu-text-2xs)] font-medium text-[var(--mu-color-warning)]">
           All hidden — click to restore
         </span>
       )}

@@ -426,7 +426,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
         )}
       </div>
       {resolvedSubtitle && (
-        <p className={cn("mu-subtitle mt-0.5 text-[11px] text-[var(--muted)] opacity-70", textAlignClass)}>
+        <p className={cn("mu-subtitle mt-0.5 text-[length:var(--mu-text-xs)] text-[var(--muted)] opacity-70", textAlignClass)}>
           {resolvedSubtitle}
         </p>
       )}
@@ -555,7 +555,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
                         {comp.label}
                       </span>
                       {label && (
-                        <span className="text-[11px] text-[var(--muted)]">
+                        <span className="text-[length:var(--mu-text-xs)] text-[var(--muted)]">
                           {label}
                         </span>
                       )}
@@ -568,7 +568,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
 
           {/* Sparkline — right side (only in left-align mode) */}
           {titleAlign === "left" && hasSparkline && (
-            <div className="mu-sparkline-slot h-10 w-20 flex-shrink-0 opacity-40 transition-opacity duration-300 group-hover:opacity-80">
+            <div className="mu-sparkline-slot h-10 w-20 flex-shrink-0 opacity-40 transition-opacity duration-[var(--mu-transition-duration)] group-hover:opacity-80">
               {(
                 <div className="relative h-full w-full">
                   {sparklinePreviousPeriod && sparklinePreviousPeriod.length > 0 && (
@@ -601,7 +601,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
         {/* ── Sparkline below value (center/right align) ── */}
         {hasSparkline && titleAlign !== "left" && (
           <div className={cn(
-            "mu-sparkline-slot mt-3 h-8 w-24 opacity-40 transition-opacity duration-300 group-hover:opacity-80",
+            "mu-sparkline-slot mt-3 h-8 w-24 opacity-40 transition-opacity duration-[var(--mu-transition-duration)] group-hover:opacity-80",
             titleAlign === "center" ? "mx-auto" : "ml-auto"
           )}>
             <div className="relative h-full w-full">
@@ -633,7 +633,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
         {/* ── Goal progress ── */}
         {goalProgress && goal && (goal.showProgress !== false) && (
           <div className="mt-4">
-            <div className="flex items-center justify-between text-[11px]">
+            <div className="flex items-center justify-between text-[length:var(--mu-text-xs)]">
               <span className="text-[var(--muted)]">
                 {goal.label ?? "Target"}
                 {goal.showTarget && (

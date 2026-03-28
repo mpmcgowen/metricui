@@ -442,7 +442,7 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
                       {comp.label}
                     </span>
                     {label && (
-                      <span className="text-[11px] text-[var(--muted)]">{label}</span>
+                      <span className="text-[length:var(--mu-text-xs)] text-[var(--muted)]">{label}</span>
                     )}
                   </div>
                 );

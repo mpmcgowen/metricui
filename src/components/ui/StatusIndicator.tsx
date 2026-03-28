@@ -406,20 +406,20 @@ export const StatusIndicator = forwardRef<HTMLDivElement, StatusIndicatorProps>(
               )}
               {trendDir && trendDir !== "flat" && (
                 <span className={cn(
-                  "text-[10px] font-medium",
+                  "text-[length:var(--mu-text-2xs)] font-medium",
                   trendDir === "up" ? "text-[var(--mu-color-positive)]" : "text-[var(--mu-color-negative)]",
                 )}>
                   {trendDir === "up" ? "↑" : "↓"}
                 </span>
               )}
               {since && (
-                <span className="text-[10px] text-[var(--muted)] opacity-60">
+                <span className="text-[length:var(--mu-text-2xs)] text-[var(--muted)] opacity-60">
                   {timeInState(since)}
                 </span>
               )}
             </div>
             {subtitle && (
-              <p className="mt-0.5 text-[11px] text-[var(--muted)] opacity-70">{subtitle}</p>
+              <p className="mt-0.5 text-[length:var(--mu-text-xs)] text-[var(--muted)] opacity-70">{subtitle}</p>
             )}
           </div>
         </div>
@@ -486,7 +486,7 @@ export const StatusIndicator = forwardRef<HTMLDivElement, StatusIndicatorProps>(
                 </span>
               )}
               {since && (
-                <span className="text-[10px] text-[var(--muted)] opacity-60">
+                <span className="text-[length:var(--mu-text-2xs)] text-[var(--muted)] opacity-60">
                   for {timeInState(since)}
                 </span>
               )}

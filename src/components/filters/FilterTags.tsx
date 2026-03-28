@@ -252,7 +252,7 @@ export const FilterTags = forwardRef<HTMLDivElement, FilterTagsProps>(
                 isSelection
                   ? "border border-[var(--accent)] bg-[var(--accent)]/[0.15] text-[var(--accent)]"
                   : "border border-[var(--accent)]/20 bg-[var(--accent)]/[0.06] text-[var(--accent)]",
-                resolvedDense ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs",
+                resolvedDense ? "px-2 py-0.5 text-[length:var(--mu-text-2xs)]" : "px-2.5 py-1 text-xs",
                 classNames?.chip,
               )}
             >
@@ -284,7 +284,7 @@ export const FilterTags = forwardRef<HTMLDivElement, FilterTagsProps>(
             onClick={() => setExpanded(true)}
             className={cn(
               "rounded-full border border-[var(--card-border)] bg-[var(--card-bg)] font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]",
-              resolvedDense ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs",
+              resolvedDense ? "px-2 py-0.5 text-[length:var(--mu-text-2xs)]" : "px-2.5 py-1 text-xs",
             )}
           >
             +{hiddenCount} more
@@ -297,7 +297,7 @@ export const FilterTags = forwardRef<HTMLDivElement, FilterTagsProps>(
             onClick={handleClearAll}
             className={cn(
               "rounded-full font-medium text-[var(--muted)] transition-colors hover:text-[var(--foreground)]",
-              resolvedDense ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-1 text-xs",
+              resolvedDense ? "px-1.5 py-0.5 text-[length:var(--mu-text-2xs)]" : "px-2 py-1 text-xs",
               classNames?.clearAll,
             )}
           >

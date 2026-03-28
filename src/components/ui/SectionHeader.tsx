@@ -82,7 +82,7 @@ export const SectionHeader = forwardRef<HTMLDivElement, SectionHeaderProps>(
             <p
               className={cn(
                 "font-semibold uppercase tracking-widest text-[var(--accent)]",
-                resolvedDense ? "text-[9px]" : "text-[10px]",
+                resolvedDense ? "text-[9px]" : "text-[length:var(--mu-text-2xs)]",
                 classNames?.title,
               )}
             >

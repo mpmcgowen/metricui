@@ -110,7 +110,7 @@ const statusConfig: Record<DashboardStatus, { label: string; dot: string; text: 
 function StatusBadge({ status, className }: { status: DashboardStatus; className?: string }) {
   const cfg = statusConfig[status];
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-[11px] font-medium", cfg.text, className)}>
+    <span className={cn("inline-flex items-center gap-1.5 text-[length:var(--mu-text-xs)] font-medium", cfg.text, className)}>
       <span className="relative flex h-2 w-2">
         {cfg.pulse && (
           <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-60", cfg.dot)} />
@@ -192,7 +192,7 @@ const DashboardHeaderInner = forwardRef<HTMLDivElement, DashboardHeaderProps>(fu
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav
           aria-label="Breadcrumbs"
-          className={cn("mb-3 flex items-center gap-1 text-[11px] text-[var(--muted)]", classNames?.breadcrumbs)}
+          className={cn("mb-3 flex items-center gap-1 text-[length:var(--mu-text-xs)] text-[var(--muted)]", classNames?.breadcrumbs)}
         >
           {breadcrumbs.map((crumb, i) => {
             const isLast = i === breadcrumbs.length - 1;
@@ -226,7 +226,7 @@ const DashboardHeaderInner = forwardRef<HTMLDivElement, DashboardHeaderProps>(fu
       {back && !breadcrumbs && (
         <BackTag
           {...(backProps as any)}
-          className="mb-3 inline-flex items-center gap-1 text-[11px] text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+          className="mb-3 inline-flex items-center gap-1 text-[length:var(--mu-text-xs)] text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
         >
           <ArrowLeft className="h-3 w-3" />
           <span>{back.label ?? "Back"}</span>
@@ -269,7 +269,7 @@ const DashboardHeaderInner = forwardRef<HTMLDivElement, DashboardHeaderProps>(fu
               {timeAgo && (
                 <span
                   className={cn(
-                    "text-[11px] font-[family-name:var(--font-mono)] transition-colors",
+                    "text-[length:var(--mu-text-xs)] font-[family-name:var(--font-mono)] transition-colors",
                     isStale ? "text-[var(--mu-color-warning)]" : "text-[var(--muted)]",
                   )}
                 >

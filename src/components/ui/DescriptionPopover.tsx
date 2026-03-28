@@ -50,7 +50,7 @@ export function DescriptionPopover({ content, className, maxWidth }: Description
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       className={cn(
-        "fixed z-[9999] -translate-x-1/2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-3 text-xs leading-relaxed text-[var(--foreground)] shadow-xl",
+        "fixed z-[var(--mu-z-modal)] -translate-x-1/2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-3 text-xs leading-relaxed text-[var(--foreground)] shadow-xl",
         !maxWidth && "w-56",
       )}
       style={{

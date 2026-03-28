@@ -999,7 +999,7 @@ const AreaChartInner = forwardRef<HTMLDivElement, AreaChartProps>(function AreaC
           />
         )}
         {comparisonData && comparisonData.length > 0 && (
-          <div className="mt-1 flex items-center justify-center gap-1.5 text-[10px] text-[var(--muted)] opacity-60">
+          <div className="mt-1 flex items-center justify-center gap-1.5 text-[length:var(--mu-text-2xs)] text-[var(--muted)] opacity-60">
             <svg width="16" height="2" className="flex-shrink-0">
               <line x1="0" y1="1" x2="16" y2="1" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 2" />
             </svg>

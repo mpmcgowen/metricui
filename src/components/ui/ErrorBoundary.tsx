@@ -174,14 +174,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
           <div className="flex items-center gap-1.5">
             <button
               onClick={this.handleCopy}
-              className="inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium text-red-600 transition-colors hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30"
+              className="inline-flex items-center gap-1 rounded px-2 py-1 text-[length:var(--mu-text-2xs)] font-medium text-red-600 transition-colors hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30"
             >
               {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
               {copied ? "Copied" : "Copy Error"}
             </button>
             <button
               onClick={this.handleRetry}
-              className="inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium text-red-600 transition-colors hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30"
+              className="inline-flex items-center gap-1 rounded px-2 py-1 text-[length:var(--mu-text-2xs)] font-medium text-red-600 transition-colors hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30"
             >
               <RefreshCw className="h-3 w-3" />
               Retry
@@ -197,7 +197,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         {/* Hint */}
         {hint && (
           <div className="rounded-md border border-blue-200 bg-blue-50/60 px-3 py-2 dark:border-blue-900/40 dark:bg-blue-950/20">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            <p className="text-[length:var(--mu-text-2xs)] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
               Hint
             </p>
             <p className="mt-0.5 text-xs leading-relaxed text-blue-800 dark:text-blue-300">
@@ -212,11 +212,11 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             open={stackOpen}
             onToggle={(e) => this.setState({ stackOpen: (e.target as HTMLDetailsElement).open })}
           >
-            <summary className="flex cursor-pointer items-center gap-1 text-[10px] font-medium text-red-500 dark:text-red-400">
+            <summary className="flex cursor-pointer items-center gap-1 text-[length:var(--mu-text-2xs)] font-medium text-red-500 dark:text-red-400">
               <ChevronDown className={`h-3 w-3 transition-transform ${stackOpen ? "rotate-0" : "-rotate-90"}`} />
               Stack Trace
             </summary>
-            <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words font-[family-name:var(--font-mono)] text-[10px] leading-relaxed text-red-600/70 dark:text-red-400/60">
+            <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words font-[family-name:var(--font-mono)] text-[length:var(--mu-text-2xs)] leading-relaxed text-red-600/70 dark:text-red-400/60">
               {error.stack}
             </pre>
           </details>

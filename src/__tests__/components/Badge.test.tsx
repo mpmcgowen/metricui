@@ -65,7 +65,7 @@ describe("Badge", () => {
   it("applies size classes — sm", () => {
     const { container } = render(<Badge size="sm">Small</Badge>);
     const badge = container.firstElementChild!;
-    expect(badge.className).toContain("text-[10px]");
+    expect(badge.className).toContain("text-[length:var(--mu-text-2xs)]");
   });
 
   it("applies size classes — md (default)", () => {

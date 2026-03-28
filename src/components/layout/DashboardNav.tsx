@@ -54,8 +54,8 @@ export interface DashboardNavProps extends BaseComponentProps {
 // ---------------------------------------------------------------------------
 
 const SIZE_STYLES = {
-  sm: { text: "text-[11px]", padding: "px-3 py-2", gap: "gap-1.5", badge: "text-[9px] px-1.5 py-0", iconSize: "h-3 w-3" },
-  md: { text: "text-xs", padding: "px-4 py-2.5", gap: "gap-2", badge: "text-[10px] px-1.5 py-0.5", iconSize: "h-3.5 w-3.5" },
+  sm: { text: "text-[length:var(--mu-text-xs)]", padding: "px-3 py-2", gap: "gap-1.5", badge: "text-[9px] px-1.5 py-0", iconSize: "h-3 w-3" },
+  md: { text: "text-xs", padding: "px-4 py-2.5", gap: "gap-2", badge: "text-[length:var(--mu-text-2xs)] px-1.5 py-0.5", iconSize: "h-3.5 w-3.5" },
   lg: { text: "text-sm", padding: "px-5 py-3", gap: "gap-2.5", badge: "text-xs px-2 py-0.5", iconSize: "h-4 w-4" },
 };
 
@@ -271,10 +271,10 @@ export const DashboardNav = forwardRef<HTMLDivElement, DashboardNavProps>(
         data-dashboard-tabs={tabs.map((t) => t.value).join(",")}
         className={cn(
           // When standalone (sticky), render as a full card
-          sticky && "noise-texture border transition-shadow duration-300",
+          sticky && "noise-texture border transition-shadow duration-[var(--mu-transition-duration)]",
           sticky && CARD_CLASSES,
           sticky && HOVER_CLASSES,
-          sticky && "sticky top-3 z-[31] backdrop-blur-xl",
+          sticky && "sticky top-3 z-[var(--mu-z-sticky)] backdrop-blur-xl",
           className,
         )}
         style={sticky ? { background: "color-mix(in srgb, var(--card-bg) 80%, transparent)" } : undefined}

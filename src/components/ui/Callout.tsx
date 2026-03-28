@@ -308,7 +308,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
         role="alert"
         onClick={interaction.isInteractive ? () => interaction.handleClick({ title: titleProp ?? "Callout", value: value ?? 0 }) : undefined}
         className={cn(
-          "relative border transition-all duration-200",
+          "relative border transition-all duration-[var(--mu-transition-duration)]",
           CARD_CLASSES,
           styles.bg,
           styles.border,

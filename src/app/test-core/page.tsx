@@ -156,6 +156,7 @@ function SimpleBarChart() {
             <Axis
               scale={xScale}
               position="bottom"
+              offset={dims.innerHeight}
               tickLabelProps={() => ({
                 fontSize: 11,
                 fill: "#6b7280",
@@ -305,6 +306,7 @@ function GroupedBarChart() {
             <Axis
               scale={xScale}
               position="bottom"
+              offset={dims.innerHeight}
               tickLabelProps={() => ({
                 fontSize: 11,
                 fill: "#6b7280",
@@ -390,7 +392,7 @@ function HorizontalBarChart() {
   const dims = useChartDimensions({
     width,
     height: height || 300,
-    margin: { top: 10, right: 30, bottom: 30, left: 80 },
+    margin: { top: 30, right: 30, bottom: 40, left: 50 },
   });
 
   const sorted = [...data].sort((a, b) => b.revenue - a.revenue).slice(0, 6);
@@ -470,6 +472,7 @@ function HorizontalBarChart() {
             <Axis
               scale={yScale}
               position="bottom"
+              offset={dims.innerHeight}
               tickFormat={(v) => `$${(v as number) / 1000}k`}
               tickLabelProps={() => ({
                 fontSize: 11,

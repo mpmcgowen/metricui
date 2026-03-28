@@ -132,7 +132,7 @@ function StaleIndicator({ config }: { config: StaleState }) {
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[length:var(--mu-text-2xs)] font-medium",
         isWarning
           ? "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
           : "bg-[var(--mu-neutral-bg)] text-[var(--mu-neutral-text)]"

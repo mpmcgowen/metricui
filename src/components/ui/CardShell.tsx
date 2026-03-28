@@ -322,10 +322,10 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
         bare
           ? cn("mu-container group relative", "px-[var(--mu-padding-x-bare)] py-[var(--mu-padding-y-bare)] sm:px-[var(--mu-padding-x-bare-sm)]")
           : cn(
-              "noise-texture group relative flex flex-col border p-[var(--mu-padding)] transition-all duration-300",
+              "noise-texture group relative flex flex-col border p-[var(--mu-padding)] transition-all duration-[var(--mu-transition-duration)]",
               CARD_CLASSES,
               HOVER_CLASSES,
-              isClickable && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-200",
+              isClickable && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-[var(--mu-transition-duration)]",
             ),
         flashClass,
         classNames?.root,
@@ -389,7 +389,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
               )}
             </div>
             {subtitle && (
-              <p className="mu-chart-subtitle mt-0.5 text-[11px] text-[var(--muted)] opacity-80">
+              <p className="mu-chart-subtitle mt-0.5 text-[length:var(--mu-text-xs)] text-[var(--muted)] opacity-80">
                 {subtitle}
               </p>
             )}
@@ -413,7 +413,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
 
       {/* Footnote */}
       {footnote && (
-        <p className={cn("mt-3 text-[10px] leading-snug text-[var(--muted)]", classNames?.footnote)}>
+        <p className={cn("mt-3 text-[length:var(--mu-text-2xs)] leading-snug text-[var(--muted)]", classNames?.footnote)}>
           {footnote}
         </p>
       )}

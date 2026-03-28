@@ -79,7 +79,7 @@ function Accordion({ open, children, className }: { open: boolean; children: Rea
   return (
     <div
       className={cn(
-        "grid transition-[grid-template-rows] duration-300 ease-in-out",
+        "grid transition-[grid-template-rows] duration-[var(--mu-transition-duration)] ease-in-out",
         open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         className,
       )}
@@ -129,7 +129,7 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
       data-dense={resolvedDense ? "true" : undefined}
       data-position={position}
       className={cn(
-        "noise-texture border transition-shadow duration-300",
+        "noise-texture border transition-shadow duration-[var(--mu-transition-duration)]",
         CARD_CLASSES,
         HOVER_CLASSES,
         sticky && "sticky top-3 z-30 backdrop-blur-xl",
@@ -156,7 +156,7 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
           "flex w-full items-center gap-2 px-[var(--mu-padding)]",
           "text-left text-[var(--muted)] hover:text-[var(--foreground)] transition-colors",
           collapsible && "cursor-pointer",
-          resolvedDense ? "py-2 text-[10px]" : "py-2.5 text-xs",
+          resolvedDense ? "py-2 text-[length:var(--mu-text-2xs)]" : "py-2.5 text-xs",
           classNames?.summary,
         )}
       >
@@ -173,7 +173,7 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
             Filters
             {activeCount > 0 && (
               <span className={cn(
-                "ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--accent)] font-[family-name:var(--font-mono)] text-[10px] font-bold text-white",
+                "ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--accent)] font-[family-name:var(--font-mono)] text-[length:var(--mu-text-2xs)] font-bold text-white",
                 activeCount > 9 ? "px-1" : "",
               )}>
                 {activeCount}
@@ -185,7 +185,7 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
           <span className={cn(
             "inline-flex items-center gap-1 rounded-full font-medium tabular-nums",
             "border border-[var(--accent)]/20 bg-[var(--accent)]/[0.06] text-[var(--accent)]",
-            resolvedDense ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs",
+            resolvedDense ? "px-2 py-0.5 text-[length:var(--mu-text-2xs)]" : "px-2.5 py-1 text-xs",
           )}>
             {badge}
           </span>
@@ -215,7 +215,7 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
                   "inline-flex items-center gap-1 rounded-full border border-[var(--card-border)]",
                   "bg-[var(--card-bg)] font-medium text-[var(--muted)]",
                   "transition-colors hover:text-[var(--foreground)]",
-                  resolvedDense ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs",
+                  resolvedDense ? "px-2 py-0.5 text-[length:var(--mu-text-2xs)]" : "px-2.5 py-1 text-xs",
                 )}
               >
                 {secondaryExpanded ? (
@@ -235,7 +235,7 @@ const FilterBarInner = forwardRef<HTMLDivElement, FilterBarProps>(function Filte
                 className={cn(
                   "ml-auto inline-flex items-center gap-1 rounded-full text-[var(--muted)]",
                   "transition-colors hover:text-[var(--foreground)]",
-                  resolvedDense ? "text-[10px]" : "text-xs",
+                  resolvedDense ? "text-[length:var(--mu-text-2xs)]" : "text-xs",
                 )}
               >
                 <X className="h-3 w-3" />

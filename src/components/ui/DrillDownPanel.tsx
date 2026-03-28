@@ -56,11 +56,11 @@ export function DrillDownOverlay(props?: DrillDownOverlayProps) {
   if (!mounted || !drill?.isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9998]">
+    <div className="fixed inset-0 z-[var(--mu-z-overlay)]">
       {/* Backdrop */}
       <div
         className={cn(
-          "absolute inset-0 bg-black/50 transition-opacity duration-300",
+          "absolute inset-0 bg-black/50 transition-opacity duration-[var(--mu-transition-duration)]",
           visible ? "opacity-100" : "opacity-0",
         )}
         onClick={drill.close}
@@ -80,7 +80,7 @@ export function DrillDownOverlay(props?: DrillDownOverlayProps) {
         tabIndex={-1}
         className={cn(
           "flex flex-col bg-[var(--background)] shadow-2xl shadow-black/20 outline-none",
-          "transition-all duration-300 ease-out",
+          "transition-all duration-[var(--mu-transition-duration)] ease-out",
           mode === "modal"
             ? cn(
                 "absolute left-1/2 top-1/2 max-h-[85vh] w-full max-w-3xl rounded-xl border border-[var(--card-border)]",

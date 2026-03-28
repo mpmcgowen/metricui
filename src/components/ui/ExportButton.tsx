@@ -147,7 +147,7 @@ export function ExportButton({
       {open && mounted && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-[9999] min-w-[160px] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-1 shadow-xl"
+          className="fixed z-[var(--mu-z-modal)] min-w-[160px] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-1 shadow-xl"
           style={{ top: pos.top, left: pos.left, transform: "translateX(-100%)" }}
           onClick={(e) => e.stopPropagation()}
         >

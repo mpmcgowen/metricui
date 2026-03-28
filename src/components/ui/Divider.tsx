@@ -120,7 +120,7 @@ export const Divider = forwardRef<HTMLDivElement, DividerProps>(
             <span
               className={cn(
                 "py-2 font-medium text-[var(--muted)]",
-                resolvedDense ? "text-[9px]" : "text-[10px]",
+                resolvedDense ? "text-[9px]" : "text-[length:var(--mu-text-2xs)]",
                 accent && "text-[var(--accent)]",
               )}
             >
@@ -170,7 +170,7 @@ export const Divider = forwardRef<HTMLDivElement, DividerProps>(
           <span
             className={cn(
               "flex-shrink-0 font-medium uppercase tracking-widest text-[var(--muted)]",
-              resolvedDense ? "text-[9px]" : "text-[10px]",
+              resolvedDense ? "text-[9px]" : "text-[length:var(--mu-text-2xs)]",
               accent && "text-[var(--accent)]",
             )}
           >

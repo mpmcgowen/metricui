@@ -18,7 +18,6 @@
         "name": "next"
       }
     ],
-    "preserveSymlinks": true,
     "paths": {
       "@/*": ["./src/*"],
       "@knowledge/*": ["./mcp-server/src/knowledge/*"]

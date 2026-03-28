@@ -268,7 +268,7 @@ function TableSkeleton<T>({ columns, rows = 5 }: { columns: ColumnDef<T>[]; rows
         <thead>
           <tr className="border-b border-[var(--card-border)]">
             {columns.map((_, i) => (
-              <th key={i} className={cn("whitespace-nowrap px-5 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]", py)}>
+              <th key={i} className={cn("whitespace-nowrap px-5 text-left text-[length:var(--mu-text-2xs)] font-semibold uppercase tracking-wider text-[var(--muted)]", py)}>
                 <div className="h-3 w-16 animate-pulse rounded bg-[var(--mu-skeleton-bg)]" />
               </th>
             ))}
@@ -303,7 +303,7 @@ function renderHeader(title?: string, subtitle?: string, description?: string | 
           {title && <span className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">{title}</span>}
           {description && <DescriptionPopover content={typeof description === "string" ? description : description} />}
         </div>
-        {subtitle && <p className="mt-0.5 text-[11px] text-[var(--muted)]">{subtitle}</p>}
+        {subtitle && <p className="mt-0.5 text-[length:var(--mu-text-xs)] text-[var(--muted)]">{subtitle}</p>}
       </div>
       {action && <div className="flex-shrink-0">{action}</div>}
     </div>
@@ -639,7 +639,7 @@ function DataTableInner<T extends DataRow = DataRow>(
                   return (
                     <th key={String(col.key)}
                       className={cn(
-                        "whitespace-nowrap text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]",
+                        "whitespace-nowrap text-[length:var(--mu-text-2xs)] font-semibold uppercase tracking-wider text-[var(--muted)]",
                         cellPx, cellPy,
                         align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left",
                         isSortable && "cursor-pointer select-none transition-colors hover:text-[var(--foreground)]",
@@ -745,7 +745,7 @@ function DataTableInner<T extends DataRow = DataRow>(
                             ...(isChild && ci === 0 ? { paddingLeft: `${depth * 20 + 12}px` } : {}),
                           }}>
                           {isBar && barStyle && <div style={barStyle} />}
-                          <span className={cn("text-[13px]", isMono ? "font-[family-name:var(--font-mono)]" : "font-[family-name:var(--font-sans)]", isBar && "relative z-[1]", isChild && "opacity-80")} style={condStyle}>
+                          <span className={cn("text-[length:var(--mu-text-base)]", isMono ? "font-[family-name:var(--font-mono)]" : "font-[family-name:var(--font-sans)]", isBar && "relative z-[1]", isChild && "opacity-80")} style={condStyle}>
                             {formatCell(col, value, row, gi)}
                           </span>
                         </td>
@@ -781,7 +781,7 @@ function DataTableInner<T extends DataRow = DataRow>(
                         className={cn("whitespace-nowrap font-semibold text-[var(--foreground)]", cellPx, cellPy,
                           align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left",
                           col.pin === "left" && "sticky left-0 z-10 bg-[var(--card-bg)]")}>
-                        <span className={cn("text-[13px]", isMono ? "font-[family-name:var(--font-mono)]" : "font-[family-name:var(--font-sans)]")}>
+                        <span className={cn("text-[length:var(--mu-text-base)]", isMono ? "font-[family-name:var(--font-mono)]" : "font-[family-name:var(--font-sans)]")}>
                           {footer[col.key as string] ?? ""}
                         </span>
                       </td>
@@ -805,7 +805,7 @@ function DataTableInner<T extends DataRow = DataRow>(
 
       {enablePagination && totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-[var(--card-border)] px-5 py-3">
-          <p className="font-[family-name:var(--font-mono)] text-[11px] text-[var(--muted)]">
+          <p className="font-[family-name:var(--font-mono)] text-[length:var(--mu-text-xs)] text-[var(--muted)]">
             {page * effectivePageSize + 1}&ndash;{Math.min((page + 1) * effectivePageSize, truncated.length)} of {truncated.length}
           </p>
           <div className="flex gap-1">
@@ -818,7 +818,7 @@ function DataTableInner<T extends DataRow = DataRow>(
       )}
 
       {footnote && (
-        <div className="border-t border-[var(--card-border)] px-5 py-3 text-[10px] leading-snug text-[var(--muted)]">
+        <div className="border-t border-[var(--card-border)] px-5 py-3 text-[length:var(--mu-text-2xs)] leading-snug text-[var(--muted)]">
           {footnote}
         </div>
       )}

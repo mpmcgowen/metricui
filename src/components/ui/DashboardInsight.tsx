@@ -32,9 +32,9 @@ function renderMarkdown(text: string): ReactNode[] {
     if (!trimmed) return null;
     // Headings
     const h3Match = trimmed.match(/^###\s+(.+)$/);
-    if (h3Match) return <p key={bi} className={cn("text-[13px] font-semibold text-[var(--foreground)]", bi > 0 && "mt-4")}>{renderInline(h3Match[1])}</p>;
+    if (h3Match) return <p key={bi} className={cn("text-[length:var(--mu-text-base)] font-semibold text-[var(--foreground)]", bi > 0 && "mt-4")}>{renderInline(h3Match[1])}</p>;
     const h2Match = trimmed.match(/^##\s+(.+)$/);
-    if (h2Match) return <p key={bi} className={cn("text-[14px] font-bold text-[var(--foreground)]", bi > 0 && "mt-4")}>{renderInline(h2Match[1])}</p>;
+    if (h2Match) return <p key={bi} className={cn("text-[length:var(--mu-text-md)] font-bold text-[var(--foreground)]", bi > 0 && "mt-4")}>{renderInline(h2Match[1])}</p>;
 
     const lines = trimmed.split("\n");
     // Numbered lists
@@ -73,7 +73,7 @@ function renderInline(text: string): ReactNode[] {
     if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
     if (match[2]) {
       parts.push(
-        <span key={match.index} className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)]/10 px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent)]">
+        <span key={match.index} className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)]/10 px-1.5 py-0.5 text-[length:var(--mu-text-xs)] font-medium text-[var(--accent)]">
           <Sparkles className="h-2 w-2" />{match[2]}
         </span>
       );
@@ -82,7 +82,7 @@ function renderInline(text: string): ReactNode[] {
     } else if (match[4]) {
       parts.push(<em key={match.index}>{match[4]}</em>);
     } else if (match[5]) {
-      parts.push(<code key={match.index} className="rounded bg-[var(--card-border)]/50 px-1 py-0.5 font-[family-name:var(--font-mono)] text-[12px] text-[var(--accent)]">{match[5]}</code>);
+      parts.push(<code key={match.index} className="rounded bg-[var(--card-border)]/50 px-1 py-0.5 font-[family-name:var(--font-mono)] text-[length:var(--mu-text-sm)] text-[var(--accent)]">{match[5]}</code>);
     }
     lastIndex = match.index + match[0].length;
   }
@@ -100,7 +100,7 @@ function AssistantMessage({ message }: { message: AiMessage }) {
       <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-[var(--accent)]/10">
         <Sparkles className="h-3 w-3 text-[var(--accent)]" />
       </div>
-      <div className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--foreground)]/85">
+      <div className="min-w-0 flex-1 text-[length:var(--mu-text-base)] leading-[1.65] text-[var(--foreground)]/85">
         {renderMarkdown(message.content)}
       </div>
     </div>
@@ -119,7 +119,7 @@ function UserMessage({ message }: { message: AiMessage }) {
     if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
     const mentionText = match[1].replace(/[\s.!?,;:]+$/, "");
     parts.push(
-      <span key={match.index} className="inline-flex items-center gap-0.5 rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">
+      <span key={match.index} className="inline-flex items-center gap-0.5 rounded bg-white/20 px-1.5 py-0.5 text-[length:var(--mu-text-xs)] font-semibold">
         <Sparkles className="h-2 w-2" />{mentionText}
       </span>
     );
@@ -129,7 +129,7 @@ function UserMessage({ message }: { message: AiMessage }) {
 
   return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--accent)] px-3.5 py-2 text-[13px] leading-relaxed text-white">
+      <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--accent)] px-3.5 py-2 text-[length:var(--mu-text-base)] leading-relaxed text-white">
         {parts.length > 0 ? parts : text}
       </div>
     </div>
@@ -142,13 +142,13 @@ function StreamingMessage({ text }: { text: string }) {
       <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-[var(--accent)]/10">
         <Sparkles className="h-3 w-3 animate-pulse text-[var(--accent)]" />
       </div>
-      <div className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--foreground)]/85">
+      <div className="min-w-0 flex-1 text-[length:var(--mu-text-base)] leading-[1.65] text-[var(--foreground)]/85">
         {text ? (
           <>{renderMarkdown(text)}<span className="ml-0.5 inline-block h-[14px] w-[2px] animate-pulse bg-[var(--accent)] align-text-bottom" /></>
         ) : (
           <span className="flex items-center gap-2 text-[var(--muted)]">
             <Loader2 className="h-3 w-3 animate-spin" />
-            <span className="text-[12px]">Analyzing your data...</span>
+            <span className="text-[length:var(--mu-text-sm)]">Analyzing your data...</span>
           </span>
         )}
       </div>
@@ -175,10 +175,10 @@ function MentionDropdown({ query, metrics, onSelect, selectedIndex, position }: 
 
   return createPortal(
     <div
-      className="fixed z-[10001] max-h-56 w-72 overflow-y-auto rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] py-1 shadow-xl"
+      className="fixed z-[var(--mu-z-toast)] max-h-56 w-72 overflow-y-auto rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] py-1 shadow-xl"
       style={{ bottom: position.bottom, left: position.left }}
     >
-      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+      <div className="px-3 py-1.5 text-[length:var(--mu-text-2xs)] font-semibold uppercase tracking-wider text-[var(--muted)]">
         Components on this tab
       </div>
       {filtered.map((m, i) => (
@@ -187,12 +187,12 @@ function MentionDropdown({ query, metrics, onSelect, selectedIndex, position }: 
           onClick={() => onSelect(m.title)}
           ref={(el) => { if (i === selectedIndex && el) el.scrollIntoView({ block: "nearest" }); }}
           className={cn(
-            "flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] transition-colors",
+            "flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--mu-text-sm)] transition-colors",
             i === selectedIndex ? "bg-[var(--accent)]/10" : "hover:bg-[var(--card-glow)]",
           )}
         >
           <span className="font-medium text-[var(--accent)]">{m.title}</span>
-          <span className="rounded bg-[var(--card-glow)] px-1.5 py-0.5 text-[10px] text-[var(--muted)]">{m.component}</span>
+          <span className="rounded bg-[var(--card-glow)] px-1.5 py-0.5 text-[length:var(--mu-text-2xs)] text-[var(--muted)]">{m.component}</span>
         </button>
       ))}
     </div>,
@@ -336,7 +336,7 @@ export function DashboardInsight({
       aria-expanded={open}
       aria-label="Open AI Insights"
       className={cn(
-        "fixed z-[9998] flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-white shadow-lg shadow-[var(--accent)]/25 transition-all hover:shadow-xl hover:shadow-[var(--accent)]/30 hover:scale-105",
+        "fixed z-[var(--mu-z-overlay)] flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-white shadow-lg shadow-[var(--accent)]/25 transition-all hover:shadow-xl hover:shadow-[var(--accent)]/30 hover:scale-105",
         position === "bottom-right" ? "bottom-6 right-6" : "bottom-6 left-6",
         open && "scale-0 opacity-0",
         className,
@@ -345,7 +345,7 @@ export function DashboardInsight({
       <Sparkles className="h-4 w-4" />
       <span className="text-sm font-medium">AI Insights</span>
       {hasMessages && (
-        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-white/20 px-1 text-[10px] font-bold">
+        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-white/20 px-1 text-[length:var(--mu-text-2xs)] font-bold">
           {ai.messages.filter((m) => m.role === "assistant").length}
         </span>
       )}
@@ -354,10 +354,10 @@ export function DashboardInsight({
 
   // Sidebar panel
   const sidebar = open && createPortal(
-    <div className="fixed inset-0 z-[9999]">
+    <div className="fixed inset-0 z-[var(--mu-z-modal)]">
       {/* Backdrop */}
       <div
-        className={cn("absolute inset-0 bg-black/40 transition-opacity duration-300", visible ? "opacity-100" : "opacity-0")}
+        className={cn("absolute inset-0 bg-black/40 transition-opacity duration-[var(--mu-transition-duration)]", visible ? "opacity-100" : "opacity-0")}
         onClick={() => setOpen(false)}
       />
 
@@ -369,7 +369,7 @@ export function DashboardInsight({
         aria-modal="true"
         aria-label="AI Insights"
         className={cn(
-          "absolute top-0 bottom-0 flex w-full max-w-md flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-out",
+          "absolute top-0 bottom-0 flex w-full max-w-md flex-col bg-[var(--background)] shadow-2xl transition-transform duration-[var(--mu-transition-duration)] ease-out",
           position === "bottom-right" ? "right-0" : "left-0",
           visible
             ? "translate-x-0"
@@ -389,7 +389,7 @@ export function DashboardInsight({
               <X className="h-4 w-4" />
             </button>
           </div>
-          <p className="mt-1 text-[11px] text-[var(--muted)]">
+          <p className="mt-1 text-[length:var(--mu-text-xs)] text-[var(--muted)]">
             Ask questions about your dashboard. Use <span className="font-medium text-[var(--accent)]">@</span> to reference specific charts.
           </p>
         </div>
@@ -402,7 +402,7 @@ export function DashboardInsight({
                 <button
                   key={qp.label}
                   onClick={() => handleQuickPrompt(qp.prompt)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] px-3 py-1.5 text-[11px] font-medium text-[var(--muted)] transition-all hover:border-[var(--accent)]/40 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] px-3 py-1.5 text-[length:var(--mu-text-xs)] font-medium text-[var(--muted)] transition-all hover:border-[var(--accent)]/40 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5"
                 >
                   <Sparkles className="h-2.5 w-2.5" />
                   {qp.label}
@@ -428,7 +428,7 @@ export function DashboardInsight({
           {selectedMentions.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
               {selectedMentions.map((m) => (
-                <span key={m} className="inline-flex items-center gap-1 rounded-md bg-[var(--accent)]/10 px-2 py-0.5 text-[11px] font-medium text-[var(--accent)]">
+                <span key={m} className="inline-flex items-center gap-1 rounded-md bg-[var(--accent)]/10 px-2 py-0.5 text-[length:var(--mu-text-xs)] font-medium text-[var(--accent)]">
                   <Sparkles className="h-2 w-2" />
                   {m}
                   <button
@@ -460,7 +460,7 @@ export function DashboardInsight({
               }}
               placeholder={placeholder}
               disabled={ai.isLoading}
-              className="flex-1 bg-transparent text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted)]/40 outline-none disabled:opacity-50"
+              className="flex-1 bg-transparent text-[length:var(--mu-text-base)] text-[var(--foreground)] placeholder:text-[var(--muted)]/40 outline-none disabled:opacity-50"
             />
             {ai.isLoading ? (
               <button onClick={ai.abort} aria-label="Stop generating" className="rounded-lg p-1.5 text-[var(--muted)] hover:bg-red-500/10 hover:text-red-500">
@@ -471,7 +471,7 @@ export function DashboardInsight({
                 {hasMessages && (
                   <button
                     onClick={ai.clear}
-                    className="rounded-lg px-2 py-1 text-[10px] font-medium text-[var(--muted)] transition-colors hover:bg-red-500/10 hover:text-red-500"
+                    className="rounded-lg px-2 py-1 text-[length:var(--mu-text-2xs)] font-medium text-[var(--muted)] transition-colors hover:bg-red-500/10 hover:text-red-500"
                   >
                     Clear
                   </button>

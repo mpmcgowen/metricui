@@ -73,7 +73,7 @@ describe("SectionHeader", () => {
     );
     const normalEl = screen.getByTestId("normal");
     const normalTitle = normalEl.querySelector("p");
-    expect(normalTitle?.className).toContain("text-[10px]");
+    expect(normalTitle?.className).toContain("text-[length:var(--mu-text-2xs)]");
 
     rerender(
       <MetricProvider>

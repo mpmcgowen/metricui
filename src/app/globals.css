@@ -64,8 +64,22 @@
   --mu-neutral-dot: #9ca3af;
   --mu-skeleton-bg: #e5e7eb;
 
-  /* ── Standard transition ── */
+  /* ── Z-index layers ── */
+  --mu-z-dropdown: 50;
+  --mu-z-sticky: 40;
+  --mu-z-overlay: 9998;
+  --mu-z-modal: 9999;
+  --mu-z-toast: 10001;
+
+  /* ── Transition ── */
   --mu-transition-duration: 200ms;
+
+  /* ── Type scale (labels, footnotes, badges) ── */
+  --mu-text-2xs: 10px;
+  --mu-text-xs: 11px;
+  --mu-text-sm: 12px;
+  --mu-text-base: 13px;
+  --mu-text-md: 14px;
 }
 
 .dark {

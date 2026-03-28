@@ -250,7 +250,7 @@ export const PeriodSelector = forwardRef<HTMLDivElement, PeriodSelectorProps>(
                     </button>
                   ) : (
                     <div className="px-2 py-2">
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">
+                      <p className="mb-2 text-[length:var(--mu-text-2xs)] font-semibold uppercase tracking-widest text-[var(--muted)]">
                         Custom Range
                       </p>
                       <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ export const PeriodSelector = forwardRef<HTMLDivElement, PeriodSelectorProps>(
               }}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-lg border transition-colors",
-                resolvedDense ? "px-2 py-1.5 text-[10px]" : "px-2.5 py-2 text-xs",
+                resolvedDense ? "px-2 py-1.5 text-[length:var(--mu-text-2xs)]" : "px-2.5 py-2 text-xs",
                 activeComparison !== "none"
                   ? "border-[var(--accent)]/30 bg-[var(--accent)]/[0.06] font-medium text-[var(--accent)]"
                   : "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--muted)] hover:border-[var(--mu-hover-border)]",
@@ -329,7 +329,7 @@ export const PeriodSelector = forwardRef<HTMLDivElement, PeriodSelectorProps>(
         {comparison && activeComparison !== "none" && activePeriod && filters?.comparisonPeriod && (
           <span className={cn(
             "text-[var(--muted)]",
-            resolvedDense ? "text-[10px]" : "text-xs",
+            resolvedDense ? "text-[length:var(--mu-text-2xs)]" : "text-xs",
           )}>
             comparing {formatDateShort(filters.comparisonPeriod.start)} – {formatDateShort(filters.comparisonPeriod.end)}
           </span>

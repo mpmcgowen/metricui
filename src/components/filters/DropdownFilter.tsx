@@ -407,7 +407,7 @@ export const DropdownFilter = forwardRef<HTMLDivElement, DropdownFilterProps>(
                         </span>
                         {/* Count badge */}
                         {option.count !== undefined && (
-                          <span className="flex-shrink-0 font-[family-name:var(--font-mono)] text-[10px] text-[var(--muted)]">
+                          <span className="flex-shrink-0 font-[family-name:var(--font-mono)] text-[length:var(--mu-text-2xs)] text-[var(--muted)]">
                             {option.count.toLocaleString()}
                           </span>
                         )}
