@@ -215,23 +215,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     else if (ref) (ref as React.MutableRefObject<HTMLElement | null>).current = el;
   };
 
-  // --- Data state early returns ---
-  if (resolvedLoading) {
-    return (
-      <div
-        data-variant={bare ? undefined : resolvedVariant}
-        data-dense={resolvedDense ? "true" : undefined}
-        className={cn(
-          bare ? "mu-container" : cn("noise-texture border p-[var(--mu-padding)]", CARD_CLASSES),
-          classNames?.root,
-          className,
-        )}
-      >
-        {skeletonType === "kpi" ? <KpiSkeletonContent /> : <ChartSkeletonContent height={height ?? 300} />}
-      </div>
-    );
-  }
-
+  // --- Data state early returns (error > loading > empty) ---
   if (error) {
     return (
       <div
@@ -244,6 +228,22 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
         )}
       >
         <DataStateWrapper error={error}><div /></DataStateWrapper>
+      </div>
+    );
+  }
+
+  if (resolvedLoading) {
+    return (
+      <div
+        data-variant={bare ? undefined : resolvedVariant}
+        data-dense={resolvedDense ? "true" : undefined}
+        className={cn(
+          bare ? "mu-container" : cn("noise-texture border p-[var(--mu-padding)]", CARD_CLASSES),
+          classNames?.root,
+          className,
+        )}
+      >
+        {skeletonType === "kpi" ? <KpiSkeletonContent /> : <ChartSkeletonContent height={height ?? 300} />}
       </div>
     );
   }
