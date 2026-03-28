@@ -268,7 +268,7 @@ describe("useFilteredData", () => {
     expect(result.current.isFiltered).toBe(false);
   });
 
-  it("comparison is null when no dateField is provided", () => {
+  it("auto-detects date field and returns comparison when available", () => {
     const refDate = new Date(2025, 2, 20);
     const wrapper = ({ children }: { children: ReactNode }) => (
       <MetricProvider>
@@ -283,7 +283,7 @@ describe("useFilteredData", () => {
       { wrapper },
     );
 
-    // Without dateField, comparison makes no sense
-    expect(result.current.comparison).toBeNull();
+    // Auto-detects "date" field in DATA, so comparison is available
+    expect(result.current.comparison).not.toBeNull();
   });
 });

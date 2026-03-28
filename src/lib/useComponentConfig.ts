@@ -7,6 +7,7 @@ import { useDenseValues } from "@/lib/useDenseValues";
 import { useChartTheme } from "@/lib/useChartTheme";
 import { useContainerSize } from "@/lib/useContainerSize";
 import type { CardVariant } from "@/lib/types";
+import { useEffect, useRef } from "react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -70,8 +71,26 @@ export interface ComponentConfigResult {
  * // Attach ctx.containerRef to a wrapper div for responsive sizing.
  * ```
  */
+// One-time check: warn if styles.css is not loaded
+let stylesChecked = false;
+
 export function useComponentConfig(opts: ComponentConfigOptions = {}): ComponentConfigResult {
   const { animate: animateProp, variant, height, dense, minHeight } = opts;
+
+  // Dev-only: detect missing styles.css
+  useEffect(() => {
+    if (stylesChecked || process.env.NODE_ENV === "production") return;
+    stylesChecked = true;
+    if (typeof window !== "undefined") {
+      const test = getComputedStyle(document.documentElement).getPropertyValue("--mu-card-radius");
+      if (!test) {
+        console.warn(
+          '[MetricUI] CSS variables not found. Did you forget to import styles?\n\n' +
+          '  import "metricui/styles.css";\n'
+        );
+      }
+    }
+  }, []);
 
   const { theme } = useTheme();
   const isDark = theme === "dark";

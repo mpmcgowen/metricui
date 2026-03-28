@@ -97,9 +97,42 @@ export function useFilteredData<T extends DataRow>(
   const filters = useMetricFilters();
   const cf = useCrossFilter();
 
-  const dateField = options?.dateField;
-  const dimensionFields = options?.dimensionFields;
-  const crossFilterField = options?.crossFilterField;
+  // Auto-detect date field if not specified — look for common date column names
+  const autoDateField = useMemo(() => {
+    if (options?.dateField) return options.dateField;
+    if (!data.length) return undefined;
+    const firstRow = data[0];
+    const dateNames = ["date", "day", "month", "week", "period", "timestamp", "createdAt", "created_at"];
+    for (const name of dateNames) {
+      if (name in firstRow) return name;
+    }
+    // Check for any field with a date-like value
+    for (const [key, val] of Object.entries(firstRow)) {
+      if (val instanceof Date) return key;
+      if (typeof val === "string" && /^\d{4}-\d{2}(-\d{2})?/.test(val)) return key;
+    }
+    return undefined;
+  }, [data, options?.dateField]);
+
+  // Auto-use all active dimension filters if no specific fields given
+  const autoDimensionFields = useMemo(() => {
+    if (options?.dimensionFields) return options.dimensionFields;
+    if (!filters?.dimensions) return undefined;
+    const active = Object.keys(filters.dimensions).filter(
+      (k) => filters.dimensions[k] && filters.dimensions[k].length > 0,
+    );
+    return active.length > 0 ? active : undefined;
+  }, [options?.dimensionFields, filters?.dimensions]);
+
+  // Auto-use cross-filter field from active selection
+  const autoCrossFilterField = useMemo(() => {
+    if (options?.crossFilterField) return options.crossFilterField;
+    return cf?.selection?.field;
+  }, [options?.crossFilterField, cf?.selection?.field]);
+
+  const dateField = autoDateField;
+  const dimensionFields = autoDimensionFields;
+  const crossFilterField = autoCrossFilterField;
 
   // Step 1: Period filter
   const byPeriod = useMemo(() => {
