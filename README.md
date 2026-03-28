@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/logo.svg" alt="MetricUI" width="200" />
+  <img src="https://metricui.com/logo.svg" alt="MetricUI" width="200" />
 </p>
 
 <h1 align="center">MetricUI</h1>
