@@ -113,7 +113,7 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
     height,
     colors: chartColors,
     animate: animateProp,
-    projectionType = "mercator",
+    projectionType = "naturalEarth1",
     projectionScale = 100,
     projectionTranslation = [0.5, 0.5],
     borderWidth = 0.5,

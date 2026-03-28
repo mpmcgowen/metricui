@@ -27,8 +27,8 @@ interface ChartContainerProps {
   aiContext?: string;
   flashClass?: string;
   loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
+  empty?: EmptyState | string;
+  error?: ErrorState | string;
   stale?: StaleState;
   /** Unified data state config — individual loading/empty/error/stale props take precedence */
   state?: DataComponentProps["state"];

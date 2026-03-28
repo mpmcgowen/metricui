@@ -39,10 +39,10 @@ export interface DataComponentProps extends BaseComponentProps {
   dense?: boolean;
   /** Loading state — shows skeleton placeholder */
   loading?: boolean;
-  /** Empty state */
-  empty?: EmptyState;
-  /** Error state */
-  error?: ErrorState;
+  /** Empty state — pass a string for a simple message, or an object for icons/actions */
+  empty?: EmptyState | string;
+  /** Error state — pass a string for a simple message, or an object for retry */
+  error?: ErrorState | string;
   /** Stale data indicator */
   stale?: StaleState;
   /** Enable export. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. */
@@ -50,8 +50,8 @@ export interface DataComponentProps extends BaseComponentProps {
   /** Data state configuration — alternative to individual loading/empty/error/stale props */
   state?: {
     loading?: boolean;
-    empty?: EmptyState;
-    error?: ErrorState;
+    empty?: EmptyState | string;
+    error?: ErrorState | string;
     stale?: StaleState;
   };
 }
@@ -175,8 +175,8 @@ export interface StaleState {
 
 export interface DataStates {
   loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
+  empty?: EmptyState | string;
+  error?: ErrorState | string;
   stale?: StaleState;
 }
 

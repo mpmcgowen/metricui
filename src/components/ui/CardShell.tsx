@@ -64,8 +64,8 @@ export interface CardShellProps {
 
   // --- Data states ---
   loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
+  empty?: EmptyState | string;
+  error?: ErrorState | string;
   stale?: StaleState;
   /** Data state configuration — alternative to individual loading/empty/error/stale props */
   state?: DataComponentProps["state"];

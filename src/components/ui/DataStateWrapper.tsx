@@ -7,11 +7,22 @@ import { useMetricConfig } from "@/lib/MetricProvider";
 
 interface DataStateWrapperProps {
   loading?: boolean;
-  empty?: EmptyState;
-  error?: ErrorState;
+  empty?: EmptyState | string;
+  error?: ErrorState | string;
   stale?: StaleState;
   children: React.ReactNode;
   className?: string;
+}
+
+/** Normalize string shorthand to object form */
+function normalizeEmpty(v?: EmptyState | string): EmptyState | undefined {
+  if (!v) return undefined;
+  return typeof v === "string" ? { message: v } : v;
+}
+
+function normalizeError(v?: ErrorState | string): ErrorState | undefined {
+  if (!v) return undefined;
+  return typeof v === "string" ? { message: v } : v;
 }
 
 function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -147,11 +158,13 @@ export function DataStateWrapper({
   className,
 }: DataStateWrapperProps) {
   const config = useMetricConfig();
+  const resolvedError = normalizeError(error);
+  const resolvedEmpty = normalizeEmpty(empty);
 
-  if (error) {
+  if (resolvedError) {
     return (
       <div className={className}>
-        <ErrorDisplay config={error} globalDefaults={config.errorState} />
+        <ErrorDisplay config={resolvedError} globalDefaults={config.errorState} />
       </div>
     );
   }
@@ -167,8 +180,8 @@ export function DataStateWrapper({
         <div role="status" aria-label="Loading">
           <KpiSkeleton />
         </div>
-      ) : empty ? (
-        <EmptyDisplay config={empty} globalDefaults={config.emptyState} />
+      ) : resolvedEmpty ? (
+        <EmptyDisplay config={resolvedEmpty} globalDefaults={config.emptyState} />
       ) : (
         children
       )}

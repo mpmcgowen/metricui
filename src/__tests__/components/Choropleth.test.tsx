@@ -228,7 +228,7 @@ describe("Choropleth", () => {
     renderWithProvider(
       <Choropleth data={choroplethData} features={minimalFeatures} />
     );
-    expect(lastChoroplethProps.projectionType).toBe("mercator");
+    expect(lastChoroplethProps.projectionType).toBe("naturalEarth1");
   });
 
   it("passes custom projectionType", () => {
