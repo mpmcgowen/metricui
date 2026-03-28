@@ -22,7 +22,6 @@ import { useMetricFilters } from "@/lib/FilterContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { Dashboard } from "@/components/layout/Dashboard";
 import { fmt, formatValue } from "@/lib/format";
-import { useDrillDownAction } from "@/components/ui/DrillDown";
 import { DashboardInsight } from "@/components/ui/DashboardInsight";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { accounts, type Account } from "@/data/saas-accounts";
@@ -165,7 +164,6 @@ function monthInRange(month: string, start: Date, end: Date): boolean {
 function DashboardContent() {
   const cf = useCrossFilter();
   const filters = useMetricFilters();
-  const openDrill = useDrillDownAction();
   const industryFilter = filters?.dimensions?.industry ?? [];
 
   // Step 1: Period filter
@@ -282,9 +280,7 @@ function DashboardContent() {
         aiContext="Our north star metric. Enterprise accounts drive 52% of MRR despite being 14% of base. Expansion revenue from seat upgrades is the fastest-growing segment."
         description="Sum of all active subscription charges this month, excluding one-time fees and overages."
         animate={{ countUp: true }}
-        drillDown={{
-          label: "MRR breakdown",
-          onClick: () => {
+        drillDown={() => {
             const activeAccts = filtered.filter((a) => a.status === "active");
             const mrrByPlan = (() => {
               const map = new Map<string, number>();
@@ -292,8 +288,7 @@ function DashboardContent() {
               return [...map.entries()].sort((a, b) => b[1] - a[1]).map(([id, value]) => ({ id, label: id, value }));
             })();
             const topByMrr = [...activeAccts].sort((a, b) => b.mrr - a.mrr).slice(0, 15);
-            openDrill(
-              { title: `MRR: ${formatValue(data.kpis.mrr, "currency")}`, field: "mrr", value: data.kpis.mrr },
+            return (
               <MetricGrid>
                 <KpiCard title="MRR" value={data.kpis.mrr} format="currency" />
                 <KpiCard title="ARR" value={data.kpis.arr} format={fmt("currency", { compact: true })} />
@@ -322,9 +317,8 @@ function DashboardContent() {
                   dense
                   searchable
                 />
-              </MetricGrid>,
+              </MetricGrid>
             );
-          },
         }}
       />
       <KpiCard
@@ -346,17 +340,14 @@ function DashboardContent() {
         aiContext="Active = not churned. Basic plan has highest absolute churn but lowest MRR impact. Enterprise retention is critical — losing one Enterprise account equals losing ~8 Basic accounts in MRR."
         description="Accounts with at least one active subscription. Excludes free-tier and trial accounts."
         animate={{ countUp: true, delay: 200 }}
-        drillDown={{
-          label: "View active accounts",
-          onClick: () => {
+        drillDown={() => {
             const activeAccts = filtered.filter((a) => a.status === "active");
             const byIndustry = (() => {
               const map = new Map<string, number>();
               for (const a of activeAccts) map.set(a.industry, (map.get(a.industry) ?? 0) + 1);
               return [...map.entries()].sort((a, b) => b[1] - a[1]).map(([industry, count]) => ({ industry, accounts: count }));
             })();
-            openDrill(
-              { title: `${data.kpis.activeAccounts} Active Accounts`, field: "status", value: "active" },
+            return (
               <MetricGrid>
                 <KpiCard title="Active" value={activeAccts.length} format="number" />
                 <KpiCard title="Total MRR" value={activeAccts.reduce((s, a) => s + a.mrr, 0)} format="currency" />
@@ -386,9 +377,8 @@ function DashboardContent() {
                   dense
                   searchable
                 />
-              </MetricGrid>,
+              </MetricGrid>
             );
-          },
         }}
       />
       <KpiCard
@@ -406,10 +396,7 @@ function DashboardContent() {
           { when: "between", min: 15, max: 25, color: "amber" },
           { when: "above", value: 25, color: "red" },
         ]}
-        drillDown={{
-          label: "View churned accounts",
-          onClick: () => openDrill(
-            { title: `Churn Rate: ${data.kpis.churnRate}%`, field: "status", value: "churned" },
+        drillDown={() => (
             <MetricGrid>
               <DonutChart data={data.churnReasons} title="Churn Reasons" showPercentage innerRadius={0.6} height={260} />
               <DataTable
@@ -425,9 +412,8 @@ function DashboardContent() {
                 dense
                 searchable
               />
-            </MetricGrid>,
-          ),
-        }}
+            </MetricGrid>
+        )}
       />
 
       <StatGroup

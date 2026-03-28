@@ -22,7 +22,6 @@ import { DashboardInsight } from "@/components/ui/DashboardInsight";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { FilterBar } from "@/components/filters/FilterBar";
-import { useDrillDownAction } from "@/components/ui/DrillDown";
 import { useWikipediaStream } from "@/lib/useWikipediaStream";
 import type { WikiEdit } from "@/lib/useWikipediaStream";
 import {
@@ -133,7 +132,6 @@ function WikipediaDashboardInner({
   const { connected, loading, recentEdits, stats } = useWikipediaStream();
   const crossFilter = useCrossFilter();
   const filters = useMetricFilters();
-  const openDrill = useDrillDownAction();
   const editFilter = filters?.dimensions?.editType?.[0] ?? "All Edits";
   const wikiFilter = filters?.dimensions?.wiki ?? [];
 
@@ -533,13 +531,7 @@ function WikipediaDashboardInner({
               description="Cumulative edits received since connecting to the EventStream. Resets on page reload."
               animate={{ countUp: true }}
               aiContext="Cumulative since page load. Resets on refresh. Bot edits dominate volume — filter to Human Only for editorial activity."
-              drillDown={{
-                label: "Edits breakdown by wiki",
-                onClick: () => openDrill(
-                  { title: `${filteredStats.totalEdits} Total Edits`, field: "edits" },
-                  null,
-                ),
-              }}
+              drillDown={() => null}
             />
             <KpiCard
               title="Edit Rate"
@@ -550,13 +542,7 @@ function WikipediaDashboardInner({
               description="Rolling average of edits per second over the last 30-second window."
               animate={{ countUp: true }}
               aiContext="Rolling 30-second average. Spikes during bot batch jobs. Human rate is more meaningful for editorial health."
-              drillDown={{
-                label: "Edit velocity detail",
-                onClick: () => openDrill(
-                  { title: `Edit Rate: ${filteredStats.editRate}/sec`, field: "editRate" },
-                  null,
-                ),
-              }}
+              drillDown={() => null}
             />
             <KpiCard
               title="Unique Editors"

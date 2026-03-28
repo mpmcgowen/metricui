@@ -23,7 +23,6 @@ import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useMetricFilters, useFilterValue, useHasComparison } from "@/lib/FilterContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDown";
 import { formatValue, fmt } from "@/lib/format";
 import {
   dailyMetrics,
@@ -136,7 +135,6 @@ function AnalyticsContent() {
   });
   const filters = useMetricFilters();
   const crossFilter = useCrossFilter();
-  const openDrill = useDrillDownAction();
   const hasComparison = useHasComparison();
 
   // --- Cross-filter state ---
@@ -356,19 +354,15 @@ function AnalyticsContent() {
               description="Total visits to acme.dev in the selected period. Each session may include multiple page views."
               aiContext="Our primary traffic metric. Weekend dips are normal. Holiday drops Dec 23-26 are expected. 30% QoQ growth target."
               animate={{ countUp: true }}
-              drillDown={{
-                label: "Session breakdown",
-                onClick: () => openDrill(
-                  { title: `${formatValue(kpis.sessions, "compact")} Sessions`, field: "sessions" },
+              drillDown={() => (
                   <MetricGrid>
                     <KpiCard title="Sessions" value={kpis.sessions} format="compact" />
                     <KpiCard title="Users" value={kpis.users} format="compact" />
                     <KpiCard title="New Users" value={kpis.newUsers} format="compact" />
                     <KpiCard title="Pages / Session" value={kpis.pagesPerSession} format="number" />
                     <AreaChart data={trendData} index="date" categories={["sessions", "users", "new users"]} title="Daily Breakdown" format="compact" height={280} curve="monotoneX" enableArea gradient />
-                  </MetricGrid>,
-                ),
-              }}
+                  </MetricGrid>
+              )}
             />
             <KpiCard
               title="Users"

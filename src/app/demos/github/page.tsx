@@ -22,10 +22,8 @@ import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { DropdownFilter } from "@/components/filters/DropdownFilter";
 import { useMetricFilters } from "@/lib/FilterContext";
 import { useCrossFilter } from "@/lib/CrossFilterContext";
-import { useDrillDownAction } from "@/components/ui/DrillDown";
 import { Dashboard } from "@/components/layout/Dashboard";
 import { DashboardInsight } from "@/components/ui/DashboardInsight";
-import { formatValue } from "@/lib/format";
 import {
   repoStats,
   commitActivity,
@@ -193,7 +191,6 @@ export default function GitHubDashboard() {
 function DashboardContent() {
   const filters = useMetricFilters();
   const crossFilter = useCrossFilter();
-  const openDrill = useDrillDownAction();
   const view = filters?.dimensions?.view?.[0] ?? "Issues";
   const labelFilter = filters?.dimensions?.label ?? [];
 
@@ -558,10 +555,7 @@ function DashboardContent() {
             description="Total GitHub stars. A measure of community interest and project visibility."
             aiContext="Vanity metric but signals community interest. Growth has plateaued — most devs already know React."
             animate={{ countUp: true }}
-            drillDown={{
-              label: "Repo stats detail",
-              onClick: () => openDrill(
-                { title: `Stars: ${formatValue(repoStats.stars, "compact")}`, field: "stars", value: repoStats.stars },
+            drillDown={() => (
                 <MetricGrid>
                   <KpiCard title="Stars" value={repoStats.stars} format="compact" icon={<Star className="h-3.5 w-3.5" />} />
                   <KpiCard title="Forks" value={repoStats.forks} format="compact" icon={<GitFork className="h-3.5 w-3.5" />} />
@@ -585,9 +579,8 @@ function DashboardContent() {
                     showPercentage
                     innerRadius={0.65}
                   />
-                </MetricGrid>,
-              ),
-            }}
+                </MetricGrid>
+            )}
           />
           <KpiCard
             title="Forks"
@@ -597,10 +590,7 @@ function DashboardContent() {
             description="Active forks of the repository. Indicates downstream development and contribution potential."
             aiContext="Fork count reflects downstream development. High fork-to-star ratio (~20%) indicates active contributor ecosystem, not just passive interest."
             animate={{ countUp: true, delay: 100 }}
-            drillDown={{
-              label: "Repo stats detail",
-              onClick: () => openDrill(
-                { title: `Forks: ${formatValue(repoStats.forks, "compact")}`, field: "forks", value: repoStats.forks },
+            drillDown={() => (
                 <MetricGrid>
                   <KpiCard title="Forks" value={repoStats.forks} format="compact" icon={<GitFork className="h-3.5 w-3.5" />} />
                   <KpiCard title="Stars" value={repoStats.stars} format="compact" icon={<Star className="h-3.5 w-3.5" />} />
@@ -613,9 +603,8 @@ function DashboardContent() {
                     ]}
                     dense
                   />
-                </MetricGrid>,
-              ),
-            }}
+                </MetricGrid>
+            )}
           />
           <KpiCard
             title="Open Issues"
@@ -636,10 +625,7 @@ function DashboardContent() {
             description={({ value }) => `${value.toLocaleString()} commits${activeDayFilter ? ` on ${activeDayFilter}s` : ""} in the selected period. Sparkline shows weekly volume.`}
             aiContext="Commit velocity tracks core team output. Weekend near-zero confirms this is corporate-driven, not community-driven."
             animate={{ countUp: true, delay: 300 }}
-            drillDown={{
-              label: "Commit activity detail",
-              onClick: () => openDrill(
-                { title: `${totalCommits} Commits`, field: "commits", value: totalCommits },
+            drillDown={() => (
                 <MetricGrid>
                   <KpiCard title="Total Commits" value={totalCommits} format="number" />
                   <KpiCard title="Avg / Week" value={periodCommits.length > 0 ? Math.round(totalCommits / periodCommits.length) : 0} format="number" />
@@ -664,9 +650,8 @@ function DashboardContent() {
                     gradient
                     curve="monotoneX"
                   />
-                </MetricGrid>,
-              ),
-            }}
+                </MetricGrid>
+            )}
           />
           <StatGroup
             stats={[

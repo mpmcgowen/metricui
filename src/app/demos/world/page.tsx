@@ -18,8 +18,6 @@ import { useCrossFilter } from "@/lib/CrossFilterContext";
 import { useMetricFilters } from "@/lib/FilterContext";
 import { SegmentToggle } from "@/components/filters/SegmentToggle";
 import { FilterBar } from "@/components/filters/FilterBar";
-import { useDrillDownAction } from "@/components/ui/DrillDown";
-import { formatValue } from "@/lib/format";
 import { worldFeatures } from "@/lib/geoFeatures";
 import { countries } from "@/data/world";
 import type { Country } from "@/data/world";
@@ -343,7 +341,6 @@ function CountryTable({ data, tableView }: {
 // ---------------------------------------------------------------------------
 
 function CountryDetail({ country }: { country: Country }) {
-  const openDrill = useDrillDownAction();
   const density = country.area > 0 ? Math.round(country.population / country.area) : 0;
 
   return (
@@ -421,11 +418,10 @@ function CountryDetail({ country }: { country: Country }) {
 }
 
 // ---------------------------------------------------------------------------
-// Nested drill components — must be separate to call useDrillDownAction()
+// Nested drill components
 // ---------------------------------------------------------------------------
 
 function SubregionDrill({ region, allCountries }: { region: string; allCountries: Country[] }) {
-  const openDrill = useDrillDownAction();
   const regionCountries = allCountries.filter((c) => c.region === region);
 
   const subregionData = useMemo(() => {
@@ -525,7 +521,6 @@ function SubregionDrill({ region, allCountries }: { region: string; allCountries
 function DashboardContent() {
   const cf = useCrossFilter();
   const filters = useMetricFilters();
-  const openDrill = useDrillDownAction();
   const tableView = filters?.dimensions?.tableView?.[0] ?? "All";
 
   // Filter countries by segment toggle + cross-filter
@@ -591,10 +586,7 @@ function DashboardContent() {
               description={({ formatted }) => `${formatted.value} people across ${filteredCountries.length} countries. Sparkline shows the top 10 most populous nations.`}
               animate={{ countUp: true }}
               aiContext="India and China hold ~36% of world population. GDP-population inversion is common — smallest countries often have highest GDP per capita."
-              drillDown={{
-                label: "Top countries by population",
-                onClick: () => openDrill(
-                  { title: `World Population: ${formatValue(data.totalPopulation, "compact")}`, field: "population" },
+              drillDown={() => (
                   <MetricGrid>
                     <KpiCard title="Total Population" value={data.totalPopulation} format="compact" />
                     <KpiCard title="Countries" value={filteredCountries.length} format="number" />
@@ -624,9 +616,8 @@ function DashboardContent() {
                       pageSize={10}
                       dense
                     />
-                  </MetricGrid>,
-                ),
-              }}
+                  </MetricGrid>
+              )}
             />
             <KpiCard
               title="Countries"
@@ -644,9 +635,7 @@ function DashboardContent() {
               description="Distinct official and recognized languages across all countries. Many nations have multiple official languages."
               animate={{ countUp: true, delay: 200 }}
               aiContext="English is official in 60+ countries but Mandarin has more native speakers. Africa has the highest linguistic diversity per country."
-              drillDown={{
-                label: "Language distribution",
-                onClick: () => {
+              drillDown={() => {
                   const langMap = new Map<string, number>();
                   for (const c of filteredCountries) {
                     for (const lang of c.languages) langMap.set(lang, (langMap.get(lang) ?? 0) + 1);
@@ -654,8 +643,7 @@ function DashboardContent() {
                   const langData = [...langMap.entries()].sort((a, b) => b[1] - a[1]);
                   const topLangs = langData.slice(0, 12).map(([id, value]) => ({ id, label: id, value }));
                   const langTable = langData.slice(0, 30).map(([language, count]) => ({ language, countries: count }));
-                  openDrill(
-                    { title: `${data.totalLanguages} Languages`, field: "languages" },
+                  return (
                     <MetricGrid>
                       <KpiCard title="Total Languages" value={data.totalLanguages} format="number" />
                       <KpiCard title="Most Common" value={langData[0]?.[0] ?? "\u2014"} format={{ style: "custom" }} />
@@ -679,9 +667,8 @@ function DashboardContent() {
                         dense
                         searchable
                       />
-                    </MetricGrid>,
+                    </MetricGrid>
                   );
-                },
               }}
             />
             <KpiCard
@@ -691,9 +678,7 @@ function DashboardContent() {
               icon={<Coins className="h-3.5 w-3.5" />}
               description={({ value }) => `${value} unique currencies in circulation. Some currencies like the Euro are shared across many nations.`}
               animate={{ countUp: true, delay: 300 }}
-              drillDown={{
-                label: "Currency distribution",
-                onClick: () => {
+              drillDown={() => {
                   const currMap = new Map<string, { name: string; count: number }>();
                   for (const c of filteredCountries) {
                     for (const cur of c.currencies) {
@@ -704,8 +689,7 @@ function DashboardContent() {
                   const currData = [...currMap.entries()].sort((a, b) => b[1].count - a[1].count);
                   const topCurr = currData.slice(0, 12).map(([code, d]) => ({ id: code, label: `${code} (${d.name})`, value: d.count }));
                   const currTable = currData.slice(0, 30).map(([code, d]) => ({ code, name: d.name, countries: d.count }));
-                  openDrill(
-                    { title: `${data.totalCurrencies} Currencies`, field: "currencies" },
+                  return (
                     <MetricGrid>
                       <KpiCard title="Total Currencies" value={data.totalCurrencies} format="number" />
                       <KpiCard title="Most Used" value={currData[0]?.[0] ?? "\u2014"} format={{ style: "custom" }} />
@@ -730,9 +714,8 @@ function DashboardContent() {
                         dense
                         searchable
                       />
-                    </MetricGrid>,
+                    </MetricGrid>
                   );
-                },
               }}
             />
 
