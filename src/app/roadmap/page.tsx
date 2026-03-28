@@ -214,7 +214,7 @@ const milestones: Milestone[] = [
       "Edge case hardening — error > loading priority, null/NaN/Infinity handling",
       { text: "675 tests — edge cases, accessibility, interaction, render", href: "/docs/guides/getting-started" },
       "API name review — consistent prop names across every component",
-      "Zero deprecated props, zero legacy shims, zero MetricCore artifacts",
+      "Zero deprecated props, zero legacy shims, clean API surface",
     ],
   },
 ];
