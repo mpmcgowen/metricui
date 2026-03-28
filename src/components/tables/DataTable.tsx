@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { CardShell } from "@/components/ui/CardShell";
-import { useTheme, useLocale, useMetricConfig } from "@/lib/MetricProvider";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { formatValue, evaluateConditions, isCustomColor, type FormatOption, type Condition } from "@/lib/format";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
 import { Badge } from "@/components/ui/Badge";
@@ -330,15 +330,13 @@ function DataTableInner<T extends DataRow = DataRow>(
   }: DataTableProps<T>,
   ref: React.ForwardedRef<HTMLDivElement>,
 ) {
-  useTheme();
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
-  const resolvedDense = dense ?? config.dense;
-  const resolvedVariant = variant ?? config.variant;
-  const resolvedNullDisplay = nullDisplay ?? config.nullDisplay;
-  const resolvedLoading = loading ?? config.loading;
+  const ctx = useComponentConfig({ variant, dense });
+  const resolvedDense = ctx.resolvedDense;
+  const resolvedVariant = ctx.resolvedVariant;
+  const resolvedNullDisplay = nullDisplay ?? ctx.config.nullDisplay;
+  const resolvedLoading = loading ?? ctx.config.loading;
   const resolvedScrollIndicators = scrollIndicatorsProp ?? true;
-  const resolvedExportable = exportableProp !== undefined ? exportableProp : config.exportable;
+  const resolvedExportable = exportableProp !== undefined ? exportableProp : ctx.config.exportable;
   const overrideExportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
 
   const resolvedColumns = useMemo(() => columnsProp ?? inferColumns(data), [columnsProp, data]);
@@ -543,7 +541,7 @@ function DataTableInner<T extends DataRow = DataRow>(
     switch (col.type) {
       case "text": return String(value);
       case "number": case "currency": case "percent":
-        return typeof value === "number" ? formatValue(value, fmt, localeDefaults) : String(value);
+        return typeof value === "number" ? formatValue(value, fmt, ctx.localeDefaults) : String(value);
       case "link": {
         const href = col.linkHref ? col.linkHref(value, row) : String(value);
         const isExt = col.linkTarget === "_blank";
@@ -575,10 +573,10 @@ function DataTableInner<T extends DataRow = DataRow>(
       case "date": {
         const d = value instanceof Date ? value : new Date(String(value));
         if (isNaN(d.getTime())) return String(value);
-        return new Intl.DateTimeFormat(localeDefaults.locale ?? "en-US", col.dateFormat ?? { year: "numeric", month: "short", day: "numeric" }).format(d);
+        return new Intl.DateTimeFormat(ctx.localeDefaults.locale ?? "en-US", col.dateFormat ?? { year: "numeric", month: "short", day: "numeric" }).format(d);
       }
       case "bar":
-        return typeof value === "number" ? formatValue(value, fmt, localeDefaults) : String(value);
+        return typeof value === "number" ? formatValue(value, fmt, ctx.localeDefaults) : String(value);
       default: return String(value);
     }
   }
@@ -589,12 +587,12 @@ function DataTableInner<T extends DataRow = DataRow>(
       if (col.render) return col.render(value, row, index);
       if (value === null || value === undefined) return resolvedNullText;
       if (col.type) return renderTypedCell(col, value, row);
-      if (col.format && typeof value === "number") return formatValue(value, col.format, localeDefaults);
-      if (typeof value === "number" && !col.format) return value.toLocaleString(localeDefaults.locale);
+      if (col.format && typeof value === "number") return formatValue(value, col.format, ctx.localeDefaults);
+      if (typeof value === "number" && !col.format) return value.toLocaleString(ctx.localeDefaults.locale);
       return String(value ?? "");
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [localeDefaults, resolvedNullText, columnMaxValues]
+    [ctx.localeDefaults, resolvedNullText, columnMaxValues]
   );
 
   // --- Data states handled by CardShell (except loading, which uses custom TableSkeleton) ---

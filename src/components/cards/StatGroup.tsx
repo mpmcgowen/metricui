@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { FormatOption, ComparisonMode } from "@/lib/format";
 import type { CardVariant, DataComponentProps, DrillDownConfig } from "@/lib/types";
 import type { EmptyState, ErrorState, StaleState } from "@/lib/types";
-import { useMetricConfig } from "@/lib/MetricProvider";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { DataStateWrapper } from "@/components/ui/DataStateWrapper";
 import { KpiCard } from "./KpiCard";
 
@@ -145,13 +145,13 @@ const StatGroupInner = forwardRef<HTMLDivElement, StatGroupProps>(function StatG
   nullDisplay,
   animate,
 }, ref) {
-  const config = useMetricConfig();
+  const ctx = useComponentConfig({ variant, dense });
 
-  const resolvedVariant = variant ?? config.variant;
-  const resolvedDense = dense ?? config.dense;
-  const resolvedNullDisplay = nullDisplay ?? config.nullDisplay;
+  const resolvedVariant = ctx.resolvedVariant;
+  const resolvedDense = ctx.resolvedDense;
+  const resolvedNullDisplay = nullDisplay ?? ctx.config.nullDisplay;
 
-  const resolvedLoading = loading ?? config.loading;
+  const resolvedLoading = loading ?? ctx.config.loading;
 
   if (resolvedLoading) {
     return (

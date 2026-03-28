@@ -2,7 +2,7 @@
 
 import { forwardRef, useState, useEffect, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { useMetricConfig, useLocale } from "@/lib/MetricProvider";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { formatValue, type FormatOption } from "@/lib/format";
 import { CARD_CLASSES } from "@/lib/styles";
 import type { DataComponentProps, DrillDownConfig } from "@/lib/types";
@@ -232,9 +232,8 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
     },
     ref
   ) {
-    const config = useMetricConfig();
-    const localeDefaults = useLocale();
-    const resolvedDense = denseProp ?? config.dense;
+    const ctx = useComponentConfig({ dense: denseProp });
+    const resolvedDense = ctx.resolvedDense;
 
     const interaction = useComponentInteraction({
       drillDown,
@@ -272,8 +271,8 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
     // --- Formatted metric ---
     const formattedMetric = useMemo(() => {
       if (!metric) return null;
-      return formatValue(metric.value, metric.format, localeDefaults);
-    }, [metric, localeDefaults]);
+      return formatValue(metric.value, metric.format, ctx.localeDefaults);
+    }, [metric, ctx.localeDefaults]);
 
     // --- Dismiss handler ---
     const handleDismiss = useCallback(() => {

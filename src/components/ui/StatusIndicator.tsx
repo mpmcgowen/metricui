@@ -2,7 +2,7 @@
 
 import { forwardRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { useMetricConfig } from "@/lib/MetricProvider";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import type { DataComponentProps } from "@/lib/types";
 import { CardShell } from "@/components/ui/CardShell";
 import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
@@ -216,8 +216,8 @@ export const StatusIndicator = forwardRef<HTMLDivElement, StatusIndicatorProps>(
     },
     ref,
   ) {
-    const config = useMetricConfig();
-    const resolvedLoading = loading ?? config.loading;
+    const ctx = useComponentConfig({});
+    const resolvedLoading = loading ?? ctx.config.loading;
 
     const matched = useMemo(() => matchRule(value, rules), [value, rules]);
     const named = matched ? resolveColor(matched.color) : null;

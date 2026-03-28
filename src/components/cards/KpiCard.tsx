@@ -37,7 +37,7 @@ import {
   buildMetricContext,
 } from "@/lib/template";
 import { devWarnDeprecated } from "@/lib/devWarnings";
-import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
+import { useComponentConfig } from "@/lib/useComponentConfig";
 import { useCountUp } from "@/lib/useCountUp";
 
 import { useCopyToClipboard } from "@/lib/useCopyToClipboard";
@@ -262,13 +262,12 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   onCopy,
   bare,
 }, ref) {
-  const localeDefaults = useLocale();
-  const config = useMetricConfig();
+  const cc = useComponentConfig({ animate: typeof animate === "boolean" ? animate : undefined, variant, dense });
 
-  const resolvedNullDisplay = nullDisplay ?? config.nullDisplay;
-  const resolvedVariant = variant ?? config.variant;
-  const resolvedAnimate = animate ?? config.animate;
-  const resolvedDense = dense ?? config.dense;
+  const resolvedNullDisplay = nullDisplay ?? cc.config.nullDisplay;
+  const resolvedVariant = cc.resolvedVariant;
+  const resolvedAnimate = cc.resolvedAnimate;
+  const resolvedDense = cc.resolvedDense;
   const exportData = typeof exportableProp === "object" && exportableProp.data ? exportableProp.data : undefined;
 
   // --- Merge config groupings with flat props (configs take precedence) ---
@@ -276,7 +275,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   const sparklinePreviousPeriod = sparklineConfig?.previousPeriod ?? sparklinePreviousPeriodProp;
   const sparklineType = sparklineConfig?.type ?? sparklineTypeProp;
   const sparklineInteractive = sparklineConfig?.interactive ?? sparklineInteractiveProp;
-  const loading = stateConfig?.loading ?? loadingProp ?? config.loading;
+  const loading = stateConfig?.loading ?? loadingProp ?? cc.config.loading;
   const empty = stateConfig?.empty ?? emptyProp;
   const error = stateConfig?.error ?? errorProp;
   const stale = stateConfig?.stale ?? staleProp;
@@ -319,7 +318,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
     enabled: !valueIsString && !valueIsInert && (animConfig?.countUp ?? false),
     duration: animConfig?.duration,
     delay: animConfig?.delay,
-    motionConfig: config.motionConfig,
+    motionConfig: cc.config.motionConfig,
   });
   const displayValue = !valueIsString && !valueIsInert && animConfig?.countUp ? animatedValue : value;
 
@@ -342,12 +341,12 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
     ? rawInputValue
     : valueIsInert
       ? resolveNullDisplay(resolvedNullDisplay)
-      : formatValue(displayValue, format, localeDefaults);
+      : formatValue(displayValue, format, cc.localeDefaults);
   const rawValue = valueIsString
     ? rawInputValue
     : valueIsInert
       ? resolveNullDisplay(resolvedNullDisplay)
-      : formatValueRaw(value, format, localeDefaults);
+      : formatValueRaw(value, format, cc.localeDefaults);
 
   // --- Normalize comparison to array ---
   const comparisons: ComparisonConfig[] = comparison
@@ -361,7 +360,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
           mode: c.mode,
           invertTrend: c.invertTrend,
           format,
-          localeDefaults,
+          localeDefaults: cc.localeDefaults,
         })
       )
     : [];
@@ -399,7 +398,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
   // --- Build context ---
   const ctx = buildMetricContext({
     value,
-    formattedValue: formatValue(value, format, localeDefaults),
+    formattedValue: formatValue(value, format, cc.localeDefaults),
     rawValue,
     comparison: compResults[0] ?? null,
     goalProgress,
@@ -428,7 +427,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
     neutral: "text-[var(--muted)]",
   };
 
-  const sparklineTooltipFormatter = (v: number) => formatValue(v, format, localeDefaults);
+  const sparklineTooltipFormatter = (v: number) => formatValue(v, format, cc.localeDefaults);
 
   const showTitle = titlePosition !== "hidden";
   const alignClass =
@@ -673,7 +672,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
                 {goal.label ?? "Target"}
                 {goal.showTarget && (
                   <span className="ml-1 font-[family-name:var(--font-mono)]">
-                    ({formatValue(goal.value, format, localeDefaults)})
+                    ({formatValue(goal.value, format, cc.localeDefaults)})
                   </span>
                 )}
               </span>
@@ -688,7 +687,7 @@ const KpiCardInner = forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
                 }
               >
                 {goal.showRemaining && !goalProgress.isComplete
-                  ? `${formatValue(goalProgress.remaining, format, localeDefaults)} left`
+                  ? `${formatValue(goalProgress.remaining, format, cc.localeDefaults)} left`
                   : `${Math.round(goalProgress.progress)}%`
                 }
               </span>
