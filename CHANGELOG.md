@@ -5,6 +5,89 @@ All notable changes to MetricUI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-03-30
+
+### Added
+
+- **Headline prop** — `headline` on any chart or table renders a summary number under the title. String shorthand (`headline="$1.2M total"`) or rich config with formatting, comparison badges, and conditional coloring.
+- **Headline component** — `src/components/ui/Headline.tsx` with count-up animation, trend arrows, named color resolution.
+- **Cookbook recipe** — 3 live examples: string shorthand, rich config with conditions, comparison badge.
+- Documented in README, llms.txt, MCP server, and cookbook.
+- 11 new Headline tests.
+
+### Changed
+
+- **ChartContainer shell pattern** — charts now pass card-level props via a single `shell` object. Add a new prop to `DataComponentProps` → it flows through to every chart automatically. No more updating 16 files.
+- **DataTable uses CardShell header** — removed custom `renderHeader` function. DataTable header now renders identically to charts.
+- **namedColors.ts** — shared color resolver extracted for all components.
+- Horizontal BarChart label margin now always respects calculated label width (removed narrow-container overrides that clipped labels).
+
+---
+
+## [1.0.0] - 2026-03-28
+
+### Added
+
+- **Unified architecture** — every data component uses `useComponentConfig` (theme, locale, sizing) + `useComponentInteraction` (drillDown, crossFilter, linkedHover). Zero exceptions.
+- **DrillDownEvent** — one callback type across all 21 components. Replaces 20 different signatures.
+- **Design tokens** — `--mu-z-dropdown/sticky/overlay/modal/toast`, `--mu-text-2xs/xs/sm/base/md`, `--mu-transition-duration`, `--mu-neutral-bg/text/dot`, `--mu-skeleton-bg`. Every visual value is a CSS variable.
+- **i18n messages** — `config.messages` with 7 translatable strings (empty, error, loading, noResults, retry, clearAll, copySuccess).
+- **String shorthand for error/empty** — `error="Failed"` works alongside `error={{ message, retry }}`.
+- **Missing styles.css warning** — dev-only console warning when CSS variables aren't loaded.
+- **useFilteredData auto-detection** — auto-detects date field, dimension filters, and cross-filter field. Zero-config mode.
+- **useFocusTrap hook** — shared focus trap for DashboardInsight sidebar and DrillDownPanel.
+- **useDropdown hook** — shared dropdown behavior with keyboard nav + ARIA.
+- **STATS constant** — single source of truth for component counts across homepage, docs, and comparisons.
+- 32 edge case tests (675 total). Found and fixed error > loading state priority in CardShell.
+
+### Changed
+
+- **Error > loading priority** — CardShell now shows error state even when loading is also true (was showing misleading skeleton).
+- **Choropleth default projection** — changed from `mercator` to `naturalEarth1`.
+- **BarLineChart** — renamed `indexBy` prop to `index` for consistency.
+
+### Removed
+
+- **All deprecated props** — `DrillDownConfig` ({ onClick }), KpiCard `crossFilterField`/`crossFilterValue`/`sparklineData`/`sparklinePreviousPeriod`/`sparklineType`/`sparklineInteractive`, BarChart `keys`/`indexBy`/`grouped`, DataTable `column.label`. Zero backwards-compat shims.
+- **All `devWarnDeprecated` calls** — clean API surface.
+- MetricCore development artifacts.
+
+---
+
+## [0.8.0] - 2026-03-27
+
+### Added
+
+- **useDashboardState** — serialize/restore entire dashboard state (filters, period, dimensions, cross-filter) for shareable links and saved views. `toSearchParam()`/`fromSearchParam()` for URL-based sharing.
+- **useComponentInteraction** — centralized drillDown/crossFilter/linkedHover logic. Replaced 6 separate hook calls duplicated across 14 chart components.
+- **6 shared doc components** — DocPageLayout, ComponentDocFooter, NotesList, GuideHero, PlaygroundSection, Code. Eliminated 1,400+ lines of doc boilerplate.
+- **Accessibility** — ARIA roles on SegmentToggle (`role="radiogroup"`), screen reader announcements on DataStateWrapper (`aria-live`), `aria-expanded` on FilterBar, `aria-label` on DashboardInsight icon buttons, `aria-expanded`/`aria-haspopup` on DropdownFilter/PeriodSelector, auto `aria-label` on all charts via ChartContainer.
+- **Fixed-position TOC** — OnThisPage redesigned as dbt-style right-rail nav with accent bar active indicator.
+- 42 components in MCP knowledge base. All 38 doc pages standardized.
+- API consistency: Sparkline gains `aiContext`, Gauge gains `action` + modern drillDown/crossFilter/tooltipHint, BulletChart gains drillDown/crossFilter/tooltipHint, StatGroup wired to DataStateWrapper for empty/error states, DataTable gains `drillDown={true}` auto-drill shorthand.
+- **Contrast fixes** — removed double-dimming (opacity on already-muted text) for WCAG AA compliance.
+
+### Changed
+
+- Renamed `useChartInteraction` → `useComponentInteraction` (not chart-specific).
+- Theme: replaced hardcoded gray/zinc colors with CSS variables (`--mu-neutral-bg/text/dot`, `--mu-skeleton-bg`).
+
+---
+
+## [0.7.0] - 2026-03-26
+
+### Added
+
+- **7 new chart types** — ScatterPlot, Treemap, Calendar, Radar, Sankey, Choropleth, Bump.
+- **Bundled map features** — `worldFeatures` (alpha-3 country codes) and `usStatesFeatures` (2-letter state abbreviations). No external geo packages needed.
+- **Choropleth DX** — `scaleType` prop (linear/log/sqrt) for skewed data, `tooltipLabel` prop, country name resolution in tooltips via `i18n-iso-countries`.
+- **Tick collision fix** — `calculateResponsiveTicks` auto-estimates label width from string length.
+- **Granularity toggle** cookbook recipe (SegmentToggle pattern, no new component).
+- 199 new tests (635 total across 36 files).
+- ROADMAP.md updated through 0.8.
+
+---
+
 ## [0.6.1] - 2026-03-25
 
 ### Fixed

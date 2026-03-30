@@ -14,9 +14,9 @@ export const STATS = {
   /** Number of live demo dashboards */
   demos: 5,
   /** Total test count */
-  tests: 675,
+  tests: 686,
   /** Number of hooks exported */
   hooks: 14,
   /** Current version */
-  version: "1.0.0",
+  version: "1.1.0",
 } as const;
