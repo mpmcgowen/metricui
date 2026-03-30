@@ -59,20 +59,19 @@ import { KpiCard, AreaChart, MetricProvider } from "https://cdn.jsdelivr.net/npm
 
 You're building a dashboard. You need KPI cards, charts, tables. You reach for Recharts + shadcn + custom CSS and spend days wiring up formatting, dark mode, loading states, and responsive layouts.
 
-**MetricUI does all of that in one import.**
+**Stop assembling dashboards from parts.**
 
 ```tsx
 import {
-  MetricProvider, FilterProvider, DashboardHeader, PeriodSelector,
+  Dashboard, DashboardHeader, PeriodSelector,
   MetricGrid, KpiCard, AreaChart, DonutChart, DataTable, Callout,
 } from "metricui";
 import "metricui/styles.css";
 
-export default function Dashboard() {
+export default function App() {
   return (
-    <MetricProvider theme="emerald">
-      <FilterProvider defaultPreset="30d">
-        <DashboardHeader title="Revenue" lastUpdated={new Date()} actions={<PeriodSelector comparison />} />
+    <Dashboard theme="emerald" filters={{ defaultPreset: "30d" }}>
+      <DashboardHeader title="Revenue" lastUpdated={new Date()} actions={<PeriodSelector comparison />} />
 
         <MetricGrid>
           <MetricGrid.Section title="Key Metrics" />
@@ -108,13 +107,12 @@ export default function Dashboard() {
           <MetricGrid.Section title="Details" border />
           <DataTable data={customers} title="Top Customers" columns={columns} searchable pageSize={10} />
         </MetricGrid>
-      </FilterProvider>
-    </MetricProvider>
+    </Dashboard>
   );
 }
 ```
 
-**Zero layout code.** MetricGrid auto-detects component types — KPIs row up, charts pair, tables go full width. DashboardHeader shows live status with auto-ticking "Updated Xm ago". FilterProvider + PeriodSelector wire time filtering across the page. Responsive out of the box.
+**Zero layout code.** `<Dashboard>` wraps all providers (theme, filters, cross-filter, drill-down, linked hover) in one component. MetricGrid auto-detects component types — KPIs row up, charts pair, tables go full width. DashboardHeader shows live status with auto-ticking "Updated Xm ago". Responsive out of the box.
 
 ---
 
@@ -207,9 +205,9 @@ One prop formats any value. Currency, percentages, durations, compact notation �
 One prop. Entire dashboard changes color. 8 built-in presets. Custom presets via `ThemePreset` type. [Theming guide &rarr;](https://metricui.com/docs/guides/theming)
 
 ```tsx
-<MetricProvider theme="emerald">   // Green accent + green-first chart palette
-<MetricProvider theme="rose">      // Pink accent + pink-first chart palette
-<MetricProvider theme="amber">     // Warm amber everything
+<Dashboard theme="emerald">   // Green accent + green-first chart palette
+<Dashboard theme="rose">      // Pink accent + pink-first chart palette
+<Dashboard theme="amber">     // Warm amber everything
 ```
 
 ### MetricGrid — Zero Layout Code
@@ -231,12 +229,12 @@ Drop components in. It figures out the layout. [Docs &rarr;](https://metricui.co
 Complete filter context — wire [PeriodSelector](https://metricui.com/docs/period-selector), [DropdownFilter](https://metricui.com/docs/dropdown-filter), [SegmentToggle](https://metricui.com/docs/segment-toggle), and [FilterTags](https://metricui.com/docs/filter-tags) together with zero boilerplate. [Filtering guide &rarr;](https://metricui.com/docs/guides/filtering)
 
 ```tsx
-<FilterProvider defaultPreset="30d">
+<Dashboard theme="indigo" filters={{ defaultPreset: "30d" }}>
   <DashboardHeader title="Dashboard" actions={<PeriodSelector comparison />} />
   <SegmentToggle options={["All", "Enterprise", "SMB"]} field="segment" />
   <DropdownFilter label="Region" options={regions} field="region" multiple />
   <FilterTags />  {/* Auto-renders active filters as dismissible chips */}
-</FilterProvider>
+</Dashboard>
 ```
 
 ### Saved Views & Shareable Links
@@ -288,11 +286,6 @@ One chart crashes? The rest keep running. Dev mode shows component name + action
 | [**Choropleth**](https://metricui.com/docs/choropleth) | Geographic heatmap with bundled world + US state maps, sqrt/log scale | [Docs](https://metricui.com/docs/choropleth) |
 | [**Bump**](https://metricui.com/docs/bump) | Ranking chart with auto-ranking from flat data | [Docs](https://metricui.com/docs/bump) |
 | [**Sparkline**](https://metricui.com/docs/sparkline) | Inline micro-chart with reference lines, bands, trend coloring | [Docs](https://metricui.com/docs/sparkline) |
-
-### Data
-
-| Component | What it does | Docs |
-|-----------|-------------|------|
 | [**DataTable**](https://metricui.com/docs/data-table) | Sort, search, pagination, expandable rows, 12 column types, pinned columns, row conditions | [Docs](https://metricui.com/docs/data-table) |
 
 ### Layout
@@ -387,17 +380,16 @@ Raw `div` cards. Manual number formatting. No sparklines, no conditions, no goal
 
 ```tsx
 import {
-  MetricProvider, FilterProvider, DashboardHeader, PeriodSelector,
+  Dashboard, DashboardHeader, PeriodSelector,
   MetricGrid, KpiCard, Callout, AreaChart, DonutChart, BarChart,
   DataTable, Badge,
 } from "metricui";
 import "metricui/styles.css";
 
-export default function Dashboard() {
+export default function App() {
   return (
-    <MetricProvider theme="emerald">
-      <FilterProvider defaultPreset="30d">
-        <DashboardHeader
+    <Dashboard theme="emerald" filters={{ defaultPreset: "30d" }}>
+      <DashboardHeader
           title="SaaS Metrics"
           subtitle="Real-time metrics overview"
           lastUpdated={new Date()}
@@ -425,7 +417,7 @@ export default function Dashboard() {
 
           <KpiCard title="Active Users" value={8420} format="number"
             comparison={{ value: 7680 }} copyable
-            drillDown={{ label: "View breakdown", onClick: () => {} }} />
+            drillDown={true} />
 
           <KpiCard title="Conversion" value={4.8} format="percent"
             comparison={{ value: 4.2 }}
@@ -470,8 +462,7 @@ export default function Dashboard() {
                 render: (v) => <Badge variant={v === "active" ? "success" : v === "at-risk" ? "warning" : "danger"}>{String(v)}</Badge> },
             ]} />
         </MetricGrid>
-      </FilterProvider>
-    </MetricProvider>
+    </Dashboard>
   );
 }
 ```
@@ -480,7 +471,7 @@ export default function Dashboard() {
 
 **Same prompt. The AI with MetricUI MCP generates:**
 - DashboardHeader with live status + auto-ticking "Updated Xm ago"
-- FilterProvider + PeriodSelector with comparison toggle
+- Dashboard wrapper with filters, cross-filtering, and comparison toggle
 - MetricGrid auto-layout (zero CSS)
 - KpiCards with conditional coloring, goal progress bars, sparkline overlays, drill-down links
 - AreaChart with dashed target reference line, danger zone threshold band, and previous-period comparison overlay
