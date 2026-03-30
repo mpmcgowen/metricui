@@ -402,6 +402,7 @@ function WikipediaDashboardInner({
             index="wiki"
             categories={["edits"]}
             title="Edits by Wiki"
+            headline={{ value: filteredStats.totalEdits, format: "compact", label: "Total" }}
             format="number"
             height={300}
             sort="desc"
@@ -846,7 +847,7 @@ function Dashboard() {
           format={{ style: "custom", suffix: "/sec" }} />
 
         <BarChart data={topWikis} index="wiki" categories={["edits"]}
-          title="Edits by Language" headline={topWikis.length + " wikis"} sort="desc" crossFilter />
+          title="Edits by Language" headline={{ value: topWikis.reduce((s: number, r: any) => s + (Number(r.edits) || 0), 0), format: "compact", label: "Total Edits" }} sort="desc" crossFilter />
         <DonutChart data={editTypes} title="Edit Types"
           headline={editTypes.length + " types"}
           showPercentage crossFilter />

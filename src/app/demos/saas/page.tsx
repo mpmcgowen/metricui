@@ -447,6 +447,7 @@ function DashboardContent() {
         index="month"
         categories={["mrr"]}
         title="Cumulative MRR"
+        headline={{ value: data.kpis.mrr, format: "currency", label: "Current" }}
         subtitle={compData ? "Current vs comparison period" : "Monthly recurring revenue growth"}
         description="Running total of MRR from account join dates. Filters apply — select an industry or country to see its MRR contribution."
         aiContext="MRR growth flattened in Q3 2024 due to a pricing migration. The step-up in Oct 2024 reflects Enterprise renewals on new pricing. Seasonality: Q1 is slowest for new signups."
@@ -462,6 +463,7 @@ function DashboardContent() {
       <Funnel
         data={data.funnel}
         title="Conversion Funnel"
+        headline={{ value: data.funnel.length > 0 ? Math.round((data.funnel[data.funnel.length - 1]?.value / data.funnel[0]?.value) * 100) : 0, format: "percent", label: "Overall" }}
         subtitle="Signup → Retained pipeline"
         description="Tracks accounts through each stage from initial signup to long-term retention."
         aiContext="Biggest drop-off is Activated → Subscribed (credit card wall). We're testing a 14-day free trial to improve this. Retained = still active after 6 months."
@@ -586,6 +588,7 @@ function DashboardContent() {
         index="month"
         categories={["signups", "churned"]}
         title="Signups vs Churn"
+        headline={{ value: data.kpis.activeAccounts - (data.kpis.totalAccounts - data.kpis.activeAccounts), format: "number", label: "Net Active" }}
         subtitle={compData ? "Current vs comparison period" : "Monthly new signups and churned accounts"}
         aiContext="Net new accounts (signups minus churn) is the key growth indicator. Positive months = healthy. The gap narrowed in mid-2024 due to a competitor launch. Recovered in Q4."
         format="number"
@@ -622,6 +625,7 @@ function DashboardContent() {
           { key: "country", header: "Country", sortable: true },
         ]}
         title="Top Accounts"
+        headline={{ value: data.topAccounts.reduce((s: number, a: any) => s + (a.mrr ?? 0), 0), format: "currency", label: "Combined MRR" }}
         pageSize={10}
         dense
         drillDownMode="modal"

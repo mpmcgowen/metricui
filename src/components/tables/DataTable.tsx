@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { CardShell } from "@/components/ui/CardShell";
 import { useComponentConfig } from "@/lib/useComponentConfig";
 import { formatValue, evaluateConditions, isCustomColor, type FormatOption, type Condition } from "@/lib/format";
-import { DescriptionPopover } from "@/components/ui/DescriptionPopover";
 import { Badge } from "@/components/ui/Badge";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { StatusIndicator } from "@/components/ui/StatusIndicator";
@@ -294,21 +293,6 @@ function TableSkeleton<T>({ columns, rows = 5 }: { columns: ColumnDef<T>[]; rows
 // Header helper
 // ---------------------------------------------------------------------------
 
-function renderHeader(title?: string, subtitle?: string, description?: string | React.ReactNode, action?: React.ReactNode) {
-  if (!title && !action) return null;
-  return (
-    <div className="flex items-start justify-between px-5 pb-2 pt-5">
-      <div>
-        <div className="flex items-center gap-1.5">
-          {title && <span className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">{title}</span>}
-          {description && <DescriptionPopover content={typeof description === "string" ? description : description} />}
-        </div>
-        {subtitle && <p className="mt-0.5 text-[length:var(--mu-text-xs)] text-[var(--muted)]">{subtitle}</p>}
-      </div>
-      {action && <div className="flex-shrink-0">{action}</div>}
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -316,7 +300,7 @@ function renderHeader(title?: string, subtitle?: string, description?: string | 
 
 function DataTableInner<T extends DataRow = DataRow>(
   {
-    data, columns: columnsProp, title, subtitle, description, footnote, action,
+    data, columns: columnsProp, title, subtitle, description, footnote, action, headline,
     pageSize, pagination: paginationProp, maxRows, onViewAll, striped = false, dense,
     onRowClick, drillDown, drillDownMode, nullDisplay, footer, variant, className, exportable: exportableProp, loading, empty, error, stale,
     id, "data-testid": dataTestId, aiContext, stickyHeader, classNames, searchable,
@@ -587,6 +571,11 @@ function DataTableInner<T extends DataRow = DataRow>(
       id={id}
       data-testid={dataTestId}
       componentName="DataTable"
+      title={title}
+      subtitle={subtitle}
+      description={description}
+      action={action}
+      headline={headline}
       aiTitle={title}
       aiContext={aiContext}
       variant={resolvedVariant}
@@ -600,13 +589,9 @@ function DataTableInner<T extends DataRow = DataRow>(
       classNames={{ root: classNames?.root }}
     >
       {resolvedLoading ? (
-        <>
-          {renderHeader(title, subtitle, description, action)}
-          <TableSkeleton columns={columns} rows={effectivePageSize > 5 ? 5 : effectivePageSize} dense={resolvedDense} />
-        </>
+        <TableSkeleton columns={columns} rows={effectivePageSize > 5 ? 5 : effectivePageSize} dense={resolvedDense} />
       ) : (
       <>
-      {renderHeader(title, subtitle, description, action)}
 
       {searchable && (
         <div className="px-5">
