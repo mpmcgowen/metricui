@@ -585,7 +585,7 @@ function DataTableInner<T extends DataRow = DataRow>(
       stale={stale}
       exportable={resolvedExportable}
       exportData={overrideExportData ?? (data as DataRow[])}
-      className={cn("p-0", className)}
+      className={className}
       classNames={{ root: classNames?.root }}
     >
       {resolvedLoading ? (

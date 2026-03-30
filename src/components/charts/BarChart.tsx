@@ -833,10 +833,10 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
     if (!isHorizontal) return 90;
     const labels = data.map((d) => String(d[indexBy]));
     const maxLen = labels.reduce((max, l) => Math.max(max, l.length), 0);
-    // ~7px per character for the 10px mono font + 16px padding
-    const estimated = maxLen * 7 + 16;
-    // Cap at a reasonable max so labels don't take over the chart
-    return Math.min(Math.max(estimated, 60), 180);
+    // ~7.5px per character for the mono font + 20px padding
+    const estimated = maxLen * 7.5 + 20;
+    // Cap at reasonable max — allow up to 220px for long labels
+    return Math.min(Math.max(estimated, 60), 220);
   }, [isHorizontal, data, indexBy]);
 
   const margin = useMemo(() => {
@@ -845,8 +845,7 @@ const BarChartInner = forwardRef<HTMLDivElement, BarChartProps>(function BarChar
         top: denseValues.marginTop,
         right: containerWidth < 400 ? 16 : 32,
         bottom: xAxisLabel ? denseValues.marginBottomWithLabel : denseValues.marginBottom,
-        left:
-          containerWidth < 300 ? 60 : containerWidth < 400 ? 80 : yAxisLabel ? Math.max(horizontalLeftMargin, 110) : horizontalLeftMargin,
+        left: yAxisLabel ? Math.max(horizontalLeftMargin, 110) : horizontalLeftMargin,
       };
     }
     return {

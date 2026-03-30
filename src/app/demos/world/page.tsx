@@ -741,6 +741,7 @@ function DashboardContent() {
               data={data.choroplethData}
               features={worldFeatures}
               title="World Population"
+              headline={{ value: data.totalPopulation, format: "compact", label: "Total" }}
               subtitle="Hover over a country to see its population"
               format="compact"
               scaleType="sqrt"
@@ -757,6 +758,7 @@ function DashboardContent() {
               index="region"
               categories={["population"]}
               title="Population by Region"
+              headline={{ value: data.totalPopulation, format: "compact", label: "World Total" }}
               subtitle="Total population per continent — click to drill into subregions"
               description="Click a bar to explore subregions. Nested drill: Region -> Subregion -> Countries."
               format="compact"

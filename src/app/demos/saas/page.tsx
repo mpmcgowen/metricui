@@ -627,7 +627,6 @@ function DashboardContent() {
         title="Top Accounts"
         headline={{ value: data.topAccounts.reduce((s: number, a: any) => s + (a.mrr ?? 0), 0), format: "currency", label: "Combined MRR" }}
         pageSize={10}
-        dense
         drillDownMode="modal"
         drillDown={(row) => (
           <MetricGrid>

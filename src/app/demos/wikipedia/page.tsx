@@ -617,6 +617,7 @@ function WikipediaDashboardInner({
               index="wiki"
               categories={["edits"]}
               title="Edits by Language"
+              headline={{ value: filteredStats.totalEdits, format: "compact", label: "Total" }}
               subtitle="Top 10 most active wikis — click to see wiki detail"
               description="Edit count per wiki language edition since connection. Click a bar to drill into that wiki's edits."
               format="number"
@@ -668,6 +669,7 @@ function WikipediaDashboardInner({
               index="type"
               categories={["count"]}
               title="Edit Types"
+              headline={editTypeData.length + " types"}
               height={300}
               showPercentage
               innerRadius={0.65}
