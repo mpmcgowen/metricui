@@ -408,6 +408,7 @@ function AnalyticsContent() {
               index="date"
               categories={["sessions", "users"]}
               title="Traffic Trend"
+              headline={{ value: kpis.sessions, format: "compact", label: "Total Sessions" }}
               subtitle="Daily sessions and unique users — Q4 2025"
               description="The weekend dips (Sat/Sun) and holiday valley (Dec 23–26) are clearly visible. The overall trendline shows steady 30% QoQ growth."
               aiContext="Weekend dips and holiday valley (Dec 23-26) are normal seasonality, not problems. The gap between sessions and users indicates healthy return visits."
@@ -425,6 +426,7 @@ function AnalyticsContent() {
               index="source"
               categories={["sessions"]}
               title="Traffic Sources"
+              headline={{ value: sourceData.reduce((s, r) => s + r.sessions, 0), format: "compact", label: "Total" }}
               subtitle="Click a bar to cross-filter the dashboard"
               aiContext="Organic is our moat — 40% of traffic at near-zero marginal cost. Display was paused Dec 1 due to poor ROI. Social includes a one-time TikTok viral spike from Nov 20."
               format="compact"

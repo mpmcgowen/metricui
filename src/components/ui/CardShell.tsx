@@ -397,11 +397,9 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
                 {subtitle}
               </p>
             )}
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
             {headline && <HeadlineDisplay headline={headline} />}
-            {action}
           </div>
+          {action && <div className="flex items-center gap-1 flex-shrink-0">{action}</div>}
         </div>
       )}
 

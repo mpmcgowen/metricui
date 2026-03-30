@@ -446,6 +446,7 @@ function SubregionDrill({ region, allCountries }: { region: string; allCountries
         index="subregion"
         categories={["population"]}
         title={`Subregions of ${region}`}
+        headline={{ value: subregionData.reduce((s, d) => s + d.population, 0), format: "compact", label: "Population" }}
         subtitle="Click a bar to drill deeper"
         format="compact"
         height={300}

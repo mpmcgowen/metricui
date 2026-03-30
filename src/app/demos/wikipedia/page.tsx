@@ -846,8 +846,9 @@ function Dashboard() {
           format={{ style: "custom", suffix: "/sec" }} />
 
         <BarChart data={topWikis} index="wiki" categories={["edits"]}
-          title="Edits by Language" sort="desc" crossFilter />
+          title="Edits by Language" headline={topWikis.length + " wikis"} sort="desc" crossFilter />
         <DonutChart data={editTypes} title="Edit Types"
+          headline={editTypes.length + " types"}
           showPercentage crossFilter />
         <Gauge value={botRatio} max={100} title="Bot Activity"
           format="percent" />

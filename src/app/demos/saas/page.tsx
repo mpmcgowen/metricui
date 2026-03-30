@@ -399,7 +399,7 @@ function DashboardContent() {
         ]}
         drillDown={() => (
             <MetricGrid>
-              <DonutChart data={data.churnReasons} title="Churn Reasons" showPercentage innerRadius={0.6} height={260} />
+              <DonutChart data={data.churnReasons} title="Churn Reasons" headline={{ value: data.kpis.churnRate, format: "percent", label: "Rate" }} showPercentage innerRadius={0.6} height={260} />
               <DataTable
                 data={filtered.filter((a) => a.status === "churned")}
                 columns={[
@@ -489,6 +489,7 @@ function DashboardContent() {
         categories={["accounts"]}
         index="country"
         title="Accounts by Country"
+        headline={{ value: data.kpis.activeAccounts, format: "number", label: "Total" }}
         description="Click a bar to drill into that country's accounts."
         aiContext="US dominates account count but ARPU is highest in UK and Germany (Enterprise-heavy). APAC is growing fastest QoQ. Brazil accounts have highest churn."
         format="number"

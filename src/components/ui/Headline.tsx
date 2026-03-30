@@ -31,7 +31,7 @@ export function Headline({ headline, className }: HeadlineProps) {
   if (typeof headline === "string") {
     return (
       <div className={cn("flex items-baseline gap-1.5 text-right", className)}>
-        <span className="font-[family-name:var(--font-mono)] text-lg font-bold text-[var(--foreground)]">
+        <span className="font-[family-name:var(--font-mono)] text-base font-semibold text-[var(--foreground)]">
           {headline}
         </span>
       </div>
@@ -72,13 +72,13 @@ export function Headline({ headline, className }: HeadlineProps) {
       : "text-[var(--muted)]";
 
   return (
-    <div className={cn("flex flex-col items-end gap-0.5", className)}>
+    <div className={cn("mt-1 flex flex-col items-start gap-0.5", className)}>
       <div className="flex items-baseline gap-1.5">
         {label && (
           <span className="text-[length:var(--mu-text-xs)] text-[var(--muted)]">{label}</span>
         )}
         <span
-          className="font-[family-name:var(--font-mono)] text-xl font-bold tabular-nums"
+          className="font-[family-name:var(--font-mono)] text-base font-semibold tabular-nums"
           style={resolvedColor ? { color: resolvedColor } : { color: "var(--foreground)" }}
         >
           {formatted}

@@ -689,6 +689,7 @@ function DashboardContent() {
             index="day"
             categories={weekLabels}
             title="Contribution Activity"
+            headline={{ value: recentWeeks.reduce((s, w) => s + w.total, 0), format: "compact", label: "Commits" }}
             subtitle={`Last ${recentWeeks.length} weeks — commits by day of week`}
             description="GitHub-style contribution heatmap. Click a cell to see that day's breakdown."
             height={220}
@@ -775,6 +776,7 @@ function DashboardContent() {
             index="language"
             categories={["share"]}
             title="Languages"
+            headline={`${languageData.length} languages`}
             description="Percentage of codebase by language, measured in bytes via GitHub's linguist."
             height={280}
             showPercentage
