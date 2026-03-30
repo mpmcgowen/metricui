@@ -101,7 +101,7 @@ export default function ChartJsComparePage() {
         <DocSection id="what-is-metricui" title="What is MetricUI?">
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
             MetricUI is a React component library purpose-built for analytics
-            dashboards. It ships 31 components, 5 providers, and 15+ hooks
+            dashboards. It ships 44 components, 5 providers, and 15+ hooks
             &mdash; covering everything from KPI cards and 18 chart types to
             filter bars, drill-down panels, export, and AI-powered insights.
           </p>
@@ -475,7 +475,7 @@ export default function ChartJsComparePage() {
                 <tr className="border-b border-[var(--border)]">
                   <td className="py-3 pr-4 font-medium text-[var(--foreground)]">Total components</td>
                   <td className="py-3 px-4">9 chart wrappers</td>
-                  <td className="py-3 pl-4">31 components + 5 providers + 15+ hooks</td>
+                  <td className="py-3 pl-4">44 components + 5 providers + 15+ hooks</td>
                 </tr>
                 <tr className="border-b border-[var(--border)]">
                   <td className="py-3 pr-4 font-medium text-[var(--foreground)]">Screen reader a11y</td>

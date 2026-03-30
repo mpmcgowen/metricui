@@ -109,7 +109,7 @@ export default function TremorCompare() {
             drill-down, export, layout, theming, and AI-powered insights.
           </p>
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            The library includes 31 components, 5 providers, and 15+ hooks. All
+            The library includes 44 components, 5 providers, and 15+ hooks. All
             18 chart types are backed by Nivo, which means consistent rendering,
             animations, and accessibility across every visualization. The theming
             system ships 8 presets with runtime switching via a single provider
@@ -149,8 +149,8 @@ export default function TremorCompare() {
           </p>
           <p className="text-[14px] leading-relaxed text-[var(--muted)]">
             MetricUI is independently maintained and actively shipping. Version
-            0.6.1 landed with AI insights, and the roadmap through 1.0 is
-            public. That said, independent maintenance comes with its own risks
+            1.0 shipped with AI insights, unified architecture, and 675 tests.
+            That said, independent maintenance comes with its own risks
             &mdash; there is no corporate backing. The trade-off is pace versus
             institutional stability, and it is worth weighing both sides.
           </p>

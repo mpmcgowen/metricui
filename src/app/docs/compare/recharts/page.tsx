@@ -80,7 +80,7 @@ export default function RechartsComparison() {
         {/* ── What is MetricUI? ── */}
         <DocSection id="what-is-metricui" title="What is MetricUI?">
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            MetricUI (v0.6.1) is a React dashboard framework. It provides 31
+            MetricUI (v1.0) is a React dashboard framework. It provides 31
             components, 5 providers, 15+ hooks, and 18 chart types — all
             designed to work together as a system.
           </p>
@@ -331,7 +331,7 @@ export default function RechartsComparison() {
               { feature: "SSR Support", recharts: "Problematic", metricui: "Client boundary" },
               { feature: "License", recharts: "MIT", metricui: "MIT" },
               { feature: "npm Weekly Downloads", recharts: "~24M", metricui: "New" },
-              { feature: "Maturity", recharts: "Very mature", metricui: "v0.6.1" },
+              { feature: "Maturity", recharts: "Very mature", metricui: "v1.0" },
             ]}
             columns={[
               { key: "feature", header: "Feature" },

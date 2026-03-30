@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { STATS } from "@/lib/stats";
 import { KpiCard } from "@/components/cards/KpiCard";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { CodeBlock } from "@/components/docs/CodeBlock";
@@ -32,10 +33,10 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 const stats = [
-  { label: "Components", value: "44" },
-  { label: "Chart Types", value: "11" },
-  { label: "Tests", value: "436" },
-  { label: "Demos", value: "5" },
+  { label: "Components", value: String(STATS.components) },
+  { label: "Chart Types", value: String(STATS.chartTypes) },
+  { label: "Tests", value: String(STATS.tests) },
+  { label: "Demos", value: String(STATS.demos) },
 ];
 
 const capabilities = [
@@ -74,14 +75,14 @@ const capabilities = [
 ];
 
 const features = [
-  { icon: Code2, title: "One import, not six libraries", desc: "KPI cards, 11 chart types, tables, layout, formatting, theming — one package. No glue code." },
+  { icon: Code2, title: "One import, not six libraries", desc: `KPI cards, ${STATS.chartTypes} chart types, tables, layout, formatting, theming — one package. No glue code.` },
   { icon: Layers, title: "Built-in data states", desc: "Loading skeletons, empty states, error retry, stale indicators. On every component. Pass a prop." },
   { icon: Filter, title: "Complete filter system", desc: "FilterBar + PeriodSelector + DropdownFilter + SegmentToggle + FilterTags. All wired through context." },
-  { icon: Palette, title: "8 theme presets + dark mode", desc: "One prop changes everything. Indigo, emerald, rose, amber, cyan, violet, slate, orange. CSS variables." },
+  { icon: Palette, title: `${STATS.themePresets} theme presets + dark mode`, desc: "One prop changes everything. Indigo, emerald, rose, amber, cyan, violet, slate, orange. CSS variables." },
   { icon: Zap, title: "Smart defaults, zero config", desc: "Auto column inference on tables. Auto-format from key names. MetricGrid auto-layout. It just works." },
   { icon: Bot, title: "MCP server for AI tools", desc: "Claude, Cursor, Copilot generate correct MetricUI code on the first try. Full API surface exposed." },
-  { icon: Shield, title: "436 tests. TypeScript-first.", desc: "Every component tested. Every prop typed. BaseComponentProps inherited everywhere. Ship with confidence." },
-  { icon: MessageSquare, title: "44 components. All free.", desc: "MIT license. No pro tier. No gates. KPIs, charts, tables, filters, layout, AI — everything ships." },
+  { icon: Shield, title: `${STATS.tests} tests. TypeScript-first.`, desc: "Every component tested. Every prop typed. BaseComponentProps inherited everywhere. Ship with confidence." },
+  { icon: MessageSquare, title: `${STATS.components} components. All free.`, desc: "MIT license. No pro tier. No gates. KPIs, charts, tables, filters, layout, AI — everything ships." },
 ];
 
 const demos = [
@@ -255,8 +256,8 @@ export default function Home() {
             </h1>
 
             <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-[var(--muted)]">
-              44 components. 11 chart types. AI-powered analysis. Cross-filtering. Drill-downs. Export.
-              One import replaces six libraries — and your dashboard can explain itself.
+              {STATS.components} components. {STATS.chartTypes} chart types. AI-powered analysis. Cross-filtering. Drill-downs. Export.
+              Stop assembling dashboards from parts — and let your dashboard explain itself.
             </p>
 
             <div className="mt-10 flex items-center gap-4">

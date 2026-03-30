@@ -91,7 +91,7 @@ export default function GrafanaComparisonPage() {
             application. No server to run, no infrastructure to manage.
           </p>
           <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
-            It ships 31 components across 18 chart types, plus KPI cards,
+            It ships 44 components across 18 chart types, plus KPI cards,
             filters, cross-filtering, drill-down, export, and AI-powered
             insights. Eight built-in themes let you match your product&apos;s
             design system out of the box, or you can define a fully custom
@@ -362,7 +362,7 @@ export default function GrafanaComparisonPage() {
                   <td className="py-3 pr-4">
                     Time-series focused (+ plugins)
                   </td>
-                  <td className="py-3">18 types, 31 components</td>
+                  <td className="py-3">18 types, 44 components</td>
                 </tr>
                 <tr>
                   <td className="py-3 pr-4 font-medium text-[var(--foreground)]">
