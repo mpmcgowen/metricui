@@ -186,6 +186,10 @@ const tocItems: TocItem[] = [
   { id: "kpi-goal", title: "Goal tracking", level: 3 },
   { id: "kpi-ghost-sparkline", title: "Previous period sparkline", level: 3 },
   { id: "kpi-conditions", title: "Conditional glow", level: 3 },
+  { id: "headline", title: "Headline Numbers", level: 2 },
+  { id: "headline-basic", title: "String shorthand", level: 3 },
+  { id: "headline-rich", title: "Rich config", level: 3 },
+  { id: "headline-comparison", title: "With comparison", level: 3 },
   { id: "charts", title: "Charts That Tell Stories", level: 2 },
   { id: "chart-reference", title: "Target lines", level: 3 },
   { id: "chart-thresholds", title: "Threshold zones", level: 3 },
@@ -567,6 +571,117 @@ export default function CookbookGuide() {
 
         {/* ================================================================ */}
         {/* CHARTS */}
+        {/* ================================================================ */}
+
+        {/* Headline Numbers */}
+        <DocSection id="headline" title="Headline Numbers">
+          <p className="text-[14px] leading-relaxed text-[var(--muted)]">
+            Add a summary number to any chart or table header. The dev computes the number — MetricUI formats it, animates it, and renders it under the title.
+          </p>
+        </DocSection>
+
+        <DocSection id="headline-basic" title="String shorthand" level={3}>
+          <ComponentExample
+            code={`<BarChart
+  data={revenueByMonth}
+  index="month"
+  categories={["revenue"]}
+  title="Revenue by Month"
+  headline="$420K total"
+  format="currency"
+/>`}
+          >
+            <BarChart
+              data={revenueByMonth}
+              index="month"
+              categories={["revenue"]}
+              title="Revenue by Month"
+              headline="$420K total"
+              format="currency"
+              height={250}
+            />
+          </ComponentExample>
+        </DocSection>
+
+        <DocSection id="headline-rich" title="Rich config" level={3}>
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Pass an object for formatting, a label, and conditional coloring.
+          </p>
+          <ComponentExample
+            code={`<BarChart
+  data={revenueByMonth}
+  index="month"
+  categories={["revenue"]}
+  title="Monthly Revenue"
+  headline={{
+    value: 420000,
+    format: "currency",
+    label: "Total",
+    conditions: [
+      { when: "above", value: 400000, color: "emerald" },
+      { when: "below", value: 200000, color: "red" },
+    ],
+  }}
+/>`}
+          >
+            <BarChart
+              data={revenueByMonth}
+              index="month"
+              categories={["revenue"]}
+              title="Monthly Revenue"
+              headline={{
+                value: 420000,
+                format: "currency",
+                label: "Total",
+                conditions: [
+                  { when: "above", value: 400000, color: "emerald" },
+                  { when: "below", value: 200000, color: "red" },
+                ],
+              }}
+              height={250}
+            />
+          </ComponentExample>
+        </DocSection>
+
+        <DocSection id="headline-comparison" title="With comparison" level={3}>
+          <p className="mb-4 text-[14px] leading-relaxed text-[var(--muted)]">
+            Add a comparison badge with trend arrow — same as KpiCard comparisons.
+          </p>
+          <ComponentExample
+            code={`<DonutChart
+  data={channelData}
+  index="month"
+  categories={["organic"]}
+  title="Traffic Sources"
+  headline={{
+    value: 2400,
+    format: "compact",
+    label: "Sessions",
+    comparison: { value: 2100 },
+  }}
+/>`}
+          >
+            <DonutChart
+              data={[
+                { id: "Organic", value: 1200 },
+                { id: "Paid", value: 600 },
+                { id: "Referral", value: 400 },
+                { id: "Direct", value: 200 },
+              ]}
+              title="Traffic Sources"
+              headline={{
+                value: 2400,
+                format: "compact",
+                label: "Sessions",
+                comparison: { value: 2100 },
+              }}
+              height={280}
+              showPercentage
+              innerRadius={0.6}
+            />
+          </ComponentExample>
+        </DocSection>
+
         {/* ================================================================ */}
 
         <DocSection id="charts" title="Charts That Tell Stories">
