@@ -53,7 +53,7 @@ Every data component (except KpiCard) accepts a `headline` prop that renders a b
 }} />
 ```
 
-The headline renders right-aligned in the header, next to the title. Supports formatting, comparison badges with trend arrows, and conditional coloring — same features as KpiCard.
+The headline renders left-aligned under the title. Supports formatting, comparison badges with trend arrows, and conditional coloring — same features as KpiCard.
 
 ## Helpers
 

@@ -137,6 +137,17 @@ Drop `<DashboardInsight />` into any dashboard. A floating chat button appears �
 
 Sparkline with previous-period overlay. Goal progress bars. Conditional red/amber/green coloring. Multiple comparison badges. Copyable values. Drill-down links. [Docs &rarr;](https://metricui.com/docs/kpi-card)
 
+### Headline Numbers on Any Chart
+
+Every chart and table accepts a `headline` prop — a summary number in the card header that gives you the punchline at a glance.
+
+```tsx
+<BarChart headline={{ value: 1200000, format: "currency", label: "Total" }} />
+<BarChart headline="$1.2M total" />  // string shorthand
+```
+
+Supports formatting, comparison badges with trend arrows, and conditional coloring — same features as KpiCard, right in the chart header.
+
 ### Charts with Reference Lines & Threshold Bands
 
 <p>
