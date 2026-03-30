@@ -158,6 +158,7 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
   description,
   footnote,
   action,
+  headline,
   format,
   height,
   colorScale = "sequential",
@@ -269,21 +270,14 @@ const HeatMapInner = forwardRef<HTMLDivElement, HeatMapProps>(function HeatMap({
     <div ref={ref} id={id} data-testid={dataTestId} style={{ minWidth: 120, height: "100%" }}>
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="HeatMap"
-        aiContext={aiContext}
-        title={title}
-        subtitle={subtitle}
-        description={description}
-        footnote={footnote}
-        action={action}
+        shell={{
+          title, subtitle, description, footnote, action, headline,
+          variant: resolvedVariant, aiContext, loading, empty, error, stale,
+          className: classNames?.root ?? className,
+          classNames: classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined,
+          id, "data-testid": dataTestId,
+        }}
         height={resolvedHeight}
-        variant={resolvedVariant}
-
-        className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
-        loading={loading}
-        empty={empty}
-        error={error}
-        stale={stale}
         exportData={dataProp as DataRow[]}
       >
         <div style={{ height: resolvedHeight }}>

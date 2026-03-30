@@ -259,6 +259,7 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
   description,
   footnote,
   action,
+  headline,
   format,
   height,
   innerRadius = 0.6,
@@ -488,21 +489,14 @@ const DonutChartInner = forwardRef<HTMLDivElement, DonutChartProps>(function Don
     <div ref={ref} id={id} data-testid={dataTestId} style={{ minWidth: 120, height: "100%" }}>
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="DonutChart"
-        aiContext={aiContext}
-        title={title}
-        subtitle={subtitle}
-        description={description}
-        footnote={footnote}
-        action={action}
+        shell={{
+          title, subtitle, description, footnote, action, headline,
+          variant: resolvedVariant, aiContext, loading, empty, error, stale,
+          className: classNames?.root ?? className,
+          classNames: classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined,
+          id, "data-testid": dataTestId,
+        }}
         height={resolvedHeight}
-        variant={resolvedVariant}
-
-        className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
-        loading={loading}
-        empty={empty}
-        error={error}
-        stale={stale}
         exportData={data.length > 0 ? (data as unknown as DataRow[]) : (dataProp as DataRow[])}
         below={legendConfig ? (
           <ChartLegend

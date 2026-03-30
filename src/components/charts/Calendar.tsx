@@ -137,6 +137,7 @@ const CalendarInner = forwardRef<HTMLDivElement, CalendarProps>(function Calenda
     "data-testid": dataTestId,
     aiContext,
     dense,
+    headline,
   } = props;
 
   assertPeer(ResponsiveCalendar, "@nivo/calendar", "Calendar");
@@ -185,28 +186,20 @@ const CalendarInner = forwardRef<HTMLDivElement, CalendarProps>(function Calenda
   return (
     <div
       ref={ref}
-      id={id}
-      data-testid={dataTestId}
       style={{ minWidth: 120, height: "100%" }}
     >
       <div ref={containerRef} style={{ height: "100%" }}>
         <ChartContainer
           componentName="Calendar"
-          aiContext={aiContext}
-          title={title}
-          subtitle={subtitle}
-          description={description}
-          footnote={footnote}
-          action={action}
+          shell={{
+            title, subtitle, description, footnote, action, headline,
+            variant: resolvedVariant, aiContext, loading, empty, error, stale,
+            dense,
+            className: classNames?.root ?? className,
+            classNames: classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart, footnote: classNames.footnote } : undefined,
+            id, "data-testid": dataTestId,
+          }}
           height={resolvedHeight}
-          variant={resolvedVariant}
-          dense={dense}
-          className={classNames?.root ?? className}
-          classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart, footnote: classNames.footnote } : undefined}
-          loading={loading}
-          empty={empty}
-          error={error}
-          stale={stale}
           exportData={calendarData as unknown as DataRow[]}
         >
           <ResponsiveCalendar

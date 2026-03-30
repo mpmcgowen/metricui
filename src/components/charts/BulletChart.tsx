@@ -125,6 +125,7 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
   description,
   footnote,
   action,
+  headline,
   format,
   height: heightProp,
   layout = "horizontal",
@@ -242,25 +243,16 @@ const BulletChartInner = forwardRef<HTMLDivElement, BulletChartProps>(function B
     <div ref={containerRef} style={{ minWidth: 120, height: "100%" }}>
       <ChartContainer
         ref={ref}
-        id={id}
-        data-testid={dataTestId}
         componentName="BulletChart"
-        aiContext={aiContext}
-        title={title}
-        subtitle={subtitle}
-        description={description}
-        footnote={footnote}
-        action={action}
+        shell={{
+          title, subtitle, description, footnote, action, headline,
+          variant: resolvedVariant, aiContext, loading, empty, error, stale,
+          dense: resolvedDense,
+          className: classNames?.root ?? className,
+          classNames: classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined,
+          id, "data-testid": dataTestId,
+        }}
         height={resolvedHeight}
-        variant={resolvedVariant}
-
-        dense={resolvedDense}
-        className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
-        loading={loading}
-        empty={empty}
-        error={error}
-        stale={stale}
       >
         <div style={{ height: resolvedHeight }}>
           <ResponsiveBullet

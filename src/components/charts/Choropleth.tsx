@@ -137,6 +137,7 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
     id,
     "data-testid": dataTestId,
     aiContext,
+    headline,
   } = props;
 
   assertPeer(ResponsiveChoropleth, "@nivo/geo", "Choropleth");
@@ -263,27 +264,19 @@ const ChoroplethInner = forwardRef<HTMLDivElement, ChoroplethProps>(function Cho
   return (
     <div
       ref={ref}
-      id={id}
-      data-testid={dataTestId}
       style={{ minWidth: 120, height: "100%" }}
     >
       <div ref={containerRef} style={{ height: "100%" }}>
         <ChartContainer
           componentName="Choropleth"
-          aiContext={aiContext}
-          title={title}
-          subtitle={subtitle}
-          description={description}
-          footnote={footnote}
-          action={action}
+          shell={{
+            title, subtitle, description, footnote, action, headline,
+            variant: resolvedVariant, aiContext, loading, empty, error, stale,
+            className: classNames?.root ?? className,
+            classNames: classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined,
+            id, "data-testid": dataTestId,
+          }}
           height={resolvedHeight}
-          variant={resolvedVariant}
-          className={classNames?.root ?? className}
-          classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
-          loading={loading}
-          empty={empty}
-          error={error}
-          stale={stale}
           exportData={exportData}
         >
           <ResponsiveChoropleth

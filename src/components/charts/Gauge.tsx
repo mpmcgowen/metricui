@@ -258,6 +258,7 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   icon,
   height,
   action,
+  headline,
   drillDown,
   drillDownMode,
   crossFilter: crossFilterProp,
@@ -402,29 +403,20 @@ const GaugeInner = forwardRef<HTMLDivElement, GaugeProps>(function Gauge({
   return (
     <div
       ref={ref}
-      id={id}
-      data-testid={dataTestId}
       style={{ minWidth: 120, height: "100%" }}
       className={cn(interaction.isInteractive && "group relative cursor-pointer", className)}
       onClick={interaction.isInteractive ? () => interaction.handleClick({ title: title ?? "Gauge", value: rawValue ?? 0 }) : undefined}
     >
     <div ref={containerRef} style={{ height: "100%" }}>
       <ChartContainer componentName="Gauge"
-        aiContext={aiContext}
-        title={title}
-        subtitle={undefined}
-        description={description}
-        footnote={footnote}
-        action={action}
+        shell={{
+          title, subtitle: undefined, description, footnote, action, headline,
+          variant: resolvedVariant, aiContext, loading, empty, error, stale,
+          className: classNames?.root ?? className,
+          classNames: classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined,
+          id, "data-testid": dataTestId,
+        }}
         height={resolvedHeight}
-        variant={resolvedVariant}
-
-        className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
-        loading={loading}
-        empty={empty}
-        error={error}
-        stale={stale}
         below={<>
           {/* Comparison badges */}
           {compResults.length > 0 && (

@@ -47,6 +47,8 @@ export interface DataComponentProps extends BaseComponentProps {
   stale?: StaleState;
   /** Enable export. `true` enables image/CSV/clipboard. Pass `{ data }` to override CSV data. */
   exportable?: ExportableConfig;
+  /** Headline number displayed in the card header. Pass a string for simple text, or HeadlineConfig for rich formatting with comparison, conditions, and animation. */
+  headline?: HeadlineProp;
   /** Data state configuration — alternative to individual loading/empty/error/stale props */
   state?: {
     loading?: boolean;
@@ -152,6 +154,26 @@ export interface TooltipConfig {
 // ---------------------------------------------------------------------------
 // Data states
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Headline (summary number on charts/tables)
+// ---------------------------------------------------------------------------
+
+export interface HeadlineConfig {
+  /** The headline value */
+  value: number;
+  /** Format for the value. Default: "compact" */
+  format?: FormatOption;
+  /** Small label next to the value (e.g., "Total", "Average") */
+  label?: string;
+  /** Comparison — renders a trend badge like KpiCard */
+  comparison?: ComparisonConfig;
+  /** Conditional coloring based on value */
+  conditions?: Condition[];
+}
+
+/** Headline prop — pass a string for simple display, or HeadlineConfig for rich features */
+export type HeadlineProp = string | HeadlineConfig;
 
 export interface LoadingState {
   loading?: boolean;

@@ -165,6 +165,7 @@ const TreemapInner = forwardRef<HTMLDivElement, TreemapProps>(function Treemap(p
     aiContext,
     exportable,
     state,
+    headline,
   } = props;
 
   assertPeer(ResponsiveTreeMap, "@nivo/treemap", "Treemap");
@@ -303,33 +304,22 @@ const TreemapInner = forwardRef<HTMLDivElement, TreemapProps>(function Treemap(p
   return (
     <div
       ref={ref}
-      id={id}
-      data-testid={dataTestId}
       style={{ minWidth: 120, height: "100%" }}
     >
       <div ref={containerRef} style={{ height: "100%" }}>
         <ChartContainer
           componentName="Treemap"
-          aiContext={aiContext}
-          title={title}
-          subtitle={subtitle}
-          description={description}
-          footnote={footnote}
-          action={action}
-          height={resolvedHeight}
-          variant={resolvedVariant}
-          className={classNames?.root ?? className}
-          classNames={
-            classNames
+          shell={{
+            title, subtitle, description, footnote, action, headline,
+            variant: resolvedVariant, aiContext, loading, empty, error, stale,
+            state, exportable,
+            className: classNames?.root ?? className,
+            classNames: classNames
               ? { header: classNames.header, body: classNames.body ?? classNames.chart }
-              : undefined
-          }
-          loading={loading}
-          empty={empty}
-          error={error}
-          stale={stale}
-          state={state}
-          exportable={exportable}
+              : undefined,
+            id, "data-testid": dataTestId,
+          }}
+          height={resolvedHeight}
           exportData={exportData}
           below={
             legendConfig ? (

@@ -234,6 +234,7 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
   description,
   footnote,
   action,
+  headline,
   format,
   height,
   positiveColor: positiveColorProp,
@@ -396,25 +397,16 @@ const WaterfallInner = forwardRef<HTMLDivElement, WaterfallProps>(function Water
     <div ref={containerRef} style={{ minWidth: 120, height: "100%" }}>
       <ChartContainer
         ref={ref}
-        id={id}
-        data-testid={dataTestId}
         componentName="Waterfall"
-        aiContext={aiContext}
-        title={title}
-        subtitle={subtitle}
-        description={description}
-        footnote={footnote}
-        action={action}
+        shell={{
+          title, subtitle, description, footnote, action, headline,
+          variant: resolvedVariant, aiContext, loading, empty, error, stale,
+          dense: resolvedDense,
+          className: classNames?.root ?? className,
+          classNames: classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined,
+          id, "data-testid": dataTestId,
+        }}
         height={resolvedHeight}
-        variant={resolvedVariant}
-
-        dense={resolvedDense}
-        className={classNames?.root ?? className}
-        classNames={classNames ? { header: classNames.header, body: classNames.body ?? classNames.chart } : undefined}
-        loading={loading}
-        empty={empty}
-        error={error}
-        stale={stale}
         exportData={rawData as unknown as DataRow[]}
       >
         <div style={{ height: resolvedHeight }}>

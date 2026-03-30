@@ -9,6 +9,7 @@ import { ExportButton } from "@/components/ui/ExportButton";
 import { ChartSkeletonContent, KpiSkeletonContent, DataStateWrapper } from "@/components/ui/DataStateWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Sparkles } from "lucide-react";
+import { Headline as HeadlineDisplay } from "./Headline";
 import { useMetricConfig } from "@/lib/MetricProvider";
 import type { CardVariant, DataRow, EmptyState, ErrorState, StaleState, ExportableConfig, DataComponentProps } from "@/lib/types";
 
@@ -25,6 +26,8 @@ export interface CardShellProps {
   description?: string | ReactNode;
   footnote?: string;
   action?: ReactNode;
+  /** Headline number in the card header — big value with optional comparison and conditions */
+  headline?: import("@/lib/types").HeadlineProp;
   /** Content rendered below the main body (e.g., chart legends) */
   below?: ReactNode;
   /** Component name for error boundary diagnostics */
@@ -108,6 +111,7 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
     description,
     footnote,
     action,
+    headline,
     below,
     componentName,
     aiContext,
@@ -375,9 +379,9 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
       )}
 
       {/* Header */}
-      {(title || action) && (
+      {(title || action || headline) && (
         <div className={cn("mb-4 flex items-start justify-between", classNames?.header)}>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               {title && (
                 <span className="truncate text-[length:var(--mu-title-size)] font-medium tracking-wide uppercase text-[var(--muted)]">
@@ -394,7 +398,10 @@ export const CardShell = forwardRef<HTMLElement, CardShellProps>(function CardSh
               </p>
             )}
           </div>
-          {action && <div className="flex items-center gap-1 flex-shrink-0">{action}</div>}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {headline && <HeadlineDisplay headline={headline} />}
+            {action}
+          </div>
         </div>
       )}
 
