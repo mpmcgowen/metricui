@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { formatValue, computeComparison, evaluateConditions } from "@/lib/format";
 import { resolveNamedColor } from "@/lib/namedColors";
-import { useLocale } from "@/lib/MetricProvider";
+import { useLocale, useMetricConfig } from "@/lib/MetricProvider";
 import { useCountUp } from "@/lib/useCountUp";
 import type { HeadlineProp } from "@/lib/types";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -25,6 +25,7 @@ interface HeadlineProps {
  */
 export function Headline({ headline, className }: HeadlineProps) {
   const localeDefaults = useLocale();
+  const config = useMetricConfig();
 
   // String shorthand
   if (typeof headline === "string") {
@@ -40,8 +41,8 @@ export function Headline({ headline, className }: HeadlineProps) {
   // Rich config
   const { value, format = "compact", label, comparison, conditions } = headline;
 
-  // Animation
-  const animatedValue = useCountUp(value, { enabled: true });
+  // Animation — respects global animate config
+  const animatedValue = useCountUp(value, { enabled: !!config.animate });
 
   // Format
   const formatted = formatValue(animatedValue, format, localeDefaults);

@@ -33,7 +33,27 @@ Same components, same props, same API — just a different import path. Use this
 ### Shared Base Types
 
 All components inherit from `BaseComponentProps`: `aiContext`, `id`, `data-testid`, `className`.
-Data components (KPIs, charts, tables) additionally inherit from `DataComponentProps`: `variant`, `dense`, `loading`, `empty`, `error`, `stale`, `exportable`, `state`.
+Data components (KPIs, charts, tables) additionally inherit from `DataComponentProps`: `variant`, `dense`, `loading`, `empty`, `error`, `stale`, `exportable`, `state`, `headline`.
+
+### Headline — Summary Number in Card Header
+
+Every data component (except KpiCard) accepts a `headline` prop that renders a big formatted number in the card header.
+
+```tsx
+// String shorthand
+<BarChart headline="$1.2M total" />
+
+// Rich config with comparison, conditions, animation
+<BarChart headline={{
+  value: 1200000,
+  format: "currency",
+  label: "Total",
+  comparison: { value: 1070000 },
+  conditions: [{ when: "above", value: 1000000, color: "emerald" }],
+}} />
+```
+
+The headline renders right-aligned in the header, next to the title. Supports formatting, comparison badges with trend arrows, and conditional coloring — same features as KpiCard.
 
 ## Helpers
 

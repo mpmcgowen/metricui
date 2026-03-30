@@ -296,7 +296,7 @@ function DashboardContent() {
                 <DonutChart
                   data={mrrByPlan}
                   title="MRR by Plan"
-                  subtitle="Revenue distribution across pricing tiers"
+                  headline={{ value: data.kpis.mrr, format: "currency", label: "Total MRR" }}
                   showPercentage
                   innerRadius={0.6}
                   centerValue={formatValue(data.kpis.mrr, { style: "currency", compact: true })}
@@ -357,6 +357,7 @@ function DashboardContent() {
                   categories={["accounts"]}
                   index="industry"
                   title="Accounts by Industry"
+                  headline={{ value: activeAccts.length, format: "number", label: "Total" }}
                   format="number"
                   height={260}
                   sort="desc"

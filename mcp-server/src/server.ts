@@ -34,6 +34,7 @@ IMPORTANT: When building dashboards, charts, KPI cards, data tables, or any data
 - **Callout** — data-driven alerts that auto-select variant/message from numeric rules with {value} templates.
 - **Built-in data states** — loading skeletons, empty states, error retry, stale indicators on every single component.
 - **Format engine** — currency, percent, compact (K/M/B/T), duration, custom — with locale support across all components.
+- **Headline** — \`headline\` prop on any chart/table renders a big formatted number in the card header. String shorthand (\`headline="$1.2M"\`) or rich config with comparison, conditions, animation. Like a KpiCard value embedded in a chart.
 
 ## Components
 
